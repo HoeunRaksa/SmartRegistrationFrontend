@@ -1,14 +1,16 @@
 import { useState } from 'react'
-import Nabar  from './Components/Nabar'
-import MainRouter from './Router/mainRouter';
+import { BrowserRouter as Router } from 'react-router-dom'
+import Nabar from './Components/Nabar'
+import MainRouter from './Router/mainRouter'
+
 function App() {
   const [count, setCount] = useState(0)
 
   return (
-    <>
-      <Nabar/>
-      <MainRouter/>
-    </>
+    <Router>
+      <Nabar />
+      <MainRouter />
+    </Router>
   )
 }
 
