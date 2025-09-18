@@ -1,13 +1,8 @@
-import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-
-const Profile = () => <div>Raksa Profile Page</div>;
-const Dashboard = () => <div>Raksa Dashboard Page</div>;
-const NotFound = () => <div>404 - Page Not Found</div>;
-
+import Home from "../page/Home.jsx";
 const RaksaRouter = () => (
   <Routes>
-   
+    <Route path="/" element={<Home />} />
   </Routes>
 );
 
