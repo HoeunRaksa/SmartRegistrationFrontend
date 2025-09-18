@@ -82,9 +82,9 @@ export function ExamResults() {
   };
 
   const getTrendIcon = (trend) => {
-    if (trend === "up") return <span className="text-green-600">↑</span>;
-    if (trend === "down") return <span className="text-red-600">↓</span>;
-    return <span className="text-gray-400">→</span>;
+    if (trend === "up") return <span className="text-green">↑</span>;
+    if (trend === "down") return <span className="text-red">↓</span>;
+    return <span className="text-gray">→</span>;
   };
 
   return (
@@ -161,7 +161,7 @@ export function ExamResults() {
         <CardContent>
           <div className="space-y-4">
             {examData.subjects.map((subject, index) => (
-              <div key={index} className="flex items-center justify-between p-4 rounded-lg border">
+              <div key={index} className="flex items-center justify-between p-4 rounded-lg border bodyglass">
                 <div className="flex items-center gap-4 flex-1">
                   <div className="min-w-0 flex-1 ">
                     <h3 className="font-medium text-white text-start">{subject.name}</h3>
@@ -242,16 +242,16 @@ export function ExamResults() {
       {/* Encouragement Section */}
       <Card className="mt-8 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
         <CardContent className="text-center py-8">
-          <div className="text-3xl mb-4">🏆</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Excellent Performance!</h2>
-          <p className="text-lg text-gray-600 mb-4">
+          <div className="text-3xl mb-4 mt-2">🏆</div>
+          <h2 className="text-2xl font-bold text-white mb-2">Excellent Performance!</h2>
+          <p className="text-lg text-white mb-4">
             You've achieved an outstanding {examData.overall.grade} grade with {examData.overall.percentage}% overall
             score.
           </p>
-          <p className="text-purple-600 font-medium">Keep up the great work and continue striving for excellence!</p>
+          <p className="text-white font-medium">Keep up the great work and continue striving for excellence!</p>
           <div className="mt-6">
             <Button className="mr-4">Download Report</Button>
-            <Button variant="outline">Share Results</Button>
+            {/* <Button variant="outline">Share Results</Button> */}
           </div>
         </CardContent>
       </Card>
