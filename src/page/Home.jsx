@@ -1,20 +1,17 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-
+import WelcomeImg from "../assets/Images/Welcome.png";
+import IntroductionImg from "../assets/Images/Introduction.png";
+import BackGrpundImg from "../assets/Images/Background.png";
 const Home = () => {
     return (
-        <div style={{ padding: '2rem' }}>
-            <div className='card'>
-                <div className='card-body'>
-                    <h2 className='card-title'>Welcome to the University Portal</h2>
-                    <p>This is the home page of the university portal. Explore our programs and register today!</p>
-                    <div className='card-actions justify-end'>
-                        <Link to="/ExamResul" className='btn btn-primary'>Get Started</Link>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <section className="w-full rounded bg-gray-100 relative overflow-hidden bodyglass">
+           <div  className="w-full sm:p-3 p-1"> 
+             <div className="absolute min-w-70 top-[10%] sm:left-[2%] left-[5%]  w-1/2">
+                     <img src={WelcomeImg} alt=""/>
+                    <img src={IntroductionImg} alt=""/> 
+             </div>
+            <img src={BackGrpundImg} className="w-full rounded" alt=""/>
+           </div>
+        </section>
     );
 };
-
 export default Home;
