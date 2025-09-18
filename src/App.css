@@ -10,7 +10,7 @@ body {
   font-family: sans-serif;
 }
 .glass {
-  background: rgba(255, 255, 255, 0.15); /* translucent */
+  background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
 border: 0.5px solid rgba(255, 255, 255, 0.3);
