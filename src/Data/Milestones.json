@@ -1,0 +1,44 @@
+{
+    "header": {
+        "title": "Our Journey Through Time",
+        "dedicated" : "From humble beginnings to global recognition, discover the milestones that have shaped Excellence University into the institution it is today."
+    },
+    "timeline": [
+        {
+        "year": "1875",
+        "title": "Foundation",
+        "description": "Excellence University was founded with a vision to provide world-class education to students from all backgrounds.",
+        "icon": "🏛️"
+        },
+        {
+        "year": "1920",
+        "title": "First Research Institute",
+        "description": "Established our first dedicated research institute, marking the beginning of our commitment to innovation.",
+        "icon": "🔬"
+        },
+        {
+        "year": "1965",
+        "title": "International Recognition",
+        "description": "Received international accreditation and began welcoming students from around the globe.",
+        "icon": "🌍"
+        },
+        {
+        "year": "1990",
+        "title": "Technology Integration",
+        "description": "Pioneered the integration of technology in education, becoming a leader in digital learning.",
+        "icon": "💻"
+        },
+        {
+        "year": "2010",
+        "title": "Sustainability Initiative",
+        "description": "Launched comprehensive sustainability programs, achieving carbon neutrality by 2015.",
+        "icon": "🌱"
+        },
+        {
+        "year": "2024",
+        "title": "Innovation Hub",
+        "description": "Opened our state-of-the-art Innovation Hub, fostering entrepreneurship and cutting-edge research.",
+        "icon": "🚀"
+        }
+    ]
+}

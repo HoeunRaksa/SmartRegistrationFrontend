@@ -1,10 +1,18 @@
 import React from "react";
+import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "../Components/ui/Card";
+import { HeroSection } from "../Components/HeroSection";
+import { HistorySection } from "../Components/HistorySection";
+import { CallToActionSection } from "../Components/CallToActionSection";
 
 const AbouteUs = () => {
   return (
-    <div>
-      <h1>About Page</h1>
-      <p>This is the about page of the application.</p>
+    <div className="">
+      <main className="min-h-screen">
+        <HeroSection />
+        <HistorySection />
+        <CallToActionSection />
+      </main>
+
     </div>
   );
 };
