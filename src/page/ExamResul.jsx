@@ -1,76 +1,12 @@
 import React, { useState } from "react";
+import {Card, CardHeader, CardContent, CardTitle, CardDescription } from "../Components/ui/Card";
+import { Badge } from "../Components/ui/Badge";
+import { Progress } from "../Components/ui/Progress";
+import { Button } from "../Components/ui/Button";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "../Components/ui/Collapsible";
+import { Trophy, BookOpen, Clock, ChevronDown } from "../Components/ui/Icons";
+import examData from "../Data/ExamData.json";
 //import "../App.css";
-// Mock UI Components (simplified versions for the example)
-const Card = ({ children, className }) => <div className={`border rounded-lg glass   ${className}`}>{children}</div>;
-const CardHeader = ({ children, className }) => <div className={`p-6 ${className}`}>{children}</div>;
-const CardContent = ({ children, className }) => <div className={`p-6 pt-0 ${className}`}>{children}</div>;
-const CardTitle = ({ children, className }) => <h3 className={`font-semibold ${className}`}>{children}</h3>;
-const CardDescription = ({ children, className }) => <p className={`text-sm text-white ${className}`}>{children}</p>;
-const Badge = ({ children, className }) => <span className={`px-2 py-1 rounded-full text-xs font-medium ${className}`}>{children}</span>;
-const Progress = ({ value, className }) => (
-  <div className={`w-full bg-gray-200 rounded-full h-2 ${className}`}>
-    <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${value}%` }}></div>
-  </div>
-);
-const Button = ({ children, variant = "default", className, ...props }) => {
-  const baseClasses = "px-4 py-2 rounded-md font-medium";
-  const variantClasses = variant === "outline" 
-    ? "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50" 
-    : "bg-blue-600 text-white hover:bg-blue-700";
-  
-  return <button className={`${baseClasses} ${variantClasses} ${className}`} {...props}>{children}</button>;
-};
-const Collapsible = ({ open, onOpenChange, children }) => {
-  const [isOpen, setIsOpen] = useState(open);
-  
-  const handleToggle = () => {
-    setIsOpen(!isOpen);
-    onOpenChange && onOpenChange(!isOpen);
-  };
-  
-  return children({ isOpen, handleToggle });
-};
-const CollapsibleTrigger = ({ asChild, children, onClick }) => {
-  if (asChild) {
-    return React.cloneElement(React.Children.only(children), { onClick });
-  }
-  
-  return <div onClick={onClick}>{children}</div>;
-};
-const CollapsibleContent = ({ children, isOpen }) => {
-  return isOpen ? children : null;
-};
-
-// Icons (using simplified versions)
-const Trophy = () => <span>🏆</span>;
-const BookOpen = () => <span>📖</span>;
-const Clock = () => <span>⏰</span>;
-const ChevronDown = ({ className }) => <span className={className}>▼</span>;
-
-// Mock exam data
-const examData = {
-  student: {
-    name: "Alex Johnson",
-    id: "STU-2024-001",
-    class: "Grade 10A",
-  },
-  overall: {
-    grade: "A-",
-    percentage: 87,
-    rank: 5,
-    totalStudents: 120,
-  },
-  subjects: [
-    { name: "Mathematics", score: 92, maxScore: 100, grade: "A+", trend: "up" },
-    { name: "Physics", score: 88, maxScore: 100, grade: "A", trend: "up" },
-    { name: "Chemistry", score: 85, maxScore: 100, grade: "A-", trend: "stable" },
-    { name: "Biology", score: 89, maxScore: 100, grade: "A", trend: "up" },
-    { name: "English", score: 82, maxScore: 100, grade: "B+", trend: "down" },
-    { name: "History", score: 90, maxScore: 100, grade: "A+", trend: "up" },
-  ],
-  attendance: 95,
-  examDate: "December 15, 2024",
-};
 
 export function ExamResults() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);

@@ -1,0 +1,24 @@
+
+{
+  "student": {
+    "name": "Alex Johnson",
+    "id": "STU-2024-001",
+    "class": "Grade 10A"
+  },
+  "overall": {
+    "grade": "A-",
+    "percentage": 87,
+    "rank": 5,
+    "totalStudents": 120
+  },
+  "subjects": [
+    { "name": "Mathematics", "score": 92, "maxScore": 100, "grade": "A+", "trend": "up" },
+    { "name": "Physics", "score": 88, "maxScore": 100, "grade": "A", "trend": "up" },
+    { "name": "Chemistry", "score": 85, "maxScore": 100, "grade": "A-", "trend": "stable" },
+    { "name": "Biology", "score": 89, "maxScore": 100, "grade": "A", "trend": "up" },
+    { "name": "English", "score": 82, "maxScore": 100, "grade": "B+", "trend": "down" },
+    { "name": "History", "score": 90, "maxScore": 100, "grade": "A+", "trend": "up" }
+  ],
+  "attendance": 95,
+  "examDate": "December 15, 2024"
+}
