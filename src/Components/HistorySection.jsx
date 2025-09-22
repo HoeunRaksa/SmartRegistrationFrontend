@@ -21,8 +21,8 @@ export function HistorySection() {
               key={index}
               className="bg-card hover:shadow-lg transition-shadow duration-300"
             >
-              <CardContent className="p-6">
-                <div className="text-4xl mb-4">{item.icon}</div>
+              <CardContent className="p-6 text-start">
+                <div className="text-4xl mb-4 mt-4">{item.icon}</div>
                 <div className="text-2xl font-bold text-primary mb-2">{item.year}</div>
                 <h3 className="text-xl font-semibold mb-3">{item.title}</h3>
                 <p className="text-muted-foreground leading-relaxed">{item.description}</p>

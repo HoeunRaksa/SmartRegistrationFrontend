@@ -4,10 +4,10 @@ import BackGrpundImg from "../assets/Images/Background.png";
 
 export function HeroSection() {
   return (
-    <section className="relative h-screen flex items-center justify-center overflow-hidden">
+    <section className="relative h-screen rounded-lg flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <div
-        className="absolute border glass inset-0 bg-cover bg-center bg-no-repeat"
+        className="absolute border rounded-lg glass inset-0 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: `url('${BackGrpundImg}')`,
         }}
