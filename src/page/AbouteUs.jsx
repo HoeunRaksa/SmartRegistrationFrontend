@@ -17,7 +17,7 @@ const AbouteUs = () => {
       </main>
 
         <section className="py-20 bg-muted">
-          <div className="container mx-auto px-6">
+          <div className="container text-white mx-auto px-6">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold mb-6 text-balance">Academic Excellence</h2>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto text-pretty leading-relaxed">
@@ -29,7 +29,7 @@ const AbouteUs = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {milestone.achievements.map((achievement, index) => (
                 <Card key={index} className="bg-card overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                  <div className="aspect-video overflow-hidden">
+                  <div className="aspect-video mt-4 overflow-hidden">
                     <img
                       src={achievement.image || "/placeholder.svg"}
                       alt={achievement.title}
