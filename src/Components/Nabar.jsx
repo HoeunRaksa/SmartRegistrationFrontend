@@ -7,7 +7,7 @@ function Navbar() {
     <nav className="backdrop-blur-md glass border border-gray-200 rounded-2xl shadow-md my-4">
       <div className="flex items-center justify-between px-6 py-4">
         {/* Logo/Brand */}
-        <div className="text-gray-800 text-white font-bold text-xl tracking-wide">
+        <div className="text-white font-bold text-xl tracking-wide">
           Department Of War
         </div>
 
