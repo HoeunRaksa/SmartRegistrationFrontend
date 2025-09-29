@@ -79,25 +79,25 @@
       "title": "Nobel Prize Winners",
       "count": 12,
       "description": "Faculty and alumni who have received the Nobel Prize for their groundbreaking contributions.",
-      "image": "../assets/Images/academic-achievement-award-ceremony.jpg"
+      "image": "academic-achievement-award-ceremony.jpg"
     },
     {
       "title": "Research Publications",
       "count": "15,000+",
       "description": "Peer-reviewed research publications produced annually by our faculty and students.",
-      "image": "../assets/Images/scientific-research-laboratory.png"
+      "image": "scientific-research-laboratory.png"
     },
     {
       "title": "Global Rankings",
       "count": "Top 10",
       "description": "Consistently ranked among the top 10 universities worldwide for academic excellence.",
-      "image": "../assets/Images/university-campus-aerial.png"
+      "image": "university-campus-aerial.png"
     },
     {
       "title": "Alumni Success",
       "count": "500+",
       "description": "CEOs of Fortune 500 companies who are proud graduates of Excellence University.",
-      "image": "../assets/Images/successful-business-leaders-graduation.jpg"
+      "image": "successful-business-leaders-graduation.jpg"
     }
   ]
 }
