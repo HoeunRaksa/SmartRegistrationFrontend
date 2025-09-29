@@ -5,13 +5,13 @@ import "../App.css"
 function Navbar() {
   return (
     <nav className="backdrop-blur-md glass border border-gray-200 rounded font-bold">
-      <div className="flex items-center justify-between px-6 py-6">
+      <div className="flex items-center justify-between px-16 py-6">
         {/* Logo/Brand */}
         <div className="text-gray-700 font-bold sm:text-3xl text-xl tracking-wide">
-          NovaTech University
+          <span className="text-orange-600">NovaTech</span> University
         </div>
         {/* Navigation Items + Login grouped together */}
-        <div className="sm:flex items-center space-x-8 hidden ">
+        <div className="sm:flex items-center space-x-8 hidden">
           <a
             href="/"
             className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-all duration-200"

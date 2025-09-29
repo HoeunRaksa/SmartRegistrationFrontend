@@ -1,8 +1,9 @@
 import LandImg from "../assets/Images/download1.png";
+import "../App.css";
 const Home = () => {
     return (
         <section className="w-full min-h-screen rounded relative overflow-hidden">
-            <div className="w-full grid grid-cols-1 md:grid-cols-2 justify-center gap-6 px-4 md:px-16 py-8 sx">
+            <div className="w-full grid sm:grid-cols-2 sx:grid-cols-2 justify-center gap-6 px-4 md:px-16 py-8">
                 {/* Text Section */}
                 <div className="flex space-y-4 flex-col md:items-start pt-[15%] md:text-left ">
                     <p className="font-bold sm:text-2xl md:text-4xl lg:text-7xl xl:text-8xl text-2xl text-gray-700">
@@ -11,7 +12,7 @@ const Home = () => {
                     <p className="sm:text-2xl text-sm text-gray-600">
                         Embark on your journey to academic excellence and groundbreaking achievements today!
                     </p>
-                    <p className="font-medium sm:text-xl text-sm text-gray-500">
+                    <p className="font-medium sm:text-xl sx:hidden">
                         Explore transformative programs, collaborate with visionary minds, and develop the skills to shape the future.
                         Your path to success begins here at <span className="text-orange-500">NovaTech University</span>.
                     </p>

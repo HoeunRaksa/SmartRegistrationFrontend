@@ -1,4 +1,3 @@
-@import "tailwindcss";
 .khmerFont {
  font-family: "Khmer Sangam MN", "Noto Sans Khmer", "Arial", sans-serif;
 }
@@ -31,12 +30,6 @@ border: 0.5px solid rgba(255, 255, 255, 0.3);
 .bodyglass:hover {
   background: rgba(255, 255, 255, 0.15);
   transform: scale(1.005);
-}
-@media (max-width: 480px) {
-  .sx{
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-  }
 }
 
 
