@@ -9,11 +9,11 @@ function App() {
   return (
    
     <Router>
-       <div className="sm:px-5 px-1 py-1">
+       <div className="py-1">
        <Nabar />
        </div>
-       <div className=" relative w-auto h-auto sm:px-5 px-1 py-1">
-        <div className="top-0 left-0 absolute overflow-hidden w-full h-full shadow"></div>
+       <div className=" relative w-auto h-auto py-1">
+        <div className="top-0 left-0 absolute overflow-hidden w-full h-full"></div>
       <MainRouter />
       </div>
     </Router>
