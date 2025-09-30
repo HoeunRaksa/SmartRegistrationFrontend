@@ -70,22 +70,25 @@ function Navbar() {
           />
         </div>   
       </div>
-      <div
-  className={`absolute top-full left-0 w-full glass shadow-lg rounded-b-md flex flex-col p-4 space-y-3 sm:hidden transform transition-transform duration-300 ease-in-out ${
-    isOpen ? "translate-y-0 opacity-100" : "-translate-y-5 opacity-0 pointer-events-none"
-  }`}
->
-  <a href="/" className="text-gray-700 hover:text-blue-600 transition">Home</a>
-  <a href="#" className="text-gray-700 hover:text-blue-600 transition">Registration</a>
-  <a href="#" className="text-gray-700 hover:text-blue-600 transition">Programs</a>
-  <a href="/AboutUs" className="text-gray-700 hover:text-blue-600 transition">About Us</a>
-  <Button
-    onClick={handleLogin}
-    className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded font-semibold shadow-md hover:shadow-lg transition-all"
-  >
-    Login
-  </Button>
-</div>
+ <div
+        className={`absolute top-full left-0 w-full navglass rounded-b-md flex flex-col p-4 space-y-3 sm:hidden transform transition-transform duration-300 ease-in-out ${
+          isOpen
+            ? "translate-y-0 opacity-100"
+            : "-translate-y-5 opacity-0 pointer-events-none"
+        }`}
+      >
+        <a href="/" className="text-gray-800 font-medium hover:text-blue-600 transition">Home</a>
+        <a href="#" className="text-gray-800 font-medium hover:text-blue-600 transition">Registration</a>
+        <a href="#" className="text-gray-800 font-medium hover:text-blue-600 transition">Programs</a>
+        <a href="/AboutUs" className="text-gray-800 font-medium hover:text-blue-600 transition">About Us</a>
+        <Button
+          onClick={handleLogin}
+          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 px-4 py-2 rounded font-semibold shadow-md hover:shadow-lg transition-all"
+        >
+          Login
+        </Button>
+      </div>
+
 
     </nav>
   )
