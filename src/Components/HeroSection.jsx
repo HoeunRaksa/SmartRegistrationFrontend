@@ -7,12 +7,13 @@ export function HeroSection() {
     <section className="relative h-screen rounded-lg flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <div
-        className="absolute border rounded-lg glass inset-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: `url('${BackGrpundImg}')`,
-        }}
+        className="absolute border rounded glass inset-0"
       >
-        <div className="absolute inset-0 bg-black/40" />
+        <img
+          src={BackGrpundImg}
+          alt="Background"
+          className="w-full h-full object-cover p-4 bg-center bg-no-repeat"
+        />
       </div>
 
       {/* Content */}

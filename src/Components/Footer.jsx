@@ -3,7 +3,7 @@ import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "../Co
 
 export function Footer() {
   return (
-    <footer className="bg-foreground text-white text-background py-12">
+    <footer className="bg-foreground text-gray-700 text-background py-12">
       <Card>
         <div className="container mx-auto mt-4 px-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">

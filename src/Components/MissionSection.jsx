@@ -5,7 +5,7 @@ import milestone from "../Data/Milestones.json"
 
 export function MissionSection() {
   return (
-    <section className="py-20 bg-background text-white">
+    <section className="py-20 bg-background text-gray-700">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-6 text-balance">Our Mission & Values</h2>

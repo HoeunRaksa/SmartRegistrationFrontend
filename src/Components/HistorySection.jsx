@@ -7,12 +7,12 @@ export function HistorySection() {
     <section className="py-20 bg-muted">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl text-white font-bold mb-6 text-balance">
+          <h2 className="text-4xl md:text-5xl text-gray-700 font-bold mb-6 text-balance">
             {milestone.header.title}
           </h2>
-          <p className="text-xl text-muted-foreground text-white max-w-3xl mx-auto text-pretty leading-relaxed">
+          <p className="text-xl text-muted-foreground text-gray-700 max-w-3xl mx-auto text-pretty leading-relaxed">
             {milestone.header.dedicated}
-          </p>
+          </p>  
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

@@ -3,7 +3,7 @@ import React from "react"
 
 export function CallToActionSection() {
   return (
-    <section className="py-20 text-white text-primary-foreground">
+    <section className="py-20 text-gray-700 text-primary-foreground">
       <div className="container mx-auto px-6 text-center">
         <h2 className="text-4xl md:text-5xl font-bold mb-6 text-balance">Ready to Join Our Community?</h2>
         <p className="text-xl mb-8 max-w-3xl mx-auto text-pretty leading-relaxed opacity-90">
