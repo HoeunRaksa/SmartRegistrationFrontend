@@ -29,9 +29,9 @@ export function ExamResults() {
       <div className="container mx-auto p-6 max-w-4xl">
         {/* Header Section */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Exam Results</h1>
-          <p className="text-lg text-white">Your Performance Overview</p>
-          <div className="mt-4 text-sm text-white">
+          <h1 className="text-4xl font-bold text-gray-700 mb-2">Exam Results</h1>
+          <p className="text-lg text-gray-700">Your Performance Overview</p>
+          <div className="mt-4 text-sm text-gray-700">
             <p>
               {examData.student.name} • {examData.student.class} • {examData.examDate}
             </p>
@@ -42,43 +42,43 @@ export function ExamResults() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="text-center">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-white">Overall Grade</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-700">Overall Grade</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-blue-600 mb-2">{examData.overall.grade}</div>
-              <p className="text-sm text-white">{examData.overall.percentage}%</p>
+              <p className="text-sm text-gray-700">{examData.overall.percentage}%</p>
             </CardContent>
           </Card>
 
           <Card className="text-center">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-white flex items-center justify-center gap-2">
+              <CardTitle className="text-sm font-medium text-gray-700 flex items-center justify-center gap-2">
                 <Trophy />
                 Class Rank
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-purple-600 mb-2">#{examData.overall.rank}</div>
-              <p className="text-sm text-white">out of {examData.overall.totalStudents}</p>
+              <p className="text-sm text-gray-700">out of {examData.overall.totalStudents}</p>
             </CardContent>
           </Card>
 
           <Card className="text-center">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-white flex items-center justify-center gap-2">
+              <CardTitle className="text-sm font-medium text-gray-700 flex items-center justify-center gap-2">
                 <BookOpen />
                 Subjects
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-gray-900 mb-2">{examData.subjects.length}</div>
-              <p className="text-sm text-white">completed</p>
+              <p className="text-sm text-gray-700">completed</p>
             </CardContent>
           </Card>
 
           <Card className="text-center">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-white flex items-center justify-center gap-2">
+              <CardTitle className="text-sm font-medium text-gray-700 flex items-center justify-center gap-2">
                 <Clock />
                 Attendance
               </CardTitle>
@@ -102,10 +102,10 @@ export function ExamResults() {
                 <div key={index} className="flex items-center justify-between p-4 rounded-lg border bodyglass">
                   <div className="flex items-center gap-4 flex-1">
                     <div className="min-w-0 flex-1 ">
-                      <h3 className="font-medium text-white text-start">{subject.name}</h3>
+                      <h3 className="font-medium text-gray-700 text-start">{subject.name}</h3>
                       <div className="flex items-center gap-2 mt-1">
                         <Progress value={(subject.score / subject.maxScore) * 100} className="h-2 flex-1 max-w-32" />
-                        <span className="text-sm text-white">
+                        <span className="text-sm text-gray-700">
                           {subject.score}/{subject.maxScore}
                         </span>
                       </div>
@@ -181,12 +181,12 @@ export function ExamResults() {
         <Card className="mt-8 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
           <CardContent className="text-center py-8">
             <div className="text-3xl mb-4 mt-2">🏆</div>
-            <h2 className="text-2xl font-bold text-white mb-2">Excellent Performance!</h2>
-            <p className="text-lg text-white mb-4">
+            <h2 className="text-2xl font-bold text-gray-700 mb-2">Excellent Performance!</h2>
+            <p className="text-lg text-gray-700 mb-4">
               You've achieved an outstanding {examData.overall.grade} grade with {examData.overall.percentage}% overall
               score.
             </p>
-            <p className="text-white font-medium">Keep up the great work and continue striving for excellence!</p>
+            <p className="text-gray-700 font-medium">Keep up the great work and continue striving for excellence!</p>
             <div className="mt-6">
               <Button className="mr-4">Download Report</Button>
               {/* <Button variant="outline">Share Results</Button> */}
