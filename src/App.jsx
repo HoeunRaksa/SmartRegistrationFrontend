@@ -1,21 +1,23 @@
 import { useState } from 'react'
 import { BrowserRouter as Router } from 'react-router-dom'
-import Nabar from './Components/Nabar'
-import MainRouter from './Router/mainRouter'
+import Nabar from './Components/Nabar';
+import MainRouter from './Router/mainRouter';
+import { Footer } from "./Components/Footer";
 import "./App.css";
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
    
     <Router>
-       <div className="py-1">
+       <div className="py-1 px-4">
        <Nabar />
        </div>
-       <div className=" relative w-auto h-auto py-1">
+       <div className=" relative w-auto h-auto py-1 px-4">
         <div className="top-0 left-0 absolute overflow-hidden w-full h-full"></div>
       <MainRouter />
       </div>
+       <div className="py-1 px-4">
+       <Footer />
+       </div>
     </Router>
     
   )
