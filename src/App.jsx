@@ -15,7 +15,7 @@ function App() {
         <div className="top-0 left-0 absolute overflow-hidden w-full h-full"></div>
         <MainRouter />
       </div>
-      <div className="">
+      <div className="px-4 rounded pb-2">
         <Footer />
       </div>
     </Router>

@@ -4,15 +4,20 @@ import "../App.css"
 import { useNavigate } from "react-router-dom"
 import { HiMiniBars4 } from "react-icons/hi2";
 import { useState } from "react";
+import { ApiBaseImg } from "../Configration";
+const User = {
+  name: "Kakura",
+  avatar: "Circle.png",
+  email: "kakura@example.com"
+};
 function Navbar() {
   const navigate = useNavigate();
-  const handleLogin = () => {
-    navigate('/Login');
-  }
+  const [isLogin, setIsLogin] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+  const handleLogin = () => setIsLogin(User);
   return (
     <nav className="glass border border-gray-200 rounded">
-      <div className="flex items-center justify-between md:px-16 px-4 py-6">
+      <div className="flex items-center justify-between md:px-16 px-4 py-4">
         {/* Logo/Brand */}
         <div className="text-gray-700 font-bold md:text-2xl lg:mr-5 mr-0 sm:text-xl text-xl tracking-wide">
           <span className="text-orange-600 uppercase">NovaTech</span>
@@ -58,24 +63,29 @@ function Navbar() {
             <span className="lg:text-xl sm:text-sm text-xs text-gray-700">About Us</span>
           </a>
           {/* Login Button */}
-        
+
         </div>
-          <Button onClick={handleLogin} className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-gray-700 md:px-5 md:py-2 sm:px-4 sm:py-2 rounded font-semibold shadow-md hover:shadow-lg transition-all hidden lg:inline">
-            Login
-          </Button>
-           <div className="sm:hidden">
+        {isLogin ? (
+          <div className="relative max-w-15" ><img src={`${ApiBaseImg}${User.avatar}`} className="w-full" alt="" /></div>
+        ) : (
+          <div>
+            <Button onClick={handleLogin} className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-gray-700 md:px-5 md:py-2 sm:px-4 sm:py-2 rounded font-semibold shadow-md hover:shadow-lg transition-all hidden lg:inline">
+              Login
+            </Button>
+          </div>
+        )}
+        <div className="sm:hidden">
           <HiMiniBars4
             className="text-3xl text-gray-700 cursor-pointer"
             onClick={() => setIsOpen(!isOpen)}
           />
-        </div>   
+        </div>
       </div>
- <div
-        className={`absolute top-full left-0 w-full navglass rounded-b-md flex flex-col p-4 space-y-3 sm:hidden transform transition-transform duration-300 ease-in-out ${
-          isOpen
+      <div
+        className={`absolute top-full left-0 w-full navglass rounded-b-md flex flex-col p-4 space-y-3 sm:hidden transform transition-transform duration-300 ease-in-out ${isOpen
             ? "translate-y-0 opacity-100"
             : "-translate-y-5 opacity-0 pointer-events-none"
-        }`}
+          }`}
       >
         <a href="/" className="text-gray-800 font-medium hover:text-blue-600 transition">Home</a>
         <a href="#" className="text-gray-800 font-medium hover:text-blue-600 transition">Registration</a>

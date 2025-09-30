@@ -14,7 +14,7 @@ body {
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 0.5px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 1px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease;
 }
 .navglass {
@@ -29,23 +29,10 @@ body {
   transition: all 0.3s ease;
   z-index: 50;
 }
-
-
 .glass:hover {
   background: rgba(255, 255, 255, 0.25);
 } 
-.bodyglass {
-  background: rgba(255, 255, 255, 0.15); /* translucent */
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-border: 0.5px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
-}
-.bodyglass:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: scale(1.005);
-}
+
 
 
 
