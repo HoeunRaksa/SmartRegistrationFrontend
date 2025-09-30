@@ -14,7 +14,7 @@ const Home = () => {
                     <p className="sm:text-2xl text-sm text-gray-600">
                         Embark on your journey to academic excellence and groundbreaking achievements today!
                     </p>
-                    <p className="font-medium sm:text-xl sx:hidden">
+                    <p className="font-medium sm:text-xl sx:hidden text-gray-700">
                         Explore transformative programs, collaborate with visionary minds, and develop the skills to shape the future.
                         Your path to success begins here at <span className="text-orange-500">NovaTech University</span>.
                     </p>
