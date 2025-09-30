@@ -49,7 +49,7 @@ function Navbar() {
             <span className="lg:text-xl sm:text-sm text-xs text-gray-700">Programs</span>
           </a>
           <a
-            href="/AbouteUs"
+            href="/aboutus"
             className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-all duration-200"
           >
             <div className="w-7 h-7 bg-cyan-500 rounded-lg flex items-center justify-center shadow hover:scale-110 transition">

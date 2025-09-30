@@ -7,7 +7,7 @@ const Home = () => {
         <section className="w-full min-h-screen rounded relative overflow-hidden">
             <div className="w-full grid sm:grid-cols-2 sx:grid-cols-2 justify-center gap-6 px-4 md:px-16 py-8">
                 {/* Text Section */}
-                <div className="flex space-y-4 flex-col md:items-start sm:pt-[15%] pt-3 md:text-left ">
+                <div className="flex space-y-4 flex-col md:items-start sm:pt-[25%] pt-3 md:text-left ">
                     <p className="font-bold sm:text-2xl md:text-4xl lg:text-7xl xl:text-8xl text-2xl text-gray-700">
                         Welcome <span className="text-orange-500"> To</span> <span className="text-orange-500">NovaTech </span> University
                     </p>
