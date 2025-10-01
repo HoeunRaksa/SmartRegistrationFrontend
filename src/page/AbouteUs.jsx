@@ -48,7 +48,6 @@ const AbouteUs = () => {
           </div>
         </section>
       <CallToActionSection />
-      <Footer />
     </div>
   );
 };
