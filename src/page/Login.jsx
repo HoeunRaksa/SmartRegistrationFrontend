@@ -8,6 +8,20 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [remember, setRemember] = useState(false)
 
+  // ✅ Correct way to declare static data
+  const data = {
+    users: [
+      {
+        email: "test@example.com",
+        password: "password123",
+      },
+      {
+        email: "makara@example.com",
+        password: "12345678",
+      },
+    ],
+  }
+
   const validateForm = () => {
     const newErrors = {}
 
@@ -32,39 +46,35 @@ export default function Login() {
     if (!validateForm()) return
     setIsLoading(true)
 
-    setTimeout(() => {
-      console.log("Login attempt:", { email, password, remember })
-      setIsLoading(false)
-    }, 1500)
+    try {
+      // ✅ No fetch, just check from local data
+      const user = data.users.find(
+        (u) => u.email === email && u.password === password
+      )
+
+      if (user) {
+        console.log("✅ Login successful:", user)
+        alert("Login successful!")
+        setErrors({})
+      } else {
+        console.log("❌ Invalid credentials")
+        setErrors({ password: "Invalid email or password" })
+      }
+    } catch (err) {
+      console.error("Error checking users:", err)
+      setErrors({ email: "Something went wrong. Try again later." })
+    }
+
+    setIsLoading(false)
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
       <div className="relative w-auto h-auto py-1">
-        {/* Background layer */}
-        <div className="absolute top-0 left-0 overflow-hidden w-full h-full">
-          {/* You can add gradient, SVG, or background here */}
-        </div>
-
-        {/* Foreground content */}
         <div className="w-full max-w-md relative z-10">
-          {/* Logo/Brand */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-12 h-12 bg-indigo-600 text-white rounded-lg mb-4">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="w-6 h-6"
-              >
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                <polyline points="10 17 15 12 10 7" />
-                <line x1="15" y1="12" x2="3" y2="12" />
-              </svg>
+              🚀
             </div>
             <h1 className="text-3xl font-semibold text-gray-900 mb-2">
               Welcome back
@@ -74,11 +84,10 @@ export default function Login() {
             </p>
           </div>
 
-          {/* Card */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Email */}
-              <div className="space-y-2 z-50">
+              <div className="space-y-2">
                 <label
                   htmlFor="email"
                   className="block text-sm font-medium text-gray-700"
@@ -172,7 +181,6 @@ export default function Login() {
             </form>
           </div>
 
-          {/* Footer */}
           <p className="text-center text-sm text-gray-500 mt-6">
             {"Don't have an account? "}
             <button
