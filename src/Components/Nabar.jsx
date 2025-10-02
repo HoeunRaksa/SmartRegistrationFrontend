@@ -20,7 +20,7 @@ function Navbar() {
   const handleLogin = () => setIsLogin(true);
 useEffect(() => {
   if (isLogin) {
-    showSuccess(`Welcome back, ${User.name}!`);
+    showSuccess(`Welcome back, ${User.name}!`,'w-200');
   }
 }, [isLogin]);
   return (
