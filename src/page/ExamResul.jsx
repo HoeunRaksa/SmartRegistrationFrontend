@@ -194,7 +194,6 @@ export function ExamResults() {
           </CardContent>
         </Card>
       </div>
-      <Footer />
     </div>
   );
 }
