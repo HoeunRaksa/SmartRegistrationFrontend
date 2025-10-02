@@ -11,7 +11,7 @@ function App() {
       <div className="fixed top-0 left-0 w-full z-50">
         <Nabar />
       </div>
-      <div className=" relative w-auto h-auto py-1 px-4">
+      <div className=" relative w-auto h-auto py-1 px-4 pt-15">
         <div className="top-0 left-0 absolute overflow-hidden w-full h-full"></div>
         <MainRouter />
       </div>

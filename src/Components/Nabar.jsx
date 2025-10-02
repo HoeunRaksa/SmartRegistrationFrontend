@@ -7,7 +7,7 @@ import { useState } from "react";
 import { ApiBaseImg } from "../Configration";
 import { showSuccess, showError, ToastContainer } from "./ui/Toast.jsx";
 import { useEffect } from "react";
-
+import { Link } from "react-router-dom";
 const User = {
   name: "Kakura",
   avatar: "Circle.png",
@@ -15,14 +15,14 @@ const User = {
 };
 function Navbar() {
   const navigate = useNavigate();
-   const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const handleLogin = () => setIsLogin(true);
-useEffect(() => {
-  if (isLogin) {
-    showSuccess(`Welcome back, ${User.name}!`,'w-200');
-  }
-}, [isLogin]);
+  useEffect(() => {
+    if (isLogin) {
+      showSuccess(`Welcome back, ${User.name}!`, 'w-200');
+    }
+  }, [isLogin]);
   return (
     <nav className="glass border border-gray-200 rounded">
       <ToastContainer />
@@ -33,47 +33,47 @@ useEffect(() => {
         </div>
         {/* Navigation Items + Login grouped together */}
         <div className="sm:flex px-4 mr-auto lg:space-x-8 space-x-3 hidden">
-          <a
-            href="/"
+          <Link
+            to="/"
             className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-all duration-200"
           >
             <div className="w-7 h-7 bg-green-500 rounded-lg flex items-center justify-center shadow hover:scale-110 transition">
               <Home className="sm:w-3 md:w-4 w-5 text-gray-700" />
             </div>
             <span className="lg:text-xl sm:text-sm text-xs text-gray-700">Home</span>
-          </a>
+          </Link>
 
-          <a
-            href="#"
+          <Link
+            to="/registration"
             className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-all duration-200"
           >
             <div className="w-7 h-7 bg-blue-500 rounded-lg flex items-center justify-center shadow hover:scale-110 transition">
               <FileText className="sm:w-3 md:w-4 w-5 text-gray-700" />
             </div>
             <span className="lg:text-xl sm:text-sm text-xs text-gray-700">Registration</span>
-          </a>
+          </Link>
 
-          <a
-            href="#"
+          <Link
+            to="/programs"
             className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-all duration-200"
           >
             <div className="w-7 h-7 bg-gradient-to-r from-orange-400 to-red-500 rounded-lg flex items-center justify-center shadow hover:scale-110 transition">
               <BarChart3 className="sm:w-3 md:w-4 w-5 text-gray-700" />
             </div>
             <span className="lg:text-xl sm:text-sm text-xs text-gray-700">Programs</span>
-          </a>
-          <a
-            href="/aboutus"
+          </Link>
+
+          <Link
+            to="/aboutus"
             className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-all duration-200"
           >
             <div className="w-7 h-7 bg-cyan-500 rounded-lg flex items-center justify-center shadow hover:scale-110 transition">
               <Info className="sm:w-3 md:w-4 w-5 text-gray-700" />
             </div>
             <span className="lg:text-xl sm:text-sm text-xs text-gray-700">About Us</span>
-          </a>
-          {/* Login Button */}
-
+          </Link>
         </div>
+
         {isLogin ? (
           <div className="relative max-w-15" ><img src={`${ApiBaseImg}${User.avatar}`} className="w-full" alt="" /></div>
         ) : (
@@ -92,14 +92,24 @@ useEffect(() => {
       </div>
       <div
         className={`absolute top-full left-0 w-full navglass rounded-b-md flex flex-col p-4 space-y-3 sm:hidden transform transition-transform duration-300 ease-in-out ${isOpen
-            ? "translate-y-0 opacity-100"
-            : "-translate-y-5 opacity-0 pointer-events-none"
+          ? "translate-y-0 opacity-100"
+          : "-translate-y-5 opacity-0 pointer-events-none"
           }`}
       >
-        <a href="/" className="text-gray-800 font-medium hover:text-blue-600 transition">Home</a>
-        <a href="#" className="text-gray-800 font-medium hover:text-blue-600 transition">Registration</a>
-        <a href="#" className="text-gray-800 font-medium hover:text-blue-600 transition">Programs</a>
-        <a href="/AboutUs" className="text-gray-800 font-medium hover:text-blue-600 transition">About Us</a>
+        <nav className="flex space-x-6">
+          <Link to="/" className="text-gray-800 font-medium hover:text-blue-600 transition">
+            Home
+          </Link>
+          <Link to="/registration" className="text-gray-800 font-medium hover:text-blue-600 transition">
+            Registration
+          </Link>
+          <Link to="/programs" className="text-gray-800 font-medium hover:text-blue-600 transition">
+            Programs
+          </Link>
+          <Link to="/aboutus" className="text-gray-800 font-medium hover:text-blue-600 transition">
+            About Us
+          </Link>
+        </nav>
         <Button
           onClick={handleLogin}
           className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 px-4 py-2 rounded font-semibold shadow-md hover:shadow-lg transition-all"
@@ -107,8 +117,6 @@ useEffect(() => {
           Login
         </Button>
       </div>
-
-
     </nav>
   )
 }
