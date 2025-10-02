@@ -5,6 +5,9 @@ import { useNavigate } from "react-router-dom"
 import { HiMiniBars4 } from "react-icons/hi2";
 import { useState } from "react";
 import { ApiBaseImg } from "../Configration";
+import { showSuccess, showError, ToastContainer } from "./ui/Toast.jsx";
+import { useEffect } from "react";
+
 const User = {
   name: "Kakura",
   avatar: "Circle.png",
@@ -12,11 +15,17 @@ const User = {
 };
 function Navbar() {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(null);
+   const [isLogin, setIsLogin] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const handleLogin = () => setIsLogin(User);
+  const handleLogin = () => setIsLogin(true);
+useEffect(() => {
+  if (isLogin) {
+    showSuccess(`Welcome back, ${User.name}!`);
+  }
+}, [isLogin]);
   return (
     <nav className="glass border border-gray-200 rounded">
+      <ToastContainer />
       <div className="flex items-center justify-between md:px-16 px-4 py-4">
         {/* Logo/Brand */}
         <div className="text-gray-700 font-bold md:text-2xl lg:mr-5 mr-0 sm:text-xl text-xl tracking-wide">

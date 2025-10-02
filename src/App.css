@@ -32,6 +32,25 @@ body {
 .glass:hover {
   background: rgba(255, 255, 255, 0.25);
 } 
+.toast-success {
+  background-color: rgba(72, 187, 120, 0.8); /* greenish */
+  color: white;
+}
+
+.toast-error {
+  background-color: rgba(220, 53, 69, 0.85); /* reddish */
+  color: white;
+}
+
+.toast-info {
+  background-color: rgba(23, 162, 184, 0.85); /* blueish */
+  color: white;
+}
+
+.toast-warning {
+  background-color: rgba(255, 193, 7, 0.85); /* yellowish */
+  color: black;
+}
 
 
 
