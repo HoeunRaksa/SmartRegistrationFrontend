@@ -6,7 +6,6 @@ import { Footer } from "./Components/Footer";
 import "./App.css";
 function App() {
   return (
-
     <Router>
       <div className="fixed top-0 left-0 w-full z-50">
         <Nabar />
@@ -19,8 +18,9 @@ function App() {
         <Footer />
       </div>
     </Router>
-
   )
 }
 
 export default App
+     
+ 
