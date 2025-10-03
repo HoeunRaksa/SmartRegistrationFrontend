@@ -54,7 +54,7 @@ function Navbar() {
           </Link>
 
           <Link
-            to="/programs"
+            to="/curriculum"
             className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-all duration-200"
           >
             <div className="w-7 h-7 bg-gradient-to-r from-orange-400 to-red-500 rounded-lg flex items-center justify-center shadow hover:scale-110 transition">
@@ -103,7 +103,7 @@ function Navbar() {
           <Link to="/registration" className="text-gray-800 font-medium hover:text-blue-600 transition">
             Registration
           </Link>
-          <Link to="/programs" className="text-gray-800 font-medium hover:text-blue-600 transition">
+          <Link to="/curriculum" className="text-gray-800 font-medium hover:text-blue-600 transition">
             Programs
           </Link>
           <Link to="/aboutus" className="text-gray-800 font-medium hover:text-blue-600 transition">
