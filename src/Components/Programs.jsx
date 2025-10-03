@@ -24,46 +24,6 @@ const programs = {
     items: ["Literature", "History", "Philosophy", "Visual Arts"],
     link: "#"
   },
-  EnvironmentalLifeSciences: {
-    icon: "🌿",
-    iconColor: "text-green-600",
-    title: "Environmental & Life Sciences",
-    description: "Programs focused on sustainability, ecology, and life sciences research.",
-    items: ["Ecology", "Marine Biology", "Sustainability Studies", "Genetics"],
-    link: "#"
-  },
-  LawSocialSciences: {
-    icon: "⚖️",
-    iconColor: "text-purple-600",
-    title: "Law & Social Sciences",
-    description: "Comprehensive programs preparing students for careers in law, governance, and society.",
-    items: ["Law", "Political Science", "Sociology", "Public Policy"],
-    link: "#"
-  },
-  InformationTechnologyAI: {
-    icon: "🖥️",
-    iconColor: "text-indigo-600",
-    title: "Information Technology & AI",
-    description: "Advanced IT programs and artificial intelligence research for the future of technology.",
-    items: ["Artificial Intelligence", "Cybersecurity", "Cloud Computing", "Software Engineering"],
-    link: "#"
-  },
-  HealthMedicine: {
-    icon: "🏥",
-    iconColor: "text-red-600",
-    title: "Health & Medicine",
-    description: "Leading programs in medical sciences, healthcare, and public health.",
-    items: ["Medicine", "Nursing", "Public Health", "Pharmacy"],
-    link: "#"
-  },
-  HospitalityTourism: {
-    icon: "✈️",
-    iconColor: "text-teal-500",
-    title: "Hospitality & Tourism",
-    description: "Prepare for global careers in hospitality, travel, and tourism management.",
-    items: ["Hotel Management", "Tourism Studies", "Event Management", "Travel Operations"],
-    link: "#"
-  }
 };
 function Program() {
   return (

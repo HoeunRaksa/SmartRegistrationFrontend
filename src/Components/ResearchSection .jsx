@@ -66,7 +66,8 @@ const ResearchSection = () => {
             className="rounded-2xl shadow-lg w-full object-cover"
           />
           {/* Badge */}
-          <div className="absolute top-18 right-10 glass text-gray-700 px-4 py-1 rounded-full  text-sm font-medium flex items-center gap-2">
+          <div className="absolute top-18 right-10 glass text-gray-700 px-4 py-1 rounded-full 
+           text-sm font-medium flex items-center gap-2">
             {researchData.imageBadge}
           </div>
         </div>
