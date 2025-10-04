@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+
 const Registration = () => {
   const [form, setForm] = useState({
+    // ===== Personal Information =====
     studentID: "",
     fullNameKh: "",
     fullNameEn: "",
@@ -11,6 +13,8 @@ const Registration = () => {
     currentAddress: "",
     phoneNumber: "",
     personalEmail: "",
+
+    // ===== Academic Information =====
     highSchoolName: "",
     graduationYear: "",
     grade12ExamCenter: "",
@@ -21,13 +25,36 @@ const Registration = () => {
     batch: "",
     academicYear: "",
     profilePicture: null,
+
+    // ===== Parent / Guardian Information =====
     fatherName: "",
     fathersJob: "",
     motherName: "",
     mothersJob: "",
     guardianName: "",
     guardianPhone: "",
+
+    // ===== Emergency Contact =====
+    emergencyContactName: "",
+    emergencyContactPhone: "",
+
+    // ===== Previous Education =====
+    previousSchool: "",
+    certificate: "",
+
+    // ===== Medical Information =====
+    bloodType: "",
+    medicalConditions: "",
+
+    // ===== Social / Online Profiles =====
+    linkedin: "",
+    facebook: "",
+
+    // ===== Preferences / Interests =====
+    studyMode: "On-Campus",
+    interests: "",
   });
+
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (files) {
@@ -36,25 +63,27 @@ const Registration = () => {
       setForm({ ...form, [name]: value });
     }
   };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log(form);
+    alert("Registration data submitted! Check console.");
   };
 
   const inputClass =
-    "border border-white glass rounded p-3 outline-none focus:ring-2 focus:ring-white focus:border-white";
+    "border border-white glass rounded p-3 outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all duration-300";
 
   return (
-    <section className="w-full min-h-screen flex justify-center items-start body py-8">
-      <div className="w-full max-w-4xl glass rounded-lg p-8 shadow-lg">
-        <h1 className="text-3xl md:text-5xl font-bold text-gray-700 text-center mb-8">
+    <section className="w-full min-h-screen flex justify-center items-start py-8 glass overflow-y-auto">
+      <div className="w-full max-w-6xl p-8">
+        <h1 className="text-3xl md:text-5xl font-bold text-gray-700 text-center mb-12">
           <span className="text-orange-500">NovaTech</span> University Registration
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-10">
           {/* ===== Personal Information ===== */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-600 mb-4">
+          <div className="glass p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
               Personal Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -76,8 +105,8 @@ const Registration = () => {
           </div>
 
           {/* ===== Academic Information ===== */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-600 mb-4">
+          <div className="glass p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
               Academic Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -96,11 +125,21 @@ const Registration = () => {
               <input type="text" name="academicYear" placeholder="Academic Year" value={form.academicYear} onChange={handleChange} className={inputClass} />
               <input type="file" name="profilePicture" onChange={handleChange} className={inputClass} />
             </div>
+            {/* ===== Profile Picture Preview ===== */}
+            {form.profilePicture && (
+              <div className="col-span-1 md:col-span-2 flex justify-center mt-4">
+                <img
+                  src={URL.createObjectURL(form.profilePicture)}
+                  alt="Profile Preview"
+                  className="w-32 h-32 rounded-full object-cover border-2 border-orange-400"
+                />
+              </div>
+            )}
           </div>
 
           {/* ===== Parent / Guardian Information ===== */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-600 mb-4">
+          <div className="glass p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
               Parent / Guardian Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -113,11 +152,70 @@ const Registration = () => {
             </div>
           </div>
 
+          {/* ===== Emergency Contact ===== */}
+          <div className="glass p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
+              Emergency Contact
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input type="text" name="emergencyContactName" placeholder="Emergency Contact Name" value={form.emergencyContactName} onChange={handleChange} className={inputClass} />
+              <input type="tel" name="emergencyContactPhone" placeholder="Emergency Contact Phone" value={form.emergencyContactPhone} onChange={handleChange} className={inputClass} />
+            </div>
+          </div>
+
+          {/* ===== Previous Education ===== */}
+          <div className="glass p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
+              Previous Education
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input type="text" name="previousSchool" placeholder="Previous School / College" value={form.previousSchool} onChange={handleChange} className={inputClass} />
+              <input type="text" name="certificate" placeholder="Certificate / Diploma" value={form.certificate} onChange={handleChange} className={inputClass} />
+            </div>
+          </div>
+
+          {/* ===== Medical Information ===== */}
+          <div className="glass p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
+              Medical Information
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input type="text" name="bloodType" placeholder="Blood Type" value={form.bloodType} onChange={handleChange} className={inputClass} />
+              <textarea name="medicalConditions" placeholder="Medical Conditions (if any)" value={form.medicalConditions} onChange={handleChange} className={`${inputClass} resize-none`} />
+            </div>
+          </div>
+
+          {/* ===== Social / Online Profiles ===== */}
+          <div className="glass p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
+              Social / Online Profiles
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input type="url" name="linkedin" placeholder="LinkedIn Profile" value={form.linkedin} onChange={handleChange} className={inputClass} />
+              <input type="url" name="facebook" placeholder="Facebook Profile" value={form.facebook} onChange={handleChange} className={inputClass} />
+            </div>
+          </div>
+
+          {/* ===== Preferences / Interests ===== */}
+          <div className="glass p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
+              Preferences / Interests
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <select name="studyMode" value={form.studyMode} onChange={handleChange} className={inputClass}>
+                <option>On-Campus</option>
+                <option>Online</option>
+                <option>Hybrid</option>
+              </select>
+              <textarea name="interests" placeholder="Your Interests / Hobbies" value={form.interests} onChange={handleChange} className={`${inputClass} resize-none`} />
+            </div>
+          </div>
+
           {/* ===== Submit Button ===== */}
           <div className="flex justify-center">
             <button
               type="submit"
-              className="bg-orange-500 py-3 px-12 rounded-lg font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all text-white"
+              className="bg-orange-500 py-3 px-12 rounded-lg font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all text-white text-lg"
             >
               Submit Registration
             </button>
@@ -127,5 +225,4 @@ const Registration = () => {
     </section>
   );
 };
-
 export default Registration;

@@ -6,7 +6,6 @@ import { CallToActionSection } from "../Components/CallToActionSection";
 import { MissionSection } from "../Components/MissionSection";
 import milestone from "../Data/Milestones.json"
 import { ApiBaseImg } from "../Configration.jsx";
-
 const AbouteUs = () => {
   return (
     <div>
@@ -50,5 +49,4 @@ const AbouteUs = () => {
     </div>
   );
 };
-
 export default AbouteUs;

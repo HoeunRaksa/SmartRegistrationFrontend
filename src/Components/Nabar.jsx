@@ -44,16 +44,6 @@ function Navbar() {
           </Link>
 
           <Link
-            to="/registration"
-            className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-all duration-200"
-          >
-            <div className="w-7 h-7 bg-blue-500 rounded-lg flex items-center justify-center shadow hover:scale-110 transition">
-              <FileText className="sm:w-3 md:w-4 w-5 text-gray-700" />
-            </div>
-            <span className="lg:text-xl sm:text-sm text-xs text-gray-700">Registration</span>
-          </Link>
-
-          <Link
             to="/curriculum"
             className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-all duration-200"
           >
@@ -71,6 +61,15 @@ function Navbar() {
               <Info className="sm:w-3 md:w-4 w-5 text-gray-700" />
             </div>
             <span className="lg:text-xl sm:text-sm text-xs text-gray-700">About Us</span>
+          </Link>
+          <Link
+            to="/registration"
+            className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-all duration-200"
+          >
+            <div className="w-7 h-7 bg-blue-500 rounded-lg flex items-center justify-center shadow hover:scale-110 transition">
+              <FileText className="sm:w-3 md:w-4 w-5 text-gray-700" />
+            </div>
+            <span className="lg:text-xl sm:text-sm text-xs text-gray-700">Registration</span>
           </Link>
         </div>
 
@@ -96,18 +95,18 @@ function Navbar() {
           : "-translate-y-5 opacity-0 pointer-events-none"
           }`}
       >
-        <nav className="flex space-x-6">
-          <Link to="/" className="text-gray-800 font-medium hover:text-blue-600 transition">
+        <nav className="flex p-5 flex-col glass  space-y-6">
+          <Link to="/" className="text-gray-800 p-3 glass font-medium hover:text-blue-600 transition">
             Home
           </Link>
-          <Link to="/registration" className="text-gray-800 font-medium hover:text-blue-600 transition">
-            Registration
-          </Link>
-          <Link to="/curriculum" className="text-gray-800 font-medium hover:text-blue-600 transition">
+          <Link to="/curriculum" className="text-gray-800 p-3 glass font-medium hover:text-blue-600 transition">
             Programs
           </Link>
-          <Link to="/aboutus" className="text-gray-800 font-medium hover:text-blue-600 transition">
+          <Link to="/aboutus" className="text-gray-800 p-3 glass font-medium hover:text-blue-600 transition">
             About Us
+          </Link>
+          <Link to="/registration" className="text-gray-800 p-3 glass font-medium hover:text-blue-600 transition">
+            Registration
           </Link>
         </nav>
         <Button
