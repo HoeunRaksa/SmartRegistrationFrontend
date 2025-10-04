@@ -3,7 +3,6 @@ import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "../Co
 import { HeroSection } from "../Components/HeroSection";
 import { HistorySection } from "../Components/HistorySection";
 import { CallToActionSection } from "../Components/CallToActionSection";
-import { Footer } from "../Components/Footer";
 import { MissionSection } from "../Components/MissionSection";
 import milestone from "../Data/Milestones.json"
 import { ApiBaseImg } from "../Configration.jsx";
