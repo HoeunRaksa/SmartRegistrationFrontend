@@ -5,6 +5,7 @@ import AbouteUs from "../page/AbouteUs";
 import Login from "../page/Login";
 import NotificationInbox from "../page/Notification";
 import AdminSidebar from "../Components/AdminSidebar";
+import PaidStudentsTable from "../Components/PaidStudentsTable";
 
 const MakaraRouter = () => (
   <Routes>
@@ -13,6 +14,7 @@ const MakaraRouter = () => (
     <Route path="/login" element={<Login />} />
     <Route path="/notification" element={<NotificationInbox />} />
     <Route path="/adminsidebar" element={<AdminSidebar />} />
+    <Route path="/paid-students" element={<PaidStudentsTable/>} />
   </Routes>
 );
 
