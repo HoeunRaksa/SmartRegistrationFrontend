@@ -55,6 +55,16 @@ export default function PaidStudentsTable() {
       paymentMethod: "ABA Pay",
       status: "Paid",
     },
+    {
+      id: 5,
+      studentId: "STU005",
+      name: "Dara You",
+      grade: "Year 4 - Networking",
+      amount: 300,
+      paymentDate: "2025-10-03",
+      paymentMethod: "ABA Pay",
+      status: "Paid",
+    },
   ])
 
   const [searchQuery, setSearchQuery] = useState("")

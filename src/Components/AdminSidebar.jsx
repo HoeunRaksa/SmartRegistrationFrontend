@@ -1,37 +1,50 @@
-import React from "react";
-import { NavLink } from "react-router-dom";
-import {
-  ChevronFirst,
-  LayoutDashboard,
-  DollarSign,
-  FileText,
-  Settings,
-  GraduationCap,
-  CreditCard,
-} from "lucide-react";
-import logo from "../assets/Images/AdminLogo.png";
-import Profiler from "../assets/Images/profile.png";
+import { useState } from "react"
+import { ChevronFirst, LayoutDashboard, DollarSign, FileText, Settings, GraduationCap, CreditCard } from "lucide-react"
+import Profile from "../assets/Images/profile.png"
+import Logo from "../assets/Images/AdminLogo.png"
+import PaidStudentsTable from "./PaidStudentsTable"
 
 // Navigation items
 const navItems = [
-  { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { title: "Paid Students", href: "/paid-students", icon: CreditCard },
-  { title: "All Students", href: "/admin/students", icon: GraduationCap },
-  { title: "Payments", href: "/admin/payments", icon: DollarSign },
-  { title: "Reports", href: "/admin/reports", icon: FileText },
-  { title: "Settings", href: "/admin/settings", icon: Settings },
-];
+  { title: "Dashboard", icon: LayoutDashboard, id: "dashboard" },
+  { title: "Paid Students", icon: CreditCard, id: "paid-students" },
+  { title: "All Students", icon: GraduationCap, id: "all-students" },
+  { title: "Payments", icon: DollarSign, id: "payments" },
+  { title: "Reports", icon: FileText, id: "reports" },
+  { title: "Settings", icon: Settings, id: "settings" },
+]
 
 const AdminSidebar = ({ children }) => {
+  const [activeView, setActiveView] = useState("dashboard")
+
+  const renderContent = () => {
+    switch (activeView) {
+      case "paid-students":
+        return <PaidStudentsTable />
+      case "dashboard":
+        return <div className="text-gray-600">Dashboard Content</div>
+      case "all-students":
+        return <div className="text-gray-600">All Students Content</div>
+      case "payments":
+        return <div className="text-gray-600">Payments Content</div>
+      case "reports":
+        return <div className="text-gray-600">Reports Content</div>
+      case "settings":
+        return <div className="text-gray-600">Settings Content</div>
+      default:
+        return <div className="text-gray-600">Select a menu item</div>
+    }
+  }
+
   return (
     <section className="flex min-h-screen glass my-7">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r shadow-md flex flex-col justify-between">
+      <aside className="w-64 border-r shadow-md flex flex-col justify-between">
         <div>
           {/* Logo & Title */}
           <div className="p-4 flex justify-between items-center border-b">
             <div className="flex items-center gap-2">
-              <img src={logo} className="w-10 h-10 object-contain" alt="Logo" />
+              <img src={Logo} alt="Logo" width={40} height={40} className="object-contain" />
               <h4 className="font-bold text-gray-800">Admin Dashboard</h4>
             </div>
             <button className="p-1.5 rounded-md bg-gray-100 hover:bg-gray-200 transition">
@@ -42,23 +55,21 @@ const AdminSidebar = ({ children }) => {
           {/* Navigation */}
           <nav className="p-4 flex flex-col gap-1">
             {navItems.map((item) => {
-              const Icon = item.icon;
+              const Icon = item.icon
               return (
-                <NavLink
-                  key={item.href}
-                  to={item.href}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                      isActive
-                        ? "bg-blue-600 text-white"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                    }`
-                  }
+                <button
+                  key={item.id}
+                  onClick={() => setActiveView(item.id)}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                    activeView === item.id
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  }`}
                 >
                   <Icon className="h-5 w-5" />
                   {item.title}
-                </NavLink>
-              );
+                </button>
+              )
             })}
           </nav>
         </div>
@@ -66,21 +77,23 @@ const AdminSidebar = ({ children }) => {
         {/* Profile section */}
         <div className="border-t p-4 flex items-center gap-3">
           <img
-            src={Profiler}
+            src={Profile}
             alt="Profile"
-            className="w-10 h-10 rounded-md object-cover"
+            width={40}
+            height={40}
+            className="rounded-md object-cover"
           />
           <div>
-            <p className="font-semibold text-gray-800 leading-tight">John Doe</p>
+            <p className="font-semibold text-gray-800 leading-tight">Lang Makara</p>
             <p className="text-xs text-gray-500">langmakara122@gmail.com</p>
           </div>
         </div>
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 p-6 bg-gray-100 overflow-y-auto">{children}</main>
+      <div className="flex-1 p-6 overflow-y-auto">{renderContent()}</div>
     </section>
-  );
-};
+  )
+}
 
 export default AdminSidebar;
