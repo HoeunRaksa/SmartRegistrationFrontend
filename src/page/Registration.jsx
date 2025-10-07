@@ -72,8 +72,8 @@ const Registration = () => {
     "border border-white glass rounded p-3 outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all duration-300";
 
   return (
-    <section className="w-full min-h-screen flex justify-center items-start py-8 glass overflow-y-auto">
-      {showQr && <PaymentForm />}
+    <section className="w-full min-h-screen flex justify-center items-start py-8 my-8 glass overflow-y-auto">
+    {showQr && <PaymentForm onClose={() => setShowQr(false)} />}
       <div className="w-full max-w-6xl p-8">
         <h1 className="text-3xl md:text-5xl font-bold text-gray-700 text-center mb-12">
           <span className="text-orange-500">NovaTech</span> University Registration

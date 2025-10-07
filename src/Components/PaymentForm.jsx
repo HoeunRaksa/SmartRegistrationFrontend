@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { showSuccess, showError, ToastContainer } from "./ui/Toast.jsx";
-const PaymentForm = () => {
+const PaymentForm = ({ onClose }) => {
   const [qrImage, setQrImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("PENDING"); // PENDING / PAID
   const [tranId, setTranId] = useState(null); // ABA transaction ID
   const [alerted, setAlerted] = useState(false); // show alert only once
-  const [getClose, setClose] = useState(false); // 5 minutes countdown
 
   const fetchQR = async () => {
     setLoading(true);
-
     const data = {
       req_time: new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14),
       merchant_id: "ec461971",
@@ -80,19 +78,20 @@ if (json.tran_id) setTranId(json.tran_id);
   useEffect(() => {
     if (status === "PAID" && !alerted) {
       setAlerted(true);
-      alert("Payment Completed ✅");
+      showSuccess("Payment successful! Thank you.", "w-200");
     }
   }, [status, alerted]);
-  
   useEffect(() => {
     if (alerted == true) {
-      const timer = setTimeout(() => {
-        setClose(true);
-      }, 3000); // 30 seconds
+        const timer = setTimeout(() => {
+            onClose();
+        }, 3000);
+        return () => clearTimeout(timer);
     }
   }, [alerted]);
+
   return (
-    <div className={`max-w-md mx-auto mt-10 p-6 rounded-xl shadow-md border ${getClose == true ? "hidden": "block"} border-gray-200 text-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white z-50`}>
+    <div className={`max-w-md mx-auto mt-10 p-6 rounded-xl shadow-md border border-gray-200 text-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white z-50`}>
       <h2 className="text-2xl font-bold text-gray-800 mb-4">ABA Payment QR</h2>
 
       {loading && <p className="text-gray-500 mb-4">Generating QR code...</p>}
@@ -108,6 +107,9 @@ if (json.tran_id) setTranId(json.tran_id);
       <p className={`mt-4 font-bold text-lg ${status === "PAID" ? "text-green-600" : "text-gray-600"}`}>
         {status === "PAID" ? "Payment Completed ✅" : "Waiting for payment..."}
       </p>
+        <button className="mt-4 text-gray-500 underline" onClick={onClose}>
+        Close
+      </button>
     </div>
   );
 };
