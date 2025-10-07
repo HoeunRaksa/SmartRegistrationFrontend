@@ -62,8 +62,8 @@ export default function PaidStudentsTable() {
       grade: "Year 4 - Networking",
       amount: 300,
       paymentDate: "2025-10-03",
-      paymentMethod: "ABA Pay",
-      status: "Paid",
+      paymentMethod: "Null",
+      status: "Unpaid",
     },
   ])
 
@@ -138,7 +138,13 @@ export default function PaidStudentsTable() {
                   </TableCell>
                   <TableCell>{student.paymentMethod}</TableCell>
                   <TableCell>
-                    <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+                    <Badge
+                      className={
+                        student.status === "Paid"
+                          ? "bg-green-600 text-white hover:bg-green-700"
+                          : "bg-red-600 text-white hover:bg-red-700"
+                      }
+                    >
                       {student.status}
                     </Badge>
                   </TableCell>

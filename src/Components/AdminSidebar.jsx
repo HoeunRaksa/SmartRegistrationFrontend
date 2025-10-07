@@ -3,6 +3,8 @@ import { ChevronFirst, LayoutDashboard, DollarSign, FileText, Settings, Graduati
 import Profile from "../assets/Images/profile.png"
 import Logo from "../assets/Images/AdminLogo.png"
 import PaidStudentsTable from "./PaidStudentsTable"
+import PaymentsContent from "./payments-content"
+import User from "./User"
 
 // Navigation items
 const navItems = [
@@ -11,6 +13,7 @@ const navItems = [
   { title: "All Students", icon: GraduationCap, id: "all-students" },
   { title: "Manage Students", icon: UserIcon, id: "manage-students" },
   { title: "Payments", icon: DollarSign, id: "payments" },
+  { title: "User", icon: Settings, id: "user" },
   { title: "Reports", icon: FileText, id: "reports" },
   { title: "Settings", icon: Settings, id: "settings" },
 ]
@@ -29,7 +32,9 @@ const AdminSidebar = ({ children }) => {
       case "manage-students":
         return <div className="text-gray-600">Manage Students Content</div>
       case "payments":
-        return <div className="text-gray-600">Payments Content</div>
+        return <PaymentsContent />
+      case "user":
+        return <User />
       case "reports":
         return <div className="text-gray-600">Reports Content</div>
       case "settings":
