@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-
+import PaymentForm from "../Components/PaymentForm.jsx";
 const Registration = () => {
   const [form, setForm] = useState({
     // ===== Personal Information =====
@@ -63,24 +63,23 @@ const Registration = () => {
       setForm({ ...form, [name]: value });
     }
   };
-
+  const [showQr, setShowQr] = useState(false);
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(form);
-    alert("Registration data submitted! Check console.");
+    setShowQr(true);
   };
-
   const inputClass =
     "border border-white glass rounded p-3 outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all duration-300";
 
   return (
     <section className="w-full min-h-screen flex justify-center items-start py-8 glass overflow-y-auto">
+      {showQr && <PaymentForm />}
       <div className="w-full max-w-6xl p-8">
         <h1 className="text-3xl md:text-5xl font-bold text-gray-700 text-center mb-12">
           <span className="text-orange-500">NovaTech</span> University Registration
         </h1>
 
-        <form onSubmit={handleSubmit} className="space-y-10">
+        <form className="space-y-10">
           {/* ===== Personal Information ===== */}
           <div className="glass p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
@@ -214,7 +213,7 @@ const Registration = () => {
           {/* ===== Submit Button ===== */}
           <div className="flex justify-center">
             <button
-              type="submit"
+              onClick={handleSubmit}
               className="bg-orange-500 py-3 px-12 rounded-lg font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all text-white text-lg"
             >
               Submit Registration

@@ -1,110 +1,101 @@
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from "react";
 
 const PaymentForm = () => {
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    amount: "",
-    currency: "KHR",
-  });
-
+  const [qrImage, setQrImage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("PENDING"); // PENDING / PAID
+  const [tranId, setTranId] = useState(null); // ABA transaction ID
+  const [alerted, setAlerted] = useState(false); // show alert only once
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const fetchQR = async () => {
     setLoading(true);
 
-    try {
-      const response = await axios.post("https://localhost:7247/api/Payments/purchase", formData);
-      console.log("Server response:", response.data);
-      if (response.data.checkoutUrl) {
-        window.location.href = response.data.checkoutUrl;
-      } else {
-        alert("Failed to get checkout URL. Check console for details.");
-      }
-    } catch (error) {
-      console.error("Payment request failed:", error.response || error);
-      alert("Payment request failed. Check console for details.");
-    } finally {
-      setLoading(false);
-    }
+    const data = {
+      req_time: new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14),
+      merchant_id: "ec461971",
+      tran_id: Date.now().toString(),
+      first_name: "Hoeun",
+      last_name: "Raksa",
+      email: "aba.bank@gmail.com",
+      phone: "012345678",
+      amount: 0.1,
+      purchase_type: "purchase",
+      payment_option: "abapay_khqr",
+      items: "W3sibmFtZSI6IkZ1bGwgdGVzdCBpdGVtIiwicXVhbnRpdHkiOjEsInByaWNlIjoxMDB9XQ==",
+      currency: "USD",
+      callback_url: "aHR0cHM6Ly9leGFtcGxlLmNvbS9jYWxsYmFjaw==",
+      lifetime: 6,
+      qr_image_template: "template3_color",
+    };
+
+   try {
+  const res = await fetch("https://localhost:7247/api/payment/generate-qr", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  const json = await res.json();
+  console.log("ABA QR response:", json);
+
+  setQrImage(json.qr_image_url || json.qrImage || json.qr_code || null);
+if (json.tran_id) setTranId(json.tran_id);
+
+} catch (err) {
+  console.error("Error fetching QR:", err);
+  setQrImage("https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ERROR");
+} finally {
+  setLoading(false);
+}
   };
 
-  const inputClass =
-    "border border-gray-300 rounded p-3 w-full outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500";
+  useEffect(() => {
+    fetchQR();
+  }, []);
+
+  useEffect(() => {
+    if (!tranId) return;
+
+    const evtSource = new EventSource(`https://localhost:7247/api/payment/stream-status/${tranId}`);
+
+    evtSource.onmessage = (event) => {
+      console.log("SSE Status:", event.data);
+      setStatus(event.data);
+    };
+
+    evtSource.onerror = (err) => {
+      console.error("SSE Error:", err);
+      evtSource.close();
+    };
+
+    return () => evtSource.close();
+  }, [tranId]);
+
+  useEffect(() => {
+    if (status === "PAID" && !alerted) {
+      setAlerted(true);
+      alert("Payment Completed ✅");
+    }
+  }, [status, alerted]);
 
   return (
-    <section className="min-h-screen flex justify-center items-start py-10 bg-gray-100">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8 relative z-10">
-        <h2 className="text-3xl font-bold text-center mb-6">
-          ABA <span className="text-orange-500">PayWay</span> Payment
-        </h2>
+    <div className="max-w-md mx-auto mt-10 p-6 rounded-xl shadow-md border border-gray-200 text-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white z-50">
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">ABA Payment QR</h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            name="firstName"
-            placeholder="First Name"
-            value={formData.firstName}
-            onChange={handleChange}
-            className={inputClass}
-            required
-          />
-          <input
-            type="text"
-            name="lastName"
-            placeholder="Last Name"
-            value={formData.lastName}
-            onChange={handleChange}
-            className={inputClass}
-            required
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            className={inputClass}
-            required
-          />
-          <input
-            type="text"
-            name="phone"
-            placeholder="Phone"
-            value={formData.phone}
-            onChange={handleChange}
-            className={inputClass}
-            required
-          />
-          <input
-            type="number"
-            name="amount"
-            placeholder="Amount"
-            value={formData.amount}
-            onChange={handleChange}
-            className={inputClass}
-            required
-          />
+      {loading && <p className="text-gray-500 mb-4">Generating QR code...</p>}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition-all disabled:opacity-50"
-          >
-            {loading ? "Processing..." : "Pay Now"}
-          </button>
-        </form>
-      </div>
-    </section>
+      {qrImage && (
+        <img
+          src={qrImage}
+          alt="ABA QR Code"
+          className="mx-auto w-64 h-64 object-contain rounded-lg shadow-sm"
+        />
+      )}
+
+      <p className={`mt-4 font-bold text-lg ${status === "PAID" ? "text-green-600" : "text-gray-600"}`}>
+        {status === "PAID" ? "Payment Completed ✅" : "Waiting for payment..."}
+      </p>
+    </div>
   );
 };
 

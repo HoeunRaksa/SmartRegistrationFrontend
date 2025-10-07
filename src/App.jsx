@@ -1,25 +1,23 @@
-import { useState } from 'react'
-import { BrowserRouter as Router } from 'react-router-dom'
+import { BrowserRouter as Router } from 'react-router-dom';
 import Nabar from './Components/Nabar';
 import MainRouter from './Router/mainRouter';
 import { Footer } from "./Components/Footer";
 import "./App.css";
+
 function App() {
   return (
-    <Router>
+    <Router> {/* Only one Router here */}
       <div className="fixed top-0 left-0 w-full z-50">
         <Nabar />
       </div>
-      <div className=" relative w-auto h-auto py-1 px-4 pt-15">
+      <div className="relative w-auto h-auto py-1 px-4 pt-15">
         <MainRouter />
       </div>
       <div className="px-4 rounded pb-2">
         <Footer />
       </div>
     </Router>
-  )
+  );
 }
 
-export default App
-     
- 
+export default App;

@@ -1,5 +1,4 @@
 import { useState } from "react"
-
 export default function Login() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -7,8 +6,6 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [remember, setRemember] = useState(false)
-
-  // ✅ Correct way to declare static data
   const data = {
     users: [
       {
