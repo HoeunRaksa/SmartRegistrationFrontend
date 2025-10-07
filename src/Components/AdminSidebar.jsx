@@ -1,15 +1,19 @@
 import { useState } from "react"
-import { ChevronFirst, LayoutDashboard, DollarSign, FileText, Settings, GraduationCap, CreditCard } from "lucide-react"
+import { ChevronFirst, LayoutDashboard, DollarSign, FileText, Settings, GraduationCap, CreditCard, UserIcon } from "lucide-react"
 import Profile from "../assets/Images/profile.png"
 import Logo from "../assets/Images/AdminLogo.png"
 import PaidStudentsTable from "./PaidStudentsTable"
+import PaymentsContent from "./payments-content"
+import User from "./User"
 
 // Navigation items
 const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, id: "dashboard" },
   { title: "Paid Students", icon: CreditCard, id: "paid-students" },
   { title: "All Students", icon: GraduationCap, id: "all-students" },
+  { title: "Manage Students", icon: UserIcon, id: "manage-students" },
   { title: "Payments", icon: DollarSign, id: "payments" },
+  { title: "User", icon: Settings, id: "user" },
   { title: "Reports", icon: FileText, id: "reports" },
   { title: "Settings", icon: Settings, id: "settings" },
 ]
@@ -25,8 +29,12 @@ const AdminSidebar = ({ children }) => {
         return <div className="text-gray-600">Dashboard Content</div>
       case "all-students":
         return <div className="text-gray-600">All Students Content</div>
+      case "manage-students":
+        return <div className="text-gray-600">Manage Students Content</div>
       case "payments":
-        return <div className="text-gray-600">Payments Content</div>
+        return <PaymentsContent />
+      case "user":
+        return <User />
       case "reports":
         return <div className="text-gray-600">Reports Content</div>
       case "settings":
