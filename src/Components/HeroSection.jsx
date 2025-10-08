@@ -1,19 +1,18 @@
-import React from "react"
-import { Button } from "./ui/Button"
-import BackGrpundImg from "../assets/Images/Background.png";
+import React from "react";
+import AboutUs from "../assets/Images/AboutUs.jpg";
 
 export function HeroSection() {
   return (
     <section className="relative h-screen rounded-lg flex items-center justify-center overflow-hidden">
       {/* Background Image */}
-      <div
-        className="absolute border rounded glass inset-0"
-      >
+      <div className="absolute border rounded glass inset-0">
         <img
-          src={BackGrpundImg}
-          alt="Background"
+          src={AboutUs}
+          alt="University Campus Background"
           className="w-full h-full object-cover p-4 bg-center bg-no-repeat"
         />
+        {/* Dark overlay to make text more visible */}
+        <div className="absolute inset-0 bg-black/50" />
       </div>
 
       {/* Content */}
@@ -24,9 +23,6 @@ export function HeroSection() {
             "Empowering minds, shaping futures, and building tomorrow's leaders through innovative education and groundbreaking research since 1875."
           }
         </p>
-        <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-          Discover Our Story
-        </Button>
       </div>
     </section>
   )
