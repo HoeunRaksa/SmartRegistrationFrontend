@@ -12,25 +12,11 @@ export function CallToActionSection() {
           }
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <div>
           <Button
-            size="lg"
-            variant="secondary"
-            className="btn btn-primary bg-secondary hover:bg-secondary/90 text-secondary-foreground"
-          >
-            Explore Programs
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary bg-transparent"
-          >
-            Schedule a Visit
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary bg-transparent"
+            onClick={() => {
+              window.location.href = "/registration";
+            }}
           >
             Apply Now
           </Button>
