@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { showSuccess, showError, ToastContainer } from "./ui/Toast.jsx";
-const PaymentForm = ({ onClose }) => {
+const PaymentForm = ({ onClose, formData }) => {
   const [qrImage, setQrImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("PENDING"); // PENDING / PAID
   const [tranId, setTranId] = useState(null); // ABA transaction ID
   const [alerted, setAlerted] = useState(false); // show alert only once
-
+  const fetchedRef = React.useRef(false);
   const fetchQR = async () => {
     setLoading(true);
     const data = {
@@ -48,9 +48,11 @@ if (json.tran_id) setTranId(json.tran_id);
 }
   };
 
-  useEffect(() => {
-    fetchQR();
-  }, []);
+useEffect(() => {
+  if (fetchedRef.current) return; // already fetched
+  fetchedRef.current = true;
+  fetchQR();
+}, []);
 
   useEffect(() => {
     if (!tranId) return;
@@ -100,7 +102,7 @@ if (json.tran_id) setTranId(json.tran_id);
         <img
           src={qrImage}
           alt="ABA QR Code"
-          className="mx-auto w-200 h-200 object-contain rounded-lg shadow-sm"
+          className="mx-auto w-200 h-full object-contain rounded-lg shadow-sm"
         />
       )}
 

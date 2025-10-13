@@ -66,20 +66,19 @@ const Registration = () => {
   const [showQr, setShowQr] = useState(false);
   const handleSubmit = (e) => {
       e.preventDefault();
-      setShowQr(true);
+       setShowQr(true);
   };
   const inputClass =
     "border border-white glass rounded p-3 outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all duration-300";
-
   return (
-    <section className="w-full min-h-screen flex justify-center items-start py-8 my-8 glass overflow-y-auto">
+    <section className="w-full min-h-screen flex justify-center items-start pt-6 mt-6 mb-3 glass overflow-y-auto">
     {showQr && <PaymentForm onClose={() => setShowQr(false)} />}
-      <div className="w-full max-w-6xl p-8">
+      <div className="w-full max-w-6xl p-6">
         <h1 className="text-3xl md:text-5xl font-bold text-gray-700 text-center mb-12">
           <span className="text-orange-500">NovaTech</span> University Registration
         </h1>
 
-        <form  className="space-y-10">
+        <form onSubmit={handleSubmit} className="space-y-10">
           {/* ===== Personal Information ===== */}
           <div className="glass p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
@@ -213,8 +212,8 @@ const Registration = () => {
           {/* ===== Submit Button ===== */}
           <div className="flex justify-center">
             <button
-               onClick={handleSubmit}
-              className="bg-orange-500 py-3 px-12 rounded-lg font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all text-white text-lg"
+               type="submit"
+              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 py-3 px-12 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all text-white text-lg"
             >
               Submit Registration
             </button>
