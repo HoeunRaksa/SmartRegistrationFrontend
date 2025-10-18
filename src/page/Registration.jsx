@@ -78,7 +78,7 @@ const Registration = () => {
           <span className="text-orange-500">NovaTech</span> University Registration
         </h1>
 
-        <form onSubmit={handleSubmit} className="space-y-10">
+        <form className="space-y-10">
           {/* ===== Personal Information ===== */}
           <div className="glass p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
@@ -212,7 +212,7 @@ const Registration = () => {
           {/* ===== Submit Button ===== */}
           <div className="flex justify-center">
             <button
-               type="submit"
+               onClick={handleSubmit}
               className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 py-3 px-12 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all text-white text-lg"
             >
               Submit Registration

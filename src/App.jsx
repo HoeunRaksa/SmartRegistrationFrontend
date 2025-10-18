@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, useLocation } from "react-router-dom";
 import Nabar from "./Components/Nabar";
-import MainRouter from "./Router/MainRouter";
+import MainRouter from "./Router/mainRouter";
 import { Footer } from "./Components/Footer";
 import "./App.css";
 function App() {
@@ -12,7 +12,7 @@ function App() {
 }
 function AppContent() {
   const location = useLocation();
-  const hideFooterRoutes = ["/adminsidebar", "/registration"];
+  const hideFooterRoutes = ["/adminsidebar", "/registration","/Login"];
   const shouldHideFooter = hideFooterRoutes.includes(location.pathname);
   return (
     <>
