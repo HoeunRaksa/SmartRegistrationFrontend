@@ -1,5 +1,5 @@
 import React from "react";
-import AboutUs from "../assets/Images/AboutUs.jpg";
+import AboutUs from "../../public/Images/AboutUs.jpg";
 
 export function HeroSection() {
   return (

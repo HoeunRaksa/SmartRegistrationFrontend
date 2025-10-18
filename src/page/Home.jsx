@@ -1,4 +1,4 @@
-import LandImg from "../assets/Images/download1.png";
+import LandImg from "../../public/Images/download1.png";
 import "../App.css";
 import Program from "../Components/Programs";
 import ResearchSection from "../Components/ResearchSection ";

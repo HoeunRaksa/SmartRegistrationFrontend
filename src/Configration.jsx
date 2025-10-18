@@ -1,2 +1,2 @@
-const ApiBaseImg = "./src/assets/Images/";
+const ApiBaseImg = "../../public/Images/";
 export { ApiBaseImg };
