@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { ChevronFirst, LayoutDashboard, DollarSign, FileText, Settings, GraduationCap, CreditCard, UserIcon } from "lucide-react"
-import Profile from "../../public/Images/profile.png"
-import Logo from "../../public/Images/AdminLogo.png"
+const Profile = "/Images/profile.png";
+const Logo = "/Images/AdminLogo.png";
+
 import PaidStudentsTable from "./PaidStudentsTable"
 import PaymentsContent from "./payments-content"
 import User from "./User"
