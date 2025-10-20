@@ -20,7 +20,7 @@ const researchData = {
 
 const ResearchSection = () => {
   return (
-    <section className="py-20 my-6 glass rounded text-gray-700">
+    <section className="py-20 my-6 glass rounded-lg text-gray-700">
       <div className="container mx-auto px-6 flex flex-col lg:flex-row lg:items-stretch items-start gap-12">
         {/* Left Content */}
         <div className="lg:w-1/2">
@@ -36,7 +36,7 @@ const ResearchSection = () => {
             {researchData.stats.map((stat, idx) => (
               <div
                 key={idx}
-                className="bg-white/50 backdrop-blur-md p-6 rounded-xl text-center shadow hover:shadow-lg transition-shadow duration-300"
+                className="glass p-6 rounded-lg text-center shadow hover:shadow-lg transition-shadow duration-300"
               >
                 <p className="text-2xl font-bold text-gray-700">{stat.value}</p>
                 <p className="text-gray-500">{stat.label}</p>
@@ -59,7 +59,7 @@ const ResearchSection = () => {
         </div>
 
         {/* Right Image */}
-        <div className="lg:w-1/3 relative w-full flex justify-center items-center">
+        <div className="lg:w-1/3  relative w-full flex justify-center items-center">
           <img
             src={`${ApiBaseImg}${researchData.image}`}
             alt="Research Lab"

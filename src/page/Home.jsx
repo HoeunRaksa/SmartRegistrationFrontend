@@ -6,7 +6,7 @@ import CampusLife from "../Components/CampusLifeSection";
 const Home = () => {
     return (
         <section className="w-full min-h-screen relative overflow-hidden ">
-            <div className="w-full grid sm:grid-cols-2 sx:grid-cols-2 justify-center gap-6 px-4 md:px-16 py-8 my-6 glass rounded">
+            <div className="w-full grid sm:grid-cols-2 sx:grid-cols-2 justify-center gap-6 px-4 md:px-16 py-8 my-6 glass rounded-lg">
                 {/* Text Section */}
                 <div className="flex space-y-4 flex-col md:items-start sm:pt-[20%] pt-3 md:text-left ">
                     <p className="font-bold sm:text-2xl md:text-4xl lg:text-7xl xl:text-8xl text-2xl text-gray-700">
@@ -23,7 +23,7 @@ const Home = () => {
                         <button className=" bg-orange-500 py-4 px-8 rounded font-semibold shadow-md hover:shadow-lg transition-all hover:scale-105 duration-200 text-white cursor-pointer">
                             Get Started
                         </button>
-                        <button className=" text-gray-700 py-4 px-8 rounded font-semibold shadow border-2 border-white bg-white hover:shadow-lg transition-all hover:scale-105 duration-200 cursor-pointer">
+                        <button className=" text-gray-700 py-4 px-8 rounded font-semibold shadow border-2 glass hover:shadow-lg transition-all hover:scale-105 duration-200 cursor-pointer">
                             Learn More
                         </button>
                     </div>

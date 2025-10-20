@@ -27,7 +27,7 @@ const programs = {
 };
 function Program() {
   return (
-    <section className="py-20 my-4 glass text-gray-700">
+    <section className="py-20 my-4 glass rounded-lg text-gray-700">
       <div className="container mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-16">
@@ -43,7 +43,7 @@ function Program() {
         {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {Object.values(programs).map((program, index) => (
-            <Card key={index} className="bg-card border-border hover:shadow-lg transition-shadow duration-300">
+            <Card key={index} className=" hover:shadow-lg transition-shadow duration-300">
               <CardContent className="p-6 text-left">
                 <div className={`text-4xl m-4 ${program.iconColor}`}>{program.icon}</div>
                 <h3 className="text-xl font-semibold mb-3 text-primary">{program.title}</h3>

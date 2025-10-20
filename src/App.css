@@ -3,22 +3,23 @@
  font-family: "Khmer Sangam MN", "Noto Sans Khmer", "Arial", sans-serif;
 }
 body {
-  background: linear-gradient(135deg, #ffffff, #d0e8ff, #ffe4f0);
-  background-size: cover;
+   background: linear-gradient(135deg, #f0f4ff, #d9efff, #e0f7fa);
+
   min-height: 100vh;
   font-family: sans-serif;
 }
 
+
 .glass {
-   background: rgba(255, 255, 255, 0.5); /* translucent */
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 0.5px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
-.navglass {
-  background: rgba(255, 255, 255, 0.4); /* ultra-light background */
+
+.itemglass {
+  background: rgba(255, 255, 255, 1); /* ultra-light background */
   backdrop-filter: blur(120px) saturate(300%); /* VERY strong blur */
   -webkit-backdrop-filter: blur(120px) saturate(300%); /* Safari */
   border-top: none;

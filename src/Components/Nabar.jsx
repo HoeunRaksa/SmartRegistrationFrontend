@@ -24,7 +24,7 @@ function Navbar() {
     }
   }, [isLogin]);
   return (
-    <nav className="glass border border-gray-200 rounded">
+    <nav className="glass border rounded-lg mx-3">
       <ToastContainer />
       <div className="flex items-center justify-between md:px-16 px-4 py-4">
         {/* Logo/Brand */}
@@ -40,7 +40,7 @@ function Navbar() {
             <div className="w-7 h-7 bg-green-500 rounded-lg flex items-center justify-center shadow hover:scale-110 transition">
               <Home className="sm:w-3 md:w-4 w-5 text-gray-700" />
             </div>
-            <span className="lg:text-xl sm:text-sm text-xs text-gray-700">Home</span>
+            <span className="lg:text-xl sm:text-sm text-xs text-gray-700 ">Home</span>
           </Link>
 
           <Link
@@ -90,28 +90,28 @@ function Navbar() {
         </div>
       </div>
       <div
-        className={`absolute top-full left-0 w-full navglass rounded-b-md flex flex-col p-4 space-y-3 sm:hidden transform transition-transform duration-300 ease-in-out ${isOpen
+        className={`absolute top-full left-0 w-full glass rounded-b-md flex flex-col p-4 space-y-3 sm:hidden transform transition-transform duration-300 ease-in-out ${isOpen
           ? "translate-y-0 opacity-100"
           : "-translate-y-5 opacity-0 pointer-events-none"
           }`}
       >
-        <nav className="flex p-5 flex-col glass  space-y-6">
-          <Link to="/" className="text-gray-800 p-3 glass font-medium hover:text-blue-600 transition">
+        <nav className="flex p-5 flex-col space-y-6">
+          <Link to="/" className="text-gray-800 p-3 itemglass font-medium hover:text-blue-600 transition rounded-lg">
             Home
           </Link>
-          <Link to="/curriculum" className="text-gray-800 p-3 glass font-medium hover:text-blue-600 transition">
+          <Link to="/curriculum" className="text-gray-800 p-3 itemglass font-medium hover:text-blue-600 transition rounded-lg">
             Programs
           </Link>
-          <Link to="/aboutus" className="text-gray-800 p-3 glass font-medium hover:text-blue-600 transition">
+          <Link to="/aboutus" className="text-gray-800 p-3 itemglass font-medium hover:text-blue-600 transition  rounded-lg">
             About Us
           </Link>
-          <Link to="/registration" className="text-gray-800 p-3 glass font-medium hover:text-blue-600 transition">
+          <Link to="/registration" className="text-gray-800 p-3 itemglass font-medium hover:text-blue-600 transition  rounded-lg">
             Registration
           </Link>
         </nav>
         <Button
           onClick={handleLogin}
-          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 px-4 py-2 rounded font-semibold shadow-md hover:shadow-lg transition-all"
+          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-gray-700 md:px-5 md:py-2 sm:px-4 sm:py-2 mx-5 rounded font-semibold shadow-md hover:shadow-lg transition-all"
         >
           Login
         </Button>
