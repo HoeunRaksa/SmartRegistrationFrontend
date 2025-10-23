@@ -19,7 +19,7 @@ function AppContent() {
       <div className="fixed top-0 left-0 w-full z-50">
         <Nabar />
       </div>
-      <div className="relative w-auto h-auto py-1 px-4 pt-15">
+      <div className="relative w-auto h-auto py-1 px-4 sm:pt-15 pt-13">
         <MainRouter />
       </div>
       {!shouldHideFooter && (

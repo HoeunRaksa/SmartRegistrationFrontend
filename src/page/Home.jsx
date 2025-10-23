@@ -20,7 +20,7 @@ const Home = () => {
                         Your path to success begins here at <span className="text-orange-500">NovaTech University</span>.
                     </p>
                     <div className="flex space-x-4 pt-4 justify-start">
-                        <button className=" bg-orange-500 py-4 px-8 rounded font-semibold shadow-md hover:shadow-lg transition-all hover:scale-105 duration-200 text-white cursor-pointer">
+                        <button className=" bg-orange-500 py-4 px-8 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all hover:scale-105 duration-200 text-white cursor-pointer">
                             Get Started
                         </button>
                         <button className=" text-gray-700 py-4 px-8 rounded font-semibold shadow border-2 glass hover:shadow-lg transition-all hover:scale-105 duration-200 cursor-pointer">
@@ -29,16 +29,16 @@ const Home = () => {
                     </div>
                     <div className="flex gap-8 items-center justify-center mt-6">
                         <div className="text-center">
-                            <p className="text-orange-600 text-3xl font-bold">500K+</p>
-                            <span className="text-gray-700 text-xl">Students</span>
+                            <p className="text-orange-600 sm:text-3xl text-xl font-bold">500K+</p>
+                            <span className="text-gray-700 sm:text-xl text-sm">Students</span>
                         </div>
                         <div className="text-center">
-                            <p className="text-gray-500 text-3xl font-bold">200+</p>
-                            <span className="text-gray-700 text-xl">Programs</span>
+                            <p className="text-gray-500 sm:text-3xl text-xl font-bold">200+</p>
+                            <span className="text-gray-700 sm:text-xl text-sm">Programs</span>
                         </div>
                         <div className="text-center">
-                            <p className="text-gray-500 text-3xl font-bold">95%</p>
-                            <span className="text-gray-700 text-xl">Satisfaction Rate</span>
+                            <p className="text-gray-500 sm:text-3xl text-xl font-bold">95%</p>
+                            <span className="text-gray-700 sm:text-xl text-sm">Satisfaction Rate</span>
                         </div>
                     </div>
 
