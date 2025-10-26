@@ -102,7 +102,7 @@ useEffect(() => {
         <img
           src={qrImage}
           alt="ABA QR Code"
-          className="mx-auto w-200 h-full object-contain rounded-lg shadow-sm"
+          className="mx-auto w-200 h-full max-h-100 object-contain rounded-lg shadow-sm"
         />
       )}
 
