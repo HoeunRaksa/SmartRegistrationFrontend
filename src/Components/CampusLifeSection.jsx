@@ -26,16 +26,16 @@ export default function CampusLife() {
   ];
 
   const highlights = [
-    { img: "scientific-research-laboratory.png", label: "Academic Excellence" },
-    { img: "scientific-research-laboratory.png", label: "Active Lifestyle" },
-    { img: "scientific-research-laboratory.png", label: "Cultural Diversity" },
+    { img: "Cake1.png", label: "Academic Excellence" },
+    { img: "Cake2.png", label: "Active Lifestyle" },
+    { img: "Cake3.png", label: "Cultural Diversity" },
   ];
 
   return (
     <section className="glass rounded-lg text-gray-700 py-16 my-4 px-6 lg:px-20">
       <div className="text-center max-w-3xl mx-auto mb-12">
-        <h2 className="text-3xl font-bold mb-4">Vibrant Campus Life</h2>
-        <p className="text-lg">
+        <h2 className="sm:text-3xl text-xl font-bold mb-4">Vibrant Campus Life</h2>
+        <p className="sm:text-lg text-sm">
           Experience a dynamic campus community with endless opportunities for growth,
           connection, and discovery beyond the classroom.
         </p>

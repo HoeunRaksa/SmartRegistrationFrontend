@@ -1,7 +1,6 @@
 import LandImg from "../../public/Images/download1.png";
 import "../App.css";
 import Program from "../Components/Programs";
-import ResearchSection from "../Components/ResearchSection ";
 import CampusLife from "../Components/CampusLifeSection";
 import milestone from "../Data/Milestones.json";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "../Components/ui/Card";
@@ -24,10 +23,10 @@ const Home = () => {
                         Your path to success begins here at <span className="text-orange-500">NovaTech University</span>.
                     </p>
                     <div className="flex space-x-4 pt-4 justify-start">
-                        <button className=" bg-orange-500 py-4 px-8 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all hover:scale-105 duration-200 text-white cursor-pointer">
+                        <button className=" bg-orange-500 sm:py-4 sm:px-8 py-2 px-6 sm:rounded-lg rounded font-semibold shadow-md hover:shadow-lg transition-all hover:scale-105 duration-200 text-white cursor-pointer">
                             Get Started
                         </button>
-                        <button className=" text-gray-700 py-4 px-8 rounded font-semibold shadow border-2 glass hover:shadow-lg transition-all hover:scale-105 duration-200 cursor-pointer">
+                        <button className=" text-gray-700 sm:py-4 sm:px-8 py-2 px-6 sm:rounded-lg rounded font-semibold shadow border-2 glass hover:shadow-lg transition-all hover:scale-105 duration-200 cursor-pointer">
                             Learn More
                         </button>
                     </div>
@@ -52,30 +51,30 @@ const Home = () => {
                     <img src={LandImg} alt="University Campus" className=" h-auto rounded min-h-[300px] min-w-[300px]" />
                 </div>
             </div>
-            <Program />
-              <section className="py-20 bg-muted">
-                      <div className="container text-gray-700 mx-auto px-6">
+       
+              <section className="py-20 bg-muted glass">
+                      <div className=" text-gray-700 mx-auto px-6">
                         <div className="text-center mb-16">
-                          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-balance">Academic Excellence</h2>
-                          <p className="text-xl text-muted-foreground max-w-3xl mx-auto text-pretty leading-relaxed">
+                          <h2 className="sm:text-4xl md:text-5xl text-xl font-bold mb-6 text-balance">Academic Excellence</h2>
+                          <p className="sm:text-xl text-sm text-muted-foreground max-w-3xl mx-auto text-pretty leading-relaxed">
                             Our commitment to excellence is reflected in our achievements, recognition, and the success of our graduates
                             who are making a difference worldwide.
                           </p>
                         </div>
             
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="grid sm:grid-cols-2 md:grid-cols-4 grid-cols-1 gap-8">
                           {milestone.achievements.map((achievement, index) => (
-                            <Card key={index} className="bg-card overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                              <div className="aspect-video mt-4 overflow-hidden">
+                            <Card key={index} className="glass shadow-sm overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                              <div className="aspect-video rounded-[50px]">
                                 <img
                                    src={`${ApiBaseImg}${achievement.image}`} 
                                   alt={achievement.title}
-                                  className="w-full h-full object-cover"
+                                  className="w-full object-cover rounded-[30px]  p-4"
                                 />
                               </div>
                               <CardContent className="p-6">
-                                <div className="text-4xl font-bold text-primary mb-2">{achievement.count}</div>
-                                <h3 className="text-xl font-semibold mb-3">{achievement.title}</h3>
+                                <div className="sm:text-4xl text-xl font-bold text-primary mb-2">{achievement.count}</div>
+                                <h3 className="sm:text-xl text-sm font-semibold mb-3">{achievement.title}</h3>
                                 <p className="text-muted-foreground leading-relaxed">{achievement.description}</p>
                               </CardContent>
                             </Card>
@@ -83,7 +82,7 @@ const Home = () => {
                         </div>
                       </div>
                     </section>
-            <ResearchSection  />
+                    <Program />
             <CampusLife />
         </section>
     );

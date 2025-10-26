@@ -4,8 +4,8 @@ import milestone from "../Data/Milestones.json"
 
 export function HistorySection() {
   return (
-    <section className="py-20 bg-muted">
-      <div className="container mx-auto px-6">
+    <section className="py-20 my-5 glass shadow-sm rounded-lg">
+      <div className="mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl text-gray-700 font-bold mb-6 text-balance">
             {milestone.header.title}
@@ -19,7 +19,7 @@ export function HistorySection() {
           {milestone.timeline.map((item, index) => (
             <Card
               key={index}
-              className="bg-card hover:shadow-lg transition-shadow duration-300"
+              className="bg-white hover:shadow-lg transition-shadow duration-300"
             >
               <CardContent className="p-6 text-start">
                 <div className="text-4xl mb-4 mt-4">{item.icon}</div>

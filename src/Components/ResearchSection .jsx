@@ -14,20 +14,20 @@ const researchData = {
     "Sustainable Energy & Climate Science",
     "Artificial Intelligence & Machine Learning"
   ],
-  image: "academic-achievement-award-ceremony.jpg",
+  image: "Cake1.png",
   imageBadge: "Nobel Prize Winners: 12"
 };
 
 const ResearchSection = () => {
   return (
     <section className="py-20 my-6 glass rounded-lg text-gray-700">
-      <div className="container mx-auto px-6 flex flex-col lg:flex-row lg:items-stretch items-start gap-12">
+      <div className=" mx-auto px-6 flex flex-col justify-between lg:flex-row lg:items-stretch items-start gap-12">
         {/* Left Content */}
         <div className="lg:w-1/2">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-700">
+          <h2 className="sm:text-3xl md:text-4xl text-xl font-bold mb-4 text-gray-700 text-center">
             Leading Research & Innovation
           </h2>
-          <p className="text-lg mb-8 text-gray-600">
+          <p className="sm:text-lg text-sm mb-8 text-gray-600">
             At U-World, we're at the forefront of groundbreaking research that addresses global challenges and shapes the future of humanity.
           </p>
 
@@ -36,9 +36,9 @@ const ResearchSection = () => {
             {researchData.stats.map((stat, idx) => (
               <div
                 key={idx}
-                className="glass p-6 rounded-lg text-center shadow hover:shadow-lg transition-shadow duration-300"
+                className="bg-white p-6 rounded-lg text-center shadow hover:shadow-lg transition-shadow duration-300"
               >
-                <p className="text-2xl font-bold text-gray-700">{stat.value}</p>
+                <p className="text-2xl text-gray-700">{stat.value}</p>
                 <p className="text-gray-500">{stat.label}</p>
               </div>
             ))}

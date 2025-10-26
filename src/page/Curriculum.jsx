@@ -79,22 +79,11 @@ const programs = {
 const Curriculum = () => {
   return (
     <div>
-      <div className="text-center mb-4 mt-6 p-10 mx-auto bg-blue-100 rounded-lg shadow">
-        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-700">
-          Welcome to Novatech University Program
-        </h2>
-        <p className="text-gray-600 text-sm lg:text-2xl">
-          Your journey to success starts here. Explore our diverse programs and find the right fit for your future.
-        </p>
-        <button className="py-3 px-8 mt-5 rounded-md text-white text-base md:text-xl font-bold bg-blue-400 hover:bg-blue-500">
-          Get Started
-        </button>
-      </div>
       <section className="py-20 my-4 glass text-gray-700">
         <div className="container mx-auto px-6">
           {/* Header */}
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-balance">
+            <h2 className="sm:text-4xl text-xl md:text-5xl font-bold mb-6 text-balance">
               World-Class Academic Programs
             </h2>
             <p className="text-xl mb-8 text-pretty leading-relaxed max-w-4xl mx-auto">
@@ -106,7 +95,7 @@ const Curriculum = () => {
           {/* Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {Object.values(programs).map((program, index) => (
-              <Card key={index} className="bg-card border-border hover:shadow-lg transition-shadow duration-300">
+              <Card key={index} className="glass shadow-sm border-border hover:shadow-lg transition-shadow duration-300">
                 <CardContent className="p-6 text-left">
                   <div className={`text-4xl m-4 ${program.iconColor}`}>{program.icon}</div>
                   <h3 className="text-xl font-semibold mb-3 text-primary">{program.title}</h3>

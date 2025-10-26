@@ -23,8 +23,22 @@ function Navbar() {
       showSuccess(`Welcome back, ${User.name}!`, 'w-200');
     }
   }, [isLogin]);
+  function handleNewClick() {
+    setIsOpen(false);
+  }
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isOpen) {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isOpen]);
+
   return (
-    <nav className="glass border rounded-lg mx-3">
+    <nav className="bg-white shadow-lg">
       <ToastContainer />
       <div className="flex items-center justify-between md:px-16 px-4 py-4">
         {/* Logo/Brand */}
@@ -90,22 +104,22 @@ function Navbar() {
         </div>
       </div>
       <div
-        className={`absolute top-full left-0 w-full glass rounded-b-md flex flex-col p-4 space-y-3 sm:hidden transform transition-transform duration-300 ease-in-out ${isOpen
-          ? "translate-y-0 opacity-100"
-          : "-translate-y-5 opacity-0 pointer-events-none"
+        className={`absolute top-full left-0 w-full glass rounded-b-md shadow-lg flex flex-col p-4 space-y-3 sm:hidden transition-all duration-500 ease-in-out ${isOpen
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 -translate-y-6 pointer-events-none"
           }`}
       >
         <nav className="flex p-5 flex-col space-y-6">
-          <Link to="/" className="text-gray-800 p-3 itemglass font-medium hover:text-blue-600 transition rounded-lg">
+          <Link to="/" onClick={handleNewClick} className="text-gray-800 p-3 itemglass font-medium hover:text-blue-600 transition rounded-lg">
             Home
           </Link>
-          <Link to="/curriculum" className="text-gray-800 p-3 itemglass font-medium hover:text-blue-600 transition rounded-lg">
+          <Link to="/curriculum" onClick={handleNewClick} className="text-gray-800 p-3 itemglass font-medium hover:text-blue-600 transition rounded-lg">
             Programs
           </Link>
-          <Link to="/aboutus" className="text-gray-800 p-3 itemglass font-medium hover:text-blue-600 transition  rounded-lg">
+          <Link to="/aboutus" onClick={handleNewClick} className="text-gray-800 p-3 itemglass font-medium hover:text-blue-600 transition  rounded-lg">
             About Us
           </Link>
-          <Link to="/registration" className="text-gray-800 p-3 itemglass font-medium hover:text-blue-600 transition  rounded-lg">
+          <Link to="/registration" onClick={handleNewClick} className="text-gray-800 p-3 itemglass font-medium hover:text-blue-600 transition  rounded-lg">
             Registration
           </Link>
         </nav>

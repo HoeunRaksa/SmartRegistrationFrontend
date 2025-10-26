@@ -3,16 +3,16 @@ import AboutUs from "../../public/Images/AboutUs.jpg";
 
 export function HeroSection() {
   return (
-    <section className="relative h-screen rounded-lg flex items-center justify-center overflow-hidden">
+    <section className="relative h-screen rounded-lg flex items-center justify-center shadow-sm my-5">
       {/* Background Image */}
-      <div className="absolute border rounded glass inset-0">
+      <div className="absolute rounded  inset-0">
         <img
           src={AboutUs}
           alt="University Campus Background"
           className="w-full h-full object-cover p-4 bg-center bg-no-repeat"
         />
         {/* Dark overlay to make text more visible */}
-        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 "/>
       </div>
 
       {/* Content */}
