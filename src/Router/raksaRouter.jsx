@@ -1,11 +1,11 @@
-import { Routes, Route } from "react-router-dom";
-import Home from "../page/Home.jsx";
-import Registration from "../page/Registration.jsx";
-export default function RaksaRouter() {
-  return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/registration" element={<Registration />} />
-    </Routes>
-  );
-}
+import React from "react";
+import Home from "../page/Home";
+import Registration from "../page/Registration";
+import { Route } from "react-router-dom";
+
+const RaksaRoutes = () => [
+  <Route key="home" path="/" element={<Home />} />,
+  <Route key="registration" path="/registration" element={<Registration />} />,
+];
+
+export default RaksaRoutes;

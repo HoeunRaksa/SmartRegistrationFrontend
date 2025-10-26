@@ -1,9 +1,9 @@
 import React from "react";
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "../Components/ui/Card";
-import { HeroSection } from "../Components/HeroSection";
-import { HistorySection } from "../Components/HistorySection";
-import { CallToActionSection } from "../Components/CallToActionSection";
-import { MissionSection } from "../Components/MissionSection";
+import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "../Components/ui/Card.jsx";
+import { HeroSection } from "../Components/HeroSection.jsx";
+import { HistorySection } from "../Components/HistorySection.jsx";
+import { CallToActionSection } from "../Components/CallToActionSection.jsx";
+import { MissionSection } from "../Components/MissionSection.jsx";
 import milestone from "../Data/Milestones.json"
 import { ApiBaseImg } from "../Configration.jsx";
 const AbouteUs = () => {

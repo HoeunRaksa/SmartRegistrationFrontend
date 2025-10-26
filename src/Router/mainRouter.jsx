@@ -1,14 +1,17 @@
-import MakaraRouter from "./makaraRouter";
-import RaksaRouter from "./raksaRouter";
-import MonyRouter from "./monyRouter";
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import MakaraRoutes from "./makaraRouter";
+import MonyRoutes from "./monyRouter";
+import RaksaRoutes from "./raksaRouter";
 
 const MainRouter = () => {
   return (
-    <>
-      <MakaraRouter />  {/* Only Routes */}
-      <RaksaRouter />
-      <MonyRouter />
-    </>
+    <Routes>
+      {RaksaRoutes()}
+      {MakaraRoutes()}
+      {MonyRoutes()}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 };
 

@@ -1,19 +1,17 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
 import ExamResul from "../page/ExamResul";
-import AbouteUs from "../page/AbouteUs";
+import AboutUs from "../page/AboutUs";
 import Login from "../page/Login";
 import NotificationInbox from "../page/Notification";
 import AdminSidebar from "../Components/AdminSidebar";
+import { Route } from "react-router-dom";
 
-const MakaraRouter = () => (
-  <Routes>
-    <Route path="/examresul" element={<ExamResul />} />
-    <Route path="/aboutus" element={<AbouteUs />} />
-    <Route path="/login" element={<Login />} />
-    <Route path="/notification" element={<NotificationInbox />} />
-    <Route path="/adminsidebar" element={<AdminSidebar />} />
-  </Routes>
-);
+const MakaraRoutes = () => [
+  <Route key="examresul" path="/examresul" element={<ExamResul />} />,
+  <Route key="aboutus" path="/aboutus" element={<AboutUs />} />,
+  <Route key="login" path="/login" element={<Login />} />,
+  <Route key="notification" path="/notification" element={<NotificationInbox />} />,
+  <Route key="adminsidebar" path="/adminsidebar" element={<AdminSidebar />} />,
+];
 
-export default MakaraRouter;
+export default MakaraRoutes;
