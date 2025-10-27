@@ -104,7 +104,7 @@ const PaymentForm = ({ onClose, formData }) => {
 
   return (
     <div
-      className={`max-w-md mx-auto mt-10 p-6 rounded-xl shadow-md border border-gray-200 text-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white z-50`}
+      className={`max-w-md mx-auto sm:mt-10 p-6 rounded-xl shadow-md border border-gray-200 text-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white z-50`}
     >
       <h2 className="text-2xl font-bold text-gray-800 mb-4">ABA Payment QR</h2>
 
