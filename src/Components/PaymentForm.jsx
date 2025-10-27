@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { showSuccess, showError, ToastContainer } from "./ui/Toast.jsx";
+
 const PaymentForm = ({ onClose, formData }) => {
   const [qrImage, setQrImage] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -7,6 +8,7 @@ const PaymentForm = ({ onClose, formData }) => {
   const [tranId, setTranId] = useState(null); // ABA transaction ID
   const [alerted, setAlerted] = useState(false); // show alert only once
   const fetchedRef = React.useRef(false);
+
   const fetchQR = async () => {
     setLoading(true);
     const data = {
@@ -27,32 +29,31 @@ const PaymentForm = ({ onClose, formData }) => {
       qr_image_template: "template3_color",
     };
 
-   try {
-  const res = await fetch("https://localhost:7247/api/payment/generate-qr", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+    try {
+      const res = await fetch("https://localhost:7247/api/payment/generate-qr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
 
-  const json = await res.json();
-  console.log("ABA QR response:", json);
+      const json = await res.json();
+      console.log("ABA QR response:", json);
 
-  setQrImage(json.qr_image_url || json.qrImage || json.qr_code || null);
-if (json.tran_id) setTranId(json.tran_id);
-
-} catch (err) {
-  console.error("Error fetching QR:", err);
-  setQrImage("https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ERROR");
-} finally {
-  setLoading(false);
-}
+      setQrImage(json.qr_image_url || json.qrImage || json.qr_code || null);
+      if (json.tran_id) setTranId(json.tran_id);
+    } catch (err) {
+      console.error("Error fetching QR:", err);
+      setQrImage("https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ERROR");
+    } finally {
+      setLoading(false);
+    }
   };
 
-useEffect(() => {
-  if (fetchedRef.current) return; // already fetched
-  fetchedRef.current = true;
-  fetchQR();
-}, []);
+  useEffect(() => {
+    if (fetchedRef.current) return; // already fetched
+    fetchedRef.current = true;
+    fetchQR();
+  }, []);
 
   useEffect(() => {
     if (!tranId) return;
@@ -63,11 +64,11 @@ useEffect(() => {
       console.log("SSE Status:", event.data);
       setStatus(event.data);
     };
-    evtSource.addEventListener("complete", (event) => {
-  console.log("Payment complete:", event.data);
-  evtSource.close();
-});
 
+    evtSource.addEventListener("complete", (event) => {
+      console.log("Payment complete:", event.data);
+      evtSource.close();
+    });
 
     evtSource.onerror = (err) => {
       console.error("SSE Error:", err);
@@ -83,17 +84,28 @@ useEffect(() => {
       showSuccess("Payment successful! Thank you.", "w-200");
     }
   }, [status, alerted]);
+
   useEffect(() => {
-    if (alerted == true) {
-        const timer = setTimeout(() => {
-            onClose();
-        }, 3000);
-        return () => clearTimeout(timer);
+    if (alerted === true) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 3000);
+      return () => clearTimeout(timer);
     }
   }, [alerted]);
 
+  const handleDownloadQR = () => {
+    if (!qrImage) return;
+    const link = document.createElement("a");
+    link.href = qrImage;
+    link.download = "ABA_QR_Code.png";
+    link.click();
+  };
+
   return (
-    <div className={`max-w-md mx-auto mt-10 p-6 rounded-xl shadow-md border border-gray-200 text-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white z-50`}>
+    <div
+      className={`max-w-md mx-auto mt-10 p-6 rounded-xl shadow-md border border-gray-200 text-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white z-50`}
+    >
       <h2 className="text-2xl font-bold text-gray-800 mb-4">ABA Payment QR</h2>
 
       {loading && <p className="text-gray-500 mb-4">Generating QR code...</p>}
@@ -106,10 +118,24 @@ useEffect(() => {
         />
       )}
 
-      <p className={`mt-4 font-bold text-lg ${status === "PAID" ? "text-green-600" : "text-gray-600"}`}>
+      {qrImage && (
+        <button
+          onClick={handleDownloadQR}
+          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+        >
+          Download QR
+        </button>
+      )}
+
+      <p
+        className={`mt-4 font-bold text-lg ${
+          status === "PAID" ? "text-green-600" : "text-gray-600"
+        }`}
+      >
         {status === "PAID" ? "Payment Completed ✅" : "Waiting for payment..."}
       </p>
-        <button className="mt-4 text-gray-500 underline" onClick={onClose}>
+
+      <button className="mt-4 text-gray-500 underline" onClick={onClose}>
         Close
       </button>
     </div>

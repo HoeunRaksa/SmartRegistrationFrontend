@@ -65,14 +65,19 @@ const Registration = () => {
   };
   const [showQr, setShowQr] = useState(false);
   const handleSubmit = (e) => {
-      e.preventDefault();
-       setShowQr(true);
+    e.preventDefault();
+    setShowQr(true);
   };
   const inputClass =
-    "border border-white glass rounded p-3 outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all duration-300";
+    "border border-white ring-1 ring-gray-300 glass rounded p-3 outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all duration-300";
   return (
-    <section className="w-full min-h-screen flex justify-center items-start pt-6 mt-6 mb-3 glass overflow-y-auto">
-    {showQr && <PaymentForm onClose={() => setShowQr(false)} />}
+    <section className="h-full">
+      {showQr && (
+        <div className="fixed inset-0 flex justify-center items-center bg-opacity-50 z-50">
+          <PaymentForm onClose={() => setShowQr(false)} />
+        </div>
+      )}
+     <div className="w-full min-h-screen flex justify-center items-start pt-6 mt-6 mb-3 glass overflow-y-auto">
       <div className="w-full max-w-6xl p-6">
         <h1 className="text-3xl md:text-5xl font-bold text-gray-700 text-center mb-12">
           <span className="text-orange-500">NovaTech</span> University Registration
@@ -80,7 +85,7 @@ const Registration = () => {
 
         <form className="space-y-10">
           {/* ===== Personal Information ===== */}
-          <div className="glass p-6 rounded-lg shadow-md">
+          <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
               Personal Information
             </h2>
@@ -103,7 +108,7 @@ const Registration = () => {
           </div>
 
           {/* ===== Academic Information ===== */}
-          <div className="glass p-6 rounded-lg shadow-md">
+          <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
               Academic Information
             </h2>
@@ -136,7 +141,7 @@ const Registration = () => {
           </div>
 
           {/* ===== Parent / Guardian Information ===== */}
-          <div className="glass p-6 rounded-lg shadow-md">
+          <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
               Parent / Guardian Information
             </h2>
@@ -151,7 +156,7 @@ const Registration = () => {
           </div>
 
           {/* ===== Emergency Contact ===== */}
-          <div className="glass p-6 rounded-lg shadow-md">
+          <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
               Emergency Contact
             </h2>
@@ -162,7 +167,7 @@ const Registration = () => {
           </div>
 
           {/* ===== Previous Education ===== */}
-          <div className="glass p-6 rounded-lg shadow-md">
+          <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
               Previous Education
             </h2>
@@ -173,7 +178,7 @@ const Registration = () => {
           </div>
 
           {/* ===== Medical Information ===== */}
-          <div className="glass p-6 rounded-lg shadow-md">
+          <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
               Medical Information
             </h2>
@@ -184,7 +189,7 @@ const Registration = () => {
           </div>
 
           {/* ===== Social / Online Profiles ===== */}
-          <div className="glass p-6 rounded-lg shadow-md">
+          <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
               Social / Online Profiles
             </h2>
@@ -195,7 +200,7 @@ const Registration = () => {
           </div>
 
           {/* ===== Preferences / Interests ===== */}
-          <div className="glass p-6 rounded-lg shadow-md">
+          <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
               Preferences / Interests
             </h2>
@@ -212,13 +217,14 @@ const Registration = () => {
           {/* ===== Submit Button ===== */}
           <div className="flex justify-center">
             <button
-               onClick={handleSubmit}
+              onClick={handleSubmit}
               className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 py-3 px-12 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all text-white text-lg"
             >
               Submit Registration
             </button>
           </div>
         </form>
+      </div>
       </div>
     </section>
   );

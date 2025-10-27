@@ -95,7 +95,7 @@ const Curriculum = () => {
           {/* Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {Object.values(programs).map((program, index) => (
-              <Card key={index} className="glass shadow-sm border-border hover:shadow-lg transition-shadow duration-300">
+              <Card key={index} className="bg-white shadow-sm border-border hover:shadow-lg transition-shadow duration-300">
                 <CardContent className="p-6 text-left">
                   <div className={`text-4xl m-4 ${program.iconColor}`}>{program.icon}</div>
                   <h3 className="text-xl font-semibold mb-3 text-primary">{program.title}</h3>

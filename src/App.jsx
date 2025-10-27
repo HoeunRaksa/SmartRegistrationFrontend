@@ -4,6 +4,7 @@ import Nabar from "./Components/Nabar";
 import { Footer } from "./Components/Footer";
 import MainRouter from "./Router/mainRouter";
 import "./App.css";
+import SnowAnimation from "./Motion/Snow";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function AppContent() {
 
   return (
     <>
+    <SnowAnimation />
       <div className="fixed top-0 left-0 w-full z-50">
         <Nabar />
       </div>
