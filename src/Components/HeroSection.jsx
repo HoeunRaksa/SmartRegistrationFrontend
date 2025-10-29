@@ -3,22 +3,17 @@ import AboutUs from "../../public/Images/AboutUs.jpg";
 
 export function HeroSection() {
   return (
-    <section className="relative h-screen rounded-lg flex items-center justify-center shadow-sm my-5">
-      {/* Background Image */}
-      <div className="absolute rounded  inset-0">
+    <section className="relative w-full flex items-center justify-center -mt-5 shadow-sm">
+
         <img
           src={AboutUs}
           alt="University Campus Background"
-          className="w-full h-full object-cover p-4 bg-center bg-no-repeat"
+          className="w-full sm:h-200 h-100 object-cover shadow-sm bg-no-repeat"
         />
-        {/* Dark overlay to make text more visible */}
-        <div className="absolute inset-0 "/>
-      </div>
-
       {/* Content */}
-      <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-6">
-        <h1 className="text-5xl md:text-7xl font-bold mb-6 text-balance">Excellence University</h1>
-        <p className="text-xl md:text-2xl mb-8 text-pretty leading-relaxed">
+      <div className=" absolute z-10 text-center text-white max-w-4xl mx-auto px-6">
+        <h1 className="text-5xl md:text-7xl font-bold mb-6 p-4 rounded-xl">Excellence University</h1>
+        <p className="text-xl md:text-2xl mb-8 p-4 text-pretty leading-relaxed rounded-lg">
           {
             "Empowering minds, shaping futures, and building tomorrow's leaders through innovative education and groundbreaking research since 1875."
           }

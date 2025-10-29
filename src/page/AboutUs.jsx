@@ -14,7 +14,6 @@ const AbouteUs = () => {
         <HistorySection />
         <MissionSection />
       </main>
-
         <section className="py-20 glass my-5 rounded-lg shadow-sm">
           <div className="text-gray-700 mx-auto px-6">
             <div className="text-center mb-16">
@@ -25,7 +24,7 @@ const AbouteUs = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 sm:grid-cols-2 gap-8">
               {milestone.achievements.map((achievement, index) => (
                 <Card key={index} className="glass shadow-lg overflow-hidden hover:shadow-lg transition-shadow duration-300">
                   <div className="aspect-video p-5 overflow-hidden">
