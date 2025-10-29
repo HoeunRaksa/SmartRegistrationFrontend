@@ -49,7 +49,7 @@ const ResearchSection = () => {
             <h3 className="font-semibold mb-4 text-xl text-gray-700">Research Focus Areas</h3>
             <ul className="space-y-3">
               {researchData.focusAreas.map((area, idx) => (
-                <li key={idx} className="flex items-center gap-3 text-gray-600">
+                <li key={idx} className="flex items-center gap-3  text-gray-600">
                   <span className="w-3 h-3 rounded-full bg-blue-600 flex-shrink-0"></span>
                   {area}
                 </li>

@@ -48,7 +48,7 @@ export default function CampusLife() {
             <CardHeader className="flex flex-col items-center text-center">
               <div className="itemglass p-4 rounded-full mb-4">{item.icon}</div>
               <CardTitle className="mb-2">{item.title}</CardTitle>
-              <CardDescription>{item.desc}</CardDescription>
+              <CardDescription className="text-sm">{item.desc}</CardDescription>
             </CardHeader>
           </Card>
         ))}

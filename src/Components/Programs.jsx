@@ -47,8 +47,8 @@ function Program() {
               <CardContent className="p-6 text-left">
                 <div className={`sm:text-4xl text-xl m-4 ${program.iconColor}`}>{program.icon}</div>
                 <h3 className="text-xl font-semibold mb-3 text-primary">{program.title}</h3>
-                <p className="text-muted-foreground mb-3">{program.description}</p>
-                <ul className="mb-4 list-disc list-inside text-muted-foreground">
+                <p className="text-muted-foreground text-sm mb-3">{program.description}</p>
+                <ul className="mb-4 list-disc list-inside text-muted-foreground text-sm">
                   {program.items.map((item, i) => (
                     <li key={i}>{item}</li>
                   ))}
