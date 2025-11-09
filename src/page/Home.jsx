@@ -12,7 +12,7 @@ const Home = () => {
       <div className="w-full grid sm:grid-cols-2 sx:grid-cols-2 justify-center gap-6 px-4 md:px-16 py-8 my-6 glass rounded-lg">
         {/* Text Section */}
         <div className="flex space-y-4 flex-col md:items-start sm:pt-[20%] pt-3 p-2 md:text-left ">
-          <p className="font-bold sm:text-2xl md:text-4xl lg:text-7xl xl:text-8xl text-2xl text-gray-700">
+          <p className="font-bold sm:text-2xl md:text-3xl lg:text-5xl xl:text-8xl text-2xl text-gray-700">
             Welcome <span className="text-orange-500"> To</span> <span className="text-orange-500">NovaTech </span> University
           </p>
           <p className="lg:text-xl text-sm text-gray-600">
@@ -48,7 +48,7 @@ const Home = () => {
         </div>
         {/* Image Section */}
         <div className="flex justify-center items-center w-full pt-[10%]">
-          <img src={LandImg} alt="University Campus" className="rounded-[20px] w-2/3 p-2 min-w-70" />
+          <img src={LandImg} alt="University Campus" className="rounded-[20px] xl:w-2/3 w-full p-2 min-w-70" />
         </div>
       </div>
 
@@ -62,7 +62,7 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 md:grid-cols-4 grid-cols-1 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-8">
             {milestone.achievements.map((achievement, index) => (
               <Card key={index} className="glass shadow-sm overflow-hidden hover:shadow-lg transition-shadow duration-300">
                 <div className="aspect-video rounded-[50px]">
