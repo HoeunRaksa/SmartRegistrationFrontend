@@ -26,9 +26,9 @@ export default function CampusLife() {
   ];
 
   const highlights = [
-    { img: "Cake1.png", label: "Academic Excellence" },
-    { img: "Cake2.png", label: "Active Lifestyle" },
-    { img: "Cake3.png", label: "Cultural Diversity" },
+    { img: "ScholasticAwards.jpg", label: "Academic Excellence" },
+    { img: "active.jpg", label: "Active Lifestyle" },
+    { img: "Essay.jpg", label: "Cultural Diversity" },
   ];
 
   return (
