@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { ChevronFirst, LayoutDashboard, DollarSign, FileText, Settings, GraduationCap, CreditCard, UserIcon } from "lucide-react"
-const Profile = "/Images/profile.png";
-const Logo = "/Images/AdminLogo.png";
+const Profile = "/Images/Profile.jpg";
+const Logo = "/Images/Logo.png";
 
 import PaidStudentsTable from "./PaidStudentsTable"
 import PaymentsContent from "./payments-content"
@@ -48,7 +48,7 @@ const AdminSidebar = ({ children }) => {
   return (
     <section className="flex min-h-screen glass my-7">
       {/* Sidebar */}
-      <aside className="w-64 border-r shadow-md flex flex-col justify-between">
+      <aside className="w-64 border-r shadow-md flex flex-col justify-between"> 
         <div>
           {/* Logo & Title */}
           <div className="p-4 flex justify-between items-center border-b">
