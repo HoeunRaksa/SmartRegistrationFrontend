@@ -17,16 +17,18 @@ function App() {
 function AppContent() {
   const location = useLocation();
   const hideFooterRoutes = ["/adminsidebar", "/registration", "/login"];
+  const hideNavbarRoutes = ["/adminsidebar",];
+  const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname);
   const shouldHideFooter = hideFooterRoutes.includes(location.pathname);
 
   return (
     <>
     <SnowAnimation />
-      <div className="fixed top-0 left-0 w-full z-50">
-        <Nabar />
+      <div className={`fixed top-0 left-0 w-full z-50 ${shouldHideNavbar ? 'hidden w-0 h-0' : ''}`}>
+          <Nabar />
       </div>
 
-      <div className="relative w-auto h-auto py-1 px-4 sm:pt-15 pt-13">
+      <div className={`relative w-auto h-auto py-1 px-4 sm:pt-15 pt-13 ${shouldHideNavbar ? 'py-0 px-0 sm:pt-0 pt-0' : ''}`}>
         <MainRouter />
       </div>
 
@@ -35,6 +37,8 @@ function AppContent() {
           <Footer />
         </div>
       )}
+
+      
     </>
   );
 }

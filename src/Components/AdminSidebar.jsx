@@ -46,7 +46,7 @@ const AdminSidebar = ({ children }) => {
   }
 
   return (
-    <section className="flex min-h-screen glass my-7">
+    <section className="flex min-h-screen glass">
       {/* Sidebar */}
       <aside className="w-64 border-r shadow-md flex flex-col justify-between"> 
         <div>
