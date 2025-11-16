@@ -259,7 +259,7 @@ export default function PaymentsContent() {
           </div>
 
           {/* Table */}
-          <div className="rounded-md border">
+          <div className="rounded-md ">
             <Table>
               <TableHeader>
                 <TableRow>

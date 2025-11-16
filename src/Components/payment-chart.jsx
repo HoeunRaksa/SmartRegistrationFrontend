@@ -48,20 +48,26 @@ export function PaymentChart({ payments }) {
     },
   }
 
+  const colors = {
+  paid: "#BFDBFE",
+  unpaid: "#FCA5A5",
+};
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Payment Statistics</CardTitle>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-[300px] w-full">
+        <ChartContainer config={chartConfig} className="h-[300px] w-full glass">
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
             <YAxis tickLine={false} axisLine={false} tickMargin={10} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="paid" fill="var(--color-paid)" radius={4} />
-            <Bar dataKey="unpaid" fill="var(--color-unpaid)" radius={4} />
+           <Bar dataKey="paid" fill= {colors.paid} radius={4} />
+           <Bar dataKey="unpaid" fill= {colors.unpaid} radius={4} />
+
           </BarChart>
         </ChartContainer>
       </CardContent>

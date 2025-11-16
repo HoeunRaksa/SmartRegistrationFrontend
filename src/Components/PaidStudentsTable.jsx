@@ -102,7 +102,7 @@ export default function PaidStudentsTable() {
       </div>
 
       {/* Table */}
-      <div className="rounded-lg border overflow-x-auto">
+      <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -156,7 +156,7 @@ export default function PaidStudentsTable() {
       </div>
 
       {/* Results Count */}
-      <p className="text-sm text-muted-foreground text-right">
+      <p className="text-sm text-right">
         Showing {filteredStudents.length} of {students.length} paid students
       </p>
     </div>

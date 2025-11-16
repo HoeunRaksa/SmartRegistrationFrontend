@@ -10,7 +10,7 @@ export function ChartContainer({ title, description, children, className }) {
   return (
     <div
       className={cn(
-        "w-full h-[350px] p-4 rounded-2xl border bg-card shadow-sm",
+        "w-full h-[350px] p-4 rounded-2xl bg-card shadow-sm",
         className
       )}
     >
@@ -53,18 +53,18 @@ export function ChartTooltipContent({ active, payload, label }) {
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 5 }}
-      className="rounded-lg border bg-popover px-3 py-2 text-sm shadow-md"
+      className="rounded-lg bg-popover px-3 py-2 text-sm shadow-md"
     >
       <p className="font-medium text-foreground">{label}</p>
       {payload.map((entry, index) => (
         <div key={`tooltip-${index}`} className="flex items-center gap-2">
           <span
-            className="w-2.5 h-2.5 rounded-full"
+            className="w-2.5 h-2.5 rounded-full "
             style={{ backgroundColor: entry.color }}
           />
           <span className="text-muted-foreground">
             {entry.name}:{" "}
-            <span className="font-medium text-foreground">{entry.value}</span>
+            <span className="font-medium text-foreground ">{entry.value}</span>
           </span>
         </div>
       ))}

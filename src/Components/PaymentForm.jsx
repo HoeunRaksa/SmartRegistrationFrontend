@@ -13,10 +13,10 @@ const PaymentForm = ({ onClose, formData }) => {
     setLoading(true);
     const data = {
       req_time: new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14),
-      merchant_id: "ec461971",
+      merchant_id: "ec462554",
       tran_id: Date.now().toString(),
-      first_name: "Hoeun",
-      last_name: "Raksa",
+      first_name: "Lang",
+      last_name: "Makara",
       email: "aba.bank@gmail.com",
       phone: "012345678",
       amount: 0.1,

@@ -1,8 +1,8 @@
 import * as React from "react"
 
-export function Table({ children, className = "" }) {
+export function Table({ children, className = "border-none glass " }) {
   return (
-    <table className={`w-full border-collapse text-sm ${className}`}>
+    <table className={`w-full text-sm glass ${className}`}>
       {children}
     </table>
   )
@@ -18,7 +18,7 @@ export function TableBody({ children, className = "" }) {
 
 export function TableRow({ children, className = "" }) {
   return (
-    <tr className={`border-b hover:bg-gray-50 transition-colors ${className}`}>
+    <tr className={`glass ${className}`}>
       {children}
     </tr>
   )

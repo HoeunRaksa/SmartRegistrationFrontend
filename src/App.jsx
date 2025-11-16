@@ -16,14 +16,13 @@ function App() {
 
 function AppContent() {
   const location = useLocation();
-  const hideFooterRoutes = ["/adminsidebar", "/registration", "/login"];
+  const hideFooterRoutes = ["/Adminsidebar", "/registration", "/login"];
   const hideNavbarRoutes = ["/adminsidebar",];
   const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname);
   const shouldHideFooter = hideFooterRoutes.includes(location.pathname);
 
   return (
     <>
-    <SnowAnimation />
       <div className={`fixed top-0 left-0 w-full z-50 ${shouldHideNavbar ? 'hidden w-0 h-0' : ''}`}>
           <Nabar />
       </div>
