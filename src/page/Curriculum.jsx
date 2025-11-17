@@ -1,14 +1,16 @@
 import React from "react";
 import { Card, CardContent } from "../Components/ui/Card";
 import { Link } from "react-router-dom";
-const programs = {
+
+// Keep the same programs object; we will use the object keys as IDs in routes
+export const programs = {
   AiResearcher: {
     icon: "🤖",
     iconColor: "text-teal-500",
     title: "AI Researcher",
     description: "Explore the forefront of artificial intelligence and machine learning.",
     items: ["Machine Learning", "Natural Language Processing", "Computer Vision", "Robotics"],
-    link: "/curriculumdetail"
+    // note: link replaced by route path below (we'll generate it dynamically)
   },
   BusinessEconomics: {
     icon: "💼",
@@ -16,7 +18,6 @@ const programs = {
     title: "Business & Economics",
     description: "Industry-leading business programs with global perspectives and practical experience.",
     items: ["MBA Programs", "International Business", "Finance & Banking", "Entrepreneurship"],
-    link: "#"
   },
   ArtsHumanities: {
     icon: "🎨",
@@ -24,7 +25,6 @@ const programs = {
     title: "Arts & Humanities",
     description: "Explore creativity and critical thinking through diverse cultural and artistic studies.",
     items: ["Literature", "History", "Philosophy", "Visual Arts"],
-    link: "#"
   },
   EnvironmentalLifeSciences: {
     icon: "🌿",
@@ -32,7 +32,6 @@ const programs = {
     title: "Environmental & Life Sciences",
     description: "Programs focused on sustainability, ecology, and life sciences research.",
     items: ["Ecology", "Marine Biology", "Sustainability Studies", "Genetics"],
-    link: "#"
   },
   LawSocialSciences: {
     icon: "⚖️",
@@ -40,7 +39,6 @@ const programs = {
     title: "Law & Social Sciences",
     description: "Comprehensive programs preparing students for careers in law, governance, and society.",
     items: ["Law", "Political Science", "Sociology", "Public Policy"],
-    link: "#"
   },
   InformationTechnologyAI: {
     icon: "🖥️",
@@ -48,7 +46,6 @@ const programs = {
     title: "Information Technology & AI",
     description: "Advanced IT programs and artificial intelligence research for the future of technology.",
     items: ["Artificial Intelligence", "Cybersecurity", "Cloud Computing", "Software Engineering"],
-    link: "#"
   },
   HealthMedicine: {
     icon: "🏥",
@@ -56,7 +53,6 @@ const programs = {
     title: "Health & Medicine",
     description: "Leading programs in medical sciences, healthcare, and public health.",
     items: ["Medicine", "Nursing", "Public Health", "Pharmacy"],
-    link: "#"
   },
   HospitalityTourism: {
     icon: "✈️",
@@ -64,7 +60,6 @@ const programs = {
     title: "Hospitality & Tourism",
     description: "Prepare for global careers in hospitality, travel, and tourism management.",
     items: ["Hotel Management", "Tourism Studies", "Event Management", "Travel Operations"],
-    link: "#"
   },
   ScienceEngineering: {
     icon: "🧪",
@@ -72,13 +67,38 @@ const programs = {
     title: "Science & Engineering",
     description: "Cutting-edge research facilities and world-renowned faculty in STEM fields.",
     items: ["Computer Science", "Biomedical Engineering", "Environmental Science", "Data Analytics"],
-    link: "#"
   }
 };
 
 const Curriculum = () => {
   return (
     <div>
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-r from-blue-600 to-teal-500 text-white">
+        <div className="container mx-auto px-6 py-20 flex flex-col-reverse md:flex-row items-center md:justify-between">
+          <div className="text-center md:text-left md:w-1/2">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
+              Unlock Your Potential with Our Programs
+            </h1>
+            <p className="text-lg sm:text-xl mb-6 leading-relaxed">
+              Dive into world-class education and research opportunities designed to equip you with skills for tomorrow’s careers.
+            </p>
+            <Link
+              to="/curriculum"
+              className="inline-block bg-white text-blue-600 font-semibold px-6 py-3 rounded-lg shadow-lg hover:bg-gray-100 transition-all"
+            >
+              Explore Programs
+            </Link>
+          </div>
+          <div className="md:w-1/2 mb-10 md:mb-0 flex justify-center">
+            <img
+              src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=80"
+              alt="Education Hero"
+              className="w-full max-w-md rounded-xl shadow-lg"
+            />
+          </div>
+        </div>
+      </section>
       <section className="py-20 my-4 glass text-gray-700">
         <div className="container mx-auto px-6">
           {/* Header */}
@@ -93,9 +113,9 @@ const Curriculum = () => {
           </div>
 
           {/* Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {Object.values(programs).map((program, index) => (
-              <Card key={index} className="bg-white shadow-sm border-border hover:shadow-lg transition-shadow duration-300">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {Object.entries(programs).map(([key, program]) => (
+              <Card key={key} className="bg-white shadow-sm border-border hover:shadow-lg transition-shadow duration-300">
                 <CardContent className="p-6 text-left">
                   <div className={`text-4xl m-4 ${program.iconColor}`}>{program.icon}</div>
                   <h3 className="text-xl font-semibold mb-3 text-primary">{program.title}</h3>
@@ -105,7 +125,11 @@ const Curriculum = () => {
                       <li key={i}>{item}</li>
                     ))}
                   </ul>
-                  <Link to={program.link} className="text-blue-500 font-medium hover:underline">
+                  {/* link to param-based detail route */}
+                  <Link
+                    to={`/curriculum/${encodeURIComponent(key)}`}
+                    className="text-blue-500 font-medium hover:underline"
+                  >
                     Learn More →
                   </Link>
                 </CardContent>

@@ -6,7 +6,7 @@ import { Route } from "react-router-dom";
 
 const MonyRoutes = () => [
   <Route key="curriculum" path="/curriculum" element={<Curriculum />} />,
-  <Route key="curriculumdetail" path="/curriculumdetail" element={<CurriculumDetail />} />,
+  <Route key="curriculumdetail" path="/curriculum/:id" element={<CurriculumDetail />} />,
   <Route key="managestudent" path="/managestudent" element={<StudentLifecycleTracker />} />,
 ];
 
