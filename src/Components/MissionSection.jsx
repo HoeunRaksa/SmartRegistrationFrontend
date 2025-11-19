@@ -23,8 +23,8 @@ export function MissionSection() {
             <Card key={index} className="bg-white hover:shadow-lg shadow-sm duration-300">
               <CardContent className="p-6 text-center">
                 <div className="sm:text-5xl sm:mb-4 sm:mt-4 text-2xl mx-2">{value.icon}</div>
-                <h3 className="sm:text-xl text-sm font-semibold mb-3 text-primary">{value.title}</h3>
-                <p className="sm:text-sm text-xs leading-relaxed">{value.description}</p>
+                <h3 className="lg:text-2xl sm:text-xl text-sm font-semibold mb-3 text-primary">{value.title}</h3>
+                <p className="sm:text-xl text-xs leading-relaxed">{value.description}</p>
               </CardContent>
             </Card>
           ))}
