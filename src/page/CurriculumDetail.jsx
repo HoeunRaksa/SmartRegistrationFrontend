@@ -1,13 +1,3 @@
-// import React from "react";
-
-// const CurriculumDetail = () => {
-//   return <div className="p-10">
-//     Curriculum Detail Page
-//   </div>;
-// };
-
-// export default CurriculumDetail;
-// src/pages/CurriculumDetail.jsx
 import React from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { programs } from "./Curriculum";
@@ -15,8 +5,6 @@ import { programs } from "./Curriculum";
 const CurriculumDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
-  // id is the key name in the `programs` object
   const program = programs[id];
 
   if (!program) {

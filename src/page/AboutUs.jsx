@@ -8,7 +8,7 @@ import milestone from "../Data/Milestones.json"
 import { ApiBaseImg } from "../Configration.jsx";
 const AbouteUs = () => {
   return (
-    <div className="my-4">
+    <div className="my-4 mt-5">
       <main className="min-h-screen">
         <HeroSection />
         <HistorySection />

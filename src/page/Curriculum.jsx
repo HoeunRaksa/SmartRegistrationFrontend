@@ -2,7 +2,6 @@ import React from "react";
 import { Card, CardContent } from "../Components/ui/Card";
 import { Link } from "react-router-dom";
 
-// Keep the same programs object; we will use the object keys as IDs in routes
 export const programs = {
   AiResearcher: {
     icon: "🤖",
@@ -10,7 +9,6 @@ export const programs = {
     title: "AI Researcher",
     description: "Explore the forefront of artificial intelligence and machine learning.",
     items: ["Machine Learning", "Natural Language Processing", "Computer Vision", "Robotics"],
-    // note: link replaced by route path below (we'll generate it dynamically)
   },
   BusinessEconomics: {
     icon: "💼",
@@ -74,7 +72,7 @@ const Curriculum = () => {
   return (
     <div>
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-blue-600 to-teal-500 text-white">
+      <section className="relative bg-gradient-to-r from-blue-600 to-teal-500 text-white mt-5 rounded-lg">
         <div className="container mx-auto px-6 py-20 flex flex-col-reverse md:flex-row items-center md:justify-between">
           <div className="text-center md:text-left md:w-1/2">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
@@ -100,7 +98,7 @@ const Curriculum = () => {
         </div>
       </section>
       <section className="py-20 my-4 glass text-gray-700">
-        <div className="container mx-auto px-6">
+        <div className=" mx-auto px-6">
           {/* Header */}
           <div className="text-center mb-16">
             <h2 className="sm:text-4xl text-xl md:text-5xl font-bold mb-6 text-balance">
