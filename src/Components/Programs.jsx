@@ -31,10 +31,10 @@ function Program() {
       <div className="mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-16">
-          <h2 className="sm:text-2xl text-sm font-bold mb-6 text-balance">
+          <h2 className="lg:text-3xl sm:text-2xl text-sm font-bold mb-6 text-balance">
             World-Class Academic Programs
           </h2>
-          <p className="lg:text-sm text-xs mb-8 max-w-4xl mx-auto">
+          <p className="lg:text-xl sm:text-sm text-xs mb-8 max-w-4xl mx-auto">
             Discover our comprehensive range of undergraduate, graduate, and doctoral
             programs designed to prepare you for success in the global marketplace.
           </p>
@@ -47,13 +47,13 @@ function Program() {
               <CardContent className="p-6 text-left">
                 <div className={`sm:text-4xl text-xl m-4 ${program.iconColor}`}>{program.icon}</div>
                 <h3 className="sm:text-xl text-sm font-bold pb-2">{program.title}</h3>
-                <p className="lg:text-sm text-xs mb-3">{program.description}</p>
-                <ul className="mb-4 list-disc list-inside lg:text-sm text-xs">
+                <p className="lg:text-xl sm:text-sm text-xs mb-3">{program.description}</p>
+                <ul className="mb-4 list-disc list-inside lg:text-xl sm:text-sm text-xs">
                   {program.items.map((item, i) => (
                     <li key={i}>{item}</li>
                   ))}
                 </ul>
-                <a href={program.link} className="text-blue-500 lg:text-sm text-xs hover:underline">
+                <a href={program.link} className="text-blue-500 lg:text-xl sm:text-sm text-xs hover:underline">
                   Learn More →
                 </a>
               </CardContent>

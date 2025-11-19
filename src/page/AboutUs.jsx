@@ -14,11 +14,11 @@ const AbouteUs = () => {
         <HistorySection />
         <MissionSection />
       </main>
-        <section className="py-20 glass my-5 rounded-lg shadow-sm">
+        <section className=" py-5 glass my-5 rounded-lg shadow-sm">
           <div className="text-gray-700 mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-balance">Academic Excellence</h2>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto text-pretty leading-relaxed">
+            <div className="text-center">
+              <h2 className="sm:text-xl text-sm font-bold py-5 text-balance">Academic Excellence</h2>
+              <p className="sm:text-sm text-xs max-w-3xl mx-auto text-pretty leading-relaxed">
                 Our commitment to excellence is reflected in our achievements, recognition, and the success of our graduates
                 who are making a difference worldwide.
               </p>
@@ -35,9 +35,9 @@ const AbouteUs = () => {
                     />
                   </div>
                   <CardContent className="p-6">
-                    <div className="text-4xl font-bold text-primary mb-2">{achievement.count}</div>
-                    <h3 className="text-xl font-semibold mb-3">{achievement.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed">{achievement.description}</p>
+                    <div className="sm:text-xl text-sm font-bold text-primary mb-2">{achievement.count}</div>
+                    <h3 className="sm:text-xl text-sm font-semibold mb-3">{achievement.title}</h3>
+                    <p className="sm:text-sm text-xs leading-relaxed">{achievement.description}</p>
                   </CardContent>
                 </Card>
               ))}

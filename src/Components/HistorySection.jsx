@@ -4,13 +4,13 @@ import milestone from "../Data/Milestones.json"
 
 export function HistorySection() {
   return (
-    <section className="py-20 my-5 glass shadow-sm rounded-lg">
+    <section className="py-10 my-5 glass shadow-sm rounded-lg">
       <div className="mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl text-gray-700 font-bold mb-6 text-balance">
+          <h2 className="text-xl sm:text-2xl text-gray-700 font-bold py-5 text-balance">
             {milestone.header.title}
           </h2>
-          <p className="text-xl text-muted-foreground text-gray-700 max-w-3xl mx-auto text-pretty leading-relaxed">
+          <p className="sm:text-sm text-xs text-muted-foreground text-gray-700 max-w-3xl mx-auto text-pretty leading-relaxed">
             {milestone.header.dedicated}
           </p>  
         </div>
@@ -22,10 +22,12 @@ export function HistorySection() {
               className="bg-white hover:shadow-lg transition-shadow duration-300"
             >
               <CardContent className="p-6 text-start">
-                <div className="text-4xl mb-4 mt-4">{item.icon}</div>
-                <div className="text-2xl font-bold text-primary mb-2">{item.year}</div>
-                <h3 className="text-xl font-semibold mb-3">{item.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{item.description}</p>
+                <div className="flex items-center gap-3 p-3 w-full">
+                <div className="sm:text-5xl sm:mb-4 sm:mt-4 text-2xl mx-2">{item.icon}</div>
+                <div className="sm:text-xl text-sm font-bold ">{item.year}</div>
+                </div>
+                <h3 className="sm:text-sm text-xs font-bold text-gray-700 mb-3">{item.title}</h3>
+                <p className="sm:text-sm text-xs text-gray-700 leading-relaxed">{item.description}</p>
               </CardContent>
             </Card>
           ))}

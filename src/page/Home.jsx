@@ -14,14 +14,14 @@ const Home = () => {
           <p className="font-bold sm:text-2xl md:text-2xl lg:text-3xl xl:text-6xl text-2xl text-gray-700">
             Welcome <span className="text-orange-500"> To</span> <span className="text-orange-500">NovaTech </span> University
           </p>
-          <p className="lg:text-sm text-xs text-gray-600">
+          <p className="lg:text-xl text-xs text-gray-600">
             Embark on your journey to academic excellence and groundbreaking achievements today!
           </p>
-          <p className="font-medium lg:text-sm text-xs sx:hidden text-gray-700">
+          <p className="font-medium lg:text-xl text-xs sx:hidden text-gray-700">
             Explore transformative programs, collaborate with visionary minds, and develop the skills to shape the future.
             Your path to success begins here at <span className="text-orange-500">NovaTech University</span>.
           </p>
-          <div className="flex space-x-4 pt-4 justify-evenly">
+          <div className="flex space-x-4 pt-4 justify-start">
             <button className=" bg-orange-500 sm:py-4 sm:px-8 py-2 px-4 sm:rounded-lg lg:text-sm text-xs rounded-lg shadow-md hover:shadow-lg transition-all hover:scale-105 duration-200 text-white cursor-pointer">
               Get Started
             </button>
@@ -54,8 +54,8 @@ const Home = () => {
       <section className="py-10 glass">
         <div className=" text-gray-700 mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className=" md:text-2xl text-sm font-bold mb-6">Academic Excellence</h2>
-            <p className="lg:text-sm text-xs max-w-3xl mx-auto text-pretty leading-relaxed">
+            <h2 className=" md:text-3xl sm:text-2xl text-xl font-bold mb-6">Academic Excellence</h2>
+            <p className="lg:text-xl sm:text-sm text-xs max-w-3xl mx-auto text-pretty leading-relaxed">
               Our commitment to excellence is reflected in our achievements, recognition, and the success of our graduates
               who are making a difference worldwide.
             </p>
@@ -73,8 +73,8 @@ const Home = () => {
                 </div>
                 <CardContent className="p-6">
                   <div className="sm:text-2xl text-sm font-semibold mb-2">{achievement.count}</div>
-                  <h3 className="sm:text-xl text-sm mb-3">{achievement.title}</h3>
-                  <p className="lg:text-sm text-xs">{achievement.description}</p>
+                  <h3 className="sm:text-xl text-sm mb-3 font-semibold">{achievement.title}</h3>
+                  <p className="lg:text-xl sm:text-sm text-xs">{achievement.description}</p>
                 </CardContent>
               </Card>
             ))}

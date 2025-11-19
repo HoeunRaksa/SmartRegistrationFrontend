@@ -34,8 +34,8 @@ export default function CampusLife() {
   return (
     <section className="glass rounded-lg text-gray-700 py-16 my-4 px-6 lg:px-20">
       <div className="text-center max-w-3xl mx-auto mb-12">
-        <h2 className="sm:text-xl text-sm font-bold mb-4">Vibrant Campus Life</h2>
-        <p className="sm:text-sm text-xs">
+        <h2 className="lg:text-3xl sm:text-2xl text-xl font-bold mb-4">Vibrant Campus Life</h2>
+        <p className="lg:text-xl sm:text-sm text-xs">
           Experience a dynamic campus community with endless opportunities for growth,
           connection, and discovery beyond the classroom.
         </p>

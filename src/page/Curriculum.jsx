@@ -73,17 +73,17 @@ const Curriculum = () => {
     <div>
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-blue-600 to-teal-500 text-white mt-5 rounded-lg">
-        <div className="container mx-auto px-6 py-20 flex flex-col-reverse md:flex-row items-center md:justify-between">
+        <div className="container mx-auto px-6 py-10 flex flex-col-reverse md:flex-row items-center md:justify-between">
           <div className="text-center md:text-left md:w-1/2">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-6">
               Unlock Your Potential with Our Programs
             </h1>
-            <p className="text-lg sm:text-xl mb-6 leading-relaxed">
+            <p className="text-xs sm:text-sm mb-6 leading-relaxed">
               Dive into world-class education and research opportunities designed to equip you with skills for tomorrow’s careers.
             </p>
             <Link
               to="/curriculum"
-              className="inline-block bg-white text-blue-600 font-semibold px-6 py-3 rounded-lg shadow-lg hover:bg-gray-100 transition-all"
+              className="inline-block bg-white text-blue-600 px-6 py-2 sm:text-sm text-xs rounded-lg shadow-lg hover:bg-gray-100 transition-all"
             >
               Explore Programs
             </Link>
@@ -101,10 +101,10 @@ const Curriculum = () => {
         <div className=" mx-auto px-6">
           {/* Header */}
           <div className="text-center mb-16">
-            <h2 className="sm:text-4xl text-xl md:text-5xl font-bold mb-6 text-balance">
+            <h2 className="sm:text-xl text-sm md:text-5xl font-bold mb-6 text-balance">
               World-Class Academic Programs
             </h2>
-            <p className="text-xl mb-8 text-pretty leading-relaxed max-w-4xl mx-auto">
+            <p className="sm:text-sm text-xs mb-8 text-pretty leading-relaxed max-w-4xl mx-auto">
               Discover our comprehensive range of undergraduate, graduate, and doctoral
               programs designed to prepare you for success in the global marketplace.
             </p>
@@ -115,10 +115,10 @@ const Curriculum = () => {
             {Object.entries(programs).map(([key, program]) => (
               <Card key={key} className="bg-white shadow-sm border-border hover:shadow-lg transition-shadow duration-300">
                 <CardContent className="p-6 text-left">
-                  <div className={`text-4xl m-4 ${program.iconColor}`}>{program.icon}</div>
-                  <h3 className="text-xl font-semibold mb-3 text-primary">{program.title}</h3>
-                  <p className="text-muted-foreground mb-3">{program.description}</p>
-                  <ul className="mb-4 list-disc list-inside text-muted-foreground">
+                  <div className={`text-2xl m-4 ${program.iconColor}`}>{program.icon}</div>
+                  <h3 className="sm:text-xl text-sm font-semibold mb-3 text-primary">{program.title}</h3>
+                  <p className="text-muted-foreground sm:text-sm text-xs mb-3">{program.description}</p>
+                  <ul className="mb-4 list-disc list-inside sm:text-sm text-xs">
                     {program.items.map((item, i) => (
                       <li key={i}>{item}</li>
                     ))}
@@ -126,7 +126,7 @@ const Curriculum = () => {
                   {/* link to param-based detail route */}
                   <Link
                     to={`/curriculum/${encodeURIComponent(key)}`}
-                    className="text-blue-500 font-medium hover:underline"
+                    className="text-blue-500 font-medium sm:text-sm text-xs hover:underline"
                   >
                     Learn More →
                   </Link>
