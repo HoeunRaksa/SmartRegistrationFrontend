@@ -32,9 +32,9 @@ export default function CampusLife() {
   ];
 
   return (
-    <section className="glass rounded-lg text-gray-700 py-16 my-4 px-6 lg:px-20">
+    <section className="glass rounded-lg text-gray-600 py-16 my-4 px-6 lg:px-20">
       <div className="text-center max-w-3xl mx-auto mb-12">
-        <h2 className="lg:text-3xl sm:text-2xl text-xl font-bold mb-4">Vibrant Campus Life</h2>
+        <h2 className="lg:text-3xl sm:text-2xl text-xl text-gray-700 font-bold mb-4">Vibrant Campus Life</h2>
         <p className="lg:text-xl sm:text-sm text-xs">
           Experience a dynamic campus community with endless opportunities for growth,
           connection, and discovery beyond the classroom.
@@ -44,11 +44,11 @@ export default function CampusLife() {
       {/* Features */}
       <div className="grid md:grid-cols-4 gap-8 mb-16">
         {features.map((item, index) => (
-          <Card key={index} className="glass text-gray-700 transition-all duration-200">
+          <Card key={index} className="glass text-gray-600 transition-all duration-200">
             <CardHeader className="flex flex-col items-center text-center">
               <div className="itemglass p-2 rounded-full mb-4">{item.icon}</div>
-              <CardTitle className="mb-2 sm:text-xl text-xs">{item.title}</CardTitle>
-              <CardDescription className="md:text-xl sm:text-sm text-xs opacity-80">{item.desc}</CardDescription>
+              <CardTitle className="mb-2 sm:text-xl text-gray-700 text-xs">{item.title}</CardTitle>
+              <CardDescription className="md:text-lg sm:text-sm text-xs opacity-80">{item.desc}</CardDescription>
             </CardHeader>
           </Card>
         ))}

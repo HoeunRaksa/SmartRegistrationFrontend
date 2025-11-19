@@ -54,8 +54,8 @@ const Home = () => {
       <section className="py-10 glass">
         <div className=" text-gray-700 mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className=" md:text-3xl sm:text-2xl text-xl font-bold mb-6">Academic Excellence</h2>
-            <p className="lg:text-xl sm:text-sm text-xs max-w-3xl mx-auto text-pretty leading-relaxed">
+            <h2 className=" md:text-3xl sm:text-2xl text-xl font-bold mb-6 text-gray-600">Academic Excellence</h2>
+            <p className="lg:text-xl sm:text-sm text-xs max-w-3xl mx-auto text-pretty leading-relaxed opacity-80">
               Our commitment to excellence is reflected in our achievements, recognition, and the success of our graduates
               who are making a difference worldwide.
             </p>
@@ -72,9 +72,9 @@ const Home = () => {
                   />
                 </div>
                 <CardContent className="p-6">
-                  <div className="sm:text-2xl text-sm font-semibold mb-2">{achievement.count}</div>
-                  <h3 className="sm:text-xl text-sm mb-3 font-semibold">{achievement.title}</h3>
-                  <p className="lg:text-xl sm:text-sm text-xs">{achievement.description}</p>
+                  <div className="sm:text-2xl text-sm font-semibold mb-2 ">{achievement.count}</div>
+                  <h3 className="sm:text-xl text-sm mb-3 font-semibold opacity-90">{achievement.title}</h3>
+                  <p className="lg:text-xl sm:text-sm text-xs opacity-80">{achievement.description}</p>
                 </CardContent>
               </Card>
             ))}
