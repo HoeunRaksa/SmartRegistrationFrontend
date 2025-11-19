@@ -41,49 +41,47 @@ function Navbar() {
     <nav className="bg-white shadow-lg">
       <ToastContainer />
       <div className="flex items-center justify-between md:px-16 px-4 py-4">
-        {/* Logo/Brand */}
         <div className="text-gray-700 font-bold md:text-2xl lg:mr-5 mr-0 sm:text-xl text-xl tracking-wide">
           <span className="text-orange-600 uppercase">NovaTech</span>
         </div>
-        {/* Navigation Items + Login grouped together */}
         <div className="sm:flex px-4 mr-auto lg:space-x-8 space-x-3 hidden">
           <Link
             to="/"
             className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-all duration-200"
           >
-            <div className="w-7 h-7 bg-green-500 rounded-lg flex items-center justify-center shadow hover:scale-110 transition">
-              <Home className="sm:w-3 md:w-4 w-5 text-gray-700" />
+            <div className="w-6 h-6 bg-green-500 rounded-lg flex items-center justify-center shadow hover:scale-110 transition">
+              <Home className="sm:w-4 md:w-4 w-3 text-white" />
             </div>
-            <span className="lg:text-xl sm:text-sm text-xs text-gray-700 ">Home</span>
+            <span className=" sm:text-sm text-xs text-gray-700 ">Home</span>
           </Link>
 
           <Link
             to="/curriculum"
             className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-all duration-200"
           >
-            <div className="w-7 h-7 bg-gradient-to-r from-orange-400 to-red-500 rounded-lg flex items-center justify-center shadow hover:scale-110 transition">
-              <BarChart3 className="sm:w-3 md:w-4 w-5 text-gray-700" />
+            <div className="w-6 h-6 bg-gradient-to-r from-orange-400 to-red-500 rounded-lg flex items-center justify-center shadow hover:scale-110 transition">
+              <BarChart3 className="sm:w-4 md:w-4 w-3 text-white" />
             </div>
-            <span className="lg:text-xl sm:text-sm text-xs text-gray-700">Programs</span>
+            <span className=" sm:text-sm text-xs text-gray-700">Programs</span>
           </Link>
 
           <Link
             to="/aboutus"
             className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-all duration-200"
           >
-            <div className="w-7 h-7 bg-cyan-500 rounded-lg flex items-center justify-center shadow hover:scale-110 transition">
-              <Info className="sm:w-3 md:w-4 w-5 text-gray-700" />
+            <div className="w-6 h-6 bg-cyan-500 rounded-lg flex items-center justify-center shadow hover:scale-110 transition">
+              <Info className="sm:w-4 md:w-4 w-3 text-white" />
             </div>
-            <span className="lg:text-xl sm:text-sm text-xs text-gray-700">About Us</span>
+            <span className=" sm:text-sm text-xs text-gray-700">About Us</span>
           </Link>
           <Link
             to="/registration"
             className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-all duration-200"
           >
-            <div className="w-7 h-7 bg-blue-500 rounded-lg flex items-center justify-center shadow hover:scale-110 transition">
-              <FileText className="sm:w-3 md:w-4 w-5 text-gray-700" />
+            <div className="w-6 h-6 bg-blue-500 rounded-lg flex items-center justify-center shadow hover:scale-110 transition">
+              <FileText className="sm:w-4 md:w-4 w-3 text-white" />
             </div>
-            <span className="lg:text-xl sm:text-sm text-xs text-gray-700">Registration</span>
+            <span className=" sm:text-sm text-xs text-gray-700">Registration</span>
           </Link>
         </div>
 
@@ -91,7 +89,7 @@ function Navbar() {
           <div className="relative max-w-15" ><img src={`${ApiBaseImg}${User.avatar}`} className="w-full" alt="" /></div>
         ) : (
           <div>
-            <Button onClick={handleLogin} className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-gray-700 md:px-5 md:py-2 sm:px-4 sm:py-2 rounded font-semibold shadow-md hover:shadow-lg transition-all hidden lg:inline">
+            <Button onClick={handleLogin} className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-gray-700 md:px-5 md:py-1 sm:px-4 sm:py-2 rounded-lg shadow-md hover:shadow-lg transition-all hidden lg:inline">
               Login
             </Button>
           </div>
@@ -110,22 +108,22 @@ function Navbar() {
           }`}
       >
         <nav className="flex p-5 flex-col space-y-6">
-          <Link to="/" onClick={handleNewClick} className="text-gray-800 p-3 itemglass font-medium hover:text-blue-600 transition rounded-lg">
+          <Link to="/" onClick={handleNewClick} className="text-gray-800 text-xs p-3 itemglass font-medium hover:text-blue-600 transition rounded-lg">
             Home
           </Link>
-          <Link to="/curriculum" onClick={handleNewClick} className="text-gray-800 p-3 itemglass font-medium hover:text-blue-600 transition rounded-lg">
+          <Link to="/curriculum" onClick={handleNewClick} className="text-gray-800 text-xs p-3 itemglass font-medium hover:text-blue-600 transition rounded-lg">
             Programs
           </Link>
-          <Link to="/aboutus" onClick={handleNewClick} className="text-gray-800 p-3 itemglass font-medium hover:text-blue-600 transition  rounded-lg">
+          <Link to="/aboutus" onClick={handleNewClick} className="text-gray-800 text-xs p-3 itemglass font-medium hover:text-blue-600 transition  rounded-lg">
             About Us
           </Link>
-          <Link to="/registration" onClick={handleNewClick} className="text-gray-800 p-3 itemglass font-medium hover:text-blue-600 transition  rounded-lg">
+          <Link to="/registration" onClick={handleNewClick} className="text-gray-800 text-xs p-3 itemglass font-medium hover:text-blue-600 transition  rounded-lg">
             Registration
           </Link>
         </nav>
         <Button
           onClick={handleLogin}
-          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-gray-700 md:px-5 md:py-2 sm:px-4 sm:py-2 mx-5 rounded font-semibold shadow-md hover:shadow-lg transition-all"
+          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-xs text-gray-700 md:py-2 sm:px-4 sm:py-2 mx-5 rounded-lg shadow-md hover:shadow-lg transition-all"
         >
           Login
         </Button>
