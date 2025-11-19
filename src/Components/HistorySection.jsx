@@ -23,7 +23,7 @@ export function HistorySection() {
             >
               <CardContent className="p-6 text-start">
                 <div className="flex items-center gap-3 p-3 w-full">
-                <div className="lg:text-4xl sm:text-2xl text-xl sm:mb-4 sm:mt-4 text-2xl mx-2">{item.icon}</div>
+                <div className="lg:text-4xl sm:text-2xl text-xl sm:mb-4 sm:mt-4 mx-2">{item.icon}</div>
                 <div className="md:text-2xl sm:text-xl text-sm font-bold ">{item.year}</div>
                 </div>
                 <h3 className="sm:text-xl text-xs font-bold text-gray-700 mb-3">{item.title}</h3>

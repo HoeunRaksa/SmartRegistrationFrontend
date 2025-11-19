@@ -37,7 +37,7 @@ const AbouteUs = () => {
                   <CardContent className="p-6">
                     <div className="sm:text-xl text-sm font-bold text-primary mb-2">{achievement.count}</div>
                     <h3 className="sm:text-xl text-sm font-semibold mb-3">{achievement.title}</h3>
-                    <p className="sm:text-sm text-xs leading-relaxed">{achievement.description}</p>
+                    <p className="sm:text-xl text-xs leading-relaxed">{achievement.description}</p>
                   </CardContent>
                 </Card>
               ))}

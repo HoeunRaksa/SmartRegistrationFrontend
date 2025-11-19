@@ -47,8 +47,8 @@ export default function CampusLife() {
           <Card key={index} className="glass text-gray-700 transition-all duration-200">
             <CardHeader className="flex flex-col items-center text-center">
               <div className="itemglass p-2 rounded-full mb-4">{item.icon}</div>
-              <CardTitle className="mb-2 text-xs">{item.title}</CardTitle>
-              <CardDescription className="text-sm">{item.desc}</CardDescription>
+              <CardTitle className="mb-2 sm:text-xl text-xs">{item.title}</CardTitle>
+              <CardDescription className="md:text-xl sm:text-sm text-xs opacity-80">{item.desc}</CardDescription>
             </CardHeader>
           </Card>
         ))}

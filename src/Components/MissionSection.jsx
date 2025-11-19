@@ -10,7 +10,7 @@ export function MissionSection() {
         <div className="text-center mb-16">
           <h2 className="text-xl md:text-2xl font-bold mb-6 text-balance">Our Mission & Values</h2>
           <div className="max-w-4xl mx-auto">
-            <p className="sm:text-sm text-xs mb-8 text-pretty leading-relaxed">
+            <p className="md:text-xl sm:text-sm text-xs mb-8 text-pretty leading-relaxed">
               {
                 "At Excellence University, our mission is to advance knowledge through innovative research, provide transformative educational experiences, and prepare students to become ethical leaders who will make a positive impact on the world."
               }
