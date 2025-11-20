@@ -23,6 +23,7 @@ function AppContent() {
 
   return (
     <>
+    <SnowAnimation/>
       <div className={`fixed top-0 left-0 w-full z-50 ${shouldHideNavbar ? 'hidden w-0 h-0' : ''}`}>
           <Nabar />
       </div>
