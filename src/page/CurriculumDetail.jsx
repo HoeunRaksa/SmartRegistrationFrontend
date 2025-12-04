@@ -1,15 +1,13 @@
 import React from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { programs } from "./Curriculum";
-
 const CurriculumDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const program = programs[id];
-
   if (!program) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-8">
+      <div className="min-h-screen  flex items-center justify-center p-8">
         <div className="max-w-xl w-full bg-white rounded-xl shadow-md p-8 text-center">
           <h2 className="text-2xl font-semibold mb-4">Program Not Found</h2>
           <p className="text-gray-600 mb-6">We couldn't find the program you're looking for.</p>
@@ -21,7 +19,6 @@ const CurriculumDetail = () => {
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-sky-50 py-12">
       <div className="container mx-auto px-6">

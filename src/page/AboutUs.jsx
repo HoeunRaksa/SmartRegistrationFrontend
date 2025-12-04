@@ -1,4 +1,3 @@
-import React from "react";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "../Components/ui/Card.jsx";
 import { HeroSection } from "../Components/HeroSection.jsx";
 import { HistorySection } from "../Components/HistorySection.jsx";

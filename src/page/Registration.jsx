@@ -1,230 +1,230 @@
-import React, { useState } from "react";
-import PaymentForm from "../Components/PaymentForm.jsx";
+import React, { useState, useEffect, useRef, createContext, useContext } from "react";
+import { CheckCircle, X, Loader, Upload, GraduationCap, User, Phone, MapPin, Mail, School, FileText, CreditCard } from "lucide-react";
+export const ToastContext = createContext();
+import PaymentForm from '../Components/PaymentForm.jsx';
 const Registration = () => {
   const [form, setForm] = useState({
-    // ===== Personal Information =====
-    studentID: "",
-    fullNameKh: "",
-    fullNameEn: "",
-    gender: "Other",
-    dateOfBirth: "",
-    nationalID: "",
-    address: "",
-    currentAddress: "",
-    phoneNumber: "",
-    personalEmail: "",
-
-    // ===== Academic Information =====
-    highSchoolName: "",
-    graduationYear: "",
-    grade12ExamCenter: "",
-    grade12Result: "",
-    faculty: "",
-    major: "",
-    shift: "Morning",
-    batch: "",
-    academicYear: "",
-    profilePicture: null,
-
-    // ===== Parent / Guardian Information =====
-    fatherName: "",
-    fathersJob: "",
-    motherName: "",
-    mothersJob: "",
-    guardianName: "",
-    guardianPhone: "",
-
-    // ===== Emergency Contact =====
-    emergencyContactName: "",
-    emergencyContactPhone: "",
-
-    // ===== Previous Education =====
-    previousSchool: "",
-    certificate: "",
-
-    // ===== Medical Information =====
-    bloodType: "",
-    medicalConditions: "",
-
-    // ===== Social / Online Profiles =====
-    linkedin: "",
-    facebook: "",
-
-    // ===== Preferences / Interests =====
-    studyMode: "On-Campus",
-    interests: "",
+    studentID: "", fullNameKh: "", fullNameEn: "", gender: "Male",
+    dateOfBirth: "", nationalID: "", address: "", currentAddress: "",
+    phoneNumber: "", personalEmail: "",
+    highSchoolName: "", graduationYear: "", grade12ExamCenter: "",
+    grade12Result: "", faculty: "", major: "", shift: "Morning",
+    batch: "", academicYear: "", profilePicture: null,
+    // Extra fields
+    fatherName: "", fathersJob: "", motherName: "", mothersJob: "",
+    guardianName: "", guardianPhone: "",
+    emergencyContactName: "", emergencyContactPhone: "",
+    previousSchool: "", certificate: "",
+    bloodType: "", medicalConditions: "",
+    linkedin: "", facebook: "",
+    studyMode: "On-Campus", interests: "",
   });
+
+  const [showQr, setShowQr] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState("PENDING");
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    if (files) {
-      setForm({ ...form, [name]: files[0] });
-    } else {
-      setForm({ ...form, [name]: value });
-    }
+    if (files) setForm({ ...form, [name]: files[0] });
+    else setForm({ ...form, [name]: value });
   };
-  const [showQr, setShowQr] = useState(false);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setShowQr(true);
   };
-  const inputClass =
-    "border border-white ring-1 ring-gray-300 glass rounded p-3 outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all duration-300";
+
+useEffect(() => {
+  if (paymentStatus === "PAID") setShowQr(false);
+}, [paymentStatus]);
+
+
+  const inputClass = "w-full  bg-white/50 border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 rounded-lg px-4 py-3 outline-none transition-all duration-200 text-gray-700 placeholder-gray-400";
+  const labelClass = "block text-sm font-medium text-gray-600 mb-1 ml-1";
+  
+  const InputGroup = ({ label, icon: Icon, children }) => (
+      <div className="relative group">
+          <label className={labelClass}>{label}</label>
+          <div className="relative">
+             {Icon && <Icon className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-orange-500 transition-colors" size={18} />}
+             <div className={`${Icon ? "pl-8" : ""}`}>
+                 {children}
+             </div>
+          </div>
+      </div>
+  );
+
+
   return (
-    <section className="h-full">
+    <section className="min-h-screen bg-slate-50 relative overflow-hidden font-sans">
+      {/* Background decoration */}
+      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-br from-orange-400 to-pink-600 rounded-b-[50px] shadow-lg z-0"></div>
+      <div className="absolute top-10 right-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+      <div className="absolute top-40 left-10 w-32 h-32 bg-yellow-300/20 rounded-full blur-2xl"></div>
+
       {showQr && (
-        <div className="fixed inset-0 flex justify-center items-center bg-opacity-50 z-50">
-          <PaymentForm onClose={() => setShowQr(false)} />
+        <div className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 animate-fade-in">
+          <PaymentForm
+            setPaymentStatus={setPaymentStatus}
+            onClose={() => setShowQr(false)}
+          />
         </div>
       )}
-     <div className="w-full min-h-screen flex justify-center items-start pt-6 mt-6 mb-3 glass overflow-y-auto">
-      <div className="w-full max-w-6xl p-6">
-        <h1 className="text-3xl md:text-5xl font-bold text-gray-700 text-center mb-12">
-          <span className="text-orange-500">NovaTech</span> University Registration
-        </h1>
 
-        <form className="space-y-10">
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-12">
+        <div className="text-center mb-10 text-white">
+          <div className="inline-flex items-center justify-center p-3 bg-white/20 backdrop-blur-md rounded-2xl mb-4 shadow-inner border border-white/30">
+             <GraduationCap size={40} className="text-white" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight drop-shadow-sm">
+            NovaTech University
+          </h1>
+          <p className="mt-2 text-orange-100 text-lg font-medium">Student Registration Portal</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-8 animate-slide-up">
+          
           {/* ===== Personal Information ===== */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
-              Personal Information
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input type="text" name="studentID" placeholder="Student ID" value={form.studentID} onChange={handleChange} className={inputClass} required />
-              <input type="text" name="fullNameKh" placeholder="Full Name (Khmer)" value={form.fullNameKh} onChange={handleChange} className={inputClass} required />
-              <input type="text" name="fullNameEn" placeholder="Full Name (English)" value={form.fullNameEn} onChange={handleChange} className={inputClass} required />
-              <select name="gender" value={form.gender} onChange={handleChange} className={inputClass}>
-                <option>Male</option>
-                <option>Female</option>
-                <option>Other</option>
-              </select>
-              <input type="date" name="dateOfBirth" value={form.dateOfBirth} onChange={handleChange} className={inputClass} required />
-              <input type="text" name="nationalID" placeholder="National ID / Passport" value={form.nationalID} onChange={handleChange} className={inputClass} />
-              <input type="text" name="address" placeholder="Permanent Address" value={form.address} onChange={handleChange} className={inputClass} />
-              <input type="text" name="currentAddress" placeholder="Current Address" value={form.currentAddress} onChange={handleChange} className={inputClass} />
-              <input type="tel" name="phoneNumber" placeholder="Phone Number" value={form.phoneNumber} onChange={handleChange} className={inputClass} />
-              <input type="email" name="personalEmail" placeholder="Personal Email" value={form.personalEmail} onChange={handleChange} className={inputClass} required />
+          <div className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/50">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+                <div className="p-2 bg-orange-100 rounded-lg text-orange-600">
+                    <User size={24} />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800">Personal Information</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <InputGroup label="Student ID">
+                  <input type="text" name="studentID" value={form.studentID} onChange={handleChange} className={inputClass} required placeholder="NTU-2024-XXXX" />
+              </InputGroup>
+              
+              <InputGroup label="Full Name (Khmer)">
+                  <input type="text" name="fullNameKh" value={form.fullNameKh} onChange={handleChange} className={inputClass} required placeholder="ឈ្មោះ នាមត្រកូល" />
+              </InputGroup>
+
+              <InputGroup label="Full Name (English)">
+                  <input type="text" name="fullNameEn" value={form.fullNameEn} onChange={handleChange} className={inputClass} required placeholder="First Last" />
+              </InputGroup>
+
+              <InputGroup label="Gender">
+                  <select name="gender" value={form.gender} onChange={handleChange} className={inputClass}>
+                    <option>Male</option>
+                    <option>Female</option>
+                    <option>Other</option>
+                  </select>
+              </InputGroup>
+
+              <InputGroup label="Date of Birth">
+                  <input type="date" name="dateOfBirth" value={form.dateOfBirth} onChange={handleChange} className={inputClass} required />
+              </InputGroup>
+
+              <InputGroup label="National ID / Passport">
+                  <input type="text" name="nationalID" value={form.nationalID} onChange={handleChange} className={inputClass} placeholder="ID Number" />
+              </InputGroup>
+
+              <div className="md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <InputGroup label="Permanent Address" icon={MapPin}>
+                    <input type="text" name="address" value={form.address} onChange={handleChange} className={`${inputClass} !pl-10`} placeholder="#123, Street ABC, Phnom Penh" />
+                 </InputGroup>
+                 <InputGroup label="Current Address" icon={MapPin}>
+                    <input type="text" name="currentAddress" value={form.currentAddress} onChange={handleChange} className={`${inputClass} !pl-10`} placeholder="Same as permanent" />
+                 </InputGroup>
+              </div>
+
+              <InputGroup label="Phone Number" icon={Phone}>
+                 <input type="tel" name="phoneNumber" value={form.phoneNumber} onChange={handleChange} className={`${inputClass} !pl-10`} placeholder="012 345 678" />
+              </InputGroup>
+
+              <InputGroup label="Email Address" icon={Mail}>
+                 <input type="email" name="personalEmail" value={form.personalEmail} onChange={handleChange} className={`${inputClass} !pl-10`} required placeholder="student@example.com" />
+              </InputGroup>
             </div>
           </div>
 
           {/* ===== Academic Information ===== */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
-              Academic Information
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input type="text" name="highSchoolName" placeholder="High School Name" value={form.highSchoolName} onChange={handleChange} className={inputClass} required />
-              <input type="text" name="graduationYear" placeholder="Graduation Year" value={form.graduationYear} onChange={handleChange} className={inputClass} required />
-              <input type="text" name="grade12ExamCenter" placeholder="Grade 12 Exam Center" value={form.grade12ExamCenter} onChange={handleChange} className={inputClass} />
-              <input type="text" name="grade12Result" placeholder="Grade 12 Result (A-F)" value={form.grade12Result} onChange={handleChange} className={inputClass} />
-              <input type="text" name="faculty" placeholder="Faculty" value={form.faculty} onChange={handleChange} className={inputClass} required />
-              <input type="text" name="major" placeholder="Major" value={form.major} onChange={handleChange} className={inputClass} required />
-              <select name="shift" value={form.shift} onChange={handleChange} className={inputClass}>
-                <option>Morning</option>
-                <option>Afternoon</option>
-                <option>Evening</option>
-              </select>
-              <input type="text" name="batch" placeholder="Batch" value={form.batch} onChange={handleChange} className={inputClass} />
-              <input type="text" name="academicYear" placeholder="Academic Year" value={form.academicYear} onChange={handleChange} className={inputClass} />
-              <input type="file" name="profilePicture" onChange={handleChange} className={inputClass} />
+          <div className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/50">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+                <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                    <School size={24} />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800">Academic Information</h2>
             </div>
-            {/* ===== Profile Picture Preview ===== */}
-            {form.profilePicture && (
-              <div className="col-span-1 md:col-span-2 flex justify-center mt-4">
-                <img
-                  src={URL.createObjectURL(form.profilePicture)}
-                  alt="Profile Preview"
-                  className="w-32 h-32 rounded-full object-cover border-2 border-orange-400"
-                />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <InputGroup label="High School Name">
+                 <input type="text" name="highSchoolName" value={form.highSchoolName} onChange={handleChange} className={inputClass} required placeholder="School Name" />
+              </InputGroup>
+
+              <InputGroup label="Graduation Year">
+                 <input type="text" name="graduationYear" value={form.graduationYear} onChange={handleChange} className={inputClass} required placeholder="2023" />
+              </InputGroup>
+
+              <InputGroup label="Grade 12 Result">
+                 <input type="text" name="grade12Result" value={form.grade12Result} onChange={handleChange} className={inputClass} placeholder="Grade A-F" />
+              </InputGroup>
+
+              <div className="md:col-span-3 border-t border-gray-100 my-2"></div>
+
+              <InputGroup label="Faculty">
+                 <input type="text" name="faculty" value={form.faculty} onChange={handleChange} className={inputClass} required placeholder="Engineering" />
+              </InputGroup>
+
+              <InputGroup label="Major">
+                 <input type="text" name="major" value={form.major} onChange={handleChange} className={inputClass} required placeholder="Computer Science" />
+              </InputGroup>
+
+              <InputGroup label="Shift">
+                  <select name="shift" value={form.shift} onChange={handleChange} className={inputClass}>
+                    <option>Morning</option>
+                    <option>Afternoon</option>
+                    <option>Evening</option>
+                    <option>Weekend</option>
+                  </select>
+              </InputGroup>
+
+              <InputGroup label="Batch">
+                 <input type="text" name="batch" value={form.batch} onChange={handleChange} className={inputClass} placeholder="Gen 10" />
+              </InputGroup>
+
+              <InputGroup label="Academic Year">
+                 <input type="text" name="academicYear" value={form.academicYear} onChange={handleChange} className={inputClass} placeholder="2024-2025" />
+              </InputGroup>
+
+              <div className="md:col-span-3 mt-4">
+                 <label className={labelClass}>Profile Picture</label>
+                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:border-orange-400 hover:bg-orange-50/50 transition cursor-pointer bg-gray-50">
+                    <input type="file" name="profilePicture" onChange={handleChange} className="hidden" id="file-upload" />
+                    <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center w-full">
+                        {form.profilePicture ? (
+                            <img src={URL.createObjectURL(form.profilePicture)} alt="Preview" className="w-32 h-32 rounded-full object-cover shadow-md mb-2" />
+                        ) : (
+                            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-2 text-gray-400">
+                                <User size={32} />
+                            </div>
+                        )}
+                        <span className="text-orange-600 font-medium flex items-center gap-2">
+                           <Upload size={16} /> {form.profilePicture ? "Change Photo" : "Upload Photo"}
+                        </span>
+                        <span className="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB</span>
+                    </label>
+                 </div>
               </div>
-            )}
-          </div>
-
-          {/* ===== Parent / Guardian Information ===== */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
-              Parent / Guardian Information
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input type="text" name="fatherName" placeholder="Father's Name" value={form.fatherName} onChange={handleChange} className={inputClass} />
-              <input type="text" name="fathersJob" placeholder="Father's Job" value={form.fathersJob} onChange={handleChange} className={inputClass} />
-              <input type="text" name="motherName" placeholder="Mother's Name" value={form.motherName} onChange={handleChange} className={inputClass} />
-              <input type="text" name="mothersJob" placeholder="Mother's Job" value={form.mothersJob} onChange={handleChange} className={inputClass} />
-              <input type="text" name="guardianName" placeholder="Guardian's Name" value={form.guardianName} onChange={handleChange} className={inputClass} />
-              <input type="tel" name="guardianPhone" placeholder="Guardian's Phone" value={form.guardianPhone} onChange={handleChange} className={inputClass} />
-            </div>
-          </div>
-
-          {/* ===== Emergency Contact ===== */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
-              Emergency Contact
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input type="text" name="emergencyContactName" placeholder="Emergency Contact Name" value={form.emergencyContactName} onChange={handleChange} className={inputClass} />
-              <input type="tel" name="emergencyContactPhone" placeholder="Emergency Contact Phone" value={form.emergencyContactPhone} onChange={handleChange} className={inputClass} />
-            </div>
-          </div>
-
-          {/* ===== Previous Education ===== */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
-              Previous Education
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input type="text" name="previousSchool" placeholder="Previous School / College" value={form.previousSchool} onChange={handleChange} className={inputClass} />
-              <input type="text" name="certificate" placeholder="Certificate / Diploma" value={form.certificate} onChange={handleChange} className={inputClass} />
-            </div>
-          </div>
-
-          {/* ===== Medical Information ===== */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
-              Medical Information
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input type="text" name="bloodType" placeholder="Blood Type" value={form.bloodType} onChange={handleChange} className={inputClass} />
-              <textarea name="medicalConditions" placeholder="Medical Conditions (if any)" value={form.medicalConditions} onChange={handleChange} className={`${inputClass} resize-none`} />
-            </div>
-          </div>
-
-          {/* ===== Social / Online Profiles ===== */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
-              Social / Online Profiles
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input type="url" name="linkedin" placeholder="LinkedIn Profile" value={form.linkedin} onChange={handleChange} className={inputClass} />
-              <input type="url" name="facebook" placeholder="Facebook Profile" value={form.facebook} onChange={handleChange} className={inputClass} />
-            </div>
-          </div>
-
-          {/* ===== Preferences / Interests ===== */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-orange-400 pb-1">
-              Preferences / Interests
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <select name="studyMode" value={form.studyMode} onChange={handleChange} className={inputClass}>
-                <option>On-Campus</option>
-                <option>Online</option>
-                <option>Hybrid</option>
-              </select>
-              <textarea name="interests" placeholder="Your Interests / Hobbies" value={form.interests} onChange={handleChange} className={`${inputClass} resize-none`} />
             </div>
           </div>
 
           {/* ===== Submit Button ===== */}
-          <div className="flex justify-center">
+          <div className="flex justify-center pt-6 pb-20">
             <button
-              onClick={handleSubmit}
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 py-3 px-12 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all text-white text-lg"
+              type="submit"
+              className="group relative bg-gray-900 text-white py-4 px-12 rounded-2xl font-bold shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 overflow-hidden"
             >
-              Submit Registration
+              <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-orange-500 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <span className="relative flex items-center gap-3 text-lg">
+                 Proceed to Payment <CreditCard size={20} />
+              </span>
             </button>
           </div>
         </form>
-      </div>
       </div>
     </section>
   );

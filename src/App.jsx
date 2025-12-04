@@ -5,11 +5,13 @@ import { Footer } from "./Components/Footer";
 import MainRouter from "./Router/mainRouter";
 import "./App.css";
 import SnowAnimation from "./Motion/Snow";
-
+import { ToastProvider } from "./Components/Context/ToastProvider";
 function App() {
   return (
     <Router>
-      <AppContent />
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
     </Router>
   );
 }

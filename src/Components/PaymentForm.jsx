@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { showSuccess, showError, ToastContainer } from "./ui/Toast.jsx";
-
-const PaymentForm = ({ onClose, formData }) => {
+import React, { useState, useEffect, useRef, useContext } from "react";
+import { CheckCircle, Loader } from "lucide-react";
+import { ToastContext } from "./Context/ToastProvider.jsx";
+const useToast = () => useContext(ToastContext);
+const PaymentForm = ({ onClose, setPaymentStatus }) => {
+  const { showSuccess } = useToast();
   const [qrImage, setQrImage] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState("PENDING"); // PENDING / PAID
-  const [tranId, setTranId] = useState(null); // ABA transaction ID
-  const [alerted, setAlerted] = useState(false); // show alert only once
-  const fetchedRef = React.useRef(false);
-
+  const [status, setStatus] = useState("PENDING");
+  const [tranId, setTranId] = useState(null);
+  const fetchedRef = useRef(false);
+  const intervalRef = useRef(null);
+  const alertedRef = useRef(false);
   const fetchQR = async () => {
     setLoading(true);
     const data = {
@@ -30,7 +32,7 @@ const PaymentForm = ({ onClose, formData }) => {
     };
 
     try {
-      const res = await fetch("https://localhost:7247/api/payment/generate-qr", {
+      const res = await fetch("http://127.0.0.1:8000/api/payment/generate-qr", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -50,49 +52,43 @@ const PaymentForm = ({ onClose, formData }) => {
   };
 
   useEffect(() => {
-    if (fetchedRef.current) return; // already fetched
-    fetchedRef.current = true;
-    fetchQR();
+    if (!fetchedRef.current) {
+      fetchedRef.current = true;
+      fetchQR();
+    }
   }, []);
 
-  useEffect(() => {
-    if (!tranId) return;
+useEffect(() => {
+  if (!tranId) return;
 
-    const evtSource = new EventSource(`https://localhost:7247/api/payment/stream-status/${tranId}`);
+  const es = new EventSource(`http://127.0.0.1:8000/api/payment/stream/${tranId}`);
 
-    evtSource.onmessage = (event) => {
-      console.log("SSE Status:", event.data);
-      setStatus(event.data);
-    };
-
-    evtSource.addEventListener("complete", (event) => {
-      console.log("Payment complete:", event.data);
-      evtSource.close();
-    });
-
-    evtSource.onerror = (err) => {
-      console.error("SSE Error:", err);
-      evtSource.close();
-    };
-
-    return () => evtSource.close();
-  }, [tranId]);
-
-  useEffect(() => {
-    if (status === "PAID" && !alerted) {
-      setAlerted(true);
-      showSuccess("Payment successful! Thank you.", "w-200");
+  es.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if (data.status === 'PAID') {
+      setStatus('PAID');              // Update internal status
+      showSuccess('Payment successful!'); 
+      setPaymentStatus('PAID');       // Notify parent
+      onClose?.();                    // Auto-close modal
     }
-  }, [status, alerted]);
+  };
+
+  es.onerror = () => {
+    es.close(); // Close SSE on error
+  };
+
+  return () => es.close();
+}, [tranId, setPaymentStatus, showSuccess, onClose]);
+
+
+
 
   useEffect(() => {
-    if (alerted === true) {
-      const timer = setTimeout(() => {
-        onClose();
-      }, 3000);
+    if (status === "PAID") {
+      const timer = setTimeout(() => onClose?.(), 3000);
       return () => clearTimeout(timer);
     }
-  }, [alerted]);
+  }, [status, onClose]);
 
   const handleDownloadQR = () => {
     if (!qrImage) return;
@@ -103,41 +99,45 @@ const PaymentForm = ({ onClose, formData }) => {
   };
 
   return (
-    <div
-      className={`max-w-md mx-auto sm:mt-10 p-6 rounded-xl shadow-md border border-gray-200 text-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white z-50`}
-    >
-      <h2 className="ztext-2xl font-bold text-gray-800 mb-4">ABA Payment QR</h2>
+    <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden mx-4">
+      <div className="bg-[#005788] p-4 text-center">
+        <h2 className="text-xl font-bold text-white">ABA PAY</h2>
+        <p className="text-blue-200 text-sm">Scan to pay registration fee</p>
+      </div>
+      <p className="text-xs mt-2 text-gray-400">tran_id: {tranId}</p>
 
-      {loading && <p className="text-gray-500 mb-4">Generating QR code...</p>}
+      <div className="p-8 flex flex-col items-center">
+        {loading ? (
+          <Loader className="animate-spin text-blue-600" size={48} />
+        ) : (
+          qrImage && <img src={qrImage} alt="ABA QR Code" className="w-[200px] h-[200px] object-contain rounded" />
+        )}
 
-      {qrImage && (
-        <img
-          src={qrImage}
-          alt="ABA QR Code"
-          className="mx-auto w-200 h-full max-h-100 object-contain rounded-lg shadow-sm"
-        />
-      )}
+        <div className={`mt-6 flex items-center gap-2 font-bold text-lg ${status === "PAID" ? "text-green-600" : "text-gray-500"}`}>
+          {status === "PAID" ? (
+            <>
+              <CheckCircle size={24} />
+              <span>Payment Completed</span>
+            </>
+          ) : (
+            <span className="animate-pulse">Waiting for payment...</span>
+          )}
+        </div>
 
-      {qrImage && (
-        <button
-          onClick={handleDownloadQR}
-          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-        >
-          Download QR
-        </button>
-      )}
-
-      <p
-        className={`mt-4 font-bold text-lg ${
-          status === "PAID" ? "text-green-600" : "text-gray-600"
-        }`}
-      >
-        {status === "PAID" ? "Payment Completed ✅" : "Waiting for payment..."}
-      </p>
-
-      <button className="mt-4 text-gray-500 underline" onClick={onClose}>
-        Close
-      </button>
+        <div className="flex gap-3 mt-6 w-full">
+          <button onClick={onClose} className="flex-1 py-2 px-4 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition font-medium">
+            Cancel
+          </button>
+          {qrImage && (
+            <button
+              onClick={handleDownloadQR}
+              className="flex-1 py-2 px-4 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition font-medium"
+            >
+              Download
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

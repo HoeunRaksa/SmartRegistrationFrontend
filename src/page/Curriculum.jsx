@@ -1,7 +1,5 @@
-import React from "react";
 import { Card, CardContent } from "../Components/ui/Card";
 import { Link } from "react-router-dom";
-
 export const programs = {
   AiResearcher: {
     icon: "🤖",
@@ -67,7 +65,6 @@ export const programs = {
     items: ["Computer Science", "Biomedical Engineering", "Environmental Science", "Data Analytics"],
   }
 };
-
 const Curriculum = () => {
   return (
     <div>
@@ -139,5 +136,4 @@ const Curriculum = () => {
     </div>
   );
 };
-
 export default Curriculum;

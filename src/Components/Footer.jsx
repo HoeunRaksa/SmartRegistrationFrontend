@@ -1,82 +1,123 @@
+import { Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
+
+// --- Configuration Data ---
+const quickLinks = [
+  { label: "Admissions", href: "/admissions" },
+  { label: "Academic Programs", href: "/programs" },
+  { label: "Research", href: "/research" },
+  { label: "Campus Life", href: "/campus-life" },
+];
+
+const resources = [
+  { label: "Library", href: "/library" },
+  { label: "Student Services", href: "/services" },
+  { label: "Career Center", href: "/careers" },
+  { label: "Alumni Network", href: "/alumni" },
+];
+
+const socialMedia = [
+  { Icon: Facebook, href: "https://facebook.com/excellence", label: "Facebook" },
+  { Icon: Twitter, href: "https://twitter.com/excellence", label: "Twitter" },
+  { Icon: Instagram, href: "https://instagram.com/excellence", label: "Instagram" },
+  { Icon: Linkedin, href: "https://linkedin.com/school/excellence", label: "LinkedIn" },
+];
+
+// --- Sub-Components for Modularity ---
+
+// Reusable link list component
+function FooterLinkGroup({ title, links }) {
+  return (
+    <div>
+      <h4 className="text-sm font-semibold mb-4 uppercase text-gray-800 tracking-wider">
+        {title}
+      </h4>
+      <ul className="space-y-3 text-sm">
+        {links.map((link) => (
+          <li key={link.label}>
+            <a
+              href={link.href}
+              className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
+            >
+              {link.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// Social media icon component
+function Socials() {
+  return (
+    <div className="flex space-x-4 mt-4">
+      {socialMedia.map(({ Icon, href, label }) => (
+        <a
+          key={label}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Link to our ${label} page`}
+          className="text-gray-400 hover:text-blue-600 transition-colors duration-200"
+        >
+          <Icon className="w-6 h-6" />
+        </a>
+      ))}
+    </div>
+  );
+}
+
+// --- Main Component ---
 export function Footer() {
   return (
-    <footer className="text-gray-600 bg-white py-2 px-4 rounded-lg shadow-md">
-        <div className=" mx-auto py-4 px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="sm:text-sm text-xs font-bold mb-4">Excellence University</h3>
-              <p className="text-xs opacity-80 leading-relaxed">
-                Empowering minds and shaping the future through innovative education and groundbreaking research.
+    <footer className="bg-white text-gray-600 border-t border-gray-100 rounded-xl">
+      <div className="max-w-7xl mx-auto py-12 px-6 lg:px-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-y-10 gap-x-8">
+          {/* Column 1: Brand & Mission */}
+          <div className="col-span-2 md:col-span-2">
+            <h3 className="text-xl font-extrabold mb-4 text-blue-700">
+              Excellence University
+            </h3>
+            <p className="text-sm leading-relaxed text-gray-500 max-w-sm">
+              Empowering minds and shaping the future through innovative education and
+              groundbreaking research.
+            </p>
+            <Socials />
+          </div>
+
+          {/* Column 2 & 3: Quick Links & Resources (using reusable components) */}
+          <FooterLinkGroup title="Quick Links" links={quickLinks} />
+          <FooterLinkGroup title="Resources" links={resources} />
+
+          {/* Column 4: Contact Information */}
+          <div>
+            <h4 className="text-sm font-semibold mb-4 uppercase text-gray-800 tracking-wider">
+              Contact Us
+            </h4>
+            <div className="text-sm space-y-2 text-gray-600">
+              <p>123 University Avenue</p>
+              <p>Excellence City, EC 12345</p>
+              <p className="pt-2">
+                <a href="tel:5551234567" className="hover:text-blue-600 transition-colors">
+                  Phone: (555) 123-4567
+                </a>
+              </p>
+              <p>
+                <a href="mailto:info@excellence.edu" className="hover:text-blue-600 transition-colors">
+                  Email: info@excellence.edu
+                </a>
               </p>
             </div>
-
-            <div>
-              <h4 className="sm:text-sm text-xs  font-semibold mb-4">Quick Links</h4>
-              <ul className="space-y-2 text-xs">
-                <li>
-                  <a href="#" className="opacity-80 hover:opacity-100 transition-opacity">
-                    Admissions
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="opacity-80 hover:opacity-100 transition-opacity">
-                    Academic Programs
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="opacity-80 hover:opacity-100 transition-opacity">
-                    Research
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="opacity-80 hover:opacity-100 transition-opacity">
-                    Campus Life
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="sm:text-sm text-xs font-semibold mb-4">Resources</h4>
-              <ul className="space-y-2 text-xs">
-                <li>
-                  <a href="#" className="opacity-80 hover:opacity-100 transition-opacity">
-                    Library
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="opacity-80 hover:opacity-100 transition-opacity">
-                    Student Services
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="opacity-80 hover:opacity-100 transition-opacity">
-                    Career Center
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="opacity-80 hover:opacity-100 transition-opacity">
-                    Alumni Network
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="sm:text-sm text-xs  font-semibold mb-4">Contact</h4>
-              <div className="sm:text-sm text-xs space-y-2 opacity-80">
-                <p>123 University Avenue</p>
-                <p>Excellence City, EC 12345</p>
-                <p>Phone: (555) 123-4567</p>
-                <p>Email: info@excellence.edu</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-background/20 mt-4 pt-8 text-center mb-4 sm:text-sm text-xs opacity-80">
-            <p>&copy; 2024 Excellence University. All rights reserved.</p>
           </div>
         </div>
+        
+        {/* Separator and Copyright */}
+        <div className="border-t border-gray-200 mt-12 pt-8 text-center">
+          <p className="text-sm text-gray-500">
+            &copy; {new Date().getFullYear()} Excellence University. All rights reserved.
+          </p>
+        </div>
+      </div>
     </footer>
-  )
+  );
 }
