@@ -56,9 +56,9 @@ useEffect(() => {
 
 
   return (
-    <section className="min-h-screen  bg-slate-50 relative overflow-hidden font-sans">
+    <section className="min-h-screen -mt-9 bg-slate-50 relative overflow-hidden font-sans rounded-lg">
       {/* Background decoration */}
-      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-br from-orange-400 to-pink-600 rounded-b-[50px] shadow-lg z-0"></div>
+      <div className="absolute top-0 left-0 w-full h-120 bg-gradient-to-br from-orange-400 to-pink-600 rounded-b-[50px] shadow-lg z-0"></div>
       <div className="absolute top-10 right-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
       <div className="absolute top-40 left-10 w-32 h-32 bg-yellow-300/20 rounded-full blur-2xl"></div>
 
@@ -71,7 +71,7 @@ useEffect(() => {
         </div>
       )}
 
-      <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-12">
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-30">
         <div className="text-center mb-10 text-white">
           <div className="inline-flex items-center justify-center p-3 bg-white/20 backdrop-blur-md rounded-2xl mb-4 shadow-inner border border-white/30">
              <GraduationCap size={40} className="text-white" />
