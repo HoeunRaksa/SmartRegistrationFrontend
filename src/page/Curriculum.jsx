@@ -93,8 +93,8 @@ const Curriculum = () => {
             />
           </div>
         </div>
-      </section>
-      <section className="py-20 my-4 glass text-white">
+      </section> 
+      <section className="py-20 my-4 glass text-white rounded-3xl">
         <div className=" mx-auto px-6">
           {/* Header */}
           <div className="text-center mb-16">

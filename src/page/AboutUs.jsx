@@ -14,16 +14,16 @@ const AbouteUs = () => {
         <MissionSection />
       </main>
         <section className=" py-5 glass my-5 rounded-lg shadow-sm">
-          <div className="text-gray-700 mx-auto px-6">
+          <div className="text-white mx-auto px-6">
             <div className="text-center">
               <h2 className="sm:text-xl text-sm font-bold py-5 text-balance">Academic Excellence</h2>
-              <p className="sm:text-sm text-xs max-w-3xl mx-auto text-pretty leading-relaxed">
+              <p className="sm:text-sm text-xs max-w-3xl mx-auto text-pretty leading-relaxed py-2">
                 Our commitment to excellence is reflected in our achievements, recognition, and the success of our graduates
                 who are making a difference worldwide.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 sm:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 sm:grid-cols-2 gap-8 p-20">
               {milestone.achievements.map((achievement, index) => (
                 <Card key={index} className="glass shadow-lg overflow-hidden hover:shadow-lg transition-shadow duration-300">
                   <div className="aspect-video p-5 overflow-hidden">
@@ -34,9 +34,9 @@ const AbouteUs = () => {
                     />
                   </div>
                   <CardContent className="p-6">
-                    <div className="sm:text-xl text-sm font-bold text-primary mb-2">{achievement.count}</div>
-                    <h3 className="sm:text-xl text-sm font-semibold mb-3">{achievement.title}</h3>
-                    <p className="sm:text-xl text-xs leading-relaxed">{achievement.description}</p>
+                    <div className="sm:text-2xl text-orange-700 text-sm font-bold  mb-2">{achievement.count}</div>
+                    <h3 className="text-lg text-orange-600 font-semibold mb-3">{achievement.title}</h3>
+                    <p className="text-lg leading-relaxed">{achievement.description}</p>
                   </CardContent>
                 </Card>
               ))}
