@@ -167,7 +167,7 @@ function Navbar() {
       {/* Mobile Menu Dropdown */}
       <div
         id="mobile-menu"
-        className={`absolute top-full left-0 w-full glass bg-white/95 rounded-b-md shadow-xl flex flex-col p-4 sm:hidden transition-all duration-300 ease-in-out ${
+        className={`absolute top-full left-0 w-full glass bg-white/95 rounded-b-md shadow-xl flex flex-col p-2 sm:hidden transition-all duration-300 ease-in-out ${
           isMenuOpen
             ? "opacity-100 translate-y-0"
             : "opacity-0 -translate-y-6 pointer-events-none "
