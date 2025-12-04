@@ -3,7 +3,6 @@
  font-family: "Khmer Sangam MN", "Noto Sans Khmer", "Arial", sans-serif;
 }
 body {
-   background: linear-gradient(135deg, #f0f4ff, #d9efff, #e0f7fa);
 
   min-height: 100vh;
   font-family: sans-serif;
@@ -12,23 +11,11 @@ body {
 
 .glass {
   background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(50px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-.itemglass {
-  background: rgba(255, 255, 255, 1); /* ultra-light background */
-  backdrop-filter: blur(120px) saturate(300%); /* VERY strong blur */
-  -webkit-backdrop-filter: blur(120px) saturate(300%); /* Safari */
-  border-top: none;
-  border-right: 0.5px solid rgba(255,255,255,0.2);
-  border-bottom: 0.5px solid rgba(255,255,255,0.2);
-  border-left: 0.5px solid rgba(255,255,255,0.2);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-  transition: all 0.3s ease;
-  z-index: 50;
-}
 .glass:hover {
   background: rgba(255, 255, 255, 0.25);
 } 

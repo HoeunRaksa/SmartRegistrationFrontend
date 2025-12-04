@@ -56,7 +56,7 @@ useEffect(() => {
 
 
   return (
-    <section className="min-h-screen bg-slate-50 relative overflow-hidden font-sans">
+    <section className="min-h-screen  bg-slate-50 relative overflow-hidden font-sans">
       {/* Background decoration */}
       <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-br from-orange-400 to-pink-600 rounded-b-[50px] shadow-lg z-0"></div>
       <div className="absolute top-10 right-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>

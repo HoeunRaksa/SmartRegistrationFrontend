@@ -27,14 +27,14 @@ const programs = {
 };
 function Program() {
   return (
-    <section className="py-20 my-4 glass rounded-lg text-gray-700">
+    <section className="py-20 my-4 glass rounded-3xl text-white">
       <div className="mx-auto px-6">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h2 className="lg:text-3xl sm:text-2xl text-sm font-bold mb-6 text-balance">
+        <div className="text-center sm:mb-16">
+          <h2 className="lg:text-6xl text-orange-600 text-3xl font-bold mb-15">
             World-Class Academic Programs
           </h2>
-          <p className="lg:text-xl sm:text-sm text-xs mb-8 max-w-4xl mx-auto">
+          <p className="lg:text-xl sm:text-xl font-sans text-sm mb-8 max-w-4xl text-white mx-auto">
             Discover our comprehensive range of undergraduate, graduate, and doctoral
             programs designed to prepare you for success in the global marketplace.
           </p>
@@ -43,17 +43,17 @@ function Program() {
         {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {Object.values(programs).map((program, index) => (
-            <Card key={index} className=" hover:shadow-lg transition-shadow duration-300 bg-white shadow-sm">
+            <Card key={index} className=" hover:shadow-lg transition-shadow duration-300 glass p-8 font-sans ">
               <CardContent className="p-6 text-left">
                 <div className={`sm:text-4xl text-xl m-4 ${program.iconColor}`}>{program.icon}</div>
-                <h3 className="sm:text-xl text-sm font-bold pb-2">{program.title}</h3>
+                <h3 className="sm:text-xl text-sm  pb-2 text-orange-600">{program.title}</h3>
                 <p className="lg:text-xl sm:text-sm text-xs mb-3">{program.description}</p>
-                <ul className="mb-4 list-disc list-inside lg:text-xl sm:text-sm text-xs">
+                <ul className="mb-4 list-disc list-inside lg:text-xl sm:text-sm text-sm">
                   {program.items.map((item, i) => (
                     <li key={i}>{item}</li>
                   ))}
                 </ul>
-                <a href={program.link} className="text-blue-500 lg:text-xl sm:text-sm text-xs hover:underline">
+                <a href={program.link} className="text-blue-500 lg:text-xl sm:text-sm text-sm hover:underline">
                   Learn More →
                 </a>
               </CardContent>

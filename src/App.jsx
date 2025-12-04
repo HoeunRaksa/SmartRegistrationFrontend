@@ -30,15 +30,16 @@ function AppContent() {
           <Nabar />
       </div>
 
-      <div className={`relative w-auto h-auto py-1 px-4 sm:pt-15 pt-13 ${shouldHideNavbar ? 'py-0 px-0 sm:pt-0 pt-0' : ''}`}>
+      <div className={`relative w-auto h-auto bg-gradient-to-br from-blue-600 to-pink-400  sm:pt-15 pt-13  ${shouldHideNavbar ? 'py-0 px-0 sm:pt-0 pt-0' : ''}`}>
         <MainRouter />
+            {!shouldHideFooter && (
+         <div className="p-2">
+          <Footer />
+             </div>
+      )}
       </div>
 
-      {!shouldHideFooter && (
-        <div className="px-4 rounded pb-2">
-          <Footer />
-        </div>
-      )}
+  
 
       
     </>
