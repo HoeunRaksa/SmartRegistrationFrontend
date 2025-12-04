@@ -34,7 +34,7 @@ function Program() {
           <h2 className="lg:text-6xl text-orange-600 text-3xl font-bold mb-15">
             World-Class Academic Programs
           </h2>
-          <p className="lg:text-xl sm:text-xl font-sans text-sm mb-8 max-w-4xl text-white mx-auto">
+          <p className="lg:text-xl sm:text-xl font-sans  mb-8 max-w-4xl text-white mx-auto">
             Discover our comprehensive range of undergraduate, graduate, and doctoral
             programs designed to prepare you for success in the global marketplace.
           </p>
@@ -45,9 +45,9 @@ function Program() {
           {Object.values(programs).map((program, index) => (
             <Card key={index} className=" hover:shadow-lg transition-shadow duration-300 glass p-8 font-sans ">
               <CardContent className="p-6 text-left">
-                <div className={`sm:text-4xl text-xl m-4 ${program.iconColor}`}>{program.icon}</div>
-                <h3 className="sm:text-xl text-sm  pb-2 text-orange-600">{program.title}</h3>
-                <p className="lg:text-xl sm:text-sm text-xs mb-3">{program.description}</p>
+                <div className={`sm:text-4xl text-4xl ${program.iconColor}`}>{program.icon}</div>
+                <h3 className="sm:text-xl  pb-2 text-orange-600 uppercase font-semibold">{program.title}</h3>
+                <p className="lg:text-xl sm:text-sm  mb-3">{program.description}</p>
                 <ul className="mb-4 list-disc list-inside lg:text-xl sm:text-sm text-sm">
                   {program.items.map((item, i) => (
                     <li key={i}>{item}</li>

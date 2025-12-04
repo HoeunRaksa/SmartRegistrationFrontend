@@ -95,7 +95,7 @@ function Navbar() {
   return (
     <nav className="sticky top-0 z-50 bg-white shadow-xl">
       <ToastContainer />
-      <div className="flex items-center  px-4 py-4 md:px-16">
+      <div className="flex items-center px-4 py-4 md:px-16">
         {/* Logo/Brand */}
         <Link
           to="/"
@@ -170,7 +170,7 @@ function Navbar() {
         className={`absolute top-full left-0 w-full glass bg-white/95 rounded-b-md shadow-xl flex flex-col p-4 sm:hidden transition-all duration-300 ease-in-out ${
           isMenuOpen
             ? "opacity-100 translate-y-0"
-            : "opacity-0 -translate-y-6 pointer-events-none"
+            : "opacity-0 -translate-y-6 pointer-events-none "
         }`}
       >
         <nav className="flex flex-col space-y-2 mb-4">
@@ -179,7 +179,7 @@ function Navbar() {
               key={`mobile-${path}`}
               to={path}
               onClick={handleNavLinkClick}
-              className="text-gray-800 text-sm p-3 itemglass font-medium hover:bg-gray-100 hover:text-blue-600 transition rounded-lg"
+              className="text-gray-800 text-sm p-3 glass font-medium hover:bg-gray-100 hover:text-blue-600 transition rounded-lg"
             >
               {label}
             </Link>
@@ -204,7 +204,7 @@ function Navbar() {
               handleLogin();
               closeMenu();
             }}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-sm py-2 mx-5 rounded-lg shadow-md hover:shadow-lg transition-all"
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-sm py-2 rounded-lg shadow-md hover:shadow-lg transition-all"
           >
             Login
           </Button>

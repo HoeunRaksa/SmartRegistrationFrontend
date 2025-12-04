@@ -35,7 +35,7 @@ export default function CampusLife() {
     <section className="glass rounded-3xl text-white sm:py-16 my-4 px-6 lg:px-20">
       <div className="text-center max-w-3xl mx-auto mb-12">
         <h2 className="lg:text-6xl py-10 sm:text-2xl text-3xl text-orange-600 font-bold mb-4">Vibrant Campus Life</h2>
-        <p className="lg:text-xl sm:text-sm text-xs">
+        <p className="text-lg">
           Experience a dynamic campus community with endless opportunities for growth,
           connection, and discovery beyond the classroom.
         </p>
@@ -47,8 +47,8 @@ export default function CampusLife() {
           <Card key={index} className="glass text-white transition-all duration-200">
             <CardHeader className="flex flex-col items-center text-center">
               <div className="bg-blue-600 p-4 rounded-full mb-4">{item.icon}</div>
-              <CardTitle className="my-2 sm:text-xl text-orange-600 text-xs">{item.title}</CardTitle>
-              <CardDescription className="md:text-lg my-6 sm:text-sm text-xs opacity-80">{item.desc}</CardDescription>
+              <CardTitle className="my-2 sm:text-xl text-orange-600 ">{item.title}</CardTitle>
+              <CardDescription className="md:text-lg my-6 sm:text-sm  opacity-80">{item.desc}</CardDescription>
             </CardHeader>
           </Card>
         ))}
