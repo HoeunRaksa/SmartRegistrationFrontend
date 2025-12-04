@@ -18,7 +18,7 @@ export function MissionSection() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:p-20 p-2">
           {milestone.values.map((value, index) => (
             <Card key={index} className="glass hover:shadow-lg shadow-sm duration-300">
               <CardContent className="p-6 text-center">

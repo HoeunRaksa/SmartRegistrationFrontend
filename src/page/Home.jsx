@@ -60,7 +60,7 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-10 p-20">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-10 sm:p-20 p-2">
             {milestone.achievements.map((achievement, index) => (
               <Card key={index} className="overflow-hidden glass hover:shadow-lg transition-shadow duration-300">
                 <div className="aspect-video rounded-[50px]">
