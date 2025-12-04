@@ -15,7 +15,6 @@ function App() {
     </Router>
   );
 }
-
 function AppContent() {
   const location = useLocation();
   const hideFooterRoutes = ["/Adminsidebar", "/registration", "/login"];
@@ -29,19 +28,14 @@ function AppContent() {
       <div className={`fixed top-0 left-0 w-full z-50 ${shouldHideNavbar ? 'hidden w-0 h-0' : ''}`}>
           <Nabar />
       </div>
-
-      <div className={`relative w-auto h-auto bg-gradient-to-br from-blue-600 to-pink-400  sm:pt-15 pt-13  ${shouldHideNavbar ? 'py-0 px-0 sm:pt-0 pt-0' : ''}`}>
+      <div className={`relative w-auto h-auto bg-gradient-to-br from-blue-600 to-pink-400  sm:pt-15 pt-13 sm:p-2 p-[2px]  ${shouldHideNavbar ? 'py-0 px-0 sm:pt-0 pt-0' : ''}`}>
         <MainRouter />
             {!shouldHideFooter && (
-         <div className="sm:p-2 p-[2px]">
+      
           <Footer />
-             </div>
+       
       )}
       </div>
-
-  
-
-      
     </>
   );
 }

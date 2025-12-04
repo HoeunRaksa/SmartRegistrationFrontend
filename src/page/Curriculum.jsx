@@ -69,7 +69,7 @@ const Curriculum = () => {
   return (
     <div>
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-blue-600 to-teal-500 text-white mt-5 rounded-lg">
+      <section className="relative glass text-white mt-5 rounded-3xl">
         <div className="container mx-auto px-6 py-10 flex flex-col-reverse md:flex-row items-center md:justify-between">
           <div className="text-center md:text-left md:w-1/2">
             <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-6">
@@ -94,7 +94,7 @@ const Curriculum = () => {
           </div>
         </div>
       </section>
-      <section className="py-20 my-4 glass text-gray-700">
+      <section className="py-20 my-4 glass text-white">
         <div className=" mx-auto px-6">
           {/* Header */}
           <div className="text-center mb-16">
@@ -108,14 +108,14 @@ const Curriculum = () => {
           </div>
 
           {/* Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:p-20">
             {Object.entries(programs).map(([key, program]) => (
-              <Card key={key} className="bg-white shadow-sm border-border hover:shadow-lg transition-shadow duration-300">
+              <Card key={key} className="glass shadow-sm border-border hover:shadow-lg transition-shadow duration-300">
                 <CardContent className="p-6 text-left">
                   <div className={`lg:text-5xl sm:text-3xl text-xl m-4 ${program.iconColor}`}>{program.icon}</div>
-                  <h3 className="sm:text-xl text-sm font-semibold mb-3 text-primary">{program.title}</h3>
-                  <p className="text-muted-foreground lg:text-xl sm:text-sm text-xs mb-3">{program.description}</p>
-                  <ul className="mb-4 list-disc list-inside lg:text-xl sm:text-sm text-xs">
+                  <h3 className="text-xl font-semibold mb-3 text-orange-600">{program.title}</h3>
+                  <p className="text-muted-foreground lg:text-xl text-lg mb-3">{program.description}</p>
+                  <ul className="mb-4 list-disc list-inside sm:text-lg text-sm">
                     {program.items.map((item, i) => (
                       <li key={i}>{item}</li>
                     ))}

@@ -41,7 +41,7 @@ function Program() {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-20">
           {Object.values(programs).map((program, index) => (
             <Card key={index} className=" hover:shadow-lg transition-shadow duration-300 glass p-8 font-sans ">
               <CardContent className="p-6 text-left">

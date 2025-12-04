@@ -1,14 +1,13 @@
 import LandImg from "../../public/Images/download1.png";
 import "../App.css";
 import Program from "../Components/Programs";
-import CampusLife from "../Components/CampusLifeSection";
 import milestone from "../Data/Milestones.json";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "../Components/ui/Card";
 import { ApiBaseImg } from "../Configration";
 
 const Home = () => {
   return (
-    <section className="w-full min-h-screen relative overflow-hidden sm:p-2 p-[2px] font-sans ">
+    <section className="w-full min-h-screen relative overflow-hidden font-sans ">
       <div className="w-full grid sm:grid-cols-2 sx:grid-cols-2 justify-between gap-6 px-4 md:px-16 my-6 sm:py-20 py-5 glass rounded-3xl">
         <div className="flex space-y-4 flex-col md:items-start justify-center pt-3 p-2 md:text-left ">
           <p className="font-bold sm:text-2xl md:text-2xl lg:text-3xl xl:text-7xl text-4xl text-white py-10">
@@ -61,7 +60,7 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 md:grid-cols-2 grid-cols-1  gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-10 p-20">
             {milestone.achievements.map((achievement, index) => (
               <Card key={index} className="overflow-hidden glass hover:shadow-lg transition-shadow duration-300">
                 <div className="aspect-video rounded-[50px]">
@@ -82,7 +81,6 @@ const Home = () => {
         </div>
       </section>
       <Program />
-      <CampusLife />
     </section>
   );
 };
