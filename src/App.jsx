@@ -33,7 +33,7 @@ function AppContent() {
       <div className={`relative w-auto h-auto bg-gradient-to-br from-blue-600 to-pink-400  sm:pt-15 pt-13  ${shouldHideNavbar ? 'py-0 px-0 sm:pt-0 pt-0' : ''}`}>
         <MainRouter />
             {!shouldHideFooter && (
-         <div className="p-2">
+         <div className="sm:p-2 p-[2px]">
           <Footer />
              </div>
       )}
