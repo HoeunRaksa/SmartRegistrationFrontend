@@ -7,10 +7,10 @@ export function HistorySection() {
     <section className="py-10 my-5  font text-gray-700  rounded-lg">
       <div className="mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="lg:text-3xl sm:text-2xl text-xl text-whote font py-5 text-balance">
+          <h2 className="lg:text-3xl sm:text-2xl text-xl font-semibold text-whote font py-5 text-balance">
             {milestone.header.title}
           </h2>
-          <p className="sm:text-xl text-lg text-gray-700 max-w-3xl mx-auto text-pretty leading-relaxed">
+          <p className="sm:text-xl text-lg text-gray-700 max-w-3xl mx-auto text-pretty leading-relaxed font-medium">
             {milestone.header.dedicated}
           </p>  
         </div>
@@ -24,10 +24,10 @@ export function HistorySection() {
               <CardContent className="p-6 text-start">
                 <div className="flex items-center gap-3 p-3 w-full">
                 <div className="lg:text-4xl sm:text-2xl text-xl sm:mb-4 sm:mt-4 mx-2">{item.icon}</div>
-                <div className="md:text-2xl sm:text-xl text-sm font text-gray-700">{item.year}</div>
+                <div className="md:text-2xl text-xl font text-gray-700 ">{item.year}</div>
                 </div>
-                <h3 className="sm:text-xl text-xs font text-whote mb-3">{item.title}</h3>
-                <p className="sm:text-xl text-xs text-gray-700 leading-relaxed">{item.description}</p>
+                <h3 className="sm:text-xl font mb-3 font-medium py-3">{item.title}</h3>
+                <p className="sm:text-xl text-sm text-gray-700 leading-relaxed">{item.description}</p>
               </CardContent>
             </Card>
           ))}

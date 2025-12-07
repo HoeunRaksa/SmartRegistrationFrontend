@@ -1,7 +1,5 @@
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "../Components/ui/Card.jsx";
-import { HeroSection } from "../Components/HeroSection.jsx";
 import { HistorySection } from "../Components/HistorySection.jsx";
-import { CallToActionSection } from "../Components/CallToActionSection.jsx";
 import { MissionSection } from "../Components/MissionSection.jsx";
 import milestone from "../Data/Milestones.json"
 import { ApiBaseImg } from "../Configration.jsx";
@@ -12,11 +10,11 @@ const AbouteUs = () => {
         <HistorySection />
         <MissionSection />
       </main>
-        <section className=" py-5 my-5 rounded-lg  text-gray-700">
+        <section className="py-5 my-5 rounded-lg font  text-gray-700">
           <div className="text-gray-700 mx-auto px-6">
             <div className="text-center">
-              <h2 className="sm:text-xl text-sm font-bold py-5 text-balance">Academic Excellence</h2>
-              <p className="sm:text-sm text-xs max-w-3xl mx-auto text-pretty leading-relaxed py-2">
+              <h2 className="sm:text-2xl text-xl font-bold py-5 ">Academic Excellence</h2>
+              <p className="sm:text-xl text-sm  font-medium max-w-3xl mx-auto py-2">
                 Our commitment to excellence is reflected in our achievements, recognition, and the success of our graduates
                 who are making a difference worldwide.
               </p>
@@ -33,9 +31,9 @@ const AbouteUs = () => {
                     />
                   </div>
                   <CardContent className="p-6">
-                    <div className="sm:text-2xl text-gray-700 text-sm font-bold  mb-2">{achievement.count}</div>
-                    <h3 className="text-lg text-gray-700 font-semibold mb-3">{achievement.title}</h3>
-                    <p className="text-lg leading-relaxed">{achievement.description}</p>
+                    <div className="sm:text-xl text-gray-700 text-sm font-bold ">{achievement.count}</div>
+                    <h3 className="text-lg text-gray-700 font-semibold py-3">{achievement.title}</h3>
+                    <p className="text-sm  leading-relaxed">{achievement.description}</p>
                   </CardContent>
                 </Card>
               ))}
