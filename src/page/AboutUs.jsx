@@ -9,12 +9,11 @@ const AbouteUs = () => {
   return (
     <div className="my-4 mt-5">
       <main className="min-h-screen">
-        <HeroSection />
         <HistorySection />
         <MissionSection />
       </main>
-        <section className=" py-5 glass my-5 rounded-lg shadow-sm">
-          <div className="text-white mx-auto px-6">
+        <section className=" py-5 my-5 rounded-lg  text-gray-700">
+          <div className="text-gray-700 mx-auto px-6">
             <div className="text-center">
               <h2 className="sm:text-xl text-sm font-bold py-5 text-balance">Academic Excellence</h2>
               <p className="sm:text-sm text-xs max-w-3xl mx-auto text-pretty leading-relaxed py-2">
@@ -34,8 +33,8 @@ const AbouteUs = () => {
                     />
                   </div>
                   <CardContent className="p-6">
-                    <div className="sm:text-2xl text-orange-700 text-sm font-bold  mb-2">{achievement.count}</div>
-                    <h3 className="text-lg text-orange-600 font-semibold mb-3">{achievement.title}</h3>
+                    <div className="sm:text-2xl text-gray-700 text-sm font-bold  mb-2">{achievement.count}</div>
+                    <h3 className="text-lg text-gray-700 font-semibold mb-3">{achievement.title}</h3>
                     <p className="text-lg leading-relaxed">{achievement.description}</p>
                   </CardContent>
                 </Card>
@@ -43,7 +42,6 @@ const AbouteUs = () => {
             </div>
           </div>
         </section>
-      <CallToActionSection />
     </div>
   );
 };

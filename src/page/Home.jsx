@@ -7,39 +7,39 @@ import { ApiBaseImg } from "../Configration";
 
 const Home = () => {
   return (
-    <section className="w-full min-h-screen relative overflow-hidden font-sans ">
-      <div className="w-full grid sm:grid-cols-2 sx:grid-cols-2 justify-between gap-6 px-4 md:px-16 my-6 sm:py-20 py-5 glass rounded-3xl">
+    <section className="w-full min-h-screen relative overflow-hidden font">
+      <div className="w-full grid sm:grid-cols-2 sx:grid-cols-2 justify-between gap-6 px-4 md:px-16 my-6 sm:py-20 py-5  rounded-3xl">
         <div className="flex space-y-4 flex-col md:items-start justify-center pt-3 p-2 md:text-left ">
-          <p className="font-bold sm:text-2xl md:text-2xl lg:text-3xl xl:text-7xl text-4xl text-white py-10">
-            Welcome <span className="text-orange-500"> To</span> <span className="text-orange-500">NovaTech </span> University
+          <p className="font sm:text-2xl md:text-2xl lg:text-3xl xl:text-7xl text-4xl text-gray-700 py-10">
+            Welcome <span className="text-gray-700"> To</span> <span className="text-orange-500">NovaTech </span> University
           </p>
-          <p className="lg:text-xl  text-white">
+          <p className="lg:text-xl  text-gray-700">
             Embark on your journey to academic excellence and groundbreaking achievements today!
           </p>
-          <p className="font-medium lg:text-xl  sx:hidden text-white">
+          <p className="font-medium lg:text-xl  sx:hidden text-gray-700">
             Explore transformative programs, collaborate with visionary minds, and develop the skills to shape the future.
-            Your path to success begins here at <span className="text-orange-500">NovaTech University</span>.
+            Your path to success begins here at <span className="text-gray-700">NovaTech University</span>.
           </p>
           <div className="flex space-x-4 pt-4 justify-start">
-            <button className=" bg-orange-500 sm:py-4 sm:px-8 py-2 px-4 sm:rounded-lg lg:text-sm  rounded-lg shadow-md hover:shadow-lg transition-all hover:scale-105 duration-200 text-white cursor-pointer">
+            <button className=" bg-orange-500 sm:py-4 sm:px-8 py-2 px-4 sm:rounded-lg lg:text-sm  rounded-lg shadow-md hover:shadow-lg transition-all hover:scale-105 duration-200 text-gray-700 cursor-pointer">
               Get Started
             </button>
-            <button className=" text-white sm:py-4 sm:px-8 py-2 px-4 sm:rounded-lg lg:text-sm  rounded-lg shadow border-2 glass hover:shadow-lg transition-all hover:scale-105 duration-200 cursor-pointer">
+            <button className=" text-gray-700 sm:py-4 sm:px-8 py-2 px-4 sm:rounded-lg lg:text-sm  rounded-lg shadow border-2 glass hover:shadow-lg transition-all hover:scale-105 duration-200 cursor-pointer">
               Learn More
             </button>
           </div>
           <div className="flex gap-8 items-center justify-center mt-6">
             <div className="text-center">
-              <p className="text-orange-500 lg:text-sm  font-bold">500K+</p>
-              <span className="text-white sm:text-sm ">Students</span>
+              <p className="text-gray-700 lg:text-sm  font">500K+</p>
+              <span className="text-gray-700 sm:text-sm ">Students</span>
             </div>
             <div className="text-center">
-              <p className="text-white lg:text-sm  font-bold">200+</p>
-              <span className="text-white sm:text-sm ">Programs</span>
+              <p className="text-gray-700 lg:text-sm  font">200+</p>
+              <span className="text-gray-700 sm:text-sm ">Programs</span>
             </div>
             <div className="text-center">
-              <p className="text-white lg:text-sm  font-bold">95%</p>
-              <span className="text-white sm:text-sm ">Satisfaction Rate</span>
+              <p className="text-gray-700 lg:text-sm  font">95%</p>
+              <span className="text-gray-700 sm:text-sm ">Satisfaction Rate</span>
             </div>
           </div>
 
@@ -50,10 +50,10 @@ const Home = () => {
         </div>
       </div>
 
-      <section className="py-10 glass rounded-3xl">
-        <div className=" text-white mx-auto px-6">
+      <section className="py-10 rounded-3xl">
+        <div className=" text-gray-700 mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className=" md:text-6xl sm:py-10  sm:text-4xl text-3xl font-bold mb-6 text-orange-500">Academic Excellence</h2>
+            <h2 className=" md:text-6xl sm:py-10  sm:text-4xl text-3xl font mb-6 text-gray-700">Academic Excellence</h2>
             <p className="sm:text-xl text-lg  max-w-3xl mx-auto text-pretty leading-relaxed opacity-80">
               Our commitment to excellence is reflected in our achievements, recognition, and the success of our graduates
               who are making a difference worldwide.
@@ -71,8 +71,8 @@ const Home = () => {
                   />
                 </div>
                 <CardContent className="p-12">
-                  <div className="sm:text-xl text-xl uppercase text-orange-700 font-bold mb-2 ">{achievement.count}</div>
-                  <h3 className="sm:text-xl text-sm mb-3 font-semibold text-orange-500  opacity-90">{achievement.title}</h3>
+                  <div className="sm:text-xl text-xl uppercase text-gray-700 font mb-2 ">{achievement.count}</div>
+                  <h3 className="sm:text-xl text-sm mb-3 font-semibold text-gray-700  opacity-90">{achievement.title}</h3>
                   <p className="lg:text-lg text-sm opacity-80">{achievement.description}</p>
                 </CardContent>
               </Card>

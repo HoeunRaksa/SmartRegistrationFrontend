@@ -63,11 +63,7 @@ useEffect(() => {
 
 
   return (
-    <section className="min-h-screen -mt-9 bg-slate-50 relative overflow-hidden font-sans rounded-lg">
-
-      <div className="absolute top-0 left-0 w-full h-120 bg-gradient-to-br from-orange-400 to-pink-600 rounded-b-[50px] shadow-lg z-0"></div>
-      <div className="absolute top-10 right-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-      <div className="absolute top-40 left-10 w-32 h-32 bg-yellow-300/20 rounded-full blur-2xl"></div>
+    <section className="min-h-screen -mt-9  relative overflow-hidden font-sans rounded-lg">
       {showQr && (
         <div className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 animate-fade-in">
           <PaymentForm
@@ -77,9 +73,9 @@ useEffect(() => {
         </div>
       )}
       <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-30">
-        <div className="text-center mb-10 text-white">
+        <div className="text-center mb-10 text-gray-700 ">
           <div className="inline-flex items-center justify-center p-3 bg-white/20 backdrop-blur-md rounded-2xl mb-4 shadow-inner border border-white/30">
-            <GraduationCap size={40} className="text-white" />
+            <GraduationCap size={40} className="text-gray-700" />
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight drop-shadow-sm">
             NovaTech University
@@ -221,7 +217,7 @@ useEffect(() => {
           <div className="flex justify-center pt-6 pb-20">
             <button
               type="submit"
-              className="group relative bg-gray-900 text-white py-4 px-12 rounded-2xl font-bold shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 overflow-hidden"
+              className="group relative bg-gradient-to-r from-orange-400 to-pink-500 text-gray-700 py-4 px-12 rounded-2xl font-bold shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 overflow-hidden"
             >
               <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-orange-500 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               <span className="relative flex items-center gap-3 text-lg">

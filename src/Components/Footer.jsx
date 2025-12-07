@@ -28,7 +28,7 @@ const socialMedia = [
 function FooterLinkGroup({ title, links }) {
   return (
     <div>
-      <h4 className="text-sm font-semibold mb-4 uppercase text-gray-800 tracking-wider">
+      <h4 className="text-sm font-semibold mb-4 uppercase text-gray-700 tracking-wider">
         {title}
       </h4>
       <ul className="space-y-3 text-sm">
@@ -36,7 +36,7 @@ function FooterLinkGroup({ title, links }) {
           <li key={link.label}>
             <a
               href={link.href}
-              className="text-white hover:text-blue-600 transition-colors duration-200 font-sans"
+              className="text-gray-700 hover:text-blue-600 transition-colors duration-200 font-sans"
             >
               {link.label}
             </a>
@@ -58,7 +58,7 @@ function Socials() {
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`Link to our ${label} page`}
-          className="text-gray-800 hover:text-blue-600 transition-colors duration-200"
+          className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
         >
           <Icon className="w-6 h-6" />
         </a>
@@ -70,15 +70,15 @@ function Socials() {
 // --- Main Component ---
 export function Footer() {
   return (
-    <footer className="glass rounded-3xl">
+    <footer>
       <div className="max-w-7xl mx-auto py-12 px-6 lg:px-8">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-y-10 gap-x-8">
           {/* Column 1: Brand & Mission */}
           <div className="col-span-2 md:col-span-2">
-            <h3 className="text-xl  uppercase mb-4 tracking-wider text-gray-800">
+            <h3 className="text-xl  uppercase mb-4 tracking-wider text-gray-700">
               Excellence University
             </h3>
-            <p className="text-sm leading-relaxed text-white max-w-sm font-sans">
+            <p className="text-sm leading-relaxed text-gray-700 max-w-sm font-sans">
               Empowering minds and shaping the future through innovative education and
               groundbreaking research.
             </p>
@@ -91,10 +91,10 @@ export function Footer() {
 
           {/* Column 4: Contact Information */}
           <div>
-            <h4 className="text-sm font-semibold mb-4 uppercase text-gray-800 tracking-wider">
+            <h4 className="text-sm font-semibold mb-4 uppercase text-gray-700 tracking-wider">
               Contact Us
             </h4>
-            <div className="text-sm  font-sans space-y-2 text-white">
+            <div className="text-sm  font-sans space-y-2 text-gray-700">
               <p>123 University Avenue</p>
               <p>Excellence City, EC 12345</p>
               <p className="pt-2">
@@ -113,7 +113,7 @@ export function Footer() {
         
         {/* Separator and Copyright */}
         <div className="border-t border- mt-12 pt-8 text-center">
-          <p className="text-sm text-white">
+          <p className="text-sm text-gray-700">
             &copy; {new Date().getFullYear()} Excellence University. All rights reserved.
           </p>
         </div>

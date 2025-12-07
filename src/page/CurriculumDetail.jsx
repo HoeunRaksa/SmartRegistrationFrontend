@@ -13,7 +13,7 @@ const CurriculumDetail = () => {
           <p className="text-gray-600 mb-6">We couldn't find the program you're looking for.</p>
           <div className="flex justify-center gap-3">
             <button onClick={() => navigate(-1)} className="px-4 py-2 bg-slate-100 rounded-md">Go Back</button>
-            <Link to="/" className="px-4 py-2 bg-sky-600 text-white rounded-md">Home</Link>
+            <Link to="/" className="px-4 py-2 bg-sky-600 text-gray-700 rounded-md">Home</Link>
           </div>
         </div>
       </div>
@@ -60,7 +60,7 @@ const CurriculumDetail = () => {
               </div>
 
               <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                <a href="#apply" className="inline-block bg-sky-600 text-white px-4 py-2 rounded-md">Apply</a>
+                <a href="#apply" className="inline-block bg-sky-600 text-gray-700 px-4 py-2 rounded-md">Apply</a>
                 <a href="#curriculum" className="inline-block border border-slate-200 px-4 py-2 rounded-md">View Curriculum</a>
               </div>
             </div>

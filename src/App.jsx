@@ -18,23 +18,29 @@ function App() {
 function AppContent() {
   const location = useLocation();
   const hideFooterRoutes = ["/Adminsidebar", "/registration", "/login"];
-  const hideNavbarRoutes = ["/adminsidebar",];
+  const hideNavbarRoutes = ["/adminsidebar"];
   const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname);
   const shouldHideFooter = hideFooterRoutes.includes(location.pathname);
 
   return (
     <>
-    <SnowAnimation/>
+      <SnowAnimation />
+
+      {/* Navbar */}
       <div className={`fixed top-0 left-0 w-full z-50 ${shouldHideNavbar ? 'hidden w-0 h-0' : ''}`}>
-          <Nabar />
+        <Nabar />
       </div>
-      <div className={`relative w-auto h-auto bg-gradient-to-br from-blue-600 to-pink-400  sm:pt-15 pt-13 sm:p-2 p-[2px]  ${shouldHideNavbar ? 'py-0 px-0 sm:pt-0 pt-0' : ''}`}>
+
+      {/* Main Content */}
+      <div
+        className={`relative w-full min-h-screen p-[2px] sm:p-2 sm:pt-15 pt-13
+          ${shouldHideNavbar ? 'py-0 px-0 sm:pt-0 pt-0' : ''}
+          bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300
+          flex flex-col items-center`}
+      >
         <MainRouter />
-            {!shouldHideFooter && (
-      
-          <Footer />
-       
-      )}
+
+        {!shouldHideFooter && <Footer />}
       </div>
     </>
   );
