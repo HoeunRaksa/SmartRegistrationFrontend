@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useContext } from "react";
 import { CheckCircle, Loader, CloudOff, Info } from "lucide-react";
 import { ToastContext } from "./Context/ToastProvider.jsx";
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
-const PaymentForm = ({ onClose, setPaymentStatus, initialPaymentData }) => {
+const PaymentForm = ({ onClose, setPaymentStatus, onSuccess, initialPaymentData }) => {
   const { showSuccess, showError } = useContext(ToastContext)
   const [qrImage, setQrImage] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -71,34 +71,38 @@ const PaymentForm = ({ onClose, setPaymentStatus, initialPaymentData }) => {
     }
   }, []);
 
-  useEffect(() => {
-    if (!tranId) return;
+ useEffect(() => {
+  if (!tranId) return;
 
-    let interval = setInterval(async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/payment/check-status/${tranId}`);
-        if (!res.ok) throw new Error(`Status API error: ${res.status}`);
+  let interval = setInterval(async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/payment/check-status/${tranId}`);
+      if (!res.ok) throw new Error(`Status API error: ${res.status}`);
 
-        const data = await res.json();
-        const statusMsg = data.status?.message;
-        setStatus(statusMsg);
+      const data = await res.json();
+      const statusMsg = data.status?.message;
+      setStatus(statusMsg);
 
-        if (statusMsg === "PAID" || statusMsg === "FAILED") {
-          clearInterval(interval);
-          if (statusMsg === "PAID") showSuccess("Payment successfully completed!");
-          else showError(`Payment ${statusMsg.toLowerCase()}.`);
-          onClose?.();
-        }
-
-      } catch (err) {
-        console.error("Error polling status:", err);
-        showError("Failed to poll payment status.");
+      if (statusMsg === "PAID" || statusMsg === "FAILED") {
         clearInterval(interval);
+        if (statusMsg === "PAID") {
+          showSuccess("Payment successfully completed!");
+          if (onSuccess) onSuccess();  // ✅ CALL THE CALLBACK HERE
+        } else {
+          showError(`Payment ${statusMsg.toLowerCase()}.`);
+        }
+        onClose?.();
       }
-    }, 3000); // every 3 seconds
 
-    return () => clearInterval(interval);
-  }, [tranId]);
+    } catch (err) {
+      console.error("Error polling status:", err);
+      showError("Failed to poll payment status.");
+      clearInterval(interval);
+    }
+  }, 3000);
+
+  return () => clearInterval(interval);
+}, [tranId]);
 
 
   const handleDownloadQR = () => {

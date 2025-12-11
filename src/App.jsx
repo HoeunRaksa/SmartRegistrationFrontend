@@ -24,14 +24,9 @@ function AppContent() {
 
   return (
     <>
-      <SnowAnimation />
-
-      {/* Navbar */}
       <div className={`fixed top-0 left-0 w-full z-50 ${shouldHideNavbar ? 'hidden w-0 h-0' : ''}`}>
         <Nabar />
       </div>
-
-      {/* Main Content */}
       <div
         className={`relative w-full min-h-screen p-[2px] sm:p-2 sm:pt-15 pt-13
           ${shouldHideNavbar ? 'py-0 px-0 sm:pt-0 pt-0' : ''}
