@@ -1,6 +1,6 @@
 import { useMemo } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/Card"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "./ui/Chart"
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../ui/Chart"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
 export function PaymentChart({ payments }) {
@@ -49,9 +49,9 @@ export function PaymentChart({ payments }) {
   }
 
   const colors = {
-  paid: "#BFDBFE",
-  unpaid: "#FCA5A5",
-};
+    paid: "#BFDBFE",
+    unpaid: "#FCA5A5",
+  };
 
   return (
     <Card>
@@ -65,8 +65,8 @@ export function PaymentChart({ payments }) {
             <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
             <YAxis tickLine={false} axisLine={false} tickMargin={10} />
             <ChartTooltip content={<ChartTooltipContent />} />
-           <Bar dataKey="paid" fill= {colors.paid} radius={4} />
-           <Bar dataKey="unpaid" fill= {colors.unpaid} radius={4} />
+            <Bar dataKey="paid" fill={colors.paid} radius={4} />
+            <Bar dataKey="unpaid" fill={colors.unpaid} radius={4} />
 
           </BarChart>
         </ChartContainer>

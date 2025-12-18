@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table"
-import { Input } from "./ui/Input"
-import { Badge } from "./ui/Badge"
-import { Button } from "./ui/Button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/Table"
+import { Input } from "../ui/Input"
+import { Badge } from "../ui/Badge"
+import { Button } from "../ui/Button"
 import { Search, Download, Loader2 } from "lucide-react"
 
 export default function User() {

@@ -10,7 +10,7 @@ const Home = () => {
     <section className="w-full min-h-screen relative overflow-hidden font">
       <div className="w-full grid sm:grid-cols-2 sx:grid-cols-2 justify-between gap-6 px-4 md:px-16 my-6 sm:py-20 py-5  rounded-3xl">
         <div className="flex space-y-4 flex-col md:items-start justify-center pt-3 p-2 md:text-left ">
-          <p className="font sm:text-2xl md:text-2xl lg:text-3xl xl:text-7xl text-4xl text-gray-700 py-10">
+          <p className="font sm:text-2xl md:text-2xl lg:text-3xl xl:text-7xl text-4xl text-gray-700 py-10 font-bold">
             Welcome <span className="text-gray-700"> To</span> <span className="text-orange-500">NovaTech </span> University
           </p>
           <p className="lg:text-xl font-medium   text-gray-700">

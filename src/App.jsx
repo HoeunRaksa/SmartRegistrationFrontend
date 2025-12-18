@@ -28,9 +28,9 @@ function AppContent() {
         <Nabar />
       </div>
       <div
-        className={`relative w-full min-h-screen p-[2px] sm:p-2 sm:pt-15 pt-13
+        className={`relative  min-h-screen p-[2px] sm:p-2 sm:pt-15 pt-13
           ${shouldHideNavbar ? 'py-0 px-0 sm:pt-0 pt-0' : ''}
-          bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300
+          bg-white
           flex flex-col items-center`}
       >
         <MainRouter />

@@ -1,6 +1,6 @@
-import { Card, CardContent } from "../Components/ui/Card";
+import { Card, CardContent } from "../ui/Card";
 import React from "react"
-import milestone from "../Data/Milestones.json"
+import milestone from "../../Data/Milestones.json"
 
 
 export function MissionSection() {

@@ -1,5 +1,5 @@
 import React from "react";
-import { ApiBaseImg } from "../Configration";
+import { ApiBaseImg } from "../../config/Configration";
 
 const researchData = {
   stats: [

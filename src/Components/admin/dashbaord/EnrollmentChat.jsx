@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 
-import Button from '../../../Components/ManageStu-ui/Button';
+import Button from '../../ManageStu-ui/Button';
 
 const EnrollmentChart = () => {
   const [chartType, setChartType] = useState('line');
@@ -48,14 +48,14 @@ const EnrollmentChart = () => {
           <ResponsiveContainer width="100%" height={400}>
             <LineChart data={enrollmentData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis 
-                dataKey="month" 
+              <XAxis
+                dataKey="month"
                 stroke="#6B7280"
                 fontSize={12}
                 tickFormatter={(value) => value?.split(' ')?.[0]}
               />
               <YAxis stroke="#6B7280" fontSize={12} />
-              <Tooltip 
+              <Tooltip
                 contentStyle={{
                   backgroundColor: '#FFFFFF',
                   border: '1px solid #E5E7EB',
@@ -64,26 +64,26 @@ const EnrollmentChart = () => {
                 }}
               />
               <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="enrolled" 
-                stroke="#1E40AF" 
+              <Line
+                type="monotone"
+                dataKey="enrolled"
+                stroke="#1E40AF"
                 strokeWidth={3}
                 name="New Enrollments"
                 dot={{ fill: '#1E40AF', strokeWidth: 2, r: 4 }}
               />
-              <Line 
-                type="monotone" 
-                dataKey="active" 
-                stroke="#10B981" 
+              <Line
+                type="monotone"
+                dataKey="active"
+                stroke="#10B981"
                 strokeWidth={2}
                 name="Active Students"
                 dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
               />
-              <Line 
-                type="monotone" 
-                dataKey="graduated" 
-                stroke="#F59E0B" 
+              <Line
+                type="monotone"
+                dataKey="graduated"
+                stroke="#F59E0B"
                 strokeWidth={2}
                 name="Graduated"
                 dot={{ fill: '#F59E0B', strokeWidth: 2, r: 4 }}
@@ -91,20 +91,20 @@ const EnrollmentChart = () => {
             </LineChart>
           </ResponsiveContainer>
         );
-      
+
       case 'bar':
         return (
           <ResponsiveContainer width="100%" height={400}>
             <BarChart data={enrollmentData?.slice(-6)}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis 
-                dataKey="month" 
+              <XAxis
+                dataKey="month"
                 stroke="#6B7280"
                 fontSize={12}
                 tickFormatter={(value) => value?.split(' ')?.[0]}
               />
               <YAxis stroke="#6B7280" fontSize={12} />
-              <Tooltip 
+              <Tooltip
                 contentStyle={{
                   backgroundColor: '#FFFFFF',
                   border: '1px solid #E5E7EB',
@@ -119,7 +119,7 @@ const EnrollmentChart = () => {
             </BarChart>
           </ResponsiveContainer>
         );
-      
+
       case 'pie':
         return (
           <ResponsiveContainer width="100%" height={400}>
@@ -138,7 +138,7 @@ const EnrollmentChart = () => {
                   <Cell key={`cell-${index}`} fill={COLORS?.[index % COLORS?.length]} />
                 ))}
               </Pie>
-              <Tooltip 
+              <Tooltip
                 formatter={(value, name, props) => [
                   `${props?.payload?.count} students (${value}%)`,
                   props?.payload?.name
@@ -153,7 +153,7 @@ const EnrollmentChart = () => {
             </PieChart>
           </ResponsiveContainer>
         );
-      
+
       default:
         return null;
     }
@@ -170,7 +170,7 @@ const EnrollmentChart = () => {
             Track enrollment patterns and lifecycle progression
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {/* Chart Type Selector */}
           <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
@@ -187,7 +187,7 @@ const EnrollmentChart = () => {
               </Button>
             ))}
           </div>
-          
+
           {/* Time Range Selector */}
           <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
             {timeRanges?.map((range) => (

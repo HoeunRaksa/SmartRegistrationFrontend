@@ -6,10 +6,10 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "../Components/ui/Table"
-import { Input } from "../Components/ui/Input"
-import { Badge } from "../Components/ui/Badge"
-import { Button } from "../Components/ui/Button"
+} from "../ui/Table"
+import { Input } from "../ui/Input"
+import { Badge } from "../ui/Badge"
+import { Button } from "../ui/Button"
 import { Search, Download } from "lucide-react"
 
 export default function PaidStudentsTable() {

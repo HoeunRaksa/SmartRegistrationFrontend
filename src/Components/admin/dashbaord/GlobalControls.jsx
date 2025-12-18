@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import Icon from '../../../Components/ManageStu-ui/AppIcon';
-import Button from '../../../Components/ManageStu-ui/Button';
-import Select from '../../../Components/ManageStu-ui/Select';
+import Icon from '../../ManageStu-ui/AppIcon';
+import Button from '../../ManageStu-ui/Button';
+import Select from '../../ManageStu-ui/Select';
 
 const GlobalControls = ({ onFiltersChange }) => {
   const [selectedYear, setSelectedYear] = useState('2024-2025');
@@ -84,7 +84,7 @@ const GlobalControls = ({ onFiltersChange }) => {
             <Icon name="Calendar" size={20} className="text-primary" />
             <span className="text-sm font-medium text-foreground whitespace-nowrap">Academic Year:</span>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1">
             <Select
               options={academicYears}
@@ -92,14 +92,14 @@ const GlobalControls = ({ onFiltersChange }) => {
               onChange={(value) => handleFilterChange('year', value)}
               placeholder="Select academic year"
             />
-            
+
             <Select
               options={programs}
               value={selectedProgram}
               onChange={(value) => handleFilterChange('program', value)}
               placeholder="Filter by program"
             />
-            
+
             <Select
               options={demographics}
               value={selectedDemographic}
@@ -160,7 +160,7 @@ const GlobalControls = ({ onFiltersChange }) => {
         <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border">
           <Icon name="Filter" size={16} className="text-muted-foreground" />
           <span className="text-sm text-muted-foreground">Active filters:</span>
-          
+
           <div className="flex items-center gap-2 flex-wrap">
             {selectedProgram !== 'all' && (
               <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
@@ -173,7 +173,7 @@ const GlobalControls = ({ onFiltersChange }) => {
                 </button>
               </span>
             )}
-            
+
             {selectedDemographic !== 'all' && (
               <span className="inline-flex items-center gap-1 px-2 py-1 bg-secondary/10 text-secondary text-xs rounded-full">
                 {demographics?.find(d => d?.value === selectedDemographic)?.label}
@@ -185,7 +185,7 @@ const GlobalControls = ({ onFiltersChange }) => {
                 </button>
               </span>
             )}
-            
+
             {comparisonMode && (
               <span className="inline-flex items-center gap-1 px-2 py-1 bg-accent/10 text-accent text-xs rounded-full">
                 Comparison Mode
@@ -198,7 +198,7 @@ const GlobalControls = ({ onFiltersChange }) => {
               </span>
             )}
           </div>
-          
+
           <Button
             variant="ghost"
             size="sm"

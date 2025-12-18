@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import Icon from '../../../Components/ManageStu-ui/AppIcon';
-import Button from '../../../Components/ManageStu-ui/Button';
+import Icon from '../../ManageStu-ui/AppIcon';
+import Button from '../../ManageStu-ui/Button';
 
 const PredictivePanel = () => {
   const [selectedModel, setSelectedModel] = useState('enrollment');
@@ -19,24 +19,24 @@ const PredictivePanel = () => {
   ];
 
   const riskIndicators = [
-    { 
-      category: 'High Risk Students', 
-      count: 127, 
-      percentage: 6.3, 
+    {
+      category: 'High Risk Students',
+      count: 127,
+      percentage: 6.3,
       factors: ['Low attendance', 'Poor grades', 'Financial issues'],
       severity: 'high'
     },
-    { 
-      category: 'Medium Risk Students', 
-      count: 284, 
-      percentage: 14.1, 
+    {
+      category: 'Medium Risk Students',
+      count: 284,
+      percentage: 14.1,
       factors: ['Irregular attendance', 'Academic struggles'],
       severity: 'medium'
     },
-    { 
-      category: 'Low Risk Students', 
-      count: 1599, 
-      percentage: 79.6, 
+    {
+      category: 'Low Risk Students',
+      count: 1599,
+      percentage: 79.6,
       factors: ['Good performance', 'Regular attendance'],
       severity: 'low'
     }
@@ -104,9 +104,9 @@ const PredictivePanel = () => {
             {enrollmentForecast?.map((forecast, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                 <div className="flex items-center gap-3">
-                  <Icon 
-                    name={forecast?.trend === 'up' ? 'TrendingUp' : 'TrendingDown'} 
-                    size={16} 
+                  <Icon
+                    name={forecast?.trend === 'up' ? 'TrendingUp' : 'TrendingDown'}
+                    size={16}
                     className={forecast?.trend === 'up' ? 'text-success' : 'text-error'}
                   />
                   <div>
@@ -176,9 +176,9 @@ const PredictivePanel = () => {
               <div key={index} className="p-3 bg-muted rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-sm font-medium text-foreground">{rec?.program}</div>
-                  <Icon 
-                    name="AlertCircle" 
-                    size={16} 
+                  <Icon
+                    name="AlertCircle"
+                    size={16}
                     className={getPriorityColor(rec?.priority)}
                   />
                 </div>

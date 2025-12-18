@@ -1,6 +1,6 @@
 import React from "react"
-import { Card, CardContent } from "./ui/Card"
-import milestone from "../Data/Milestones.json"
+import { Card, CardContent } from "../ui/Card"
+import milestone from "../../Data/Milestones.json"
 
 export function HistorySection() {
   return (
@@ -12,7 +12,7 @@ export function HistorySection() {
           </h2>
           <p className="sm:text-xl text-lg text-gray-700 max-w-3xl mx-auto text-pretty leading-relaxed font-medium">
             {milestone.header.dedicated}
-          </p>  
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:p-20 p-2">
@@ -23,8 +23,8 @@ export function HistorySection() {
             >
               <CardContent className="p-6 text-start">
                 <div className="flex items-center gap-3 p-3 w-full">
-                <div className="lg:text-4xl sm:text-2xl text-xl sm:mb-4 sm:mt-4 mx-2">{item.icon}</div>
-                <div className="md:text-2xl text-xl font text-gray-700 ">{item.year}</div>
+                  <div className="lg:text-4xl sm:text-2xl text-xl sm:mb-4 sm:mt-4 mx-2">{item.icon}</div>
+                  <div className="md:text-2xl text-xl font text-gray-700 ">{item.year}</div>
                 </div>
                 <h3 className="sm:text-xl font mb-3 font-medium py-3">{item.title}</h3>
                 <p className="sm:text-xl text-sm text-gray-700 leading-relaxed">{item.description}</p>

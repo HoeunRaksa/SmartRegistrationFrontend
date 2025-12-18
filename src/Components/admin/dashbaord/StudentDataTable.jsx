@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import Icon from '../../../Components/ManageStu-ui/AppIcon';
-import Button from '../../../Components/ManageStu-ui/Button';
-import Input from '../../..//Components/ManageStu-ui/Input';
-import Select from '../../../Components/ManageStu-ui/Select';
+import Icon from '../../ManageStu-ui/AppIcon';
+import Button from '../../ManageStu-ui/Button';
+import Input from '../../ManageStu-ui/Input';
+import Select from '../../ManageStu-ui/Select';
 
 const StudentDataTable = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -131,28 +131,28 @@ const StudentDataTable = () => {
   const filteredAndSortedData = useMemo(() => {
     let filtered = studentData?.filter(student => {
       const matchesSearch = student?.name?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
-                           student?.email?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
-                           student?.id?.toLowerCase()?.includes(searchTerm?.toLowerCase());
+        student?.email?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+        student?.id?.toLowerCase()?.includes(searchTerm?.toLowerCase());
       const matchesProgram = filterProgram === 'all' || student?.program === filterProgram;
       const matchesStatus = filterStatus === 'all' || student?.status === filterStatus;
-      
+
       return matchesSearch && matchesProgram && matchesStatus;
     });
 
     filtered?.sort((a, b) => {
       let aValue = a?.[sortField];
       let bValue = b?.[sortField];
-      
+
       if (sortField === 'enrollmentDate' || sortField === 'lastActivity') {
         aValue = new Date(aValue);
         bValue = new Date(bValue);
       }
-      
+
       if (typeof aValue === 'string') {
         aValue = aValue?.toLowerCase();
         bValue = bValue?.toLowerCase();
       }
-      
+
       if (sortDirection === 'asc') {
         return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
       } else {
@@ -226,7 +226,7 @@ const StudentDataTable = () => {
             Detailed student lifecycle tracking and management
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" iconName="Download">
             Export
@@ -245,21 +245,21 @@ const StudentDataTable = () => {
           onChange={(e) => setSearchTerm(e?.target?.value)}
           className="w-full"
         />
-        
+
         <Select
           options={programOptions}
           value={filterProgram}
           onChange={setFilterProgram}
           placeholder="Filter by program"
         />
-        
+
         <Select
           options={statusOptions}
           value={filterStatus}
           onChange={setFilterStatus}
           placeholder="Filter by status"
         />
-        
+
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">
             {filteredAndSortedData?.length} students
@@ -285,9 +285,9 @@ const StudentDataTable = () => {
                   className="flex items-center gap-1 text-sm font-medium text-foreground hover:text-primary"
                 >
                   Student
-                  <Icon 
-                    name={sortField === 'name' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'} 
-                    size={14} 
+                  <Icon
+                    name={sortField === 'name' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'}
+                    size={14}
                   />
                 </button>
               </th>
@@ -297,9 +297,9 @@ const StudentDataTable = () => {
                   className="flex items-center gap-1 text-sm font-medium text-foreground hover:text-primary"
                 >
                   Program
-                  <Icon 
-                    name={sortField === 'program' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'} 
-                    size={14} 
+                  <Icon
+                    name={sortField === 'program' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'}
+                    size={14}
                   />
                 </button>
               </th>
@@ -309,9 +309,9 @@ const StudentDataTable = () => {
                   className="flex items-center gap-1 text-sm font-medium text-foreground hover:text-primary"
                 >
                   Enrollment
-                  <Icon 
-                    name={sortField === 'enrollmentDate' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'} 
-                    size={14} 
+                  <Icon
+                    name={sortField === 'enrollmentDate' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'}
+                    size={14}
                   />
                 </button>
               </th>
@@ -321,9 +321,9 @@ const StudentDataTable = () => {
                   className="flex items-center gap-1 text-sm font-medium text-foreground hover:text-primary"
                 >
                   GPA
-                  <Icon 
-                    name={sortField === 'gpa' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'} 
-                    size={14} 
+                  <Icon
+                    name={sortField === 'gpa' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'}
+                    size={14}
                   />
                 </button>
               </th>
@@ -392,7 +392,7 @@ const StudentDataTable = () => {
         <div className="text-sm text-muted-foreground">
           Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredAndSortedData?.length)} of {filteredAndSortedData?.length} students
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -403,7 +403,7 @@ const StudentDataTable = () => {
           >
             Previous
           </Button>
-          
+
           <div className="flex items-center gap-1">
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
               const page = i + 1;
@@ -420,7 +420,7 @@ const StudentDataTable = () => {
               );
             })}
           </div>
-          
+
           <Button
             variant="outline"
             size="sm"

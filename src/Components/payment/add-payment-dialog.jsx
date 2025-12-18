@@ -6,11 +6,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "./ui/Dialog"
-import { Button } from "./ui/Button"
-import { Input } from "./ui/Input"
-import { Label } from "./ui/Label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select"
+} from "../ui/Dialog"
+import { Button } from "../ui/Button"
+import { Input } from "../ui/Input"
+import { Label } from "../ui/Label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select"
 
 export function AddPaymentDialog({ open, onOpenChange, onAddPayment }) {
   const [formData, setFormData] = useState({

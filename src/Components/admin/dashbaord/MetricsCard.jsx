@@ -1,5 +1,5 @@
 import React from 'react';
-import Icon from '../../../Components/ManageStu-ui/AppIcon';
+import Icon from '../../ManageStu-ui/AppIcon';
 
 const MetricsCard = ({ title, value, change, changeType, icon, description }) => {
   const getChangeColor = () => {

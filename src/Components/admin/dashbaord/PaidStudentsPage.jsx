@@ -1,5 +1,5 @@
 import { PaidStudentsTable } from "../Components/PaidStudentsTable"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../Components/ui/Card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/Card"
 
 // Mock data for paid students
 const paidStudents = [

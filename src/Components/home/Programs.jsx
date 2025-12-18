@@ -1,4 +1,4 @@
-import { Card, CardContent } from "../Components/ui/Card";
+import { Card, CardContent } from "../ui/Card";
 const programs = {
   ScienceEngineering: {
     icon: "🧪",
