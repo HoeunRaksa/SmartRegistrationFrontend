@@ -1,5 +1,5 @@
 import { Button } from "../ui/Button.jsx";
-import "../App.css";
+import "../../App.css";
 import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { ApiBaseImg } from "../../config/Configration.jsx";

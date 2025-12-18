@@ -1,5 +1,3 @@
-import React from "react";
-
 const Button = ({ children, variant = "default", className, ...props }) => {
   const baseClasses = "px-4 py-2 rounded-md font-medium";
   const variantClasses = variant === "outline" 
@@ -8,5 +6,4 @@ const Button = ({ children, variant = "default", className, ...props }) => {
   
   return <button className={`${baseClasses} ${variantClasses} ${className}`} {...props}>{children}</button>;
 };
-
 export { Button };
