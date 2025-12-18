@@ -2,12 +2,11 @@ import { Button } from "../ui/Button.jsx";
 import "../../App.css";
 import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
-import { ApiBaseImg } from "../../config/Configration.jsx";
+import profile from "../../assets/images/profile.png";
 import { showSuccess, ToastContainer } from "../ui/Toast.jsx";
 
 const User = {
   name: "Kakura",
-  avatar: "Circle.png",
   email: "kakura@example.com",
 };
 
@@ -77,7 +76,8 @@ function Navbar() {
           {isLoggedIn ? (
             <div className="flex items-center space-x-2">
               <img
-                src={`${ApiBaseImg}${User.avatar}`}
+                src={profile}
+
                 className="w-10 h-10 rounded-full object-cover shadow-inner"
                 alt={`${User.name}'s avatar`}
               />
