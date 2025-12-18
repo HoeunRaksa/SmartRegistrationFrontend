@@ -7,10 +7,10 @@ export function HistorySection() {
     <section className="py-10 my-5  font text-gray-700  rounded-lg">
       <div className="mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="lg:text-3xl sm:text-2xl text-xl font-semibold text-whote font py-5 text-balance">
+          <h2 className="lg:text-3xl sm:text-2xl text-xl font-semibold text-whote font py-5 text-balance header-text">
             {milestone.header.title}
           </h2>
-          <p className="sm:text-xl text-lg text-gray-700 max-w-3xl mx-auto text-pretty leading-relaxed font-medium">
+          <p className="sm:text-xl text-lg text-gray-700 max-w-3xl mx-auto text-pretty leading-relaxed font-medium ">
             {milestone.header.dedicated}
           </p>
         </div>

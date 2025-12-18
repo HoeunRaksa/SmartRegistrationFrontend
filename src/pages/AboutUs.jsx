@@ -13,7 +13,7 @@ const AbouteUs = () => {
       <section className="py-5 my-5 rounded-lg font  text-gray-700">
         <div className="text-gray-700 mx-auto px-6">
           <div className="text-center">
-            <h2 className="sm:text-2xl text-xl font-bold py-5 ">Academic Excellence</h2>
+            <h2 className="sm:text-2xl text-xl font-bold py-5 header-text">Academic Excellence</h2>
             <p className="sm:text-xl text-sm  font-medium max-w-3xl mx-auto py-2">
               Our commitment to excellence is reflected in our achievements, recognition, and the success of our graduates
               who are making a difference worldwide.

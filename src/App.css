@@ -48,6 +48,40 @@ body {
   color: black;
 }
 
+.header-text {
+  font-weight: bold;          /* font-bold */
+  color: #374151;             /* text-gray-700 */
+  padding-top: 2.5rem;        /* py-10 => padding-top & bottom 2.5rem (40px) */
+  padding-bottom: 2.5rem;
+  text-align: center;         /* default for small screens */
+  font-size: 2.25rem;         /* text-4xl ~ 36px */
+}
+
+/* Responsive font sizes */
+@media (min-width: 640px) {  /* sm */
+  .header-text {
+    font-size: 2.25rem;       /* sm:text-4xl ~ same as default */
+    text-align: center;         /* sm:text-start */
+  }
+}
+
+@media (min-width: 768px) {  /* md */
+  .header-text {
+    font-size: 3rem;          /* md:text-5xl ~ 48px */
+  }
+}
+
+@media (min-width: 1024px) { /* lg */
+  .header-text {
+    font-size: 3.75rem;       /* lg:text-6xl ~ 60px */
+  }
+}
+
+@media (min-width: 1280px) { /* xl */
+  .header-text {
+    font-size: 4.5rem;        /* xl:text-7xl ~ 72px */
+  }
+}
 
 
 

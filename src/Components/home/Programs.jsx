@@ -1,24 +1,18 @@
 import { Card, CardContent } from "../ui/Card";
 const programs = {
   ScienceEngineering: {
-    icon: "🧪",
-    iconColor: "text-blue-600",
     title: "Science & Engineering",
     description: "Cutting-edge research facilities and world-renowned faculty in STEM fields.",
     items: ["Computer Science", "Biomedical Engineering", "Environmental Science", "Data Analytics"],
     link: "#"
   },
   BusinessEconomics: {
-    icon: "💼",
-    iconColor: "text-yellow-600",
     title: "Business & Economics",
     description: "Industry-leading business programs with global perspectives and practical experience.",
     items: ["MBA Programs", "International Business", "Finance & Banking", "Entrepreneurship"],
     link: "#"
   },
   ArtsHumanities: {
-    icon: "🎨",
-    iconColor: "text-pink-500",
     title: "Arts & Humanities",
     description: "Explore creativity and critical thinking through diverse cultural and artistic studies.",
     items: ["Literature", "History", "Philosophy", "Visual Arts"],
@@ -31,7 +25,7 @@ function Program() {
       <div className="mx-auto px-6">
         {/* Header */}
         <div className="text-center sm:mb-16">
-          <h2 className="lg:text-6xl text-gray-700 text-3xl font mb-15">
+          <h2 className="header-text">
             World-Class Academic Programs
           </h2>
           <p className="lg:text-xl sm:text-xl font-medium  mb-8 max-w-4xl text-gray-700 mx-auto">
@@ -45,10 +39,9 @@ function Program() {
           {Object.values(programs).map((program, index) => (
             <Card key={index} className=" hover:shadow-lg transition-shadow duration-300 glass p-8 font-sans ">
               <CardContent className="p-6 text-left">
-                <div className={`sm:text-4xl text-4xl px-3 ${program.iconColor}`}>{program.icon}</div>
                 <h3 className="sm:text-xl text-gray-700 uppercase font-medium py-5">{program.title}</h3>
                 <p className="lg:text-xl sm:text-sm mb-3 font">{program.description}</p>
-                <ul className="mb-4 list-disc list-inside lg:text-xl sm:text-sm text-sm">
+                <ul className="mb-4 lg:text-xl sm:text-sm text-sm">
                   {program.items.map((item, i) => (
                     <li key={i}>{item}</li>
                   ))}

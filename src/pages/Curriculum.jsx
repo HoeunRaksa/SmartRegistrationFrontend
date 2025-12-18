@@ -1,5 +1,6 @@
 import { Card, CardContent } from "../Components/ui/Card";
 import { Link } from "react-router-dom";
+import headerImage from "../assets/images/curriculum.png"
 export const programs = {
   AiResearcher: {
     icon: "🤖",
@@ -72,7 +73,7 @@ const Curriculum = () => {
       <section className="relative text-gray-700 mt-5 rounded-3xl">
         <div className="container mx-auto px-6 py-10 flex flex-col-reverse md:flex-row items-center md:justify-between">
           <div className="text-center md:text-left md:w-1/2">
-            <h1 className="text-xl sm:text-2xl md:text-5xl font mb-6">
+            <h1 className="header-text">
               Unlock Your Potential with Our Programs
             </h1>
             <p className="sm:text-xl text-xs mb-6 leading-relaxed font-medium">
@@ -87,9 +88,9 @@ const Curriculum = () => {
           </div>
           <div className="md:w-1/2 mb-10 md:mb-0 flex justify-center">
             <img
-              src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=80"
+              src={`${headerImage}`}
               alt="Education Hero"
-              className="w-full max-w-md rounded-xl shadow-lg"
+              className="w-full "
             />
           </div>
         </div>
@@ -98,7 +99,7 @@ const Curriculum = () => {
         <div className=" mx-auto px-6">
           {/* Header */}
           <div className="text-center mb-16">
-            <h2 className="sm:text-5xl text-xl md:text-5xl font mb-6 text-balance">
+            <h2 className="sm:text-5xl text-xl md:text-5xl font mb-6 text-balance header-text">
               World-Class Academic Programs
             </h2>
             <p className="lg:text-xl sm:text-sm text-xs mb-8 text-pretty leading-relaxed max-w-4xl mx-auto font-medium">

@@ -8,7 +8,7 @@ export function MissionSection() {
     <section className="py-10 text-gray-700  rounded-lg front">
       <div className="mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-xl md:text-2xl text-gray-700 font-bold mb-6 text-balance">Our Mission & Values</h2>
+          <h2 className="text-xl md:text-2xl text-gray-700 font-bold mb-6 text-balance header-text">Our Mission & Values</h2>
           <div className="max-w-4xl mx-auto">
             <p className="md:text-xl sm:text-sm text-xs mb-8 text-pretty leading-relaxed ">
               {
