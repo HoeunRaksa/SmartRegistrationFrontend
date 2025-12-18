@@ -4,6 +4,7 @@ import milestone from "../Data/Milestones.json";
 import { Card, CardContent } from "../Components/ui/Card";
 import character from "../assets/images/character.png";
 import { ApiBaseImg } from "../config/Configration";
+import acadami from "../assets/images/academic.png"
 const Home = () => {
   return (
     <section className="min-h-screen">
@@ -50,32 +51,37 @@ const Home = () => {
       </div>
 
       <section className="py-10 rounded-3xl">
-        <div className=" text-gray-700 mx-auto px-6">
-          <div className="flex sm:flex-row flex-col-reverse">
-            <div className ="transform scale-x-[-1]">
-              <img src={`${ApiBaseImg}academic.png`} alt="Acadami" className="w-full"/>
-              
-            </div>
-            <div className="text-center mb-16">
-              <h2 className="header-text">Academic Excellence</h2>
-              <p className="sm:text-xl text-lg font-medium max-w-3xl mx-auto text-pretty leading-relaxed opacity-80">
-                Our commitment to excellence is reflected in our achievements, recognition, and the success of our graduates
-                who are making a difference worldwide.
-              </p>
+        <div className=" text-gray-700px-6">
+          <div className="text-gray-700  px-6">
+            <div className="flex sm:flex-row-reverse flex-col justify-center items-center">
+              {/* Text */}
+              <div className="text-center w-full">
+                <h2 className="header-text">Academic Excellence</h2>
+                <p className="sm:text-xl text-lg font-medium max-w-3xl mx-auto text-pretty leading-relaxed opacity-80">
+                  Our commitment to excellence is reflected in our achievements, recognition, and the success of our graduates
+                  who are making a difference worldwide.
+                </p>
+              </div>
+
+              {/* Image */}
+              <div className="transform scale-x-[-1] max-w-150 relative">
+                <img src={acadami} alt="Acadami" className="w-full" />
+              </div>
             </div>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-10 sm:p-20 p-2">
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 md:grid-cols-2 grid-cols-2 gap-10 sm:p-20 p-2">
             {milestone.achievements.map((achievement, index) => (
               <Card key={index} className="overflow-hidden glass hover:shadow-lg transition-shadow duration-300 group relative">
                 <div className="aspect-video">
                   <img
                     src={`${ApiBaseImg}${achievement.image}`}
                     alt={achievement.title}
-                    className="w-full object-cover"
+                    className="max-w-100 w-100 object-cover"
                   />
                 </div>
-                <CardContent className="py-30 absolute -bottom-full group-hover:bottom-0 transition-all duration-500 glass flex flex-col justify-center">
+                <CardContent className="py-30 absolute sm:-bottom-54 -bottom-61 group-hover:-bottom-1 transition-all duration-500 glass flex flex-col justify-center">
                   <h3 className="sm:text-xl text-sm mb-3 font-semibold text-gray-700">{achievement.title}</h3>
                   <p className="lg:text-lg text-sm opacity-80">{achievement.description}</p>
                 </CardContent>
