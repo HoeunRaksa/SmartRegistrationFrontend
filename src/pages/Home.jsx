@@ -17,60 +17,14 @@ const cardVariants = {
   }),
 };
 
-const AchievementCard = ({ achievement, index }) => {
-  const [showInfo, setShowInfo] = useState(false);
 
-  return (
-    <motion.div
-      key={index}
-      custom={index}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.2 }}
-      variants={cardVariants}
-    >
-      <Card className="relative rounded-3xl overflow-hidden ">
-        {/* Image */}
-        <motion.div
-          className="aspect-video w-full overflow-hidden rounded-3xl"
-          whileHover={{ scale: 1.05, rotateY: 5 }}
-          transition={{ type: "spring", stiffness: 120 }}
-        >
-          <img
-            src={`${ApiBaseImg}${achievement.image}`}
-            alt={achievement.title}
-            className="w-full h-full object-cover transition-transform duration-500"
-          />
-        </motion.div>
-
-        {/* Overlay Content */}
-        <motion.div
-          className={`absolute bottom-0 left-0 right-0 p-6 bg-white  rounded-t-2xl flex flex-col gap-2 transition-all duration-500 ${
-            showInfo ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
-          }`}
-        >
-          <h3 className="text-lg font-bold text-gray-800">{achievement.title}</h3>
-          <p className="text-sm text-gray-600">{achievement.description}</p>
-        </motion.div>
-
-        {/* Button to toggle overlay */}
-        <button
-          onClick={() => setShowInfo(!showInfo)}
-          className="absolute bottom-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg  hover:bg-blue-600 transition-all"
-        >
-          {showInfo ? "Hide Info" : "View Info"}
-        </button>
-      </Card>
-    </motion.div>
-  );
-};
 
 const Home = () => {
   return (
     <section className="min-h-screen">
       {/* Hero Section */}
       <motion.div
-        className="flex flex-col-reverse md:flex-row items-center justify- px-6 sm:px-12 lg:px-20 py-10 gap-8"
+        className="flex flex-col md:flex-row items-center justify- px-6 sm:px-12 lg:px-20 py-10 gap-8"
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
@@ -151,14 +105,37 @@ const Home = () => {
         </motion.div>
       </section>
 
-      {/* Milestones */}
-      <section className="py-16 px-6 sm:px-12 lg:px-20">
-        <div className="grid grid-cols-1 sm:grid-cols-2  md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {milestone.achievements.map((achievement, index) => (
-            <AchievementCard key={index} achievement={achievement} index={index} />
-          ))}
+    {/* Milestones */}
+<section className="py-16 px-6 sm:px-12 lg:px-20 rounded-3xl">
+  <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 text-center mb-12">
+    Our Achievements
+  </h2>
+
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-10">
+    {milestone.achievements.map((achievement, index) => (
+      <motion.div
+        key={index}
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ delay: index * 0.1, type: "spring", stiffness: 120 }}
+        whileHover={{ scale: 1.05 }}
+        className="glass rounded-3xl shadow-lg overflow-hidden relative cursor-pointer"
+      >
+        <img
+          src={`${ApiBaseImg}${achievement.image}`}
+          alt={achievement.title}
+          className="w-full h-48 object-cover"
+        />
+        <div className="p-6 flex flex-col gap-2">
+          <h3 className="text-lg font-bold text-gray-800">{achievement.title}</h3>
+          <p className="text-sm text-gray-600">{achievement.description}</p>
         </div>
-      </section>
+      </motion.div>
+    ))}
+  </div>
+</section>
+
 
       <Program />
     </section>

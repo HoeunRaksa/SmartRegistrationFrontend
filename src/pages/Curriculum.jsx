@@ -117,7 +117,7 @@ const Curriculum = () => {
       </motion.section>
 
       {/* Programs Section */}
-      <section className="py-20 my-4 text-gray-700 rounded-3xl">
+      <section className="py-10 my-4 text-gray-700 rounded-3xl">
         <div className="mx-auto px-6">
           {/* Header */}
           <div className="text-center mb-16">
@@ -131,7 +131,7 @@ const Curriculum = () => {
           </div>
 
           {/* Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:p-20 p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:p-30 sm:p-10 p-4">
             {Object.entries(programs).map(([key, program], i) => (
               <motion.div
                 key={key}
