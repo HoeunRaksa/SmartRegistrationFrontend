@@ -1,6 +1,8 @@
 import { Card, CardContent } from "../Components/ui/Card";
 import { Link } from "react-router-dom";
-import headerImage from "../../public/assets/images/curriculum.png"
+import { motion } from "framer-motion";
+import headerImage from "../../public/assets/images/curriculum.png";
+
 export const programs = {
   AiResearcher: {
     icon: "🤖",
@@ -66,11 +68,26 @@ export const programs = {
     items: ["Computer Science", "Biomedical Engineering", "Environmental Science", "Data Analytics"],
   }
 };
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 50 },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.1, type: "spring", stiffness: 120 },
+  }),
+};
+
 const Curriculum = () => {
   return (
     <div>
       {/* Hero Section */}
-      <section className="relative text-gray-700 mt-5 rounded-3xl">
+      <motion.section 
+        className="relative text-gray-700 mt-5 rounded-3xl"
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+      >
         <div className="container mx-auto px-6 py-10 flex flex-col-reverse md:flex-row items-center md:justify-between">
           <div className="text-center md:text-left md:w-1/2">
             <h1 className="header-text">
@@ -87,16 +104,21 @@ const Curriculum = () => {
             </Link>
           </div>
           <div className="md:w-1/2 mb-10 md:mb-0 flex justify-center">
-            <img
+            <motion.img
               src={`${headerImage}`}
               alt="Education Hero"
-              className="w-full "
+              className="w-full"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.8 }}
             />
           </div>
         </div>
-      </section> 
-      <section className="py-20 my-4  text-gray-700 rounded-3xl">
-        <div className=" mx-auto px-6">
+      </motion.section>
+
+      {/* Programs Section */}
+      <section className="py-20 my-4 text-gray-700 rounded-3xl">
+        <div className="mx-auto px-6">
           {/* Header */}
           <div className="text-center mb-16">
             <h2 className="sm:text-5xl text-xl md:text-5xl font mb-6 text-balance header-text">
@@ -109,27 +131,72 @@ const Curriculum = () => {
           </div>
 
           {/* Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:p-20 p-2">
-            {Object.entries(programs).map(([key, program]) => (
-              <Card key={key} className="glass shadow-sm border-border hover:shadow-lg transition-shadow duration-300">
-                <CardContent className="p-6 text-left">
-                  <div className={`lg:text-5xl sm:text-3xl text-xl m-4 ${program.iconColor}`}>{program.icon}</div>
-                  <h3 className="text-xl font-semibold mb-3 text-gray-700 py-3">{program.title}</h3>
-                  <p className="text-muted-foreground lg:text-xl text-lg mb-3">{program.description}</p>
-                  <ul className="mb-4 list-disc list-inside sm:text-lg text-sm py-2">
-                    {program.items.map((item, i) => (
-                      <li key={i}>{item}</li>
-                    ))}
-                  </ul>
-                  {/* link to param-based detail route */}
-                  <Link
-                    to={`/curriculum/${encodeURIComponent(key)}`}
-                    className="text-blue-500 font-medium lg:text-xl sm:text-sm text-xs hover:underline"
-                  >
-                    Learn More →
-                  </Link>
-                </CardContent>
-              </Card>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:p-20 p-4">
+            {Object.entries(programs).map(([key, program], i) => (
+              <motion.div
+                key={key}
+                custom={i}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.2 }}
+                variants={cardVariants}
+              >
+                <Card
+                  className="
+                    relative flex flex-col h-full
+                    rounded-3xl
+                    overflow-hidden
+                    shadow-lg
+                    glass
+                    border border-gray-200
+                    transition-transform duration-500
+                    hover:-translate-y-2 hover:shadow-2xl
+                    group
+                  "
+                >
+                  {/* Gradient Glow */}
+                  <div className="absolute -inset-1 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl blur-2xl"></div>
+
+                  <CardContent className="relative flex flex-col h-full p-6">
+                    {/* Icon */}
+                    <div
+                      className={`text-5xl sm:text-6xl lg:text-7xl mb-4 ${program.iconColor} flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 text-white shadow-md`}
+                    >
+                      {program.icon}
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-2">
+                      {program.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-gray-600 lg:text-lg text-base mb-4 leading-relaxed">
+                      {program.description}
+                    </p>
+
+                    {/* Items */}
+                    <ul className="mb-6 list-disc list-inside space-y-2 text-gray-600 text-sm sm:text-base">
+                      {program.items.map((item, idx) => (
+                        <li key={idx}>{item}</li>
+                      ))}
+                    </ul>
+
+                    {/* Learn More */}
+                    <Link
+                      to={`/curriculum/${encodeURIComponent(key)}`}
+                      className="
+                        mt-auto inline-flex items-center gap-2
+                        font-semibold text-blue-600
+                        hover:gap-3 hover:underline
+                        transition-all duration-300 text-sm sm:text-base lg:text-lg
+                      "
+                    >
+                      Learn More <span aria-hidden>→</span>
+                    </Link>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -137,4 +204,5 @@ const Curriculum = () => {
     </div>
   );
 };
+
 export default Curriculum;
