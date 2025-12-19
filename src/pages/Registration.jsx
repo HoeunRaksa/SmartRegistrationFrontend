@@ -159,15 +159,15 @@ const Registration = () => {
                     />
                 </div>
             )}
-            <div className="relative w-full max-w-5xl mx-auto px-4 py-30">
+            <div className="relative w-full max-w-5xl mx-auto px-1 py-30">
                 <div className="text-center mb-10 text-gray-700">
                     <div className="inline-flex items-center justify-center p-3 bg-white/20 backdrop-blur-md rounded-2xl mb-4 shadow-inner border border-white/30">
                         <GraduationCap size={40} className="text-gray-700" />
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight drop-shadow-sm">
+                    <h1 className="text-3xl sm:text-4xl my-5 md:text-5xl lg:text-6xl font-bold text-gray-800">
                         NovaTech University
                     </h1>
-                    <p className="mt-2 text-orange-100 text-lg font-medium">Student Registration Portal</p>
+                    <p className="mt-2 text-gray-600 text-lg font-medium">Student Registration Portal</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-8">
@@ -177,7 +177,7 @@ const Registration = () => {
                             <div className="p-2 bg-orange-100 rounded-lg text-orange-600">
                                 <User size={24} />
                             </div>
-                            <h2 className="text-2xl font-bold text-gray-800">Personal Information</h2>
+                            <h2 className="text-xl font-bold text-gray-800">Personal Information</h2>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -309,7 +309,7 @@ const Registration = () => {
                     {/* Family Information */}
                     <div className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/50">
                         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-                            <h2 className="text-2xl font-bold text-gray-800">Family Information</h2>
+                            <h2 className="text-xl font-bold text-gray-800">Family Information</h2>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -367,7 +367,7 @@ const Registration = () => {
                             <div className="p-2 bg-orange-100 rounded-lg text-orange-600">
                                 <University size={24} />
                             </div>
-                            <h2 className="text-2xl font-bold text-gray-800">High School Information</h2>
+                            <h2 className="text-xl font-bold text-gray-800">High School Information</h2>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -414,7 +414,7 @@ const Registration = () => {
                             <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
                                 <School size={24} />
                             </div>
-                            <h2 className="text-2xl font-bold text-gray-800">Academic Information</h2>
+                            <h2 className="text-xl font-bold text-gray-800">Academic Information</h2>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -17,14 +17,12 @@ const cardVariants = {
   }),
 };
 
-
-
 const Home = () => {
   return (
-    <section className="min-h-screen">
+    <section className="min-h-screen sm:pt-20">
       {/* Hero Section */}
       <motion.div
-        className="flex flex-col md:flex-row items-center justify- px-6 sm:px-12 lg:px-20 py-10 gap-8"
+        className="flex flex-col md:flex-row items-center  sm:px-12 lg:px-20 py-10 gap-8"
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
@@ -35,11 +33,14 @@ const Home = () => {
             Welcome <span className="text-gray-700">To</span>{" "}
             <span className="text-orange-500">NovaTech</span> University
           </h1>
-          <p className="text-base sm:text-lg md:text-xl text-gray-600 leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl text-gray-700 leading-relaxed">
             Embark on your journey to academic excellence and groundbreaking achievements today!
           </p>
-          <p className="text-sm sm:text-base md:text-lg text-gray-600 opacity-90 hidden sm:block">
-            Explore transformative programs, collaborate with visionary minds, and develop the skills to shape the future.
+          <p className="text-sm sm:text-base md:text-lg text-gray-700 opacity-90 hidden sm:block">
+           Embark on your journey to academic excellence and groundbreaking achievements today.
+            At NovaTech University, we empower students through innovative programs, cutting-edge research, 
+            and hands-on learning experiences. Collaborate with visionary thinkers, explore transformative ideas, and develop the skills,
+            knowledge, and leadership needed to shape the future in a rapidly evolving world.
           </p>
           <div className="flex flex-col sm:flex-row justify-center sm:justify-start gap-4 mt-4">
             <button className="bg-gradient-to-br from-red-300 to-blue-400 text-white py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition transform hover:scale-105">
@@ -72,7 +73,7 @@ const Home = () => {
       </motion.div>
 
       {/* Academic Section */}
-      <section className="py-16 px-6 sm:px-12 lg:px-20  rounded-3xl mt-10">
+      <section className="py-16 rounded-3xl mt-10">
         <motion.div
           className="flex flex-col sm:flex-row-reverse items-center justify-center gap-8 sm:gap-12"
           initial={{ opacity: 0, y: 50 }}
@@ -82,11 +83,16 @@ const Home = () => {
         >
           {/* Text */}
           <div className="text-center sm:text-left sm:w-1/2">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center text-gray-800 mb-4">
               Academic Excellence
             </h2>
-            <p className="text-base sm:text-lg md:text-xl text-gray-600 leading-relaxed opacity-90">
-              Our commitment to excellence is reflected in our achievements, recognition, and the success of our graduates who are making a difference worldwide.
+            <p className="text-base sm:text-lg md:text-xl text-gray-700 leading-relaxed opacity-90">
+              Our commitment to academic excellence is demonstrated through
+              a strong culture of innovation, rigorous scholarship, and continuous
+              improvement. We take pride in our nationally and internationally recognized
+              achievements, outstanding faculty, and a curriculum designed to meet global
+              standards. Our graduates emerge as confident professionals and lifelong learners,
+              making meaningful contributions across industries, communities, and societies worldwide.
             </p>
           </div>
 
@@ -105,36 +111,45 @@ const Home = () => {
         </motion.div>
       </section>
 
-    {/* Milestones */}
-<section className="py-16 px-6 sm:px-12 lg:px-20 rounded-3xl">
-  <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 text-center mb-12">
-    Our Achievements
-  </h2>
+      {/* Milestones */}
+      <section className="py-16 sm:px-12 lg:px-20 rounded-3xl">
+        <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 text-center mb-12">
+          Our Achievements
+          <p className="text-base sm:text-lg md:text-xl py-5 font-light text-gray-700 leading-relaxed opacity-90">
+              Our commitment to academic excellence is demonstrated through
+              a strong culture of innovation, rigorous scholarship, and continuous
+              improvement. We take pride in our nationally and internationally recognized
+              achievements, outstanding faculty, and a curriculum designed to meet global
+              standards. Our graduates emerge as confident professionals and lifelong learners,
+              making meaningful contributions across industries, communities, and societies worldwide.
+            </p>
+        </h2>
+         
 
-  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-10">
-    {milestone.achievements.map((achievement, index) => (
-      <motion.div
-        key={index}
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ delay: index * 0.1, type: "spring", stiffness: 120 }}
-        whileHover={{ scale: 1.05 }}
-        className="glass rounded-3xl shadow-lg overflow-hidden relative cursor-pointer"
-      >
-        <img
-          src={`${ApiBaseImg}${achievement.image}`}
-          alt={achievement.title}
-          className="w-full h-48 object-cover"
-        />
-        <div className="p-6 flex flex-col gap-2">
-          <h3 className="text-lg font-bold text-gray-800">{achievement.title}</h3>
-          <p className="text-sm text-gray-600">{achievement.description}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-10">
+          {milestone.achievements.map((achievement, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ delay: index * 0.1, type: "spring", stiffness: 120 }}
+              whileHover={{ scale: 1.05 }}
+              className="glass rounded-3xl shadow-lg overflow-hidden relative cursor-pointer"
+            >
+              <img
+                src={`${ApiBaseImg}${achievement.image}`}
+                alt={achievement.title}
+                className="w-full h-48 object-cover"
+              />
+              <div className="p-6 flex flex-col gap-2">
+                <h3 className="text-lg font-bold text-gray-800">{achievement.title}</h3>
+                <p className="text-sm text-gray-700">{achievement.description}</p>
+              </div>
+            </motion.div>
+          ))}
         </div>
-      </motion.div>
-    ))}
-  </div>
-</section>
+      </section>
 
 
       <Program />

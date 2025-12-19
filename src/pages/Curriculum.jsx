@@ -90,10 +90,10 @@ const Curriculum = () => {
       >
         <div className="container mx-auto px-6 py-10 flex flex-col-reverse md:flex-row items-center md:justify-between">
           <div className="text-center md:text-left md:w-1/2">
-            <h1 className="header-text">
+            <h1 className="text-3xl sm:text-4xl my-5 md:text-5xl lg:text-6xl font-bold text-gray-800">
               Unlock Your Potential with Our Programs
             </h1>
-            <p className="sm:text-xl text-xs mb-6 leading-relaxed font-medium">
+            <p className="sm:text-xl text-lg mb-6 leading-relaxed font-medium">
               Dive into world-class education and research opportunities designed to equip you with skills for tomorrow’s careers.
             </p>
             <Link
@@ -118,20 +118,20 @@ const Curriculum = () => {
 
       {/* Programs Section */}
       <section className="py-10 my-4 text-gray-700 rounded-3xl">
-        <div className="mx-auto px-6">
+        <div className="mx-auto px-1">
           {/* Header */}
           <div className="text-center mb-16">
-            <h2 className="sm:text-5xl text-xl md:text-5xl font mb-6 text-balance header-text">
+            <h2 className="text-3xl sm:text-4xl my-5 md:text-5xl lg:text-6xl font-bold text-gray-800">
               World-Class Academic Programs
             </h2>
-            <p className="lg:text-xl sm:text-sm text-xs mb-8 text-pretty leading-relaxed max-w-4xl mx-auto font-medium">
+            <p className="lg:text-xl sm:text-sm text-lg mb-8 text-pretty leading-relaxed max-w-4xl mx-auto font-medium">
               Discover our comprehensive range of undergraduate, graduate, and doctoral
               programs designed to prepare you for success in the global marketplace.
             </p>
           </div>
 
           {/* Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:p-30 sm:p-10 p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8  p-4">
             {Object.entries(programs).map(([key, program], i) => (
               <motion.div
                 key={key}
@@ -160,13 +160,13 @@ const Curriculum = () => {
                   <CardContent className="relative flex flex-col h-full p-6">
                     {/* Icon */}
                     <div
-                      className={`text-5xl sm:text-6xl lg:text-7xl mb-4 ${program.iconColor} flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 text-white shadow-md`}
+                      className={`text-5xl  mb-4 ${program.iconColor} flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 text-white shadow-md`}
                     >
                       {program.icon}
                     </div>
 
                     {/* Title */}
-                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-2">
+                    <h3 className="text-xl sm:text-2xl  font-bold text-gray-800 mb-2">
                       {program.title}
                     </h3>
 

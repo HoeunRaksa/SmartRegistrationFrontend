@@ -44,11 +44,11 @@ function Navbar() {
   const handleNavLinkClick = () => closeMenu();
 
   return (
-    <nav className="sticky top-0 shadow-sm blue">
+    <nav className="fixed bg-amber-50 w-full blue xl:px-[10%] lg:px-[6%] md:px-[4%]">
       <ToastContainer />
 
       {/* Navbar */}
-      <div className="flex items-center justify-between glass-bar z-5000 px-4 sm:py-4 py-2 md:px-18">
+      <div className="flex items-center justify-between z-5000 px-4 sm:py-6 py-4 ">
         {/* Logo */}
         <Link
           to="/"

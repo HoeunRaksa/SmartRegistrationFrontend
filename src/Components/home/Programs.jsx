@@ -5,23 +5,44 @@ import { useState } from "react";
 const programs = {
   ScienceEngineering: {
     title: "Science & Engineering",
-    description: "Cutting-edge research facilities and world-renowned faculty in STEM fields.",
-    items: ["Computer Science", "Biomedical Engineering", "Environmental Science", "Data Analytics"],
-    link: "#"
+    description:
+      "Cutting-edge research facilities and world-renowned faculty in STEM fields, empowering students to turn curiosity into innovation and build solutions that shape the future.",
+    items: [
+      "Computer Science",
+      "Biomedical Engineering",
+      "Environmental Science",
+      "Data Analytics",
+    ],
+    link: "#",
   },
+
   BusinessEconomics: {
     title: "Business & Economics",
-    description: "Industry-leading business programs with global perspectives and practical experience.",
-    items: ["MBA Programs", "International Business", "Finance & Banking", "Entrepreneurship"],
-    link: "#"
+    description:
+      "Industry-leading business programs with global perspectives and practical experience, preparing students to lead with confidence, think strategically, and succeed in dynamic markets.",
+    items: [
+      "MBA Programs",
+      "International Business",
+      "Finance & Banking",
+      "Entrepreneurship",
+    ],
+    link: "#",
   },
+
   ArtsHumanities: {
     title: "Arts & Humanities",
-    description: "Explore creativity and critical thinking through diverse cultural and artistic studies.",
-    items: ["Literature", "History", "Philosophy", "Visual Arts"],
-    link: "#"
+    description:
+      "Explore creativity and critical thinking through diverse cultural and artistic studies, inspiring students to express ideas, challenge perspectives, and shape society.",
+    items: [
+      "Literature",
+      "History",
+      "Philosophy",
+      "Visual Arts",
+    ],
+    link: "#",
   },
 };
+
 
 // Item animation
 const itemVariants = {
@@ -88,10 +109,10 @@ const ProgramCard = ({ program, index }) => {
 export default function Program() {
   return (
     <section className="py-20 my-4 rounded-3xl text-gray-700">
-      <div className="mx-auto px-6 max-w-7xl">
+      <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="text-center sm:mb-16">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl my-10 lg:text-6xl font-bold text-gray-800">
             World-Class Academic Programs
           </h2>
           <p className="lg:text-xl sm:text-lg font-medium mb-8 max-w-4xl mx-auto text-gray-700">

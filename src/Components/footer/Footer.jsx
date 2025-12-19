@@ -71,7 +71,7 @@ function Socials() {
 export function Footer() {
   return (
     <footer>
-      <div className="max-w-7xl mx-auto py-12 px-6 lg:px-8">
+      <div className="mx-auto py-12 px-6 lg:px-8">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-y-10 gap-x-8">
           {/* Column 1: Brand & Mission */}
           <div className="col-span-2 md:col-span-2">
@@ -110,7 +110,7 @@ export function Footer() {
             </div>
           </div>
         </div>
-        
+
         {/* Separator and Copyright */}
         <div className="border-t border- mt-12 pt-8 text-center">
           <p className="text-sm text-gray-700">
