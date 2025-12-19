@@ -1,2 +1,2 @@
-export const ApiBaseImg = "src/assets/images/";
+export const ApiBaseImg = "../assets/images/";
 

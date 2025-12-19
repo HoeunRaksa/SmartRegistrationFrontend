@@ -1,6 +1,6 @@
 import { Card, CardContent } from "../Components/ui/Card";
 import { Link } from "react-router-dom";
-import headerImage from "../assets/images/curriculum.png"
+import headerImage from "../../public/assets/images/curriculum.png"
 export const programs = {
   AiResearcher: {
     icon: "🤖",

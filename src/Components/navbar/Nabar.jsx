@@ -2,7 +2,7 @@ import { Button } from "../ui/Button.jsx";
 import "../../App.css";
 import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
-import profile from "../../assets/images/profile.png";
+import profile from "../../../public/assets/images/profile.png";
 import { showSuccess, ToastContainer } from "../ui/Toast.jsx";
 
 const User = {

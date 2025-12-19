@@ -2,9 +2,9 @@ import "../App.css";
 import Program from "../Components/home/Programs";
 import milestone from "../Data/Milestones.json";
 import { Card, CardContent } from "../Components/ui/Card";
-import character from "../assets/images/character.png";
+import character from "../../public/assets/images/character.png";
 import { ApiBaseImg } from "../config/Configration";
-import acadami from "../assets/images/academic.png"
+import acadami from "../../public/assets/images/academic.png"
 const Home = () => {
   return (
     <section className="min-h-screen">
