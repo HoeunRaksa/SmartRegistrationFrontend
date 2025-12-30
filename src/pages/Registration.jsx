@@ -161,7 +161,7 @@ const Registration = () => {
             )}
             <div className="relative w-full max-w-5xl mx-auto px-1 py-30">
                 <div className="text-center mb-10 text-gray-700">
-                    <div className="inline-flex items-center justify-center p-3 bg-white/20 backdrop-blur-md rounded-2xl mb-4 shadow-inner border border-white/30">
+                    <div className="inline-flex items-center justify-center p-3 bg-amber-600 backdrop-blur-md rounded-2xl mb-4 shadow-inner border border-white/30">
                         <GraduationCap size={40} className="text-gray-700" />
                     </div>
                     <h1 className="text-3xl sm:text-4xl my-5 md:text-5xl lg:text-6xl font-bold text-gray-800">

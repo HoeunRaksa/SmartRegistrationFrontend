@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, useLocation } from "react-router-dom";
 import Nabar from "../Components/navbar/Nabar";
 import { Footer } from "../Components/footer/Footer";
@@ -20,11 +20,19 @@ function App() {
 function AppContent() {
   const location = useLocation();
 
-  const hideFooterRoutes = ["/Adminsidebar", "/registration", "/login"];
+  // ✅ SCROLL TO TOP ON EVERY ROUTE CHANGE
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [location.pathname]);
+
+  // ⚠️ always keep lowercase (because pathname is lowercased)
+  const hideFooterRoutes = ["/adminsidebar", "/registration", "/login"];
   const hideNavbarRoutes = ["/adminsidebar"];
 
-  const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname.toLowerCase());
-  const shouldHideFooter = hideFooterRoutes.includes(location.pathname.toLowerCase());
+  const pathname = location.pathname.toLowerCase();
+
+  const shouldHideNavbar = hideNavbarRoutes.includes(pathname);
+  const shouldHideFooter = hideFooterRoutes.includes(pathname);
 
   return (
     <div className="relative min-h-screen flex flex-col items-center transition-all duration-500">
@@ -40,8 +48,8 @@ function AppContent() {
 
       {/* Main Content */}
       <main
-        className={`relative xl:px-[10%] lg:px-[8%] md:px-[6%] px-[5%]  w-full flex-1 flex flex-col items-center transition-all duration-500
-          ${shouldHideNavbar ? "pt-0 sm:pt-0" : "pt-16 sm:pt-20"}`}
+        className={`relative xl:px-[10%] lg:px-[8%] md:px-[6%] px-[5%] w-full flex-1 flex flex-col items-center transition-all duration-500
+          ${shouldHideNavbar ? "pt-0" : "pt-16 sm:pt-20"}`}
       >
         <MainRouter />
       </main>
