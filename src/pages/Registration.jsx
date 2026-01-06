@@ -138,46 +138,46 @@ const Registration = () => {
     };
 
     const handlePaymentSuccess = async () => {
-        await formSubmit(); // submit the form after payment is confirmed
-        setShowQr(false);   // close the payment modal
+        await formSubmit();
+        setShowQr(false);
     };
 
-
-
     const inputClass =
-        "w-full bg-white/50 border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 rounded-lg px-4 py-3 outline-none transition-all duration-200 text-gray-700 placeholder-gray-400";
-    const labelClass = "block text-sm font-medium text-gray-600 mb-1 ml-1";
+        "w-full backdrop-blur-xl bg-white/40 border border-white/20 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-2xl px-4 py-3 outline-none transition-all duration-200 text-gray-700 placeholder-gray-400 font-light shadow-sm";
+    const labelClass = "block text-sm font-medium text-gray-700 mb-2 ml-1";
 
     return (
         <section className="min-h-screen -mt-9 relative overflow-hidden font-sans rounded-lg">
             {showQr && (
                 <div className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 animate-fade-in">
                     <PaymentForm
-                        setPaymentStatus={setPaymentStatus}   // updates parent status
-                        onClose={() => setShowQr(false)}      // close modal
-                        onSuccess={handlePaymentSuccess}      // auto-submit form after payment
+                        setPaymentStatus={setPaymentStatus}
+                        onClose={() => setShowQr(false)}
+                        onSuccess={handlePaymentSuccess}
                     />
                 </div>
             )}
             <div className="relative w-full max-w-5xl mx-auto px-1 py-30">
-                <div className="text-center mb-10 text-gray-700">
-                    <div className="inline-flex items-center justify-center p-3 bg-amber-600 backdrop-blur-md rounded-2xl mb-4 shadow-inner border border-white/30">
-                        <GraduationCap size={40} className="text-gray-700" />
+                <div className="text-center mb-10">
+                    <div className="inline-flex items-center justify-center p-4 backdrop-blur-xl bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl mb-4 shadow-2xl border border-white/20">
+                        <GraduationCap size={40} className="text-white" />
                     </div>
-                    <h1 className="text-3xl sm:text-4xl my-5 md:text-5xl lg:text-6xl font-bold text-gray-800">
+                    <h1 className="text-3xl sm:text-4xl my-5 md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                         NovaTech University
                     </h1>
-                    <p className="mt-2 text-gray-600 text-lg font-medium">Student Registration Portal</p>
+                    <p className="mt-2 text-gray-700 text-lg font-light">Student Registration Portal</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-8">
                     {/* ===== Personal Information ===== */}
-                    <div className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/50">
-                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-                            <div className="p-2 bg-orange-100 rounded-lg text-orange-600">
+                    <div className="backdrop-blur-xl bg-white/40 p-8 rounded-3xl shadow-xl border border-white/20">
+                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/30">
+                            <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl text-white shadow-lg">
                                 <User size={24} />
                             </div>
-                            <h2 className="text-xl font-bold text-gray-800">Personal Information</h2>
+                            <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                Personal Information
+                            </h2>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -307,9 +307,14 @@ const Registration = () => {
                     </div>
 
                     {/* Family Information */}
-                    <div className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/50">
-                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-                            <h2 className="text-xl font-bold text-gray-800">Family Information</h2>
+                    <div className="backdrop-blur-xl bg-white/40 p-8 rounded-3xl shadow-xl border border-white/20">
+                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/30">
+                            <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl text-white shadow-lg">
+                                <User size={24} />
+                            </div>
+                            <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                                Family Information
+                            </h2>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -362,12 +367,14 @@ const Registration = () => {
                     </div>
 
                     {/* High School Information */}
-                    <div className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/50">
-                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-                            <div className="p-2 bg-orange-100 rounded-lg text-orange-600">
+                    <div className="backdrop-blur-xl bg-white/40 p-8 rounded-3xl shadow-xl border border-white/20">
+                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/30">
+                            <div className="p-3 bg-gradient-to-br from-orange-500 to-pink-600 rounded-2xl text-white shadow-lg">
                                 <University size={24} />
                             </div>
-                            <h2 className="text-xl font-bold text-gray-800">High School Information</h2>
+                            <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
+                                High School Information
+                            </h2>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -409,12 +416,14 @@ const Registration = () => {
                     </div>
 
                     {/* Academic Information */}
-                    <div className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/50">
-                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-                            <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                    <div className="backdrop-blur-xl bg-white/40 p-8 rounded-3xl shadow-xl border border-white/20">
+                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/30">
+                            <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl text-white shadow-lg">
                                 <School size={24} />
                             </div>
-                            <h2 className="text-xl font-bold text-gray-800">Academic Information</h2>
+                            <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                                Academic Information
+                            </h2>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -481,7 +490,7 @@ const Registration = () => {
                             {/* Profile Picture */}
                             <div className="md:col-span-3 mt-4">
                                 <label className={labelClass}>Profile Picture</label>
-                                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:border-orange-400 hover:bg-orange-50/50 transition cursor-pointer bg-gray-50">
+                                <div className="backdrop-blur-xl bg-white/30 border-2 border-dashed border-white/40 rounded-3xl p-6 flex flex-col items-center justify-center text-center hover:border-blue-400 hover:bg-blue-50/30 transition cursor-pointer shadow-lg">
                                     <input
                                         type="file"
                                         name="profilePicture"
@@ -494,17 +503,17 @@ const Registration = () => {
                                             <img
                                                 src={URL.createObjectURL(form.profilePicture)}
                                                 alt="Preview"
-                                                className="w-32 h-32 rounded-full object-cover shadow-md mb-2"
+                                                className="w-32 h-32 rounded-full object-cover shadow-xl mb-2 border-4 border-white/50"
                                             />
                                         ) : (
-                                            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-2 text-gray-400">
+                                            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-2 text-white shadow-lg">
                                                 <User size={32} />
                                             </div>
                                         )}
-                                        <span className="text-orange-600 font-medium flex items-center gap-2">
+                                        <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-semibold flex items-center gap-2">
                                             <Upload size={16} /> {form.profilePicture ? "Change Photo" : "Upload Photo"}
                                         </span>
-                                        <span className="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB</span>
+                                        <span className="text-xs text-gray-500 mt-1 font-light">PNG, JPG up to 5MB</span>
                                     </label>
                                 </div>
                             </div>
@@ -515,9 +524,9 @@ const Registration = () => {
                     <div className="flex justify-center pt-6 pb-20">
                         <button
                             type="submit"
-                            className="group relative bg-gradient-to-r from-orange-400 to-pink-500 text-gray-700 py-4 px-12 rounded-2xl font-bold shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 overflow-hidden"
+                            className="group relative backdrop-blur-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-12 rounded-3xl font-bold shadow-2xl hover:shadow-[0_20px_60px_-15px_rgba(99,102,241,0.5)] hover:scale-105 transition-all duration-300 overflow-hidden border border-white/20"
                         >
-                            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-orange-500 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             <span className="relative flex items-center gap-3 text-lg">
                                 Proceed to Payment <CreditCard size={20} />
                             </span>

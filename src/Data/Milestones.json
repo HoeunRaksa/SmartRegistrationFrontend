@@ -1,105 +1,22 @@
 {
-  "header": {
-    "title": "Our Journey Through Time",
-    "dedicated": "From a bold and ambitious vision to global distinction, explore the defining milestones that have shaped Excellence University into a center of innovation, leadership, and academic impact. Each chapter of our journey reflects an unwavering commitment to knowledge, progress, and the empowerment of future generations."
-  },
-
-  "timeline": [
-    {
-      "year": "1875",
-      "title": "A Vision Is Born",
-      "description": "Excellence University was founded with a bold and transformative vision: to make world-class education accessible, meaningful, and impactful. From its earliest days, the institution stood as a beacon of opportunity, nurturing intellectual curiosity, ethical leadership, and a lifelong passion for learning among students from diverse backgrounds.",
-      "icon": "🏛️"
-    },
-    {
-      "year": "1920",
-      "title": "Research Breakthroughs Begin",
-      "description": "The establishment of our first research institute marked a pivotal turning point in the university’s evolution. This milestone ignited a culture of inquiry and discovery, empowering faculty and students to push the boundaries of knowledge, contribute original research, and address complex challenges through scientific and scholarly excellence.",
-      "icon": "🧪"
-    },
-    {
-      "year": "1965",
-      "title": "Global Recognition",
-      "description": "With international accreditation and expanding academic influence, Excellence University earned recognition on the global stage. This era welcomed students, scholars, and collaborators from around the world, fostering cross-cultural exchange and positioning the university as a truly global academic community.",
-      "icon": "🌐"
-    },
-    {
-      "year": "1990",
-      "title": "Digital Transformation",
-      "description": "Anticipating the future of education, the university pioneered the integration of digital technologies into teaching and learning. By embracing innovation early, Excellence University transformed classrooms, expanded access to knowledge, and set new standards for technology-enhanced education.",
-      "icon": "💡"
-    },
-    {
-      "year": "2010",
-      "title": "Commitment to a Sustainable Future",
-      "description": "Recognizing its responsibility to the planet, the university launched comprehensive sustainability initiatives focused on environmental stewardship, responsible resource use, and climate action. These efforts culminated in achieving carbon neutrality ahead of global targets, reinforcing our commitment to a sustainable future.",
-      "icon": "♻️"
-    },
-    {
-      "year": "2024",
-      "title": "Innovation Without Limits",
-      "description": "The opening of the state-of-the-art Innovation Hub represents a new era of limitless potential. Designed to foster entrepreneurship, interdisciplinary collaboration, and cutting-edge research, the hub empowers students, researchers, and innovators to transform ideas into solutions that create real-world impact.",
-      "icon": "🚀"
-    }
-  ],
-
-  "values": [
-    {
-      "title": "Excellence",
-      "description": "Excellence is the foundation of everything we do. We set ambitious standards in education, research, and service, continuously striving to exceed expectations and inspire our community to achieve its highest potential.",
-      "icon": "🏆"
-    },
-    {
-      "title": "Innovation",
-      "description": "We foster a culture of innovation by encouraging curiosity, experimentation, and creative thinking. By embracing new ideas and technologies, we empower our community to develop solutions that shape the future.",
-      "icon": "⚙️"
-    },
-    {
-      "title": "Integrity",
-      "description": "Integrity defines our character and guides our decisions. We uphold the highest ethical standards, promoting honesty, accountability, and transparency in all academic, professional, and personal endeavors.",
-      "icon": "🛡️"
-    },
-    {
-      "title": "Diversity & Inclusion",
-      "description": "We believe diversity strengthens excellence. By embracing different perspectives, cultures, and experiences, we create an inclusive environment where every individual feels respected, valued, and empowered to succeed.",
-      "icon": "🌍"
-    },
-    {
-      "title": "Sustainability",
-      "description": "Our commitment to sustainability extends beyond environmental responsibility. We integrate sustainable practices into education, research, and operations to ensure a resilient future for generations to come.",
-      "icon": "🌱"
-    },
-    {
-      "title": "Community",
-      "description": "Community is at the heart of our mission. We cultivate meaningful relationships within our university and beyond, fostering collaboration, service, and a shared responsibility to create positive global impact.",
-      "icon": "🤝"
-    }
-  ],
-
   "achievements": [
     {
       "title": "Nobel Prize Laureates",
       "count": 12,
       "description": "Our distinguished faculty and alumni have been awarded Nobel Prizes in recognition of their groundbreaking discoveries and transformative contributions to science, economics, and global knowledge.",
-      "image": "unnamed.jpg"
+      "image": "doctor.png"
     },
     {
       "title": "Research Publications",
       "count": "15,000+",
       "description": "Each year, our academic community produces thousands of high-impact, peer-reviewed research publications that advance knowledge, influence policy, and drive innovation across disciplines.",
-      "image": "Research.png"
+      "image": "data_analysits.png"
     },
     {
       "title": "Global Rankings",
       "count": "Top 10",
       "description": "Excellence University is consistently ranked among the top universities worldwide, reflecting our academic rigor, research excellence, and global reputation.",
-      "image": "unnamed1.jpg"
-    },
-    {
-      "title": "Alumni Success Stories",
-      "count": "500+",
-      "description": "Our alumni are leaders, innovators, and changemakers across industries and continents, applying their education to create meaningful impact and drive positive change worldwide.",
-      "image": "unnamed1.jpg"
+      "image": "best_university.png"
     }
   ]
 }
