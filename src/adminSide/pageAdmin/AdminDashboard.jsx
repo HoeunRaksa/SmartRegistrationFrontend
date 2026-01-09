@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import DepartmentsPage from '../pageAdmin/Departmentspage.jsx';
 import {
   LayoutDashboard,
   GraduationCap,
@@ -40,45 +41,50 @@ const AdminDashboard = () => {
       case 'dashboard':
         return <Dashboard />;
       case 'departments':
-        return (
-          <div className="backdrop-blur-xl bg-white/40 rounded-3xl p-8 border border-white/20 shadow-xl">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Departments Management</h2>
-            <p className="text-gray-600">Departments component will be implemented here</p>
-          </div>
-        );
+        return <DepartmentsPage />; 
       case 'majors':
         return (
-          <div className="backdrop-blur-xl bg-white/40 rounded-3xl p-8 border border-white/20 shadow-xl">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Majors Management</h2>
-            <p className="text-gray-600">Majors component will be implemented here</p>
+          <div className="min-h-screen p-6">
+            <div className="bg-white/40 rounded-3xl p-8 border border-white/20 shadow-lg">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Majors Management</h2>
+              <p className="text-gray-600">Majors component will be implemented here</p>
+            </div>
           </div>
         );
       case 'subjects':
         return (
-          <div className="backdrop-blur-xl bg-white/40 rounded-3xl p-8 border border-white/20 shadow-xl">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Subjects Management</h2>
-            <p className="text-gray-600">Subjects component will be implemented here</p>
+          <div className="min-h-screen p-6">
+            <div className="bg-white/40 rounded-3xl p-8 border border-white/20 shadow-lg">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Subjects Management</h2>
+              <p className="text-gray-600">Subjects component will be implemented here</p>
+            </div>
           </div>
         );
       case 'students':
         return (
-          <div className="backdrop-blur-xl bg-white/40 rounded-3xl p-8 border border-white/20 shadow-xl">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Students Management</h2>
-            <p className="text-gray-600">Students component will be implemented here</p>
+          <div className="min-h-screen p-6">
+            <div className="bg-white/40 rounded-3xl p-8 border border-white/20 shadow-lg">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Students Management</h2>
+              <p className="text-gray-600">Students component will be implemented here</p>
+            </div>
           </div>
         );
       case 'registrations':
         return (
-          <div className="backdrop-blur-xl bg-white/40 rounded-3xl p-8 border border-white/20 shadow-xl">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Registrations Management</h2>
-            <p className="text-gray-600">Registrations component will be implemented here</p>
+          <div className="min-h-screen p-6">
+            <div className="bg-white/40 rounded-3xl p-8 border border-white/20 shadow-lg">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Registrations Management</h2>
+              <p className="text-gray-600">Registrations component will be implemented here</p>
+            </div>
           </div>
         );
       case 'settings':
         return (
-          <div className="backdrop-blur-xl bg-white/40 rounded-3xl p-8 border border-white/20 shadow-xl">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Settings</h2>
-            <p className="text-gray-600">Settings component will be implemented here</p>
+          <div className="min-h-screen p-6">
+            <div className="bg-white/40 rounded-3xl p-8 border border-white/20 shadow-lg">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Settings</h2>
+              <p className="text-gray-600">Settings component will be implemented here</p>
+            </div>
           </div>
         );
       default:
@@ -87,13 +93,69 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
-      {/* Animated background elements */}
+    <div className="min-h-screen relative overflow-hidden">
+      {/* ================= PREMIUM BACKGROUND SYSTEM ================= */}
+      
+      {/* Base gradient */}
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/30" />
+
+      {/* Large animated orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-1/3 right-10 w-[500px] h-[500px] bg-purple-400/20 rounded-full blur-3xl animate-pulse animation-delay-2000" />
-        <div className="absolute bottom-20 left-1/4 w-80 h-80 bg-pink-400/20 rounded-full blur-3xl animate-pulse animation-delay-4000" />
+        <motion.div
+          animate={{
+            x: [0, 100, 0],
+            y: [0, -80, 0],
+            scale: [1, 1.25, 1],
+          }}
+          transition={{
+            duration: 35,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="absolute top-20 left-10 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{
+            x: [0, -80, 0],
+            y: [0, 100, 0],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 40,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="absolute top-1/3 right-10 w-[500px] h-[500px] bg-purple-400/20 rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{
+            x: [0, 60, 0],
+            y: [0, -70, 0],
+            scale: [1, 1.15, 1],
+          }}
+          transition={{
+            duration: 45,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="absolute bottom-20 left-1/4 w-80 h-80 bg-pink-400/20 rounded-full blur-3xl"
+        />
       </div>
+
+      {/* Grid pattern */}
+      <motion.div 
+        animate={{
+          opacity: [0.02, 0.04, 0.02],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+        className="fixed inset-0 pointer-events-none overflow-hidden "
+      >
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
+      </motion.div>
 
       {/* Sidebar - Desktop */}
       <motion.aside
@@ -132,11 +194,10 @@ const AdminDashboard = () => {
                   onClick={() => setActiveSection(item.id)}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
-                    isActive
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
                       ? 'backdrop-blur-xl bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
                       : 'backdrop-blur-xl bg-white/30 text-gray-700 hover:bg-white/50'
-                  } border border-white/20`}
+                    } border border-white/20`}
                 >
                   <Icon size={20} />
                   {!sidebarCollapsed && (
@@ -215,11 +276,10 @@ const AdminDashboard = () => {
                           setActiveSection(item.id);
                           setMobileMenuOpen(false);
                         }}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
-                          isActive
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
                             ? 'backdrop-blur-xl bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
                             : 'backdrop-blur-xl bg-white/30 text-gray-700 hover:bg-white/50'
-                        } border border-white/20`}
+                          } border border-white/20`}
                       >
                         <Icon size={20} />
                         <span className="font-medium">{item.label}</span>
@@ -236,50 +296,65 @@ const AdminDashboard = () => {
       {/* Main Content */}
       <div className={`transition-all duration-300 ${sidebarCollapsed ? 'md:ml-20' : 'md:ml-72'}`}>
         {/* Top Bar */}
-        <header className="sticky rounded-3xl top-5 z-30 backdrop-blur-2xl bg-white/40 border-b border-white/20 shadow-lg mx-5">
-          <div className="flex items-center justify-between p-4">
+        <header className="sticky top-0 z-10 backdrop-blur-xl rounded-2xl bg-white/30 border-b border-white/20 shadow-md">
+          <div className="flex items-center justify-between px-6 py-3">
             <div className="flex items-center gap-4">
+              {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className="md:hidden p-2 rounded-xl backdrop-blur-xl bg-white/40 hover:bg-white/60 transition border border-white/20"
+                className="md:hidden p-2 rounded-xl bg-white/40 hover:bg-white/60 border border-white/30 transition-all"
               >
-                <Menu size={24} />
+                <Menu size={20} />
               </button>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+
+              {/* Page Title */}
+              <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 {menuItems.find(item => item.id === activeSection)?.label || 'Dashboard'}
               </h2>
             </div>
 
             <div className="flex items-center gap-3">
               {/* Search */}
-              <div className="hidden sm:flex items-center gap-2 backdrop-blur-xl bg-white/40 rounded-2xl px-4 py-2 border border-white/20">
-                <Search size={18} className="text-gray-500" />
+              <div className="hidden sm:flex items-center gap-2 bg-white/40 rounded-xl px-3 py-2 border border-white/30">
+                <Search size={16} className="text-gray-500" />
                 <input
                   type="text"
                   placeholder="Search..."
-                  className="bg-transparent outline-none text-sm placeholder-gray-500 w-48"
+                  className="bg-transparent outline-none text-sm placeholder-gray-400 w-32 lg:w-48"
                 />
               </div>
 
               {/* Notifications */}
-              <button className="p-2 rounded-xl backdrop-blur-xl bg-white/40 hover:bg-white/60 transition border border-white/20 relative">
-                <Bell size={20} />
+              <button className="relative p-2 rounded-xl bg-white/40 hover:bg-white/60 border border-white/30 transition-all">
+                <Bell size={18} />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
 
               {/* Profile */}
-              <button className="hidden sm:flex items-center gap-2 p-2 rounded-xl backdrop-blur-xl bg-white/40 hover:bg-white/60 transition border border-white/20">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+              <button className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-white/40 hover:bg-white/60 border border-white/30 transition-all">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">
                   A
                 </div>
+                <span className="text-sm font-medium text-gray-700 hidden lg:block">Admin</span>
               </button>
             </div>
           </div>
         </header>
 
         {/* Dynamic Content Area */}
-        <main className="p-4 sm:p-6 lg:p-8 relative z-10">
-          {renderActiveSection()}
+        <main className="min-h-screen relative z-10">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeSection}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="h-full"
+            >
+              {renderActiveSection()}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
     </div>

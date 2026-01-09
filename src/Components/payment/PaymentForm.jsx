@@ -15,12 +15,12 @@ const PaymentForm = ({ onClose, setPaymentStatus, onSuccess, initialPaymentData 
     setError(null);
     const data = initialPaymentData || {
       req_time: new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14),
-      merchant_id: "ec462554",
+      merchant_id: "ec463261",
       tran_id: Date.now().toString(),
-      first_name: "Lang",
-      last_name: "Makara",
-      email: "aba.bank@gmail.com",
-      phone: "012345678",
+      first_name: "Hoeun",
+      last_name: "Raksa",
+      email: "hoeunraksa12@gmail.com",
+      phone: "0979899100",
       amount: 0.1,
       purchase_type: "purchase",
       payment_option: "abapay_khqr",
