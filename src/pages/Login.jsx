@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { loginApi } from "../../src/api/auth.jsx";
+import { loginApi } from "../api/auth.jsx";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
