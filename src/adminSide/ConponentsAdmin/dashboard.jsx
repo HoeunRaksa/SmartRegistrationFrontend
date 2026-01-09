@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import DepartmentsForm from '../ConponentsAdmin/DepartmentsForm.jsx';
 import "../../App.css";
 import { motion, AnimatePresence } from "framer-motion";
+import Clock from "../ConponentsAdmin/Clock";
 import {
   Building2,
   GraduationCap,
@@ -12,16 +13,16 @@ import {
   Calendar,
   Award,
   ArrowUp,
-  Clock,
   Sparkles,
   ChevronRight,
 } from "lucide-react";
 import profileFallback from "../../../public/assets/images/profile.png";
+import { i } from "framer-motion/client";
 
 const Dashboard = () => {
   const [activeView, setActiveView] = useState('admin/dashboard');
   const [user, setUser] = useState(null);
-  const [currentTime, setCurrentTime] = useState(new Date());
+
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -34,10 +35,7 @@ const Dashboard = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+
 
   /* ================= DATA ================= */
 
@@ -83,7 +81,7 @@ const Dashboard = () => {
       day: 'numeric' 
     });
   };
-
+const BASE_IMAGE_URL =import.meta.env.VITE_IMG_BASE_URL;
   return (
     <div className="min-h-screen p-6 space-y-6 pb-8">
 
@@ -108,8 +106,8 @@ const Dashboard = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full blur-md opacity-50 animate-pulse" />
                 <img
                   src={
-                    user.profile_picture_path
-                      ? `http://localhost:8000/storage/${user.profile_picture_path}`
+                    user.profile_picture_url
+                      ? `${user.profile_picture_url}`
                       : profileFallback
                   }
                   alt="Profile"
@@ -146,11 +144,11 @@ const Dashboard = () => {
               className="text-right"
             >
               <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                {formatTime(currentTime)}
+                <Clock />
               </div>
               <div className="text-xs text-gray-600 mt-1 flex items-center justify-end gap-1">
                 <Calendar className="w-3 h-3" />
-                {formatDate(currentTime)}
+                <Clock />
               </div>
             </motion.div>
           </div>
