@@ -9,7 +9,7 @@ import AboutUs from "../pages/AboutUs";
 import Login from "../pages/Login";
 import NotificationInbox from "../pages/Notification";
 import Curriculum from "../pages/Curriculum";
-import NotFound from "../pages/NotFound";
+import NotFound from "../pages/NotFound.jsx";
 
 // Admin Pages
 import AdminDashboard from "../adminSide/pageAdmin/AdminDashboard";
