@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { fetchStudents, deleteStudent } from "../../../src/api/student_api.jsx";
+import { deleteStudent } from "../../../src/api/student_api.jsx";
 import {
   GraduationCap,
   Search,
@@ -10,55 +10,33 @@ import {
   Edit,
   Trash2,
   Download,
-  Plus,
   Loader,
   AlertCircle,
   X,
   ChevronLeft,
   ChevronRight,
+  CheckCircle,
 } from "lucide-react";
 
-const StudentsTable = () => {
+const StudentsTable = ({ students, loading, onView, onUpdate }) => {
   const navigate = useNavigate();
-  const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    loadStudents();
-  }, []);
+    setFilteredStudents(students);
+  }, [students]);
 
   useEffect(() => {
     filterStudents();
   }, [students, searchTerm]);
-
-const loadStudents = async () => {
-  try {
-    setLoading(true);
-    const response = await fetchStudents();
-
-    const list = Array.isArray(response.data?.data)
-      ? response.data.data
-      : [];
-
-    setStudents(list);
-    setFilteredStudents(list);
-    setError(null);
-  } catch (err) {
-    setError(err.response?.data?.message || "Failed to load students");
-    setStudents([]);
-    setFilteredStudents([]);
-  } finally {
-    setLoading(false);
-  }
-};
-
 
   const filterStudents = () => {
     if (!searchTerm) {
@@ -80,19 +58,70 @@ const loadStudents = async () => {
     if (!studentToDelete) return;
 
     try {
+      setDeleting(true);
       await deleteStudent(studentToDelete.id);
-      setStudents(students.filter((s) => s.id !== studentToDelete.id));
+      
+      setSuccess(`${studentToDelete.full_name_en} has been deleted successfully`);
       setShowDeleteModal(false);
       setStudentToDelete(null);
+      
+      // Call parent's reload function
+      if (onUpdate) {
+        onUpdate();
+      }
+      
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to delete student");
       setShowDeleteModal(false);
+      setTimeout(() => setError(null), 5000);
+    } finally {
+      setDeleting(false);
     }
   };
 
   const confirmDelete = (student) => {
     setStudentToDelete(student);
     setShowDeleteModal(true);
+  };
+
+  const handleEdit = (student) => {
+    // Navigate to edit page with student data in state
+    navigate(`/students/edit/${student.id}`, { state: { student } });
+  };
+
+  const handleExport = () => {
+    // Prepare CSV data
+    const headers = ["Student Code", "Name (EN)", "Name (KH)", "Gender", "Phone", "Generation"];
+    const csvRows = currentStudents.map(student => [
+      student.student_code,
+      student.full_name_en,
+      student.full_name_kh || "",
+      student.gender,
+      student.phone_number || "",
+      student.generation || ""
+    ]);
+
+    // Create CSV content
+    const csvContent = [
+      headers.join(","),
+      ...csvRows.map(row => row.map(cell => `"${cell}"`).join(","))
+    ].join("\n");
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `students_${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    setSuccess("Students data exported successfully!");
+    setTimeout(() => setSuccess(null), 3000);
   };
 
   // Pagination
@@ -103,7 +132,7 @@ const loadStudents = async () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex items-center justify-center py-12">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -115,138 +144,141 @@ const loadStudents = async () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-        >
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-              <div className="p-3 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl text-white">
-                <GraduationCap className="w-8 h-8" />
-              </div>
-              Students Management
-            </h1>
-            <p className="text-gray-600 mt-2">Manage and view all registered students</p>
-          </div>
-
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate("/students/create")}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
+    <div className="space-y-6">
+      {/* Success Alert */}
+      <AnimatePresence>
+        {success && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-2xl shadow-lg"
           >
-            <Plus className="w-5 h-5" />
-            Add Student
-          </motion.button>
-        </motion.div>
-
-        {/* Error Alert */}
-        <AnimatePresence>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-2xl"
-            >
-              <AlertCircle className="w-5 h-5 text-red-600" />
-              <p className="text-sm font-medium text-red-800 flex-1">{error}</p>
-              <button onClick={() => setError(null)} className="text-red-600 hover:text-red-800">
-                <X className="w-5 h-5" />
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard label="Total Students" value={students.length} color="blue" />
-          <StatCard label="Active" value={students.length} color="green" />
-          <StatCard label="Departments" value={new Set(students.map(s => s.department_id)).size} color="purple" />
-        </div>
-
-        {/* Search and Filters */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-lg p-6"
-        >
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by name, student code, or phone..."
-                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-              />
+            <div className="p-1 bg-green-100 rounded-full">
+              <CheckCircle className="w-5 h-5 text-green-600" />
             </div>
-            <button className="flex items-center gap-2 px-6 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
-              <Filter className="w-5 h-5" />
-              <span className="font-medium">Filters</span>
+            <p className="text-sm font-medium text-green-800 flex-1">{success}</p>
+            <button onClick={() => setSuccess(null)} className="text-green-600 hover:text-green-800">
+              <X className="w-5 h-5" />
             </button>
-            <button className="flex items-center gap-2 px-6 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
-              <Download className="w-5 h-5" />
-              <span className="font-medium">Export</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Error Alert */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-2xl shadow-lg"
+          >
+            <AlertCircle className="w-5 h-5 text-red-600" />
+            <p className="text-sm font-medium text-red-800 flex-1">{error}</p>
+            <button onClick={() => setError(null)} className="text-red-600 hover:text-red-800">
+              <X className="w-5 h-5" />
             </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard label="Total Students" value={students.length} color="blue" />
+        <StatCard label="Active" value={students.length} color="green" />
+        <StatCard label="Departments" value={new Set(students.map(s => s.department_id)).size} color="purple" />
+      </div>
+
+      {/* Search and Filters */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/60 backdrop-blur-xl rounded-2xl shadow-lg p-6 border border-white/50"
+      >
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by name, student code, or phone..."
+              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white/80"
+            />
           </div>
-        </motion.div>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex items-center gap-2 px-6 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors bg-white/80"
+          >
+            <Filter className="w-5 h-5" />
+            <span className="font-medium">Filters</span>
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleExport}
+            disabled={currentStudents.length === 0}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:shadow-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download className="w-5 h-5" />
+            <span>Export CSV</span>
+          </motion.button>
+        </div>
+      </motion.div>
 
-        {/* Students Table */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-lg overflow-hidden"
-        >
-          {currentStudents.length === 0 ? (
-            <EmptyState searchTerm={searchTerm} />
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Student Code
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Gender
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Phone
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Generation
-                      </th>
-                      <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {currentStudents.map((student, index) => (
-                      <StudentRow
-                        key={student.id}
-                        student={student}
-                        index={index}
-                        onView={() => navigate(`/students/${student.id}`)}
-                        onEdit={() => navigate(`/students/edit/${student.id}`)}
-                        onDelete={() => confirmDelete(student)}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+      {/* Students Table */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/60 backdrop-blur-xl rounded-2xl shadow-lg overflow-hidden border border-white/50"
+      >
+        {currentStudents.length === 0 ? (
+          <EmptyState searchTerm={searchTerm} />
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50/80 backdrop-blur-sm border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Student Code
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Gender
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Phone
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Generation
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {currentStudents.map((student, index) => (
+                    <StudentRow
+                      key={student.id}
+                      student={student}
+                      index={index}
+                      onView={() => onView(student)}
+                      onEdit={() => handleEdit(student)}
+                      onDelete={() => confirmDelete(student)}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-              {/* Pagination */}
+            {/* Pagination */}
+            {totalPages > 1 && (
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
@@ -254,10 +286,10 @@ const loadStudents = async () => {
                 totalItems={filteredStudents.length}
                 itemsPerPage={itemsPerPage}
               />
-            </>
-          )}
-        </motion.div>
-      </div>
+            )}
+          </>
+        )}
+      </motion.div>
 
       {/* Delete Confirmation Modal */}
       <DeleteModal
@@ -268,6 +300,7 @@ const loadStudents = async () => {
           setShowDeleteModal(false);
           setStudentToDelete(null);
         }}
+        deleting={deleting}
       />
     </div>
   );
@@ -284,15 +317,15 @@ const StatCard = ({ label, value, color }) => {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ y: -4 }}
-      className="bg-white rounded-2xl shadow-lg p-6"
+      whileHover={{ y: -4, scale: 1.02 }}
+      className="bg-white/60 backdrop-blur-xl rounded-2xl shadow-lg p-6 border border-white/50"
     >
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-gray-600 mb-1">{label}</p>
           <p className="text-3xl font-bold text-gray-900">{value}</p>
         </div>
-        <div className={`p-4 bg-gradient-to-br ${colors[color]} rounded-2xl`}>
+        <div className={`p-4 bg-gradient-to-br ${colors[color]} rounded-2xl shadow-lg`}>
           <GraduationCap className="w-8 h-8 text-white" />
         </div>
       </div>
@@ -305,7 +338,7 @@ const StudentRow = ({ student, index, onView, onEdit, onDelete }) => (
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: index * 0.05 }}
-    className="hover:bg-blue-50/30 transition-colors"
+    className="hover:bg-blue-50/50 transition-colors"
   >
     <td className="px-6 py-4">
       <span className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600">
@@ -314,8 +347,20 @@ const StudentRow = ({ student, index, onView, onEdit, onDelete }) => (
     </td>
     <td className="px-6 py-4">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-          {student.full_name_en?.charAt(0) || "S"}
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold overflow-hidden shadow-md">
+          {student.profile_picture_path ? (
+            <img
+              src={`http://localhost:8000/storage/${student.profile_picture_path}`}
+              alt={student.full_name_en}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.parentElement.innerHTML = `<span class="text-lg font-bold">${student.full_name_en?.charAt(0) || "S"}</span>`;
+              }}
+            />
+          ) : (
+            <span className="text-lg font-bold">{student.full_name_en?.charAt(0) || "S"}</span>
+          )}
         </div>
         <div>
           <p className="text-sm font-semibold text-gray-900">{student.full_name_en}</p>
@@ -389,46 +434,52 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
-    <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+    <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50/50">
       <p className="text-sm text-gray-600">
         Showing <span className="font-semibold">{startItem}</span> to{" "}
         <span className="font-semibold">{endItem}</span> of{" "}
         <span className="font-semibold">{totalItems}</span> students
       </p>
       <div className="flex items-center gap-2">
-        <button
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors bg-white"
         >
           <ChevronLeft className="w-5 h-5" />
-        </button>
+        </motion.button>
         {[...Array(totalPages)].map((_, i) => (
-          <button
+          <motion.button
             key={i}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => onPageChange(i + 1)}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               currentPage === i + 1
-                ? "bg-blue-600 text-white"
-                : "border border-gray-200 hover:bg-gray-50"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "border border-gray-200 hover:bg-gray-50 bg-white"
             }`}
           >
             {i + 1}
-          </button>
+          </motion.button>
         ))}
-        <button
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors bg-white"
         >
           <ChevronRight className="w-5 h-5" />
-        </button>
+        </motion.button>
       </div>
     </div>
   );
 };
 
-const DeleteModal = ({ show, student, onConfirm, onCancel }) => {
+const DeleteModal = ({ show, student, onConfirm, onCancel, deleting }) => {
   if (!show) return null;
 
   return (
@@ -438,7 +489,7 @@ const DeleteModal = ({ show, student, onConfirm, onCancel }) => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-        onClick={onCancel}
+        onClick={!deleting ? onCancel : undefined}
       >
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
@@ -460,20 +511,34 @@ const DeleteModal = ({ show, student, onConfirm, onCancel }) => {
           <p className="text-gray-600 mb-6">
             Are you sure you want to delete{" "}
             <span className="font-semibold">{student?.full_name_en}</span>?
+            <br />
+            <span className="text-sm text-gray-500">Student code: {student?.student_code}</span>
           </p>
 
           <div className="flex gap-3">
             <button
               onClick={onCancel}
-              className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+              disabled={deleting}
+              className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               onClick={onConfirm}
-              className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors"
+              disabled={deleting}
+              className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Delete
+              {deleting ? (
+                <>
+                  <Loader className="w-4 h-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </>
+              )}
             </button>
           </div>
         </motion.div>

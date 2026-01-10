@@ -106,27 +106,39 @@ const StudentsForm = ({ onUpdate }) => {
     loadDepartments();
   }, []);
 
-const loadStudents = async () => {
-  try {
-    const res = await fetchStudents();
+  // ✅ FIXED: Proper error handling and data extraction
+  const loadStudents = async () => {
+    try {
+      const res = await fetchStudents();
 
-    const list = Array.isArray(res.data?.data)
-      ? res.data.data
-      : [];
+      // ✅ Safely handle different response structures
+      const list = Array.isArray(res.data?.data)
+        ? res.data.data
+        : [];
 
-    setStudents(list);
-    if (onUpdate) onUpdate();
-  } catch (err) {
-    console.error("Failed to load students:", err);
-    setStudents([]);
-  }
-};
+      setStudents(list);
+      if (onUpdate) onUpdate();
+    } catch (err) {
+      console.error("Failed to load students:", err);
+      setStudents([]); // ✅ Set empty array on error
+      setError(err.response?.data?.message || "Failed to load students");
+    }
+  };
 
   const loadDepartments = async () => {
     try {
       const res = await fetchDepartments();
-      setDepartments(res.data.data);
-    } catch {
+      
+      // ✅ Same pattern for departments
+      const list = Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data)
+        ? res.data
+        : [];
+        
+      setDepartments(list);
+    } catch (err) {
+      console.error("Failed to load departments:", err);
       setDepartments([]);
     }
   };
