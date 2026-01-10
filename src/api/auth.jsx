@@ -1,5 +1,5 @@
 
-import API from "../api";
+import API from "../api/index";
 
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');

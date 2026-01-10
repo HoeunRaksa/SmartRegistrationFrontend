@@ -1,27 +1,21 @@
-import axios from "axios";
-const API_URL = import.meta.env.VITE_API_URL + "/majors";
+import API from '../api/index';
 
-// GET: Fetch all majors
-export const fetchMajors = () => {
-  return axios.get(API_URL);
-};
+export const fetchMajors = () => API.get("/majors");
+export const fetchMajor = (id) => API.get(`/majors/${id}`);
 
-// GET: Fetch single major by ID
-export const fetchMajor = (id) => {
-  return axios.get(`${API_URL}/${id}`);
-};
+// STAFF / ADMIN
+export const createMajor = (data) => API.post("/majors", data);
 
-// POST: Create new major
-export const createMajor = (data) => {
-  return axios.post(API_URL, data);
-};
-
-// PUT: Update existing major
 export const updateMajor = (id, data) => {
-  return axios.put(`${API_URL}/${id}`, data);
+  const formData = new FormData();
+
+  Object.entries(data).forEach(([key, value]) => {
+    formData.append(key, value);
+  });
+
+  formData.append("_method", "PUT");
+
+  return API.post(`/majors/${id}`, formData);
 };
 
-// DELETE: Delete major
-export const deleteMajor = (id) => {
-  return axios.delete(`${API_URL}/${id}`);
-};
+export const deleteMajor = (id) => API.delete(`/majors/${id}`);

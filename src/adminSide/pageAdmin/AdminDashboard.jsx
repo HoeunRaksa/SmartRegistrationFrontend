@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import DepartmentsPage from '../pageAdmin/Departmentspage.jsx';
+import MajorsPage from '../pageAdmin/Majospage.jsx';
+import SubjectsPage from '../pageAdmin/Subjectpage.jsx';
+import StudentPage from '../pageAdmin/Studentpage.jsx';
 import {
   LayoutDashboard,
   GraduationCap,
@@ -19,6 +22,7 @@ import {
   LogOut
 } from 'lucide-react';
 import Dashboard from '../../adminSide/ConponentsAdmin/dashboard.jsx';
+
 
 const AdminDashboard = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -43,32 +47,11 @@ const AdminDashboard = () => {
       case 'departments':
         return <DepartmentsPage />; 
       case 'majors':
-        return (
-          <div className="min-h-screen p-6">
-            <div className="bg-white/40 rounded-3xl p-8 border border-white/20 shadow-lg">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Majors Management</h2>
-              <p className="text-gray-600">Majors component will be implemented here</p>
-            </div>
-          </div>
-        );
+        return <MajorsPage />;
       case 'subjects':
-        return (
-          <div className="min-h-screen p-6">
-            <div className="bg-white/40 rounded-3xl p-8 border border-white/20 shadow-lg">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Subjects Management</h2>
-              <p className="text-gray-600">Subjects component will be implemented here</p>
-            </div>
-          </div>
-        );
+        return <SubjectsPage />;
       case 'students':
-        return (
-          <div className="min-h-screen p-6">
-            <div className="bg-white/40 rounded-3xl p-8 border border-white/20 shadow-lg">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Students Management</h2>
-              <p className="text-gray-600">Students component will be implemented here</p>
-            </div>
-          </div>
-        );
+        return <StudentPage />;
       case 'registrations':
         return (
           <div className="min-h-screen p-6">

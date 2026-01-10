@@ -1,6 +1,4 @@
 import axios from "axios";
-import { i } from "framer-motion/client";
-
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL + "/api",
   withCredentials: true, // needed if using Laravel Sanctum or cookies
