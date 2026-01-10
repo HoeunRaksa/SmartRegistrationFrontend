@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import DepartmentsPage from '../pageAdmin/Departmentspage.jsx';
 import MajorsPage from '../pageAdmin/Majospage.jsx';
@@ -23,11 +24,14 @@ import {
 } from 'lucide-react';
 import Dashboard from '../../adminSide/ConponentsAdmin/dashboard.jsx';
 
-
 const AdminDashboard = () => {
+  const { section } = useParams();
+  const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState('dashboard');
+  
+  // Default to 'dashboard' if no section is specified
+  const activeSection = section || 'dashboard';
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, gradient: 'from-blue-500 to-cyan-500' },
@@ -38,6 +42,19 @@ const AdminDashboard = () => {
     { id: 'registrations', label: 'Registrations', icon: FileText, gradient: 'from-pink-500 to-rose-500' },
     { id: 'settings', label: 'Settings', icon: Settings, gradient: 'from-gray-500 to-slate-500' },
   ];
+
+  // Validate section on mount and redirect if invalid
+  useEffect(() => {
+    const validSections = menuItems.map(item => item.id);
+    if (section && !validSections.includes(section)) {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [section, navigate]);
+
+  // Function to handle section navigation
+  const handleSectionChange = (sectionId) => {
+    navigate(`/admin/${sectionId}`);
+  };
 
   // Function to render the active section component
   const renderActiveSection = () => {
@@ -174,13 +191,14 @@ const AdminDashboard = () => {
               return (
                 <motion.button
                   key={item.id}
-                  onClick={() => setActiveSection(item.id)}
+                  onClick={() => handleSectionChange(item.id)}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
+                    isActive
                       ? 'backdrop-blur-xl bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
                       : 'backdrop-blur-xl bg-white/30 text-gray-700 hover:bg-white/50'
-                    } border border-white/20`}
+                  } border border-white/20`}
                 >
                   <Icon size={20} />
                   {!sidebarCollapsed && (
@@ -256,13 +274,14 @@ const AdminDashboard = () => {
                       <button
                         key={item.id}
                         onClick={() => {
-                          setActiveSection(item.id);
+                          handleSectionChange(item.id);
                           setMobileMenuOpen(false);
                         }}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
+                          isActive
                             ? 'backdrop-blur-xl bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
                             : 'backdrop-blur-xl bg-white/30 text-gray-700 hover:bg-white/50'
-                          } border border-white/20`}
+                        } border border-white/20`}
                       >
                         <Icon size={20} />
                         <span className="font-medium">{item.label}</span>

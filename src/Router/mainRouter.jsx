@@ -13,7 +13,6 @@ import NotFound from "../pages/NotFound";
 
 // Admin Pages
 import AdminDashboard from "../adminSide/pageAdmin/AdminDashboard";
-import DepartmentsPage from "../adminSide/pageAdmin/Departmentspage";
 
 // Components
 import ProtectedRoute from "./ProtectedRoute";
@@ -30,46 +29,38 @@ const MainRouter = () => {
       {/* ================= PUBLIC ROUTES ================= */}
 
       {/* Home Page */}
-      <Route
-        path="/"
-        element={<Home />}
-      />
+      <Route path="/" element={<Home />} />
 
       {/* Student Registration */}
-      <Route
-        path="/registration"
-        element={<Registration />}
-      />
+      <Route path="/registration" element={<Registration />} />
 
       {/* About Us Page */}
-      <Route
-        path="/aboutus"
-        element={<AboutUs />}
-      />
+      <Route path="/aboutus" element={<AboutUs />} />
 
       {/* Authentication */}
-      <Route
-        path="/login"
-        element={<Login />}
-      />
+      <Route path="/login" element={<Login />} />
 
       {/* Notifications */}
-      <Route
-        path="/notification"
-        element={<NotificationInbox />}
-      />
+      <Route path="/notification" element={<NotificationInbox />} />
 
       {/* Curriculum Information */}
-      <Route
-        path="/curriculum"
-        element={<Curriculum />}
-      />
+      <Route path="/curriculum" element={<Curriculum />} />
 
       {/* ================= ADMIN ROUTES (PROTECTED) ================= */}
 
-      {/* Admin Dashboard - Main Hub */}
+      {/* Admin Base Route - Redirect to Dashboard */}
       <Route
-        path="/admin/dashboard"
+        path="/admin"
+        element={
+          <ProtectedRoute allowedRoles={["admin", "staff"]}>
+            <Navigate to="/admin/dashboard" replace />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Admin Dashboard with Nested Sections */}
+      <Route
+        path="/admin/:section?"
         element={
           <ProtectedRoute allowedRoles={["admin", "staff"]}>
             <AdminDashboard />
@@ -77,81 +68,10 @@ const MainRouter = () => {
         }
       />
 
-      {/* Department Management - Standalone Page */}
-      <Route
-        path="/admin/departments"
-        element={
-          <ProtectedRoute allowedRoles={["admin", "staff"]}>
-            <DepartmentsPage />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* ================= FUTURE ADMIN ROUTES ================= */}
-      {/* Uncomment and implement as needed */}
-
-      {/* Majors Management
-      <Route
-        path="/admin/majors"
-        element={
-          <ProtectedRoute allowedRoles={["admin", "staff"]}>
-            <MajorsPage />
-          </ProtectedRoute>
-        }
-      />
-      */}
-
-      {/* Subjects Management
-      <Route
-        path="/admin/subjects"
-        element={
-          <ProtectedRoute allowedRoles={["admin", "staff"]}>
-            <SubjectsPage />
-          </ProtectedRoute>
-        }
-      />
-      */}
-
-      {/* Students Management
-      <Route
-        path="/admin/students"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <StudentsPage />
-          </ProtectedRoute>
-        }
-      />
-      */}
-
-      {/* Registrations Management
-      <Route
-        path="/admin/registrations"
-        element={
-          <ProtectedRoute allowedRoles={["admin", "staff"]}>
-            <RegistrationsPage />
-          </ProtectedRoute>
-        }
-      />
-      */}
-
-      {/* Settings
-      <Route
-        path="/admin/settings"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <SettingsPage />
-          </ProtectedRoute>
-        }
-      />
-      */}
-
       {/* ================= ERROR HANDLING ================= */}
 
       {/* 404 - Not Found Page */}
-      <Route
-        path="*"
-        element={<NotFound />}
-      />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };
