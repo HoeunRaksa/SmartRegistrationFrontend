@@ -52,13 +52,15 @@ const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 /* ================== HELPER FUNCTIONS ================== */
 
 const getImageUrl = (department) => {
+  console.log("Department image data:", department);
   // Backend provides full URL in image_url
   if (department?.image_url) {
     return department.image_url;
+  
   }
   // Fallback if only image_path is provided
   if (department?.image_path) {
-    return `https://study.learner-teach.online/${department.image_path}`;
+    return `${department.image_path}`;
   }
   return null;
 };
