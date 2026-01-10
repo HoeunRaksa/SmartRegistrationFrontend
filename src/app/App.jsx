@@ -24,12 +24,13 @@ function AppContent() {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [location.pathname]);
 
-  const hideFooterRoutes = ["/registration", "/admin/dashboard", "/login"];
-  const hideNavbarRoutes = ["/admin/dashboard"];
+const pathname = location.pathname.toLowerCase();
 
-  const pathname = location.pathname.toLowerCase();
-  const shouldHideNavbar = hideNavbarRoutes.includes(pathname);
-  const shouldHideFooter = hideFooterRoutes.includes(pathname);
+const isAdminRoute = pathname.startsWith("/admin");
+
+const shouldHideNavbar = isAdminRoute;
+const shouldHideFooter = isAdminRoute || pathname === "/registration" || pathname === "/login";
+
 
   return (
     <div className="relative min-h-screen w-full flex flex-col items-center overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/30">
