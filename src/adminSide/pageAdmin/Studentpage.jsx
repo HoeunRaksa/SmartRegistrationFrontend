@@ -18,6 +18,7 @@ import {
 const StudentPage = () => {
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [editingStudent, setEditingStudent] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -42,6 +43,12 @@ const StudentPage = () => {
 
   const reloadStudents = () => {
     loadStudents();
+  };
+
+  const handleEdit = (student) => {
+    setEditingStudent(student);
+    // Scroll to top where the form is
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const quickStats = [
@@ -142,7 +149,11 @@ const StudentPage = () => {
       </motion.div>
 
       {/* FORM */}
-      <StudentsForm onUpdate={reloadStudents} />
+      <StudentsForm 
+        onUpdate={reloadStudents}
+        editingStudent={editingStudent}
+        onCancelEdit={() => setEditingStudent(null)}
+      />
 
       {/* TABLE */}
       <StudentsTable
@@ -152,6 +163,8 @@ const StudentPage = () => {
           if (!student?.id) return;
           setSelectedStudent(student);
         }}
+        onUpdate={reloadStudents}
+        onEdit={handleEdit}
       />
 
       {/* PROFILE MODAL */}

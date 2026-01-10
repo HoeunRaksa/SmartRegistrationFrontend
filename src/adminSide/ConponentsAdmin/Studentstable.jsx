@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { deleteStudent } from "../../../src/api/student_api.jsx";
 import {
@@ -18,8 +17,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 
-const StudentsTable = ({ students, loading, onView, onUpdate }) => {
-  const navigate = useNavigate();
+const StudentsTable = ({ students, loading, onView, onUpdate, onEdit }) => {
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -65,12 +63,10 @@ const StudentsTable = ({ students, loading, onView, onUpdate }) => {
       setShowDeleteModal(false);
       setStudentToDelete(null);
       
-      // Call parent's reload function
       if (onUpdate) {
         onUpdate();
       }
       
-      // Auto-hide success message after 3 seconds
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to delete student");
@@ -87,12 +83,12 @@ const StudentsTable = ({ students, loading, onView, onUpdate }) => {
   };
 
   const handleEdit = (student) => {
-    // Navigate to edit page with student data in state
-    navigate(`/students/edit/${student.id}`, { state: { student } });
+    if (onEdit) {
+      onEdit(student);
+    }
   };
 
   const handleExport = () => {
-    // Prepare CSV data
     const headers = ["Student Code", "Name (EN)", "Name (KH)", "Gender", "Phone", "Generation"];
     const csvRows = currentStudents.map(student => [
       student.student_code,
@@ -103,13 +99,11 @@ const StudentsTable = ({ students, loading, onView, onUpdate }) => {
       student.generation || ""
     ]);
 
-    // Create CSV content
     const csvContent = [
       headers.join(","),
       ...csvRows.map(row => row.map(cell => `"${cell}"`).join(","))
     ].join("\n");
 
-    // Create and download file
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -350,7 +344,7 @@ const StudentRow = ({ student, index, onView, onEdit, onDelete }) => (
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold overflow-hidden shadow-md">
           {student.profile_picture_path ? (
             <img
-              src={`http://localhost:8000/storage/${student.profile_picture_path}`}
+              src={`${student.profile_picture_url}`}
               alt={student.full_name_en}
               className="w-full h-full object-cover"
               onError={(e) => {
