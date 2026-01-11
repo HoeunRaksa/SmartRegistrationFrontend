@@ -1,6 +1,5 @@
 import React from "react";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 // Public Pages
 import Home from "../pages/Home";
@@ -22,10 +21,8 @@ import ProtectedRoute from "./ProtectedRoute";
  * Handles all routing logic with protected routes for admin access
  */
 const MainRouter = () => {
-  const location = useLocation();
-
   return (
-    <Routes location={location} key={location.pathname}>
+    <Routes>
       {/* ================= PUBLIC ROUTES ================= */}
 
       {/* Home Page */}

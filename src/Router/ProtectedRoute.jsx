@@ -1,27 +1,55 @@
 import { Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
+  const [isChecking, setIsChecking] = useState(true);
   const token = localStorage.getItem("token");
+  const userStr = localStorage.getItem("user");
 
-  let user = null;
-  try {
-    user = JSON.parse(localStorage.getItem("user"));
-  } catch {
-    user = null;
+  useEffect(() => {
+    // Simulate auth check
+    const timer = setTimeout(() => {
+      setIsChecking(false);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Show loading while checking
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/30">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Verifying access...</p>
+        </div>
+      </div>
+    );
   }
 
-  if (!token || !user) {
-    console.log("❌ No token or user");
+  // Check if user is logged in
+  if (!token || !userStr) {
+    console.log("❌ No token or user - redirecting to login");
     return <Navigate to="/login" replace />;
   }
 
-  console.log("✅ USER ROLE:", user.role);
+  // Parse user data
+  let user = null;
+  try {
+    user = JSON.parse(userStr);
+  } catch (error) {
+    console.error("❌ Invalid user data - clearing localStorage");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    return <Navigate to="/login" replace />;
+  }
 
+  // Check if user has required role
   if (!allowedRoles.includes(user.role)) {
-    console.log("❌ Role blocked:", user.role);
+    console.log("❌ Access denied - Role:", user.role, "Required:", allowedRoles);
     return <Navigate to="/" replace />;
   }
 
+  console.log("✅ Access granted - User:", user.name, "Role:", user.role);
   return children;
 };
 

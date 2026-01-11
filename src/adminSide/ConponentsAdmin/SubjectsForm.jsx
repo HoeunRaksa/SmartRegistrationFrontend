@@ -1,59 +1,44 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  createStudent,
-  fetchStudents,
-  updateStudent,
-  deleteStudent,
-} from "../../../src/api/student_api.jsx";
+  createSubject,
+  updateSubject,
+} from "../../../src/api/subject_api.jsx";
 import { fetchDepartments } from "../../../src/api/department_api.jsx";
 import {
-  GraduationCap,
+  BookOpen,
   X,
   CheckCircle2,
   AlertCircle,
   Sparkles,
-  User,
-  Phone,
-  Mail,
-  MapPin,
-  Calendar,
-  Building2,
   Hash,
-  Trash2,
-  Edit,
-  Eye,
+  FileText,
+  Building2,
+  GraduationCap,
+  Clock,
 } from "lucide-react";
 
 /* ================== CONSTANTS ================== */
 
 const INITIAL_FORM_STATE = {
-  registration_id: "",
-  user_id: "",
+  name: "",
+  code: "",
   department_id: "",
-  full_name_kh: "",
-  full_name_en: "",
-  date_of_birth: "",
-  gender: "Male",
-  nationality: "Cambodian",
-  phone_number: "",
-  address: "",
-  generation: "",
-  parent_name: "",
-  parent_phone: "",
+  credits: "",
+  description: "",
+  prerequisites: "",
+  semester: "",
+  level: "",
 };
 
 const INPUT_FIELDS = [
-  { key: "full_name_en", icon: User, placeholder: "Full Name (English)", col: "md:col-span-2" },
-  { key: "full_name_kh", icon: User, placeholder: "Full Name (Khmer)", col: "md:col-span-2" },
-  { key: "date_of_birth", icon: Calendar, placeholder: "Date of Birth", col: "", type: "date" },
-  { key: "gender", icon: User, placeholder: "Gender", col: "", type: "select", options: ["Male", "Female", "Other"] },
-  { key: "nationality", icon: MapPin, placeholder: "Nationality", col: "" },
-  { key: "phone_number", icon: Phone, placeholder: "Phone Number", col: "" },
-  { key: "address", icon: MapPin, placeholder: "Address", col: "md:col-span-2", multiline: true },
-  { key: "generation", icon: Hash, placeholder: "Generation/Batch", col: "" },
-  { key: "parent_name", icon: User, placeholder: "Parent Name", col: "" },
-  { key: "parent_phone", icon: Phone, placeholder: "Parent Phone", col: "" },
+  { key: "name", icon: BookOpen, placeholder: "Subject Name", col: "md:col-span-2" },
+  { key: "code", icon: Hash, placeholder: "Subject Code (e.g., CS101)", col: "" },
+  { key: "credits", icon: GraduationCap, placeholder: "Credits", col: "", type: "number" },
+  { key: "semester", icon: Clock, placeholder: "Semester", col: "" },
+  { key: "level", icon: FileText, placeholder: "Level (e.g., Undergraduate)", col: "" },
+  { key: "description", icon: FileText, placeholder: "Description", col: "md:col-span-2", multiline: true },
+  { key: "prerequisites", icon: FileText, placeholder: "Prerequisites (optional)", col: "md:col-span-2", multiline: true },
 ];
 
 /* ================== ANIMATION VARIANTS ================== */
@@ -80,50 +65,45 @@ const animations = {
 
 /* ================== COMPONENT ================== */
 
-const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
+const SubjectsForm = ({ onUpdate, editingSubject, onCancelEdit }) => {
   const [form, setForm] = useState(INITIAL_FORM_STATE);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
 
-  const isEditMode = !!editingStudent;
+  const isEditMode = !!editingSubject;
 
   useEffect(() => {
     loadDepartments();
   }, []);
 
-  // Handle editing student from parent
+  // ✅ Populate form when editingSubject changes
   useEffect(() => {
-    if (editingStudent) {
+    if (editingSubject) {
       setForm({
-        registration_id: editingStudent.registration_id || "",
-        user_id: editingStudent.user_id || "",
-        department_id: editingStudent.department_id || "",
-        full_name_kh: editingStudent.full_name_kh || "",
-        full_name_en: editingStudent.full_name_en || "",
-        date_of_birth: editingStudent.date_of_birth || "",
-        gender: editingStudent.gender || "Male",
-        nationality: editingStudent.nationality || "Cambodian",
-        phone_number: editingStudent.phone_number || "",
-        address: editingStudent.address || "",
-        generation: editingStudent.generation || "",
-        parent_name: editingStudent.parent_name || "",
-        parent_phone: editingStudent.parent_phone || "",
+        name: editingSubject.name || "",
+        code: editingSubject.code || "",
+        department_id: editingSubject.department_id || "",
+        credits: editingSubject.credits || "",
+        description: editingSubject.description || "",
+        prerequisites: editingSubject.prerequisites || "",
+        semester: editingSubject.semester || "",
+        level: editingSubject.level || "",
       });
+    } else {
+      setForm(INITIAL_FORM_STATE);
     }
-  }, [editingStudent]);
+  }, [editingSubject]);
 
   const loadDepartments = async () => {
     try {
       const res = await fetchDepartments();
-      
       const list = Array.isArray(res.data?.data)
         ? res.data.data
         : Array.isArray(res.data)
         ? res.data
         : [];
-        
       setDepartments(list);
     } catch (err) {
       console.error("Failed to load departments:", err);
@@ -146,9 +126,9 @@ const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
 
     try {
       if (isEditMode) {
-        await updateStudent(editingStudent.id, form);
+        await updateSubject(editingSubject.id, form);
       } else {
-        await createStudent(form);
+        await createSubject(form);
       }
 
       resetForm();
@@ -157,7 +137,7 @@ const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       console.error("Submit error:", err);
-      setError(err.response?.data?.message || err.message || "Failed to save student");
+      setError(err.response?.data?.message || err.message || "Failed to save subject");
     } finally {
       setLoading(false);
     }
@@ -168,7 +148,7 @@ const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
       {/* ================= ALERTS ================= */}
       <AnimatePresence>
         {success && (
-          <Alert type="success" message={`Student ${isEditMode ? "updated" : "created"} successfully!`} />
+          <Alert type="success" message={`Subject ${isEditMode ? "updated" : "created"} successfully!`} />
         )}
         {error && (
           <Alert type="error" message={error} onClose={() => setError(null)} />
@@ -245,7 +225,7 @@ const FormHeader = ({ isEditMode, onCancel }) => (
     <div className="flex items-center gap-2">
       <Sparkles className="w-4 h-4 text-purple-600" />
       <h2 className="text-lg font-semibold text-gray-900">
-        {isEditMode ? "Edit Student" : "Create New Student"}
+        {isEditMode ? "Edit Subject" : "Create New Subject"}
       </h2>
     </div>
     {isEditMode && (
@@ -264,7 +244,7 @@ const FormHeader = ({ isEditMode, onCancel }) => (
 );
 
 const InputGrid = ({ form, setForm, departments }) => (
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
     <DepartmentSelect form={form} setForm={setForm} departments={departments} />
     
     {INPUT_FIELDS.map((field) => (
@@ -274,7 +254,7 @@ const InputGrid = ({ form, setForm, departments }) => (
 );
 
 const DepartmentSelect = ({ form, setForm, departments }) => (
-  <motion.div variants={animations.item} className="relative md:col-span-3">
+  <motion.div variants={animations.item} className="relative md:col-span-2">
     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
       <Building2 className="w-3.5 h-3.5" />
     </div>
@@ -305,18 +285,7 @@ const InputField = ({ field, form, setForm }) => {
       <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
         <Icon className="w-3.5 h-3.5" />
       </div>
-      {field.type === "select" ? (
-        <select
-          name={field.key}
-          value={value}
-          onChange={handleChange}
-          className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
-        >
-          {field.options.map((option) => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-      ) : field.multiline ? (
+      {field.multiline ? (
         <textarea
           name={field.key}
           value={value}
@@ -364,16 +333,16 @@ const SubmitButton = ({ loading, isEditMode }) => (
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
             className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
           />
-          {isEditMode ? "Updating Student..." : "Saving Student..."}
+          {isEditMode ? "Updating Subject..." : "Saving Subject..."}
         </>
       ) : (
         <>
           <CheckCircle2 className="w-5 h-5" />
-          {isEditMode ? "Update Student" : "Create Student"}
+          {isEditMode ? "Update Subject" : "Create Subject"}
         </>
       )}
     </span>
   </motion.button>
 );
 
-export default StudentsForm;
+export default SubjectsForm;
