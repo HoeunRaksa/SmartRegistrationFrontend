@@ -343,15 +343,20 @@ const AdminDashboard = () => {
           </div>
         </header>
 
-        {/* Dynamic Content Area */}
+        {/* Dynamic Content Area - FIXED HERE */}
         <main className="min-h-screen relative z-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeSection}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
+              layout
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ 
+                duration: 0.15,
+                ease: "easeOut",
+                layout: { duration: 0.2 }
+              }}
               className="h-full"
             >
               {renderActiveSection()}

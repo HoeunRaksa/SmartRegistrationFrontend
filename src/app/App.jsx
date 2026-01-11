@@ -24,13 +24,12 @@ function AppContent() {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [location.pathname]);
 
-const pathname = location.pathname.toLowerCase();
+  const pathname = location.pathname.toLowerCase();
 
-const isAdminRoute = pathname.startsWith("/admin");
+  const isAdminRoute = pathname.startsWith("/admin");
 
-const shouldHideNavbar = isAdminRoute;
-const shouldHideFooter = isAdminRoute || pathname === "/registration" || pathname === "/login";
-
+  const shouldHideNavbar = isAdminRoute;
+  const shouldHideFooter = isAdminRoute || pathname === "/registration" || pathname === "/login";
 
   return (
     <div className="relative min-h-screen w-full flex flex-col items-center overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/30">
@@ -76,17 +75,22 @@ const shouldHideFooter = isAdminRoute || pathname === "/registration" || pathnam
       >
         <div className="w-full xl:px-[10%] lg:px-[8%] md:px-[6%] px-[5%]">
           <div className="min-h-[calc(100vh-220px)]">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={location.pathname}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-              >
-                <MainRouter />
-              </motion.div>
-            </AnimatePresence>
+            {/* FIXED: Only animate non-admin routes */}
+            {isAdminRoute ? (
+              <MainRouter />
+            ) : (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={location.pathname}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                >
+                  <MainRouter />
+                </motion.div>
+              </AnimatePresence>
+            )}
           </div>
         </div>
       </main>

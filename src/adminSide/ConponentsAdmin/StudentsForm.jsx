@@ -89,47 +89,48 @@ const animations = {
 
 /* ================== COMPONENT ================== */
 
-const StudentsForm = ({ onUpdate }) => {
+const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
   const [form, setForm] = useState(INITIAL_FORM_STATE);
-  const [students, setStudents] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
-  const [selectedStudent, setSelectedStudent] = useState(null);
-  const [editingStudent, setEditingStudent] = useState(null);
 
   const isEditMode = !!editingStudent;
 
+  // ✅ Load departments on mount
   useEffect(() => {
-    loadStudents();
     loadDepartments();
   }, []);
 
-  // ✅ FIXED: Proper error handling and data extraction
-  const loadStudents = async () => {
-    try {
-      const res = await fetchStudents();
-
-      // ✅ Safely handle different response structures
-      const list = Array.isArray(res.data?.data)
-        ? res.data.data
-        : [];
-
-      setStudents(list);
-      if (onUpdate) onUpdate();
-    } catch (err) {
-      console.error("Failed to load students:", err);
-      setStudents([]); // ✅ Set empty array on error
-      setError(err.response?.data?.message || "Failed to load students");
+  // ✅ NEW: Populate form when editingStudent changes
+  useEffect(() => {
+    if (editingStudent) {
+      setForm({
+        registration_id: editingStudent.registration_id || "",
+        user_id: editingStudent.user_id || "",
+        department_id: editingStudent.department_id || "",
+        full_name_kh: editingStudent.full_name_kh || "",
+        full_name_en: editingStudent.full_name_en || "",
+        date_of_birth: editingStudent.date_of_birth || "",
+        gender: editingStudent.gender || "Male",
+        nationality: editingStudent.nationality || "Cambodian",
+        phone_number: editingStudent.phone_number || "",
+        address: editingStudent.address || "",
+        generation: editingStudent.generation || "",
+        parent_name: editingStudent.parent_name || "",
+        parent_phone: editingStudent.parent_phone || "",
+      });
+    } else {
+      // ✅ Reset form when not editing
+      setForm(INITIAL_FORM_STATE);
     }
-  };
+  }, [editingStudent]);
 
   const loadDepartments = async () => {
     try {
       const res = await fetchDepartments();
       
-      // ✅ Same pattern for departments
       const list = Array.isArray(res.data?.data)
         ? res.data.data
         : Array.isArray(res.data)
@@ -145,40 +146,7 @@ const StudentsForm = ({ onUpdate }) => {
 
   const resetForm = () => {
     setForm(INITIAL_FORM_STATE);
-    setEditingStudent(null);
-  };
-
-  const handleEdit = (student) => {
-    setEditingStudent(student);
-    setForm({
-      registration_id: student.registration_id || "",
-      user_id: student.user_id || "",
-      department_id: student.department_id || "",
-      full_name_kh: student.full_name_kh || "",
-      full_name_en: student.full_name_en || "",
-      date_of_birth: student.date_of_birth || "",
-      gender: student.gender || "Male",
-      nationality: student.nationality || "Cambodian",
-      phone_number: student.phone_number || "",
-      address: student.address || "",
-      generation: student.generation || "",
-      parent_name: student.parent_name || "",
-      parent_phone: student.parent_phone || "",
-    });
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this student?")) return;
-
-    try {
-      await deleteStudent(id);
-      setSuccess(true);
-      loadStudents();
-      setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to delete student");
-    }
+    if (onCancelEdit) onCancelEdit();
   };
 
   const handleSubmit = async (e) => {
@@ -196,7 +164,8 @@ const StudentsForm = ({ onUpdate }) => {
 
       resetForm();
       setSuccess(true);
-      loadStudents();
+      if (onUpdate) onUpdate();
+      
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       console.error("Submit error:", err);
@@ -227,20 +196,6 @@ const StudentsForm = ({ onUpdate }) => {
         setForm={setForm}
         departments={departments}
         loading={loading}
-      />
-
-      {/* ================= STUDENTS LIST ================= */}
-      <StudentsList
-        students={students}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onView={setSelectedStudent}
-      />
-
-      {/* ================= DETAIL MODAL ================= */}
-      <StudentModal
-        student={selectedStudent}
-        onClose={() => setSelectedStudent(null)}
       />
     </div>
   );
@@ -431,191 +386,6 @@ const SubmitButton = ({ loading, isEditMode }) => (
       )}
     </span>
   </motion.button>
-);
-
-const StudentsList = ({ students, onEdit, onDelete, onView }) => (
-  <motion.div
-    variants={animations.fadeUp}
-    initial="hidden"
-    animate="show"
-    className="rounded-2xl bg-white/40 border border-white/40 shadow-lg p-5"
-  >
-    <div className="flex items-center justify-between mb-4">
-      <div className="flex items-center gap-2">
-        <GraduationCap className="w-5 h-5 text-blue-600" />
-        <h3 className="text-lg font-semibold text-gray-900">All Students</h3>
-      </div>
-      <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1.5 rounded-full font-semibold">
-        {students.length} Total
-      </span>
-    </div>
-
-    {students.length === 0 ? (
-      <EmptyState />
-    ) : (
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-200">
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Student Code</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Name</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Phone</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Generation</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {students.map((student) => (
-              <StudentRow
-                key={student.id}
-                student={student}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                onView={onView}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
-    )}
-  </motion.div>
-);
-
-const EmptyState = () => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
-    <div className="inline-flex p-6 rounded-full bg-gray-100 mb-4">
-      <GraduationCap className="w-12 h-12 text-gray-400" />
-    </div>
-    <p className="text-gray-500 font-medium">No students yet</p>
-    <p className="text-sm text-gray-400 mt-1">Create your first student to get started</p>
-  </motion.div>
-);
-
-const StudentRow = ({ student, onEdit, onDelete, onView }) => (
-  <motion.tr
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    className="border-b border-gray-100 hover:bg-blue-50/30 transition-colors"
-  >
-    <td className="px-4 py-3">
-      <span className="text-sm font-medium text-blue-600">{student.student_code}</span>
-    </td>
-    <td className="px-4 py-3">
-      <div>
-        <p className="text-sm font-medium text-gray-900">{student.full_name_en}</p>
-        <p className="text-xs text-gray-500">{student.full_name_kh}</p>
-      </div>
-    </td>
-    <td className="px-4 py-3">
-      <span className="text-sm text-gray-600">{student.phone_number || "-"}</span>
-    </td>
-    <td className="px-4 py-3">
-      <span className="text-sm text-gray-600">{student.generation || "-"}</span>
-    </td>
-    <td className="px-4 py-3">
-      <div className="flex items-center justify-end gap-2">
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => onView(student)}
-          className="p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200"
-        >
-          <Eye className="w-4 h-4" />
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => onEdit(student)}
-          className="p-2 rounded-lg bg-green-100 text-green-600 hover:bg-green-200"
-        >
-          <Edit className="w-4 h-4" />
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => onDelete(student.id)}
-          className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200"
-        >
-          <Trash2 className="w-4 h-4" />
-        </motion.button>
-      </div>
-    </td>
-  </motion.tr>
-);
-
-const StudentModal = ({ student, onClose }) => {
-  if (!student) return null;
-
-  return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-        onClick={onClose}
-      >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          onClick={(e) => e.stopPropagation()}
-          className="relative max-w-2xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden"
-        >
-          <div className="relative h-48 bg-gradient-to-br from-blue-500 to-purple-600">
-            <div className="w-full h-full flex items-center justify-center">
-              <GraduationCap className="w-24 h-24 text-white/30" />
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-
-            <motion.button
-              whileHover={{ scale: 1.1, rotate: 90 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={onClose}
-              className="absolute top-4 right-4 p-2 rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/30 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </motion.button>
-
-            <div className="absolute bottom-6 left-6 right-6">
-              <h2 className="text-3xl font-bold text-white mb-2">{student.full_name_en}</h2>
-              <span className="inline-flex items-center gap-1 text-sm bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full">
-                <Hash className="w-4 h-4" />
-                {student.student_code}
-              </span>
-            </div>
-          </div>
-
-          <div className="p-6 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <InfoField label="Khmer Name" value={student.full_name_kh} />
-              <InfoField label="Gender" value={student.gender} />
-              <InfoField label="Date of Birth" value={student.date_of_birth} />
-              <InfoField label="Nationality" value={student.nationality} />
-              <InfoField label="Phone" value={student.phone_number} />
-              <InfoField label="Generation" value={student.generation} />
-            </div>
-            
-            {student.address && (
-              <InfoField label="Address" value={student.address} />
-            )}
-
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-              <InfoField label="Parent Name" value={student.parent_name} />
-              <InfoField label="Parent Phone" value={student.parent_phone} />
-            </div>
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-  );
-};
-
-const InfoField = ({ label, value }) => (
-  <div>
-    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">{label}</p>
-    <p className="text-sm font-medium text-gray-800">{value || "-"}</p>
-  </div>
 );
 
 export default StudentsForm;
