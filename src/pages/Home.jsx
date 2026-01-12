@@ -2,9 +2,10 @@ import "../App.css";
 import Program from "../Components/home/Programs";
 import milestone from "../Data/Milestones.json";
 import { ApiBaseImg } from "../config/Configration";
-const acadami = "@assets/images/academic.png";
 import { motion } from "framer-motion";
-const character ="@assets/images/character.png";
+const acadami = "/assets/images/academic.png";
+const character = "/assets/images/character.png";
+
 
 const cardVariants = {
   hidden: { opacity: 0, y: 50 },
