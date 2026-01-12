@@ -159,7 +159,7 @@ const Home = () => {
 
                   <div className="aspect-video overflow-hidden">
                     <img
-                      src={`/assets/images/${achievement.image}`}
+                      src={`../../public/assets/images/${achievement.image}`}
                       alt={achievement.title}
                       className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
                     />
