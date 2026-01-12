@@ -1,22 +1,9 @@
 import "../App.css";
 import Program from "../Components/home/Programs";
 import milestone from "../Data/Milestones.json";
-import { ApiBaseImg } from "../config/Configration";
 import { motion } from "framer-motion";
 import academic from "@/assets/images/academic.png";
 import character from "@/assets/images/character.png";
-
-
-
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 50 },
-  visible: (i) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.1, type: "spring", stiffness: 120 },
-  }),
-};
 
 const Home = () => {
   return (
@@ -80,17 +67,17 @@ const Home = () => {
           </div>
 
           {/* Image */}
-          <motion.div 
-            className="md:w-1/2 flex justify-center" 
-            initial={{ scale: 0.95, opacity: 0 }} 
-            animate={{ scale: 1, opacity: 1 }} 
+          <motion.div
+            className="md:w-1/2 flex justify-center"
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.8 }}
           >
             <div className="backdrop-blur-xl bg-white/30 p-4 rounded-full border border-white/20 shadow-2xl">
-              <img 
-                src={character} 
-                alt="University Campus" 
-                className="w-full max-w-sm sm:max-w-md md:max-w-lg rounded-full transition-transform duration-500 hover:scale-105" 
+              <img
+                src={character}
+                alt="University Campus"
+                className="w-full max-w-sm sm:max-w-md md:max-w-lg rounded-full transition-transform duration-500 hover:scale-105"
               />
             </div>
           </motion.div>
@@ -169,13 +156,15 @@ const Home = () => {
                 className="group cursor-pointer"
               >
                 <div className="backdrop-blur-xl bg-white/40 border border-white/20 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden h-full">
+
                   <div className="aspect-video overflow-hidden">
                     <img
-                      src={`${ApiBaseImg}${achievement.image}`}
+                      src={`/assets/images/${achievement.image}`}
                       alt={achievement.title}
                       className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
                     />
                   </div>
+
                   <div className="p-6 flex flex-col gap-3">
                     <div className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                       {achievement.count}
@@ -187,10 +176,12 @@ const Home = () => {
                       {achievement.description}
                     </p>
                   </div>
+
                 </div>
               </motion.div>
             ))}
           </div>
+
         </section>
 
         <Program />
