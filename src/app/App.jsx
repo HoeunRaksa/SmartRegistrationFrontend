@@ -26,17 +26,31 @@ function AppContent() {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [location.pathname]);
 
-useEffect(() => {
-  const token = localStorage.getItem("token");
-  const userStr = localStorage.getItem("user");
-  const pathname = location.pathname.toLowerCase();
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const userStr = localStorage.getItem("user");
+    const pathname = location.pathname.toLowerCase();
 
-  if (!token || !userStr) return;
+    if (!token || !userStr) return;
 
-  try {
-    const user = JSON.parse(userStr);
+    let user;
+    try {
+      user = JSON.parse(userStr);
+    } catch {
+      localStorage.clear();
+      navigate("/login", { replace: true });
+      return;
+    }
 
-    // 🚫 Block logged-in users from login page
+    // ✅ redirect from ROOT
+    if (pathname === "/") {
+      if (user.role === "admin" || user.role === "staff") {
+        navigate("/admin/dashboard", { replace: true });
+      }
+      return;
+    }
+
+    // ✅ block login page
     if (pathname === "/login") {
       if (user.role === "admin" || user.role === "staff") {
         navigate("/admin/dashboard", { replace: true });
@@ -44,21 +58,8 @@ useEffect(() => {
         navigate("/", { replace: true });
       }
     }
+  }, [location.pathname, navigate]);
 
-    // 🔐 Protect admin routes
-    if (pathname.startsWith("/admin")) {
-      if (user.role !== "admin" && user.role !== "staff") {
-        localStorage.clear();
-        navigate("/login", { replace: true });
-      }
-    }
-
-  } catch (err) {
-    console.error("Invalid user data");
-    localStorage.clear();
-    navigate("/login", { replace: true });
-  }
-}, [location.pathname, navigate]);
 
 
   const pathname = location.pathname.toLowerCase();
