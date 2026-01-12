@@ -4,6 +4,10 @@ import milestone from "../Data/Milestones.json";
 import { motion } from "framer-motion";
 import academic from "@/assets/images/academic.png";
 import character from "@/assets/images/character.png";
+const images = import.meta.glob(
+  "@/assets/images/*",
+  { eager: true, import: "default" }
+);
 
 const Home = () => {
   return (
@@ -159,10 +163,11 @@ const Home = () => {
 
                   <div className="aspect-video overflow-hidden">
                     <img
-                      src={`/assets/images/${achievement.image}`}
+                      src={images[`/src/assets/images/${achievement.image}`]}
                       alt={achievement.title}
-                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
+                      className="object-cover w-full h-full"
                     />
+
                   </div>
 
                   <div className="p-6 flex flex-col gap-3">
