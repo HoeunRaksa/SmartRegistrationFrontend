@@ -3,8 +3,10 @@ import Program from "../Components/home/Programs";
 import milestone from "../Data/Milestones.json";
 import { ApiBaseImg } from "../config/Configration";
 import { motion } from "framer-motion";
-const acadami = "/assets/images/academic.png";
-const character = "/assets/images/character.png";
+import academic from "@/assets/images/academic.png";
+import character from "@/assets/images/character.png";
+
+
 
 
 const cardVariants = {
@@ -130,7 +132,7 @@ const Home = () => {
                 transition={{ duration: 0.8 }}
               >
                 <img
-                  src={acadami}
+                  src={academic}
                   alt="Academic"
                   className="w-full h-auto rounded-full transition-transform duration-500 hover:scale-105"
                 />
