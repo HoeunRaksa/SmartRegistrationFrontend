@@ -26,30 +26,40 @@ function AppContent() {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [location.pathname]);
 
-  // Auto-redirect logged-in users from login page
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userStr = localStorage.getItem('user');
-    const pathname = location.pathname.toLowerCase();
+useEffect(() => {
+  const token = localStorage.getItem("token");
+  const userStr = localStorage.getItem("user");
+  const pathname = location.pathname.toLowerCase();
 
-    // If on login page and already logged in, redirect to dashboard
-    if (pathname === '/login' && token && userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        if (user.role === 'admin' || user.role === 'staff') {
-          console.log('✅ Already logged in - redirecting to admin dashboard');
-          navigate('/admin/dashboard', { replace: true });
-        } else {
-          console.log('✅ Already logged in - redirecting to home');
-          navigate('/', { replace: true });
-        }
-      } catch (error) {
-        console.error('Invalid user data');
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+  if (!token || !userStr) return;
+
+  try {
+    const user = JSON.parse(userStr);
+
+    // 🚫 Block logged-in users from login page
+    if (pathname === "/login") {
+      if (user.role === "admin" || user.role === "staff") {
+        navigate("/admin/dashboard", { replace: true });
+      } else {
+        navigate("/", { replace: true });
       }
     }
-  }, [location.pathname, navigate]);
+
+    // 🔐 Protect admin routes
+    if (pathname.startsWith("/admin")) {
+      if (user.role !== "admin" && user.role !== "staff") {
+        localStorage.clear();
+        navigate("/login", { replace: true });
+      }
+    }
+
+  } catch (err) {
+    console.error("Invalid user data");
+    localStorage.clear();
+    navigate("/login", { replace: true });
+  }
+}, [location.pathname, navigate]);
+
 
   const pathname = location.pathname.toLowerCase();
   const isAdminRoute = pathname.startsWith("/admin");
