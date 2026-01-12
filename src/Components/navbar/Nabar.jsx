@@ -3,7 +3,6 @@ import "../../App.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { ToastContainer, showSuccess } from "../ui/Toast.jsx";
-import profileFallback from "../../../public/assets/images/profile.png";
 import { logoutApi } from "../../api/auth";
 
 const NAV_LINKS = [

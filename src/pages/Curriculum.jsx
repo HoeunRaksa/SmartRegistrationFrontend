@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import headerImage from "../../public/assets/images/curriculum.png";
+const headerImage = "public/assets/images/curriculum.png";
 
 export const programs = {
   AiResearcher: {

@@ -1,11 +1,10 @@
 import "../App.css";
 import Program from "../Components/home/Programs";
 import milestone from "../Data/Milestones.json";
-import character from "../../public/assets/images/character.png";
 import { ApiBaseImg } from "../config/Configration";
-import acadami from "../../public/assets/images/academic.png";
+const acadami = "public/assets/images/academic.png";
 import { motion } from "framer-motion";
-import { useState } from "react";
+const character ="public/assets/images/character.png";
 
 const cardVariants = {
   hidden: { opacity: 0, y: 50 },

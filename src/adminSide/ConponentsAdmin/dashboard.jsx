@@ -20,7 +20,7 @@ import {
   ChevronRight,
   Loader,
 } from "lucide-react";
-import profileFallback from "../../../public/assets/images/profile.png";
+import profileFallback from "../../assets/images/profile.png";
 import { fetchDepartments } from "../../api/department_api.jsx";
 import { fetchMajors } from "../../api/major_api.jsx";
 import { fetchSubjects } from "../../api/subject_api.jsx";

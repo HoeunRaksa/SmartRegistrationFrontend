@@ -23,8 +23,7 @@ import {
   LogOut
 } from 'lucide-react';
 import Dashboard from '../../adminSide/ConponentsAdmin/dashboard.jsx';
-import profileFallback from '../../../public/assets/images/profile.png';
-
+const profileFallback = "/assets/images/profile-fallback.png";
 const AdminDashboard = () => {
   const { section } = useParams();
   const navigate = useNavigate();
