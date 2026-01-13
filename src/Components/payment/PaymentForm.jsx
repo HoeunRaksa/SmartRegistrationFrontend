@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 import { CheckCircle, Loader, CloudOff, Info } from "lucide-react";
 import { ToastContext } from "../Context/ToastProvider.jsx";
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
 const PaymentForm = ({ onClose, setPaymentStatus, onSuccess, initialPaymentData }) => {
-  const { showSuccess, showError } = useContext(ToastContext)
+  const { showSuccess, showError } = useContext(ToastContext);
   const [qrImage, setQrImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("PENDING");
   const [tranId, setTranId] = useState(null);
   const [error, setError] = useState(null);
   const fetchedRef = useRef(false);
+
   const fetchQR = async () => {
     setLoading(true);
     setError(null);
@@ -30,6 +33,7 @@ const PaymentForm = ({ onClose, setPaymentStatus, onSuccess, initialPaymentData 
       lifetime: 6,
       qr_image_template: "template3_color",
     };
+
     try {
       const res = await fetch(`${API_BASE_URL}/api/payment/generate-qr`, {
         method: "POST",
@@ -104,7 +108,6 @@ const PaymentForm = ({ onClose, setPaymentStatus, onSuccess, initialPaymentData 
     return () => clearInterval(interval);
   }, [tranId]);
 
-
   const handleDownloadQR = () => {
     if (!qrImage) return;
     const link = document.createElement("a");
@@ -116,61 +119,122 @@ const PaymentForm = ({ onClose, setPaymentStatus, onSuccess, initialPaymentData 
   const isFinalStatus = status === "PAID" || status === "FAILED" || status === "CANCELED";
 
   return (
-    <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden mx-4">
-      <div className="bg-[#005788] p-4 text-center">
-        <h2 className="text-xl font-bold text-white">ABA PAY</h2>
-        <p className="text-blue-200 text-sm">Scan to pay registration fee</p>
+    <div className="relative w-full max-w-sm backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/80 to-white/70 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.2)] border-2 border-white/60 overflow-hidden mx-4">
+      {/* Gradient top accent */}
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+      
+      {/* Header */}
+      <div className="relative backdrop-blur-xl bg-gradient-to-r from-[#005788] to-[#0077b6] p-6 text-center border-b border-white/20">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+        <h2 className="relative text-2xl font-bold text-white drop-shadow-lg">ABA PAY</h2>
+        <p className="relative text-blue-100 text-sm mt-1 font-medium">Scan to pay registration fee</p>
       </div>
-      <p className="text-xs mt-2 text-gray-400 p-2">Tran ID: {tranId || 'Generating...'}</p>
 
+      {/* Transaction ID */}
+      <div className="backdrop-blur-xl bg-white/40 border-b border-white/30 px-4 py-2">
+        <p className="text-xs text-gray-600 font-medium">
+          Transaction ID: <span className="font-mono text-gray-800">{tranId || 'Generating...'}</span>
+        </p>
+      </div>
+
+      {/* Content */}
       <div className="p-8 flex flex-col items-center">
+        {/* Error Message */}
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative w-full mb-4 flex items-center gap-2" role="alert">
-            <CloudOff size={18} />
-            <span className="block sm:inline">{error}</span>
+          <div className="backdrop-blur-xl bg-red-50/90 border-2 border-red-200/60 text-red-700 px-4 py-3 rounded-2xl relative w-full mb-6 flex items-center gap-3 shadow-lg" role="alert">
+            <div className="backdrop-blur-xl bg-red-500/10 p-2 rounded-lg">
+              <CloudOff size={18} className="text-red-600" />
+            </div>
+            <span className="block sm:inline font-medium">{error}</span>
           </div>
         )}
 
-        {loading || !qrImage ? (
-          <div className="w-[200px] h-[200px] flex items-center justify-center border border-gray-200 rounded">
-            {loading ? <Loader className="animate-spin text-blue-600" size={48} /> : <Info className="text-gray-400" size={48} />}
-          </div>
-        ) : (
-          <img src={qrImage} alt="ABA QR Code" className="w-[200px] h-[200px] object-contain rounded" />
-        )}
-
-        <div className={`mt-6 flex items-center gap-2 font-bold text-lg 
-            ${status === "PAID" ? "text-green-600" : status === "FAILED" || status === "CANCELED" ? "text-red-600" : "text-gray-500"}`}>
-          {status === "PAID" ? (
-            <>
-              <CheckCircle size={24} />
-              <span>Payment Completed</span>
-            </>
-          ) : isFinalStatus ? (
-            <span>{status}</span>
+        {/* QR Code Container */}
+        <div className="backdrop-blur-2xl bg-gradient-to-br from-white/70 to-white/50 p-6 rounded-3xl border-2 border-white/60 shadow-xl mb-6">
+          {loading || !qrImage ? (
+            <div className="w-[200px] h-[200px] flex items-center justify-center backdrop-blur-xl bg-white/40 border-2 border-white/50 rounded-2xl">
+              {loading ? (
+                <div className="text-center">
+                  <Loader className="animate-spin text-blue-600 mb-2" size={48} />
+                  <p className="text-sm text-gray-600 font-medium">Loading QR...</p>
+                </div>
+              ) : (
+                <Info className="text-gray-400" size={48} />
+              )}
+            </div>
           ) : (
-            <span className="animate-pulse">Waiting for payment...</span>
+            <img 
+              src={qrImage} 
+              alt="ABA QR Code" 
+              className="w-[200px] h-[200px] object-contain rounded-2xl shadow-lg" 
+            />
           )}
         </div>
 
-        <div className="flex gap-3 mt-6 w-full">
+        {/* Status Display */}
+        <div className={`backdrop-blur-xl px-6 py-3 rounded-2xl border-2 shadow-lg
+            ${status === "PAID" 
+              ? "bg-green-50/80 border-green-200/60" 
+              : status === "FAILED" || status === "CANCELED" 
+              ? "bg-red-50/80 border-red-200/60" 
+              : "bg-blue-50/80 border-blue-200/60"}`}>
+          <div className={`flex items-center gap-3 font-bold text-lg 
+              ${status === "PAID" 
+                ? "text-green-600" 
+                : status === "FAILED" || status === "CANCELED" 
+                ? "text-red-600" 
+                : "text-blue-600"}`}>
+            {status === "PAID" ? (
+              <>
+                <div className="backdrop-blur-xl bg-green-500/10 p-2 rounded-lg">
+                  <CheckCircle size={24} />
+                </div>
+                <span>Payment Completed</span>
+              </>
+            ) : isFinalStatus ? (
+              <>
+                <div className="backdrop-blur-xl bg-red-500/10 p-2 rounded-lg">
+                  <CloudOff size={24} />
+                </div>
+                <span>{status}</span>
+              </>
+            ) : (
+              <>
+                <div className="backdrop-blur-xl bg-blue-500/10 p-2 rounded-lg">
+                  <Loader className="animate-spin" size={24} />
+                </div>
+                <span className="animate-pulse">Waiting for payment...</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-3 mt-8 w-full">
           <button
             onClick={onClose}
-            className="flex-1 py-2 px-4 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition font-medium"
+            className="relative flex-1 py-3 px-4 rounded-xl backdrop-blur-xl bg-white/60 border-2 border-white/60 text-gray-700 hover:bg-white/80 hover:scale-[1.02] transition-all duration-300 font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group"
             disabled={status === 'PAID'}
           >
-            {status === 'PAID' ? 'Done' : 'Cancel'}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+            <span className="relative z-10">{status === 'PAID' ? 'Done' : 'Cancel'}</span>
           </button>
+          
           {qrImage && status === 'PENDING' && (
             <button
               onClick={handleDownloadQR}
-              className="flex-1 py-2 px-4 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition font-medium"
+              className="relative flex-1 py-3 px-4 rounded-xl backdrop-blur-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-[0_10px_40px_rgba(139,92,246,0.4)] hover:scale-[1.02] transition-all duration-300 font-semibold shadow-lg border border-white/30 overflow-hidden group"
             >
-              Download QR
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+              <span className="relative z-10">Download QR</span>
             </button>
           )}
         </div>
       </div>
+
+      {/* Bottom decorative element */}
+      <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-10 -left-10 w-32 h-32 bg-gradient-to-br from-pink-400/20 to-orange-400/20 rounded-full blur-3xl pointer-events-none" />
     </div>
   );
 };

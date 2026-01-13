@@ -14,6 +14,8 @@ import {
     User2,
     Shield,
     AlertTriangle,
+    DollarSign,
+    Smartphone,
 } from "lucide-react";
 import PaymentForm from "../Components/payment/PaymentForm.jsx";
 import { submitRegistration } from "../api/registration_api.jsx";
@@ -25,9 +27,11 @@ const Registration = () => {
     const [majors, setMajors] = useState([]);
     const [departments, setDepartments] = useState([]);
     const [showQr, setShowQr] = useState(false);
+    const [showPaymentChoice, setShowPaymentChoice] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState("PENDING");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [profilePreview, setProfilePreview] = useState(null);
     const currentYear = new Date().getFullYear();
 
     const [form, setForm] = useState({
@@ -51,21 +55,21 @@ const Registration = () => {
         profilePicture: null,
         address: "",
         currentAddress: "",
-        
+
         // Father
         fatherName: "",
         fathersDateOfBirth: "",
         fathersNationality: "",
         fathersJob: "",
         fathersPhoneNumber: "",
-        
+
         // Mother
         motherName: "",
         motherDateOfBirth: "",
         motherNationality: "",
         mothersJob: "",
         motherPhoneNumber: "",
-        
+
         // Guardian & Emergency
         guardianName: "",
         guardianPhoneNumber: "",
@@ -110,9 +114,44 @@ const Registration = () => {
         loadMajors();
     }, [form.departmentId]);
 
+    useEffect(() => {
+        if (form.departmentId) {
+            const selectedDept = departments.find(d => d.id === parseInt(form.departmentId));
+            if (selectedDept && selectedDept.faculty) {
+                setForm(prev => ({ ...prev, faculty: selectedDept.faculty }));
+            }
+        }
+    }, [form.departmentId, departments]);
+
     const handleChange = (e) => {
         const { name, value, files } = e.target;
-        setForm({ ...form, [name]: files ? files[0] : value });
+        
+        if (files && files[0]) {
+            // Validate file type
+            const file = files[0];
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+            
+            if (!validTypes.includes(file.type)) {
+                setError("Please upload a valid image file (JPG, JPEG, or PNG)");
+                e.target.value = ''; // Clear the input
+                return;
+            }
+            
+            // Validate file size (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+                setError("Image size must be less than 5MB");
+                e.target.value = ''; // Clear the input
+                return;
+            }
+            
+            setForm({ ...form, [name]: file });
+            
+            // Create preview URL
+            const previewUrl = URL.createObjectURL(file);
+            setProfilePreview(previewUrl);
+        } else {
+            setForm({ ...form, [name]: value });
+        }
 
         if (error) setError(null);
     };
@@ -140,43 +179,119 @@ const Registration = () => {
             academicYear: "academic_year",
             address: "address",
             currentAddress: "current_address",
-            
+
             fatherName: "father_name",
             fathersDateOfBirth: "fathers_date_of_birth",
             fathersNationality: "fathers_nationality",
             fathersJob: "fathers_job",
             fathersPhoneNumber: "fathers_phone_number",
-            
+
             motherName: "mother_name",
             motherDateOfBirth: "mother_date_of_birth",
             motherNationality: "mother_nationality",
             mothersJob: "mothers_job",
             motherPhoneNumber: "mother_phone_number",
-            
+
             guardianName: "guardian_name",
             guardianPhoneNumber: "guardian_phone_number",
             emergencyContactName: "emergency_contact_name",
             emergencyContactPhoneNumber: "emergency_contact_phone_number",
         };
 
+        // Append all text fields
         for (const [key, value] of Object.entries(form)) {
             if (value !== null && value !== "" && key !== "profilePicture") {
                 formData.append(keyMap[key], value);
             }
         }
 
+        // Append profile picture ONLY if it exists and is valid
         if (form.profilePicture) {
-            formData.append("profile_picture", form.profilePicture);
+            if (form.profilePicture instanceof File) {
+                console.log('Appending profile picture:', {
+                    name: form.profilePicture.name,
+                    type: form.profilePicture.type,
+                    size: form.profilePicture.size
+                });
+                formData.append("profile_picture", form.profilePicture);
+            } else {
+                console.warn('Profile picture is not a File instance:', typeof form.profilePicture);
+            }
+        } else {
+            console.log('No profile picture to upload');
         }
+
+        // Debug: Log FormData contents
+        console.log("=== FormData contents ===");
+        for (let pair of formData.entries()) {
+            if (pair[1] instanceof File) {
+                console.log(`${pair[0]}: [FILE] ${pair[1].name} (${pair[1].type}, ${pair[1].size} bytes)`);
+            } else {
+                console.log(`${pair[0]}: ${pair[1]}`);
+            }
+        }
+        console.log("=== End FormData ===");
 
         try {
             setLoading(true);
             const response = await submitRegistration(formData);
             console.log("Registration Success:", response.data);
+            
+            // Show success message
+            alert(`Registration successful! Your account has been created.\n\nStudent Code: ${response.data.student_account.student_code}\nEmail: ${response.data.student_account.email}\nPassword: ${response.data.student_account.password}\n\nPlease save this information!`);
+            
+            // Reset form
+            setForm({
+                firstName: "",
+                lastName: "",
+                fullNameKh: "",
+                fullNameEn: "",
+                gender: "Male",
+                dateOfBirth: "",
+                phoneNumber: "",
+                personalEmail: "",
+                highSchoolName: "",
+                graduationYear: "",
+                grade12Result: "",
+                departmentId: "",
+                majorId: "",
+                faculty: "",
+                shift: "Morning",
+                batch: `${currentYear}`,
+                academicYear: `${currentYear}-${currentYear + 1}`,
+                profilePicture: null,
+                address: "",
+                currentAddress: "",
+                fatherName: "",
+                fathersDateOfBirth: "",
+                fathersNationality: "",
+                fathersJob: "",
+                fathersPhoneNumber: "",
+                motherName: "",
+                motherDateOfBirth: "",
+                motherNationality: "",
+                mothersJob: "",
+                motherPhoneNumber: "",
+                guardianName: "",
+                guardianPhoneNumber: "",
+                emergencyContactName: "",
+                emergencyContactPhoneNumber: "",
+            });
+            setProfilePreview(null);
+            
             return response.data;
         } catch (error) {
             console.error("Registration Error:", error.response?.data || error.message);
-            setError(error.response?.data?.message || "Registration failed. Please try again.");
+            
+            // Extract validation errors
+            if (error.response?.data?.errors) {
+                const errors = error.response.data.errors;
+                const errorMessages = Object.values(errors).flat().join('\n');
+                setError(errorMessages);
+            } else {
+                setError(error.response?.data?.message || "Registration failed. Please try again.");
+            }
+            
             throw error;
         } finally {
             setLoading(false);
@@ -185,7 +300,31 @@ const Registration = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setShowQr(true);
+        
+        // Validate required fields
+        if (!form.firstName || !form.lastName || !form.personalEmail || !form.departmentId || !form.majorId || !form.highSchoolName) {
+            setError("Please fill in all required fields");
+            return;
+        }
+        
+        setShowPaymentChoice(true);
+    };
+
+    const handlePaymentMethodSelect = (method) => {
+        setShowPaymentChoice(false);
+        if (method === 'qr') {
+            setShowQr(true);
+        } else if (method === 'later') {
+            handlePayLater();
+        }
+    };
+
+    const handlePayLater = async () => {
+        try {
+            await formSubmit();
+        } catch (error) {
+            // Error already handled in formSubmit
+        }
     };
 
     const handlePaymentSuccess = async () => {
@@ -197,13 +336,93 @@ const Registration = () => {
         }
     };
 
-    const inputClass = "w-full backdrop-blur-xl bg-white/40 border border-white/20 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-2xl px-4 py-3 outline-none transition-all duration-200 text-gray-700 placeholder-gray-400 font-light shadow-sm";
-    const labelClass = "block text-sm font-medium text-gray-700 mb-2 ml-1";
+    const inputClass = "w-full backdrop-blur-xl bg-white/60 border-2 border-white/40 focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 rounded-xl px-4 py-3 outline-none transition-all duration-300 text-gray-800 placeholder-gray-400 font-medium shadow-lg";
+    const labelClass = "block text-sm font-semibold text-gray-700 mb-2 ml-1";
 
     return (
-        <section className="min-h-screen -mt-9 relative overflow-hidden font-sans rounded-lg">
+        <section className="min-h-screen -mt-9 relative overflow-hidden font-sans rounded-lg bg-gradient-to-br ">
+            {/* Animated background elements */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-blue-400 to-cyan-400 opacity-20 rounded-full blur-3xl animate-pulse" />
+                <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-purple-400 to-pink-400 opacity-20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+                <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-r from-pink-400 to-orange-400 opacity-20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
+            </div>
+
+            {/* Payment Method Choice Modal */}
+            {showPaymentChoice && (
+                <div className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 px-4">
+                    <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/80 to-white/70 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] border-2 border-white/60 p-8 max-w-md w-full">
+                        {/* Gradient top accent */}
+                        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+
+                        <button
+                            onClick={() => setShowPaymentChoice(false)}
+                            className="absolute top-4 right-4 backdrop-blur-xl bg-white/60 p-2 rounded-full hover:bg-white/80 transition-all duration-300 border border-white/40"
+                        >
+                            <X size={20} className="text-gray-600" />
+                        </button>
+
+                        <div className="text-center mb-8">
+                            <div className="inline-flex items-center justify-center p-4 backdrop-blur-xl bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-xl">
+                                <CreditCard size={32} className="text-white" />
+                            </div>
+                            <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                                Choose Payment Method
+                            </h3>
+                            <p className="text-gray-600 text-sm">Select how you'd like to complete your registration</p>
+                        </div>
+
+                        <div className="space-y-4">
+                            {/* Pay with QR Code */}
+                            <button
+                                onClick={() => handlePaymentMethodSelect('qr')}
+                                className="group relative w-full backdrop-blur-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white p-6 rounded-2xl hover:shadow-[0_20px_60px_rgba(139,92,246,0.5)] transition-all duration-500 hover:scale-[1.02] border border-white/30 overflow-hidden"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                                <div className="relative z-10 flex items-center gap-4">
+                                    <div className="backdrop-blur-xl bg-white/20 p-3 rounded-xl">
+                                        <Smartphone size={28} />
+                                    </div>
+                                    <div className="text-left flex-1">
+                                        <h4 className="font-bold text-lg">Pay with QR Code</h4>
+                                        <p className="text-sm text-white/80 mt-1">Scan and pay using ABA Mobile</p>
+                                    </div>
+                                    <div className="text-2xl">→</div>
+                                </div>
+                            </button>
+
+                            {/* Pay Later */}
+                            <button
+                                onClick={() => handlePaymentMethodSelect('later')}
+                                className="group relative w-full backdrop-blur-xl bg-white/60 border-2 border-white/60 text-gray-800 p-6 rounded-2xl hover:bg-white/80 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                                <div className="relative z-10 flex items-center gap-4">
+                                    <div className="backdrop-blur-xl bg-gradient-to-br from-gray-500/20 to-gray-600/20 p-3 rounded-xl border border-white/40">
+                                        <DollarSign size={28} className="text-gray-700" />
+                                    </div>
+                                    <div className="text-left flex-1">
+                                        <h4 className="font-bold text-lg">Pay Later</h4>
+                                        <p className="text-sm text-gray-600 mt-1">Submit registration and pay at campus</p>
+                                    </div>
+                                    <div className="text-2xl text-gray-400">→</div>
+                                </div>
+                            </button>
+                        </div>
+
+                        <div className="mt-6 backdrop-blur-xl bg-blue-50/60 border border-blue-200/40 rounded-xl p-4 flex items-start gap-3">
+                            <AlertTriangle size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
+                            <p className="text-xs text-gray-700">
+                                <span className="font-semibold">Note:</span> If you choose "Pay Later", please complete payment within 7 days at the university finance office.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* QR Payment Modal */}
             {showQr && (
-                <div className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 animate-fade-in">
+                <div className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 px-4">
                     <PaymentForm
                         setPaymentStatus={setPaymentStatus}
                         onClose={() => setShowQr(false)}
@@ -212,32 +431,47 @@ const Registration = () => {
                 </div>
             )}
 
+            {/* Error Toast */}
             {error && (
-                <div className="fixed top-4 right-4 z-50 backdrop-blur-xl bg-red-500/90 text-white px-6 py-4 rounded-2xl shadow-2xl border border-red-400/30 flex items-center gap-3 animate-slide-in">
-                    <X size={20} />
-                    <span>{error}</span>
-                    <button onClick={() => setError(null)} className="ml-2 hover:bg-red-600 rounded-full p-1">
-                        <X size={16} />
-                    </button>
+                <div className="fixed top-4 right-4 z-50 backdrop-blur-2xl bg-red-500/90 text-white px-6 py-4 rounded-2xl shadow-[0_20px_60px_rgba(239,68,68,0.4)] border-2 border-red-400/30 max-w-md animate-slide-in">
+                    <div className="flex items-start gap-3">
+                        <div className="backdrop-blur-xl bg-white/20 p-2 rounded-lg flex-shrink-0">
+                            <AlertTriangle size={20} />
+                        </div>
+                        <div className="flex-1">
+                            <p className="font-medium whitespace-pre-line">{error}</p>
+                        </div>
+                        <button
+                            onClick={() => setError(null)}
+                            className="hover:bg-red-600/50 rounded-full p-1.5 transition-colors duration-300 flex-shrink-0"
+                        >
+                            <X size={16} />
+                        </button>
+                    </div>
                 </div>
             )}
 
-            <div className="relative w-full max-w-5xl mx-auto px-1 py-30">
-                <div className="text-center mb-10">
-                    <div className="inline-flex items-center justify-center p-4 backdrop-blur-xl bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl mb-4 shadow-2xl border border-white/20">
-                        <GraduationCap size={40} className="text-white" />
+            <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-12">
+                {/* Header */}
+                <div className="text-center mb-12">
+                    <div className="inline-flex items-center justify-center p-5 backdrop-blur-2xl bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl mb-6 shadow-[0_20px_60px_rgba(99,102,241,0.3)] border-2 border-white/30">
+                        <GraduationCap size={48} className="text-white" />
                     </div>
-                    <h1 className="text-3xl sm:text-4xl my-5 md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4 drop-shadow-lg">
                         NovaTech University
                     </h1>
-                    <p className="mt-2 text-gray-700 text-lg font-light">Student Registration Portal</p>
+                    <div className="backdrop-blur-xl bg-white/50 inline-block px-6 py-3 rounded-full border-2 border-white/60 shadow-lg">
+                        <p className="text-gray-800 text-lg font-semibold">Student Registration Portal</p>
+                    </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-8">
                     {/* Personal Information */}
-                    <div className="backdrop-blur-xl bg-white/40 p-8 rounded-3xl shadow-xl border border-white/20">
-                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/30">
-                            <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl text-white shadow-lg">
+                    <div className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border-2 border-white/60 relative">
+                        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-t-3xl" />
+
+                        <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-white/40">
+                            <div className="p-3 backdrop-blur-xl bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl text-white shadow-lg">
                                 <User size={24} />
                             </div>
                             <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -247,13 +481,13 @@ const Registration = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             <div className="relative">
-                                <label className={labelClass}>First Name (English)</label>
-                                <User2 className="absolute left-3 top-[55%] text-gray-400" size={18} />
+                                <label className={labelClass}>First Name (English) *</label>
+                                <User2 className="absolute left-3 top-[55%] text-gray-500" size={18} />
                                 <input type="text" name="firstName" value={form.firstName} onChange={handleChange} placeholder="First Name" className={`${inputClass} !pl-10`} required />
                             </div>
 
                             <div className="relative">
-                                <label className={labelClass}>Last Name (English)</label>
+                                <label className={labelClass}>Last Name (English) *</label>
                                 <input type="text" name="lastName" value={form.lastName} onChange={handleChange} placeholder="Last Name" className={inputClass} required />
                             </div>
 
@@ -263,7 +497,7 @@ const Registration = () => {
                             </div>
 
                             <div className="relative">
-                                <label className={labelClass}>Gender</label>
+                                <label className={labelClass}>Gender *</label>
                                 <select name="gender" value={form.gender} onChange={handleChange} className={inputClass}>
                                     <option>Male</option>
                                     <option>Female</option>
@@ -272,40 +506,42 @@ const Registration = () => {
                             </div>
 
                             <div className="relative">
-                                <label className={labelClass}>Date of Birth</label>
+                                <label className={labelClass}>Date of Birth *</label>
                                 <input type="date" name="dateOfBirth" value={form.dateOfBirth} onChange={handleChange} className={inputClass} required />
                             </div>
 
                             <div className="relative">
                                 <label className={labelClass}>Phone Number</label>
-                                <Phone className="absolute left-3 top-[55%] text-gray-400" size={18} />
+                                <Phone className="absolute left-3 top-[55%] text-gray-500" size={18} />
                                 <input type="tel" name="phoneNumber" value={form.phoneNumber} onChange={handleChange} placeholder="012 345 678" className={`${inputClass} !pl-10`} />
                             </div>
 
                             <div className="relative md:col-span-2">
-                                <label className={labelClass}>Email Address</label>
-                                <Mail className="absolute left-3 top-[55%] text-gray-400" size={18} />
+                                <label className={labelClass}>Email Address *</label>
+                                <Mail className="absolute left-3 top-[55%] text-gray-500" size={18} />
                                 <input type="email" name="personalEmail" value={form.personalEmail} onChange={handleChange} placeholder="student@example.com" className={`${inputClass} !pl-10`} required />
                             </div>
 
                             <div className="relative">
                                 <label className={labelClass}>Permanent Address</label>
-                                <MapPin className="absolute left-3 top-[55%] text-gray-400" size={18} />
+                                <MapPin className="absolute left-3 top-[55%] text-gray-500" size={18} />
                                 <input type="text" name="address" value={form.address} onChange={handleChange} placeholder="#123, Street ABC" className={`${inputClass} !pl-10`} />
                             </div>
 
                             <div className="relative md:col-span-2">
                                 <label className={labelClass}>Current Address</label>
-                                <MapPin className="absolute left-3 top-[55%] text-gray-400" size={18} />
+                                <MapPin className="absolute left-3 top-[55%] text-gray-500" size={18} />
                                 <input type="text" name="currentAddress" value={form.currentAddress} onChange={handleChange} placeholder="Same as permanent" className={`${inputClass} !pl-10`} />
                             </div>
                         </div>
                     </div>
 
                     {/* Family Information */}
-                    <div className="backdrop-blur-xl bg-white/40 p-8 rounded-3xl shadow-xl border border-white/20">
-                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/30">
-                            <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl text-white shadow-lg">
+                    <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border-2 border-white/60">
+                        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 rounded-t-3xl" />
+
+                        <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-white/40">
+                            <div className="p-3 backdrop-blur-xl bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl text-white shadow-lg">
                                 <User size={24} />
                             </div>
                             <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
@@ -335,7 +571,7 @@ const Registration = () => {
                                 <input type="tel" name="fathersPhoneNumber" value={form.fathersPhoneNumber} onChange={handleChange} placeholder="012 345 678" className={inputClass} />
                             </div>
 
-                            <div className="md:col-span-3 border-t border-white/30 pt-6 mt-2"></div>
+                            <div className="md:col-span-3 border-t-2 border-white/40 pt-6 mt-2"></div>
 
                             <div>
                                 <label className={labelClass}>Mother Name</label>
@@ -361,9 +597,11 @@ const Registration = () => {
                     </div>
 
                     {/* Guardian & Emergency Contact */}
-                    <div className="backdrop-blur-xl bg-white/40 p-8 rounded-3xl shadow-xl border border-white/20">
-                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/30">
-                            <div className="p-3 bg-gradient-to-br from-green-500 to-teal-600 rounded-2xl text-white shadow-lg">
+                    <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border-2 border-white/60">
+                        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-green-500 via-teal-500 to-cyan-500 rounded-t-3xl" />
+
+                        <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-white/40">
+                            <div className="p-3 backdrop-blur-xl bg-gradient-to-br from-green-500 to-teal-600 rounded-2xl text-white shadow-lg">
                                 <Shield size={24} />
                             </div>
                             <h2 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
@@ -392,9 +630,11 @@ const Registration = () => {
                     </div>
 
                     {/* High School Information */}
-                    <div className="backdrop-blur-xl bg-white/40 p-8 rounded-3xl shadow-xl border border-white/20">
-                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/30">
-                            <div className="p-3 bg-gradient-to-br from-orange-500 to-pink-600 rounded-2xl text-white shadow-lg">
+                    <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border-2 border-white/60">
+                        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-orange-500 via-pink-500 to-rose-500 rounded-t-3xl" />
+
+                        <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-white/40">
+                            <div className="p-3 backdrop-blur-xl bg-gradient-to-br from-orange-500 to-pink-600 rounded-2xl text-white shadow-lg">
                                 <University size={24} />
                             </div>
                             <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
@@ -404,7 +644,7 @@ const Registration = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             <div>
-                                <label className={labelClass}>High School</label>
+                                <label className={labelClass}>High School *</label>
                                 <input type="text" name="highSchoolName" value={form.highSchoolName} onChange={handleChange} placeholder="High School" className={inputClass} required />
                             </div>
                             <div>
@@ -419,9 +659,11 @@ const Registration = () => {
                     </div>
 
                     {/* Academic Information */}
-                    <div className="backdrop-blur-xl bg-white/40 p-8 rounded-3xl shadow-xl border border-white/20">
-                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/30">
-                            <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl text-white shadow-lg">
+                    <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border-2 border-white/60">
+                        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 rounded-t-3xl" />
+
+                        <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-white/40">
+                            <div className="p-3 backdrop-blur-xl bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl text-white shadow-lg">
                                 <School size={24} />
                             </div>
                             <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
@@ -431,7 +673,7 @@ const Registration = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             <div>
-                                <label className={labelClass}>Department</label>
+                                <label className={labelClass}>Department *</label>
                                 <select name="departmentId" value={form.departmentId} onChange={handleChange} className={inputClass} required>
                                     <option value="">Select Department</option>
                                     {departments.map((dep) => (
@@ -441,7 +683,7 @@ const Registration = () => {
                             </div>
 
                             <div>
-                                <label className={labelClass}>Major</label>
+                                <label className={labelClass}>Major *</label>
                                 <select name="majorId" value={form.majorId} onChange={handleChange} className={inputClass} required disabled={!form.departmentId}>
                                     <option value="">Select Major</option>
                                     {majors.map((major) => (
@@ -452,7 +694,15 @@ const Registration = () => {
 
                             <div>
                                 <label className={labelClass}>Faculty</label>
-                                <input type="text" name="faculty" value={form.faculty} onChange={handleChange} placeholder="Engineering" className={inputClass} required />
+                                <input
+                                    type="text"
+                                    name="faculty"
+                                    value={form.faculty}
+                                    onChange={handleChange}
+                                    placeholder="Select department first"
+                                    className={`${inputClass} ${form.departmentId ? 'bg-white/40' : 'bg-gray-100/60'}`}
+                                    readOnly
+                                />
                             </div>
 
                             <div>
@@ -467,38 +717,50 @@ const Registration = () => {
 
                             <div className="md:col-span-3 mt-4">
                                 <label className={labelClass}>Profile Picture</label>
-                                <div className="backdrop-blur-xl bg-white/30 border-2 border-dashed border-white/40 rounded-3xl p-6 flex flex-col items-center justify-center text-center hover:border-blue-400 hover:bg-blue-50/30 transition cursor-pointer shadow-lg">
-                                    <input type="file" name="profilePicture" onChange={handleChange} className="hidden" id="file-upload" accept="image/png,image/jpeg,image/jpg" />
+                                <div className="backdrop-blur-2xl bg-white/50 border-2 border-dashed border-white/60 rounded-3xl p-8 flex flex-col items-center justify-center text-center hover:border-blue-400 hover:bg-blue-50/40 transition-all duration-300 cursor-pointer shadow-lg group">
+                                    <input 
+                                        type="file" 
+                                        name="profilePicture" 
+                                        onChange={handleChange} 
+                                        className="hidden" 
+                                        id="file-upload" 
+                                        accept="image/png,image/jpeg,image/jpg" 
+                                    />
                                     <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center w-full">
-                                        {form.profilePicture ? (
-                                            <img src={URL.createObjectURL(form.profilePicture)} alt="Preview" className="w-32 h-32 rounded-full object-cover shadow-xl mb-2 border-4 border-white/50" />
+                                        {profilePreview ? (
+                                            <img src={profilePreview} alt="Preview" className="w-32 h-32 rounded-full object-cover shadow-xl mb-3 border-4 border-white/70" />
                                         ) : (
-                                            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-2 text-white shadow-lg">
-                                                <User size={32} />
+                                            <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-3 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                                <User size={40} />
                                             </div>
                                         )}
-                                        <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-semibold flex items-center gap-2">
-                                            <Upload size={16} /> {form.profilePicture ? "Change Photo" : "Upload Photo"}
+                                        <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-bold flex items-center gap-2 text-lg">
+                                            <Upload size={18} /> {form.profilePicture ? "Change Photo" : "Upload Photo"}
                                         </span>
-                                        <span className="text-xs text-gray-500 mt-1 font-light">PNG, JPG up to 5MB</span>
+                                        <span className="text-xs text-gray-500 mt-2 font-medium">PNG, JPG up to 5MB</span>
                                     </label>
                                 </div>
                             </div>
                         </div>
                     </div>
 
+                    {/* Submit Button */}
                     <div className="flex justify-center pt-6 pb-20">
-                        <button type="submit" disabled={loading} className="group relative backdrop-blur-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-12 rounded-3xl font-bold shadow-2xl hover:shadow-[0_20px_60px_-15px_rgba(99,102,241,0.5)] hover:scale-105 transition-all duration-300 overflow-hidden border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
-                            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                            <span className="relative flex items-center gap-3 text-lg">
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="group relative backdrop-blur-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white py-5 px-16 rounded-3xl font-bold text-lg shadow-[0_20px_60px_rgba(99,102,241,0.4)] hover:shadow-[0_30px_80px_rgba(99,102,241,0.6)] hover:scale-105 transition-all duration-500 overflow-hidden border-2 border-white/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            <span className="relative flex items-center gap-3">
                                 {loading ? (
                                     <>
-                                        <Loader className="animate-spin" size={20} />
+                                        <Loader className="animate-spin" size={22} />
                                         Processing...
                                     </>
                                 ) : (
                                     <>
-                                        Proceed to Payment <CreditCard size={20} />
+                                        Proceed to Payment <CreditCard size={22} />
                                     </>
                                 )}
                             </span>

@@ -9,7 +9,7 @@ import Login from "../pages/Login";
 import NotificationInbox from "../pages/Notification";
 import Curriculum from "../pages/Curriculum";
 import NotFound from "../pages/NotFound";
-
+import PaymentForm from "../../src/Components/payment/PaymentForm";
 // Admin Pages
 import AdminDashboard from "../adminSide/pageAdmin/AdminDashboard";
 
@@ -42,6 +42,7 @@ const MainRouter = () => {
 
       {/* Curriculum Information */}
       <Route path="/curriculum" element={<Curriculum />} />
+       <Route path="/payment" element={<PaymentForm />} />
 
       {/* ================= ADMIN ROUTES (PROTECTED) ================= */}
 

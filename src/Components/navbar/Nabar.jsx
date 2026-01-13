@@ -14,7 +14,6 @@ const NAV_LINKS = [
 
 function Navbar() {
   const navigate = useNavigate();
-
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
 
@@ -49,100 +48,124 @@ function Navbar() {
   };
 
   return (
-    <nav className="fixed rounded-3xl z-50 backdrop-blur-2xl bg-white/40 w-full border-b border-white/20 shadow-lg xl:px-[10%] lg:px-[6%] md:px-[4%]">
+    <nav className="relative">
       <ToastContainer />
 
-      {/* Navbar */}
-      <div className="flex items-center justify-between px-4 sm:py-6 py-4">
+      {/* Navbar Content */}
+      <div className="flex items-center justify-between px-6 py-4">
         {/* Logo */}
         <Link
           to="/"
-          className="font-extrabold sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl tracking-wide"
+          className="font-extrabold text-2xl sm:text-3xl md:text-4xl tracking-wide"
           onClick={closeMenu}
         >
-          <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent uppercase">
+          <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent uppercase drop-shadow-lg">
             NovaTech
           </span>
         </Link>
 
         {/* Desktop Links */}
-        <div className="hidden sm:flex lg:space-x-8 space-x-4">
+        <div className="hidden md:flex lg:space-x-8 md:space-x-6">
           {NAV_LINKS.map(({ path, label }) => (
             <Link
               key={path}
               to={path}
-              className="sm:text-sm md:text-xl font-medium uppercase text-gray-700 hover:text-transparent hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:bg-clip-text transition"
+              className="relative text-sm lg:text-base font-semibold uppercase text-gray-700 hover:text-transparent hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:bg-clip-text transition-all duration-300 group"
             >
               {label}
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300" />
             </Link>
           ))}
         </div>
 
-        {/* Auth */}
-        <div className="flex items-center space-x-2">
+        {/* Auth Buttons */}
+        <div className="flex items-center space-x-3">
           {user ? (
-            <div className="flex items-center space-x-2">
-              <Button
+            <div className="hidden md:flex items-center gap-3">
+              <div className="backdrop-blur-xl bg-white/60 px-4 py-2 rounded-full border border-white/60">
+                <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  {user.name}
+                </span>
+              </div>
+              <button
                 onClick={handleLogout}
-                className="hidden lg:flex backdrop-blur-xl bg-gradient-to-r from-red-500 to-pink-500 text-white px-6 py-2 rounded-full shadow-lg hover:scale-105 transition"
+                className="relative backdrop-blur-xl bg-gradient-to-r from-red-500 to-pink-500 text-white px-6 py-2.5 rounded-full shadow-lg hover:shadow-[0_10px_30px_rgba(239,68,68,0.4)] hover:scale-105 transition-all duration-300 font-semibold border border-white/30 overflow-hidden group"
               >
-                Logout
-              </Button>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                <span className="relative z-10">Logout</span>
+              </button>
             </div>
           ) : (
-            <Button
+            <button
               onClick={() => navigate("/login")}
-              className="hidden lg:inline-flex backdrop-blur-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white px-10 py-3 rounded-full shadow-lg hover:scale-105 transition"
+              className="hidden md:inline-flex relative backdrop-blur-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-2.5 rounded-full shadow-lg hover:shadow-[0_10px_30px_rgba(139,92,246,0.4)] hover:scale-105 transition-all duration-300 font-semibold border border-white/30 overflow-hidden group"
             >
-              Login
-            </Button>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+              <span className="relative z-10">Login</span>
+            </button>
           )}
 
-          {/* Mobile toggle */}
+          {/* Mobile Menu Toggle */}
           <button
-            className="sm:hidden backdrop-blur-xl bg-white/40 p-2 rounded-full border border-white/30 shadow"
+            className="md:hidden backdrop-blur-xl bg-white/60 p-2.5 rounded-full border-2 border-white/60 shadow-lg hover:scale-105 transition-all duration-300"
             onClick={() => setIsMenuOpen((v) => !v)}
             aria-label="Toggle menu"
           >
-            ☰
+            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {isMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
           </button>
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile Menu */}
       <div
-        className={`absolute left-0 w-full backdrop-blur-2xl bg-white/40 p-6 sm:hidden transition-all duration-300 ${
-          isMenuOpen
-            ? "opacity-100 translate-y-0"
-            : "opacity-0 -translate-y-4 pointer-events-none"
+        className={`md:hidden overflow-hidden transition-all duration-300 ${
+          isMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        {NAV_LINKS.map(({ path, label }) => (
-          <Link
-            key={path}
-            to={path}
-            onClick={closeMenu}
-            className="block p-4 rounded-xl bg-white/40 mb-3 text-gray-700 font-medium"
-          >
-            {label}
-          </Link>
-        ))}
+        <div className="backdrop-blur-xl bg-white/40 border-t-2 border-white/40 p-4 space-y-2 rounded-b-3xl">
+          {NAV_LINKS.map(({ path, label }) => (
+            <Link
+              key={path}
+              to={path}
+              onClick={closeMenu}
+              className="block backdrop-blur-xl bg-white/60 p-3 rounded-xl text-gray-700 font-semibold hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 border border-white/60"
+            >
+              {label}
+            </Link>
+          ))}
 
-        {user ? (
-          <Button
-            onClick={handleLogout}
-            className="w-full bg-gradient-to-r from-red-500 to-pink-500 text-white py-3 rounded-full shadow-lg"
-          >
-            Logout
-          </Button>
-        ) : (
-          <Button
-            onClick={() => navigate("/login")}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-full shadow-lg"
-          >
-            Login
-          </Button>
-        )}
+          {user ? (
+            <div className="space-y-2 pt-2 border-t-2 border-white/40">
+              <div className="backdrop-blur-xl bg-white/60 p-3 rounded-xl border border-white/60 text-center">
+                <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  {user.name}
+                </span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="w-full backdrop-blur-xl bg-gradient-to-r from-red-500 to-pink-500 text-white py-3 rounded-xl shadow-lg font-semibold border border-white/30"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                navigate("/login");
+                closeMenu();
+              }}
+              className="w-full backdrop-blur-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl shadow-lg font-semibold border border-white/30 mt-2"
+            >
+              Login
+            </button>
+          )}
+        </div>
       </div>
     </nav>
   );
