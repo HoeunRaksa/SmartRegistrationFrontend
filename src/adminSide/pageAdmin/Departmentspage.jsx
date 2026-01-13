@@ -37,28 +37,6 @@ const getImageUrl = (department) => {
   return null;
 };
 
-/* ================== ANIMATION VARIANTS ================== */
-
-const animations = {
-  fadeUp: {
-    hidden: { opacity: 0, y: 24 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
-  },
-  container: {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.15 } },
-  },
-  card: {
-    hidden: { opacity: 0, y: 20, scale: 0.95 },
-    show: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: { type: "spring", stiffness: 200, damping: 20 },
-    },
-  },
-};
-
 /* ================== MAIN COMPONENT ================== */
 
 const DepartmentsPage = () => {
@@ -112,12 +90,7 @@ const DepartmentsPage = () => {
   return (
     <div className="min-h-screen p-6 space-y-6">
       {/* ================= BREADCRUMB ================= */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex items-center gap-2 text-sm"
-      >
+      <div className="flex items-center gap-2 text-sm">
         <div className="flex items-center gap-2 text-gray-600">
           <Home className="w-4 h-4" />
           <span>Home</span>
@@ -132,102 +105,58 @@ const DepartmentsPage = () => {
           <Building2 className="w-4 h-4" />
           <span>Departments</span>
         </div>
-      </motion.div>
+      </div>
 
       {/* ================= HEADER ================= */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.1 }}
-      >
-        <div className="bg-white/40 rounded-3xl p-6 border border-white/50 shadow-lg backdrop-blur-xl">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            {/* Title Section */}
-            <div className="flex items-start gap-4">
-              <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 200,
-                  damping: 15,
-                  delay: 0.2,
-                }}
-                className="relative"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl blur-md opacity-50" />
-                <div className="relative p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-xl">
-                  <Building2 className="w-8 h-8 text-white" />
-                </div>
-              </motion.div>
-
-              <div>
-                <motion.h1
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-1"
-                >
-                  Department Management
-                </motion.h1>
-                <motion.p
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="text-sm text-gray-600"
-                >
-                  Create, manage, and organize your academic departments
-                </motion.p>
+      <div className="bg-white/40 rounded-3xl p-6 border border-white/50 shadow-lg backdrop-blur-xl">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          {/* Title Section */}
+          <div className="flex items-start gap-4">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl blur-md opacity-50" />
+              <div className="relative p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-xl">
+                <Building2 className="w-8 h-8 text-white" />
               </div>
             </div>
 
-            {/* Quick Stats */}
-            <div className="flex gap-3">
-              {quickStats.map((stat, i) => {
-                const Icon = stat.icon;
-                return (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{
-                      delay: 0.5 + i * 0.1,
-                      type: "spring",
-                      stiffness: 200,
-                      damping: 15,
-                    }}
-                    whileHover={{ scale: 1.05, y: -4 }}
-                    className="flex-1 min-w-[90px]"
-                  >
-                    <div className="bg-white/50 rounded-2xl p-3 border border-white/40 shadow-md hover:shadow-lg transition-shadow">
-                      <div className={`inline-flex p-2 rounded-xl bg-gradient-to-br ${stat.color} mb-1.5`}>
-                        <Icon className="w-4 h-4 text-white" />
-                      </div>
-                      <p className="text-xl font-bold bg-gradient-to-br from-gray-800 to-gray-600 bg-clip-text text-transparent">
-                        {stat.value}
-                      </p>
-                      <p className="text-xs text-gray-600 font-medium">{stat.label}</p>
-                    </div>
-                  </motion.div>
-                );
-              })}
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-1">
+                Department Management
+              </h1>
+              <p className="text-sm text-gray-600">
+                Create, manage, and organize your academic departments
+              </p>
             </div>
           </div>
+
+          {/* Quick Stats */}
+          <div className="flex gap-3">
+            {quickStats.map((stat, i) => {
+              const Icon = stat.icon;
+              return (
+                <div key={i} className="flex-1 min-w-[90px]">
+                  <div className="bg-white/50 rounded-2xl p-3 border border-white/40 shadow-md hover:shadow-lg transition-shadow">
+                    <div className={`inline-flex p-2 rounded-xl bg-gradient-to-br ${stat.color} mb-1.5`}>
+                      <Icon className="w-4 h-4 text-white" />
+                    </div>
+                    <p className="text-xl font-bold bg-gradient-to-br from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                      {stat.value}
+                    </p>
+                    <p className="text-xs text-gray-600 font-medium">{stat.label}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* ================= FORM ================= */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.3 }}
-      >
-        <DepartmentsForm
-          onUpdate={loadDepartments}
-          editingDepartment={editingDepartment}
-          onCancelEdit={() => setEditingDepartment(null)}
-        />
-      </motion.div>
+      <DepartmentsForm
+        onUpdate={loadDepartments}
+        editingDepartment={editingDepartment}
+        onCancelEdit={() => setEditingDepartment(null)}
+      />
 
       {/* ================= DEPARTMENTS LIST ================= */}
       <DepartmentsList
@@ -254,26 +183,17 @@ const DepartmentsPage = () => {
 const DepartmentsList = ({ departments, loading, onEdit, onView, onDelete }) => {
   if (loading) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="rounded-2xl bg-white/40 border border-white/40 shadow-lg p-12 text-center"
-      >
+      <div className="rounded-2xl bg-white/40 border border-white/40 shadow-lg p-12 text-center">
         <div className="inline-flex p-4 rounded-full bg-blue-100 mb-4">
           <Building2 className="w-8 h-8 text-blue-600 animate-pulse" />
         </div>
         <p className="text-gray-600">Loading departments...</p>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      variants={animations.fadeUp}
-      initial="hidden"
-      animate="show"
-      className="rounded-2xl bg-white/40 border border-white/40 shadow-lg p-5"
-    >
+    <div className="rounded-2xl bg-white/40 border border-white/40 shadow-lg p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Grid3x3 className="w-5 h-5 text-blue-600" />
@@ -287,12 +207,7 @@ const DepartmentsList = ({ departments, loading, onEdit, onView, onDelete }) => 
       {departments.length === 0 ? (
         <EmptyState />
       ) : (
-        <motion.div
-          variants={animations.container}
-          initial="hidden"
-          animate="show"
-          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {departments.map((dept) => (
             <DepartmentCard
               key={dept.id}
@@ -302,32 +217,29 @@ const DepartmentsList = ({ departments, loading, onEdit, onView, onDelete }) => 
               onDelete={onDelete}
             />
           ))}
-        </motion.div>
+        </div>
       )}
-    </motion.div>
+    </div>
   );
 };
 
 const EmptyState = () => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
+  <div className="text-center py-12">
     <div className="inline-flex p-6 rounded-full bg-gray-100 mb-4">
       <Building2 className="w-12 h-12 text-gray-400" />
     </div>
     <p className="text-gray-500 font-medium">No departments yet</p>
     <p className="text-sm text-gray-400 mt-1">Create your first department to get started</p>
-  </motion.div>
+  </div>
 );
 
 const DepartmentCard = ({ department, onEdit, onView, onDelete }) => {
   const imageUrl = getImageUrl(department);
 
   return (
-    <motion.div
-      variants={animations.card}
-      whileHover={{ y: -8, scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+    <div
       onClick={() => onView(department)}
-      className="group relative overflow-hidden rounded-xl bg-white/60 border border-white/50 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer"
+      className="group relative overflow-hidden rounded-xl bg-white/60 border border-white/50 shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-200 cursor-pointer"
     >
       {/* Image Section */}
       <div className="relative h-48 overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100">
@@ -335,7 +247,7 @@ const DepartmentCard = ({ department, onEdit, onView, onDelete }) => {
           <img
             src={imageUrl}
             alt={department.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -344,33 +256,29 @@ const DepartmentCard = ({ department, onEdit, onView, onDelete }) => {
         )}
 
         {/* Hover overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
 
         {/* Action Buttons */}
-        <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="p-2 rounded-full bg-white/90 shadow-lg hover:bg-white"
+        <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <button
+            className="p-2 rounded-full bg-white/90 shadow-lg hover:bg-white transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               onEdit(department);
             }}
           >
             <Edit className="w-4 h-4 text-blue-600" />
-          </motion.button>
+          </button>
 
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="p-2 rounded-full bg-white/90 shadow-lg hover:bg-white"
+          <button
+            className="p-2 rounded-full bg-white/90 shadow-lg hover:bg-white transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               onDelete(department.id);
             }}
           >
             <Trash2 className="w-4 h-4 text-red-600" />
-          </motion.button>
+          </button>
         </div>
       </div>
 
@@ -410,8 +318,8 @@ const DepartmentCard = ({ department, onEdit, onView, onDelete }) => {
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-    </motion.div>
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+    </div>
   );
 };
 
@@ -424,13 +332,15 @@ const DepartmentModal = ({ department, onClose }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
+        transition={{ duration: 0.15 }}
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
         onClick={onClose}
       >
         <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          transition={{ duration: 0.15 }}
           onClick={(e) => e.stopPropagation()}
           className="relative max-w-2xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden"
         >
@@ -449,14 +359,12 @@ const DepartmentModal = ({ department, onClose }) => {
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
-            <motion.button
-              whileHover={{ scale: 1.1, rotate: 90 }}
-              whileTap={{ scale: 0.9 }}
+            <button
               onClick={onClose}
               className="absolute top-4 right-4 p-2 rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/30 transition-colors"
             >
               <X className="w-5 h-5" />
-            </motion.button>
+            </button>
 
             <div className="absolute bottom-6 left-6 right-6">
               <h2 className="text-3xl font-bold text-white mb-2">{department.name}</h2>

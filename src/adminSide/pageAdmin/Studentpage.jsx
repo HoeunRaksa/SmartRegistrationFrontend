@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import StudentsForm from "../ConponentsAdmin/StudentsForm.jsx";
 import StudentsTable from "../ConponentsAdmin/Studentstable.jsx";
 import StudentProfile from "../../gobalConponent/Studentprofile.jsx";
@@ -30,7 +29,6 @@ const StudentPage = () => {
       setLoading(true);
       const res = await fetchStudents();
       
-      // Handle different response structures
       const studentsData = res.data?.data || res.data || [];
       setStudents(Array.isArray(studentsData) ? studentsData : []);
     } catch (error) {
@@ -47,7 +45,6 @@ const StudentPage = () => {
 
   const handleEdit = (student) => {
     setEditingStudent(student);
-    // Scroll to top where the form is
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -75,12 +72,7 @@ const StudentPage = () => {
   return (
     <div className="min-h-screen p-6 space-y-6">
       {/* BREADCRUMB */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex items-center gap-2 text-sm"
-      >
+      <div className="flex items-center gap-2 text-sm">
         <div className="flex items-center gap-2 text-gray-600">
           <Home className="w-4 h-4" />
           <span>Home</span>
@@ -95,58 +87,46 @@ const StudentPage = () => {
           <GraduationCap className="w-4 h-4" />
           <span>Students</span>
         </div>
-      </motion.div>
+      </div>
 
       {/* HEADER */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <div className="bg-white/40 rounded-3xl p-6 border border-white/50 shadow-lg backdrop-blur-xl">
-          <div className="flex flex-col lg:flex-row lg:justify-between gap-6">
-            <div className="flex items-start gap-4">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-xl">
-                <GraduationCap className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  Students Management
-                </h1>
-                <p className="text-sm text-gray-600 mt-1">
-                  Register, manage, and view student profiles
-                </p>
-              </div>
+      <div className="bg-white/40 rounded-3xl p-6 border border-white/50 shadow-lg backdrop-blur-xl">
+        <div className="flex flex-col lg:flex-row lg:justify-between gap-6">
+          <div className="flex items-start gap-4">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-xl">
+              <GraduationCap className="w-8 h-8 text-white" />
             </div>
-
-            {/* QUICK STATS */}
-            <div className="flex gap-3">
-              {quickStats.map((stat, i) => {
-                const Icon = stat.icon;
-                return (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.1 }}
-                    className="min-w-[110px]"
-                  >
-                    <div className="bg-white/50 rounded-2xl p-3 shadow-md backdrop-blur-sm hover:shadow-lg transition-shadow">
-                      <div
-                        className={`inline-flex p-2 rounded-xl bg-gradient-to-br ${stat.color} shadow-lg`}
-                      >
-                        <Icon className="w-4 h-4 text-white" />
-                      </div>
-                      <p className="text-xl font-bold mt-2">{stat.value}</p>
-                      <p className="text-xs text-gray-600">{stat.label}</p>
-                    </div>
-                  </motion.div>
-                );
-              })}
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Students Management
+              </h1>
+              <p className="text-sm text-gray-600 mt-1">
+                Register, manage, and view student profiles
+              </p>
             </div>
           </div>
+
+          {/* QUICK STATS */}
+          <div className="flex gap-3">
+            {quickStats.map((stat, i) => {
+              const Icon = stat.icon;
+              return (
+                <div key={i} className="min-w-[110px]">
+                  <div className="bg-white/50 rounded-2xl p-3 shadow-md backdrop-blur-sm hover:shadow-lg transition-shadow">
+                    <div
+                      className={`inline-flex p-2 rounded-xl bg-gradient-to-br ${stat.color} shadow-lg`}
+                    >
+                      <Icon className="w-4 h-4 text-white" />
+                    </div>
+                    <p className="text-xl font-bold mt-2">{stat.value}</p>
+                    <p className="text-xs text-gray-600">{stat.label}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* FORM */}
       <StudentsForm 

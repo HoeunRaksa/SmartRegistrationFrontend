@@ -16,21 +16,25 @@ import {
     AlertTriangle,
     DollarSign,
     Smartphone,
+    CheckCircle,
 } from "lucide-react";
 import PaymentForm from "../Components/payment/PaymentForm.jsx";
 import { submitRegistration } from "../api/registration_api.jsx";
 import { fetchDepartments, fetchMajorsByDepartment } from '../api/department_api.jsx';
+import { fetchMajor } from '../api/major_api.jsx';
 
 export const ToastContext = createContext();
 
 const Registration = () => {
     const [majors, setMajors] = useState([]);
     const [departments, setDepartments] = useState([]);
+    const [selectedMajorFee, setSelectedMajorFee] = useState(null);
     const [showQr, setShowQr] = useState(false);
     const [showPaymentChoice, setShowPaymentChoice] = useState(false);
-    const [paymentStatus, setPaymentStatus] = useState("PENDING");
+    const [registrationData, setRegistrationData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
     const [profilePreview, setProfilePreview] = useState(null);
     const currentYear = new Date().getFullYear();
 
@@ -96,6 +100,7 @@ const Registration = () => {
     useEffect(() => {
         if (!form.departmentId) {
             setMajors([]);
+            setSelectedMajorFee(null);
             return;
         }
 
@@ -123,30 +128,50 @@ const Registration = () => {
         }
     }, [form.departmentId, departments]);
 
+    // Fetch major fee when major is selected
+    useEffect(() => {
+        if (!form.majorId) {
+            setSelectedMajorFee(null);
+            return;
+        }
+
+        const loadMajorFee = async () => {
+            try {
+                const response = await fetchMajor(form.majorId);
+                if (response.data) {
+                    setSelectedMajorFee(Number(response.data.registration_fee ?? 100));
+                }
+            } catch (err) {
+                console.error("Error loading major fee:", err);
+                setSelectedMajorFee(100);
+            }
+        };
+
+        loadMajorFee();
+    }, [form.majorId]);
+
+
     const handleChange = (e) => {
         const { name, value, files } = e.target;
-        
+
         if (files && files[0]) {
-            // Validate file type
             const file = files[0];
             const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-            
+
             if (!validTypes.includes(file.type)) {
                 setError("Please upload a valid image file (JPG, JPEG, or PNG)");
-                e.target.value = ''; // Clear the input
+                e.target.value = '';
                 return;
             }
-            
-            // Validate file size (5MB max)
+
             if (file.size > 5 * 1024 * 1024) {
                 setError("Image size must be less than 5MB");
-                e.target.value = ''; // Clear the input
+                e.target.value = '';
                 return;
             }
-            
+
             setForm({ ...form, [name]: file });
-            
-            // Create preview URL
+
             const previewUrl = URL.createObjectURL(file);
             setProfilePreview(previewUrl);
         } else {
@@ -198,92 +223,25 @@ const Registration = () => {
             emergencyContactPhoneNumber: "emergency_contact_phone_number",
         };
 
-        // Append all text fields
         for (const [key, value] of Object.entries(form)) {
             if (value !== null && value !== "" && key !== "profilePicture") {
                 formData.append(keyMap[key], value);
             }
         }
 
-        // Append profile picture ONLY if it exists and is valid
-        if (form.profilePicture) {
-            if (form.profilePicture instanceof File) {
-                console.log('Appending profile picture:', {
-                    name: form.profilePicture.name,
-                    type: form.profilePicture.type,
-                    size: form.profilePicture.size
-                });
-                formData.append("profile_picture", form.profilePicture);
-            } else {
-                console.warn('Profile picture is not a File instance:', typeof form.profilePicture);
-            }
-        } else {
-            console.log('No profile picture to upload');
+        if (form.profilePicture && form.profilePicture instanceof File) {
+            formData.append("profile_picture", form.profilePicture);
         }
-
-        // Debug: Log FormData contents
-        console.log("=== FormData contents ===");
-        for (let pair of formData.entries()) {
-            if (pair[1] instanceof File) {
-                console.log(`${pair[0]}: [FILE] ${pair[1].name} (${pair[1].type}, ${pair[1].size} bytes)`);
-            } else {
-                console.log(`${pair[0]}: ${pair[1]}`);
-            }
-        }
-        console.log("=== End FormData ===");
 
         try {
             setLoading(true);
             const response = await submitRegistration(formData);
             console.log("Registration Success:", response.data);
-            
-            // Show success message
-            alert(`Registration successful! Your account has been created.\n\nStudent Code: ${response.data.student_account.student_code}\nEmail: ${response.data.student_account.email}\nPassword: ${response.data.student_account.password}\n\nPlease save this information!`);
-            
-            // Reset form
-            setForm({
-                firstName: "",
-                lastName: "",
-                fullNameKh: "",
-                fullNameEn: "",
-                gender: "Male",
-                dateOfBirth: "",
-                phoneNumber: "",
-                personalEmail: "",
-                highSchoolName: "",
-                graduationYear: "",
-                grade12Result: "",
-                departmentId: "",
-                majorId: "",
-                faculty: "",
-                shift: "Morning",
-                batch: `${currentYear}`,
-                academicYear: `${currentYear}-${currentYear + 1}`,
-                profilePicture: null,
-                address: "",
-                currentAddress: "",
-                fatherName: "",
-                fathersDateOfBirth: "",
-                fathersNationality: "",
-                fathersJob: "",
-                fathersPhoneNumber: "",
-                motherName: "",
-                motherDateOfBirth: "",
-                motherNationality: "",
-                mothersJob: "",
-                motherPhoneNumber: "",
-                guardianName: "",
-                guardianPhoneNumber: "",
-                emergencyContactName: "",
-                emergencyContactPhoneNumber: "",
-            });
-            setProfilePreview(null);
-            
+
             return response.data;
         } catch (error) {
             console.error("Registration Error:", error.response?.data || error.message);
-            
-            // Extract validation errors
+
             if (error.response?.data?.errors) {
                 const errors = error.response.data.errors;
                 const errorMessages = Object.values(errors).flat().join('\n');
@@ -291,7 +249,7 @@ const Registration = () => {
             } else {
                 setError(error.response?.data?.message || "Registration failed. Please try again.");
             }
-            
+
             throw error;
         } finally {
             setLoading(false);
@@ -300,40 +258,113 @@ const Registration = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         // Validate required fields
         if (!form.firstName || !form.lastName || !form.personalEmail || !form.departmentId || !form.majorId || !form.highSchoolName) {
             setError("Please fill in all required fields");
             return;
         }
-        
+
         setShowPaymentChoice(true);
     };
 
-    const handlePaymentMethodSelect = (method) => {
+    const handlePaymentMethodSelect = async (method) => {
         setShowPaymentChoice(false);
+
         if (method === 'qr') {
-            setShowQr(true);
+            // First submit registration, then show QR
+            try {
+                setLoading(true);
+                const regData = await formSubmit();
+                setRegistrationData(regData);
+                setShowQr(true);
+            } catch (error) {
+                // Error already handled in formSubmit
+                console.error("Failed to create registration for payment");
+            }
         } else if (method === 'later') {
-            handlePayLater();
+            await handlePayLater();
         }
     };
 
     const handlePayLater = async () => {
         try {
-            await formSubmit();
+            const regData = await formSubmit();
+
+            // Show success message
+            setSuccess({
+                title: "Registration Submitted Successfully!",
+                message: `Your registration has been created. Please complete payment within 7 days at the university finance office.`,
+                data: regData
+            });
+
+            // Reset form after 5 seconds
+            setTimeout(() => {
+                resetForm();
+                setSuccess(null);
+            }, 8000);
         } catch (error) {
             // Error already handled in formSubmit
         }
     };
 
-    const handlePaymentSuccess = async () => {
-        try {
-            await formSubmit();
-            setShowQr(false);
-        } catch (error) {
-            setShowQr(false);
-        }
+    const handlePaymentSuccess = () => {
+        // Payment completed, show success
+        setShowQr(false);
+
+        setSuccess({
+            title: "Payment Completed!",
+            message: "Your registration and payment have been successfully processed.",
+            data: registrationData
+        });
+
+        // Reset form after 8 seconds
+        setTimeout(() => {
+            resetForm();
+            setSuccess(null);
+            setRegistrationData(null);
+        }, 8000);
+    };
+
+    const resetForm = () => {
+        setForm({
+            firstName: "",
+            lastName: "",
+            fullNameKh: "",
+            fullNameEn: "",
+            gender: "Male",
+            dateOfBirth: "",
+            phoneNumber: "",
+            personalEmail: "",
+            highSchoolName: "",
+            graduationYear: "",
+            grade12Result: "",
+            departmentId: "",
+            majorId: "",
+            faculty: "",
+            shift: "Morning",
+            batch: `${currentYear}`,
+            academicYear: `${currentYear}-${currentYear + 1}`,
+            profilePicture: null,
+            address: "",
+            currentAddress: "",
+            fatherName: "",
+            fathersDateOfBirth: "",
+            fathersNationality: "",
+            fathersJob: "",
+            fathersPhoneNumber: "",
+            motherName: "",
+            motherDateOfBirth: "",
+            motherNationality: "",
+            mothersJob: "",
+            motherPhoneNumber: "",
+            guardianName: "",
+            guardianPhoneNumber: "",
+            emergencyContactName: "",
+            emergencyContactPhoneNumber: "",
+        });
+        setProfilePreview(null);
+        setSelectedMajorFee(null);
     };
 
     const inputClass = "w-full backdrop-blur-xl bg-white/60 border-2 border-white/40 focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 rounded-xl px-4 py-3 outline-none transition-all duration-300 text-gray-800 placeholder-gray-400 font-medium shadow-lg";
@@ -348,11 +379,52 @@ const Registration = () => {
                 <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-r from-pink-400 to-orange-400 opacity-20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
             </div>
 
+            {/* Success Modal */}
+            {success && (
+                <div className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 px-4">
+                    <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/80 to-white/70 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] border-2 border-white/60 p-8 max-w-lg w-full">
+                        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500" />
+
+                        <div className="text-center mb-6">
+                            <div className="inline-flex items-center justify-center p-4 backdrop-blur-xl bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl mb-4 shadow-xl">
+                                <CheckCircle size={48} className="text-white" />
+                            </div>
+                            <h3 className="text-2xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
+                                {success.title}
+                            </h3>
+                            <p className="text-gray-700 text-base mb-4">{success.message}</p>
+                        </div>
+
+                        {success.data?.student_account && (
+                            <div className="backdrop-blur-xl bg-blue-50/60 border border-blue-200/40 rounded-xl p-4 mb-4">
+                                <h4 className="font-semibold text-gray-800 mb-2">Your Account Details:</h4>
+                                <div className="space-y-1 text-sm">
+                                    <p><span className="font-medium">Student Code:</span> {success.data.student_account.student_code}</p>
+                                    <p><span className="font-medium">Email:</span> {success.data.student_account.email}</p>
+                                    <p><span className="font-medium">Password:</span> {success.data.student_account.password}</p>
+                                </div>
+                                <p className="text-xs text-gray-600 mt-2">⚠️ Please save these credentials!</p>
+                            </div>
+                        )}
+
+                        <button
+                            onClick={() => {
+                                resetForm();
+                                setSuccess(null);
+                                setRegistrationData(null);
+                            }}
+                            className="w-full backdrop-blur-xl bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-xl hover:shadow-xl transition-all duration-300 font-semibold"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Payment Method Choice Modal */}
             {showPaymentChoice && (
                 <div className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 px-4">
                     <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/80 to-white/70 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] border-2 border-white/60 p-8 max-w-md w-full">
-                        {/* Gradient top accent */}
                         <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
 
                         <button
@@ -370,31 +442,44 @@ const Registration = () => {
                                 Choose Payment Method
                             </h3>
                             <p className="text-gray-600 text-sm">Select how you'd like to complete your registration</p>
+
+                            {/* Display Registration Fee */}
+                            {selectedMajorFee && (
+                                <div className="mt-4 backdrop-blur-xl bg-green-50/60 border border-green-200/40 rounded-xl p-3">
+                                    <p className="text-sm text-gray-700">
+                                        <span className="font-semibold">Registration Fee:</span>
+                                        <span className="text-2xl font-bold text-green-600 ml-2">
+                                            ${Number(selectedMajorFee).toFixed(2)}
+                                        </span>
+
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
                         <div className="space-y-4">
-                            {/* Pay with QR Code */}
                             <button
                                 onClick={() => handlePaymentMethodSelect('qr')}
-                                className="group relative w-full backdrop-blur-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white p-6 rounded-2xl hover:shadow-[0_20px_60px_rgba(139,92,246,0.5)] transition-all duration-500 hover:scale-[1.02] border border-white/30 overflow-hidden"
+                                disabled={loading}
+                                className="group relative w-full backdrop-blur-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white p-6 rounded-2xl hover:shadow-[0_20px_60px_rgba(139,92,246,0.5)] transition-all duration-500 hover:scale-[1.02] border border-white/30 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                                 <div className="relative z-10 flex items-center gap-4">
                                     <div className="backdrop-blur-xl bg-white/20 p-3 rounded-xl">
-                                        <Smartphone size={28} />
+                                        {loading ? <Loader className="animate-spin" size={28} /> : <Smartphone size={28} />}
                                     </div>
                                     <div className="text-left flex-1">
-                                        <h4 className="font-bold text-lg">Pay with QR Code</h4>
+                                        <h4 className="font-bold text-lg">{loading ? 'Processing...' : 'Pay with QR Code'}</h4>
                                         <p className="text-sm text-white/80 mt-1">Scan and pay using ABA Mobile</p>
                                     </div>
-                                    <div className="text-2xl">→</div>
+                                    {!loading && <div className="text-2xl">→</div>}
                                 </div>
                             </button>
 
-                            {/* Pay Later */}
                             <button
                                 onClick={() => handlePaymentMethodSelect('later')}
-                                className="group relative w-full backdrop-blur-xl bg-white/60 border-2 border-white/60 text-gray-800 p-6 rounded-2xl hover:bg-white/80 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
+                                disabled={loading}
+                                className="group relative w-full backdrop-blur-xl bg-white/60 border-2 border-white/60 text-gray-800 p-6 rounded-2xl hover:bg-white/80 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                                 <div className="relative z-10 flex items-center gap-4">
@@ -421,15 +506,21 @@ const Registration = () => {
             )}
 
             {/* QR Payment Modal */}
-            {showQr && (
+            {showQr && registrationData && (
                 <div className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 px-4">
                     <PaymentForm
-                        setPaymentStatus={setPaymentStatus}
-                        onClose={() => setShowQr(false)}
+                        registrationId={registrationData.id}
+                        amount={registrationData.payment_amount || selectedMajorFee}
+                        registrationData={registrationData}
+                        onClose={() => {
+                            setShowQr(false);
+                            setRegistrationData(null);
+                        }}
                         onSuccess={handlePaymentSuccess}
                     />
                 </div>
             )}
+
 
             {/* Error Toast */}
             {error && (
@@ -718,13 +809,13 @@ const Registration = () => {
                             <div className="md:col-span-3 mt-4">
                                 <label className={labelClass}>Profile Picture</label>
                                 <div className="backdrop-blur-2xl bg-white/50 border-2 border-dashed border-white/60 rounded-3xl p-8 flex flex-col items-center justify-center text-center hover:border-blue-400 hover:bg-blue-50/40 transition-all duration-300 cursor-pointer shadow-lg group">
-                                    <input 
-                                        type="file" 
-                                        name="profilePicture" 
-                                        onChange={handleChange} 
-                                        className="hidden" 
-                                        id="file-upload" 
-                                        accept="image/png,image/jpeg,image/jpg" 
+                                    <input
+                                        type="file"
+                                        name="profilePicture"
+                                        onChange={handleChange}
+                                        className="hidden"
+                                        id="file-upload"
+                                        accept="image/png,image/jpeg,image/jpg"
                                     />
                                     <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center w-full">
                                         {profilePreview ? (
