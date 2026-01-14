@@ -39,15 +39,15 @@ const PaymentForm = ({
 
       console.log("PayWay API Response:", data);
 
-      const imageUrl = data.qr_image_url;
+      const { tran_id, qr } = data;
 
-      if (!imageUrl || !data.tran_id) {
+      if (!qr || qr.status?.code !== "0" || !qr.qrImage || !tran_id) {
+        console.error("Invalid PayWay response shape:", data);
         throw new Error("Invalid PayWay response");
       }
 
-
-      setQrImage(imageUrl);
-      setTranId(data.tran_id);
+      setQrImage(qr.qrImage);
+      setTranId(tran_id);
 
       console.log('✅ QR Code loaded successfully');
 
@@ -69,49 +69,49 @@ const PaymentForm = ({
   }, [registrationId]);
 
   // Poll payment status
-useEffect(() => {
-  if (!tranId) return;
+  useEffect(() => {
+    if (!tranId) return;
 
-  console.log('Starting payment status polling for:', tranId);
+    console.log('Starting payment status polling for:', tranId);
 
-  const pollStatus = async () => {
-    try {
-      const response = await checkPaymentStatus(tranId);
-      const data = response.data;
+    const pollStatus = async () => {
+      try {
+        const response = await checkPaymentStatus(tranId);
+        const data = response.data;
 
-      const statusMsg = (data.status?.message || "PENDING").toUpperCase();
-      setStatus(statusMsg);
+        const statusMsg = (data.status?.message || "PENDING").toUpperCase();
+        setStatus(statusMsg);
 
-      if (statusMsg === "PAID") {
-        console.log('✅ Payment completed successfully!');
-        clearInterval(pollingIntervalRef.current);
+        if (statusMsg === "PAID") {
+          console.log('✅ Payment completed successfully!');
+          clearInterval(pollingIntervalRef.current);
 
-        setTimeout(() => {
-          onSuccess?.();
-        }, 1000);
+          setTimeout(() => {
+            onSuccess?.();
+          }, 1000);
 
-      } else if (statusMsg === "FAILED" || statusMsg === "CANCELED") {
-        console.log('❌ Payment failed or canceled');
+        } else if (statusMsg === "FAILED" || statusMsg === "CANCELED") {
+          console.log('❌ Payment failed or canceled');
+          clearInterval(pollingIntervalRef.current);
+        }
+
+      } catch (err) {
+        console.error("Error polling status:", err);
+      }
+    };
+
+    // 🔥 Run immediately
+    pollStatus();
+
+    // 🔁 Then poll every 3 seconds
+    pollingIntervalRef.current = setInterval(pollStatus, 3000);
+
+    return () => {
+      if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
       }
-
-    } catch (err) {
-      console.error("Error polling status:", err);
-    }
-  };
-
-  // 🔥 Run immediately
-  pollStatus();
-
-  // 🔁 Then poll every 3 seconds
-  pollingIntervalRef.current = setInterval(pollStatus, 3000);
-
-  return () => {
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-    }
-  };
-}, [tranId, onSuccess]);
+    };
+  }, [tranId, onSuccess]);
 
 
   const handleDownloadQR = () => {
