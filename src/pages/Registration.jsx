@@ -505,21 +505,23 @@ const Registration = () => {
                 </div>
             )}
 
-            {/* QR Payment Modal */}
-            {showQr && registrationData && (
-                <div className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 px-4">
-                    <PaymentForm
-                        registrationId={registrationData.id}
-                        amount={registrationData.payment_amount || selectedMajorFee}
-                        registrationData={registrationData}
-                        onClose={() => {
-                            setShowQr(false);
-                            setRegistrationData(null);
-                        }}
-                        onSuccess={handlePaymentSuccess}
-                    />
-                </div>
-            )}
+        // Only showing the critical fix - the QR Payment Modal section
+
+{/* QR Payment Modal */}
+{showQr && registrationData && (
+    <div className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 px-4">
+        <PaymentForm
+            registrationId={registrationData.data?.registration_id} 
+            amount={registrationData.data?.payment_amount || selectedMajorFee}
+            registrationData={registrationData}
+            onClose={() => {
+                setShowQr(false);
+                setRegistrationData(null);
+            }}
+            onSuccess={handlePaymentSuccess}
+        />
+    </div>
+)}
 
 
             {/* Error Toast */}
