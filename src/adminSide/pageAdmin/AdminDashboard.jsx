@@ -34,7 +34,7 @@ const AdminDashboard = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
-  
+
   const activeSection = section || 'dashboard';
 
   const menuItems = [
@@ -91,11 +91,11 @@ const AdminDashboard = () => {
         <div style={{ display: activeSection === 'students' ? 'block' : 'none' }}>
           <StudentPage />
         </div>
-          <div style={{ display: activeSection === 'staff' ? 'block' : 'none' }}>
+        <div style={{ display: activeSection === 'staff' ? 'block' : 'none' }}>
           <StaffPage />
         </div>
         <div style={{ display: activeSection === 'registrations' ? 'block' : 'none' }}>
-         <RegistrationsPage />
+          <RegistrationsPage />
         </div>
         <div style={{ display: activeSection === 'settings' ? 'block' : 'none' }}>
           <div className="min-h-screen p-6">
@@ -110,9 +110,9 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen w-full relative overflow-hidden">
       {/* ================= BACKGROUND SYSTEM ================= */}
-      
+
       {/* Base gradient */}
       <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/30" />
 
@@ -159,11 +159,10 @@ const AdminDashboard = () => {
                 <button
                   key={item.id}
                   onClick={() => handleSectionChange(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
-                    isActive
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
                       ? 'backdrop-blur-xl bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
                       : 'backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40'
-                  } border border-white/30`}
+                    } border border-white/30`}
                 >
                   <Icon size={20} className={isActive ? "drop-shadow-sm" : ""} />
                   {!sidebarCollapsed && (
@@ -271,11 +270,10 @@ const AdminDashboard = () => {
                           handleSectionChange(item.id);
                           setMobileMenuOpen(false);
                         }}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
-                          isActive
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
                             ? 'backdrop-blur-xl bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
                             : 'backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40'
-                        } border border-white/30`}
+                          } border border-white/30`}
                       >
                         <Icon size={20} />
                         <span className="font-medium text-sm">{item.label}</span>
@@ -322,7 +320,7 @@ const AdminDashboard = () => {
       {/* ================= MAIN CONTENT ================= */}
       <div className={`transition-all duration-200 ${sidebarCollapsed ? 'md:ml-20' : 'md:ml-72'}`}>
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 backdrop-blur-2xl bg-white/30 border-b border-white/20 shadow-[0_4px_24px_0_rgba(31,38,135,0.1)]">
+        <header className="sticky top-0 z-30 backdrop-blur-2xl rounded-3xl bg-white/30 border-b border-white/20 shadow-[0_4px_24px_0_rgba(31,38,135,0.1)]">
           <div className="flex items-center justify-between px-6 py-3">
             <div className="flex items-center gap-4">
               {/* Mobile Menu Button */}
@@ -381,7 +379,7 @@ const AdminDashboard = () => {
         </header>
 
         {/* Dynamic Content Area - ALL MOUNTED, JUST HIDDEN/SHOWN */}
-        <main className="min-h-screen relative z-10">
+        <main className="min-h-screen relative z-10 w-full">
           {renderAllSections()}
         </main>
       </div>
