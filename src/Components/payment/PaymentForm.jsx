@@ -100,7 +100,6 @@ const PaymentForm = ({
       }
     };
 
-    // 🔥 Run immediately
     pollStatus();
 
     // 🔁 Then poll every 3 seconds
