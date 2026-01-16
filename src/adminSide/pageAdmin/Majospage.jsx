@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-
 import MajorsForm from '../ConponentsAdmin/MajorsForm.jsx';
+import MajorsList from '../ConponentsAdmin/MajorsList.jsx';
 import { fetchMajors } from "../../api/major_api.jsx";
 import { fetchStudents } from "../../api/student_api.jsx";
 import {
@@ -11,9 +11,9 @@ import {
 } from "lucide-react";
 
 const MajorsPage = () => {
-  
   const [majors, setMajors] = useState([]);
   const [students, setStudents] = useState([]);
+  const [editingMajor, setEditingMajor] = useState(null);
 
   useEffect(() => {
     loadMajors();
@@ -39,7 +39,23 @@ const MajorsPage = () => {
       setStudents([]);
     }
   };
-    const quickStats = [
+
+  const handleEdit = (major) => {
+    setEditingMajor(major);
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSuccess = () => {
+    loadMajors();
+    setEditingMajor(null);
+  };
+
+  const handleCancel = () => {
+    setEditingMajor(null);
+  };
+
+  const quickStats = [
     {
       label: "Majors",
       value: majors.length,
@@ -62,8 +78,6 @@ const MajorsPage = () => {
       icon: BarChart3,
     },
   ];
-
-
 
   return (
     <div className="min-h-screen space-y-6">
@@ -91,7 +105,18 @@ const MajorsPage = () => {
       </div>
 
       {/* ================= FORM ================= */}
-      <MajorsForm />
+      <MajorsForm 
+        editingMajor={editingMajor}
+        onSuccess={handleSuccess}
+        onCancel={handleCancel}
+      />
+
+      {/* ================= MAJORS LIST ================= */}
+      <MajorsList 
+        majors={majors}
+        onEdit={handleEdit}
+        onRefresh={loadMajors}
+      />
     </div>
   );
 };

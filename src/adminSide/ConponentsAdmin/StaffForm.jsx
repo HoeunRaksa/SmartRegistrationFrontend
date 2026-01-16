@@ -152,7 +152,7 @@ const StaffForm = ({ onUpdate, editingStaff, onCancelEdit }) => {
   };
 
   return (
-    <div className="bg-white/40 backdrop-blur-xl rounded-3xl p-6 border border-white/40 shadow-lg">
+    <div className="bg-white/90 border border-white shadow-lg backdrop-blur-xl rounded-3xl p-6 ">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">

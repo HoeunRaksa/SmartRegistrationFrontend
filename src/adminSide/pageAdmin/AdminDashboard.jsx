@@ -8,6 +8,7 @@ import StudentPage from '../pageAdmin/Studentpage.jsx';
 import RegistrationsPage from '../pageAdmin/Registrationspage.jsx';
 import StaffPage from '../pageAdmin/Staffpage.jsx';
 import SettingPage from '../pageAdmin/Settingpage.jsx';
+import {logoutApi} from '../../api/auth.jsx';
 import {
   LayoutDashboard,
   GraduationCap,
@@ -31,6 +32,7 @@ import {
   Minimize2
 } from 'lucide-react';
 import Dashboard from '../../adminSide/ConponentsAdmin/dashboard.jsx';
+import { a } from 'framer-motion/client';
 const profileFallback = "/assets/images/profile-fallback.png";
 
 const AdminDashboard = () => {
@@ -55,6 +57,12 @@ const AdminDashboard = () => {
     { id: 'settings', label: 'Settings', icon: Settings, gradient: 'from-gray-500 to-slate-500' },
   ];
 
+const handleLogout = async () => {
+ await logoutApi().catch(() => {});
+  localStorage.removeItem('user');
+  localStorage.removeItem('token');
+  navigate('/login');
+};
   // Load user data
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -115,13 +123,14 @@ const AdminDashboard = () => {
           <RegistrationsPage />
         </div>
         <div style={{ display: activeSection === 'settings' ? 'block' : 'none' }}>
-         <SettingPage />
+          <SettingPage />
         </div>
       </>
     );
   };
 
   return (
+
     <div className="min-h-screen w-full relative overflow-hidden">
       {/* ================= BACKGROUND SYSTEM ================= */}
 
@@ -147,6 +156,7 @@ const AdminDashboard = () => {
         className="fixed left-0 top-0 h-screen backdrop-blur-2xl bg-white/30 border-r border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.2)] z-40 hidden md:block"
       >
         <div className="flex flex-col h-full p-4">
+
           {/* Logo */}
           <div className="flex items-center justify-between mb-8 px-2">
             {!sidebarCollapsed && (
@@ -164,6 +174,7 @@ const AdminDashboard = () => {
 
           {/* Menu Items */}
           <nav className="flex-1 space-y-2 overflow-y-auto scrollbar-hide">
+
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeSection === item.id;
@@ -172,10 +183,11 @@ const AdminDashboard = () => {
                   key={item.id}
                   onClick={() => handleSectionChange(item.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
-                      ? 'backdrop-blur-xl bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
-                      : 'backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40'
+                    ? 'backdrop-blur-xl bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
+                    : 'backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40'
                     } border border-white/30`}
                 >
+
                   <Icon size={20} className={isActive ? "drop-shadow-sm" : ""} />
                   {!sidebarCollapsed && (
                     <span className="font-medium text-sm">
@@ -185,13 +197,24 @@ const AdminDashboard = () => {
                   {isActive && !sidebarCollapsed && (
                     <div className="ml-auto w-2 h-2 rounded-full bg-white shadow-lg" />
                   )}
+
                 </button>
               );
             })}
+            {/* Logout Button */}
           </nav>
-
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-2 rounded-2xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-5"
+          >
+            <LogOut size={20} />
+            {!sidebarCollapsed && (
+              <span className="font-medium text-sm">Logout</span>
+            )}
+          </button>
           {/* User Profile */}
           <div className={`mt-auto pt-4 border-t border-white/20 ${sidebarCollapsed ? 'flex justify-center' : ''}`}>
+
             <div className="backdrop-blur-xl bg-white/40 rounded-2xl p-3 border border-white/30 shadow-sm cursor-pointer hover:bg-white/50 transition-all">
               {sidebarCollapsed ? (
                 user?.profile_picture_url ? (
@@ -234,8 +257,11 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               )}
+
             </div>
+
           </div>
+
         </div>
       </motion.aside>
 
@@ -283,16 +309,27 @@ const AdminDashboard = () => {
                           setMobileMenuOpen(false);
                         }}
                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
-                            ? 'backdrop-blur-xl bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
-                            : 'backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40'
+                          ? 'backdrop-blur-xl bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
+                          : 'backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40'
                           } border border-white/30`}
                       >
                         <Icon size={20} />
                         <span className="font-medium text-sm">{item.label}</span>
+
                       </button>
                     );
+
                   })}
                 </nav>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-4 py-2 rounded-2xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-5"
+                >
+                  <LogOut size={20} />
+                  {!sidebarCollapsed && (
+                    <span className="font-medium text-sm">Logout</span>
+                  )}
+                </button>
 
                 {/* Mobile User Profile */}
                 <div className="mt-auto pt-4 border-t border-white/20">
@@ -384,7 +421,7 @@ const AdminDashboard = () => {
               </button>
 
               {/* Fullscreen Toggle */}
-              <button 
+              <button
                 onClick={toggleFullscreen}
                 className="hidden md:flex p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md group"
               >

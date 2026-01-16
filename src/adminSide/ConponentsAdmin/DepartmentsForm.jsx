@@ -234,7 +234,7 @@ const FormSection = ({ isEditMode, onCancel, onSubmit, form, setForm, imagePrevi
     variants={animations.fadeUp}
     initial="hidden"
     animate="show"
-    className="relative overflow-hidden rounded-2xl bg-white/40 border border-white/40 shadow-lg p-5"
+    className="relative overflow-hidden rounded-2xl bg-white/90 border border-white shadow-lg p-5"
   >
     <FormHeader isEditMode={isEditMode} onCancel={onCancel} />
     

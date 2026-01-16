@@ -178,7 +178,7 @@ const RegistrationsList = ({ registrations, loading, onView }) => {
   }
 
   return (
-    <div className="rounded-2xl bg-white/40 border border-white/40 shadow-lg p-5">
+    <div className="rounded-2xl bg-white/40 border  border-white/40 shadow-lg p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Grid3x3 className="w-5 h-5 text-blue-600" />
@@ -244,7 +244,7 @@ const RegistrationCard = ({ registration, onView }) => {
 
       {/* Content */}
       <div className="p-5">
-        <h4 className="font-semibold text-gray-900 text-lg mb-1 group-hover:text-blue-600 transition-colors">
+        <h4 className="font-semibold text-gray-900 text-lg mb-1  group-hover:text-blue-600 transition-colors">
           {registration.full_name_en}
         </h4>
         {registration.full_name_kh && (
@@ -303,7 +303,7 @@ const RegistrationModal = ({ registration, onClose }) => {
           exit={{ scale: 0.95, opacity: 0 }}
           transition={{ duration: 0.15 }}
           onClick={(e) => e.stopPropagation()}
-          className="relative max-w-3xl w-full max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl"
+          className="relative max-w-3xl w-full max-h-[75vh] overflow-y-auto bg-white rounded-3xl shadow-2xl"
         >
           {/* Header */}
           <div className={`sticky top-0 p-6 z-10 ${isPaid ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gradient-to-br from-orange-500 to-red-600'}`}>

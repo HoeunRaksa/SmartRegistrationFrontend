@@ -363,7 +363,7 @@ const SettingPage = () => {
             className="space-y-6"
           >
             {/* Profile Picture */}
-            <div className="backdrop-blur-2xl rounded-3xl p-8 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]">
+            <div className="backdrop-blur-2xl rounded-3xl p-8 border border-white/90 bg-white/60 shadow-lg">
               <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <div className="p-2 rounded-xl bg-blue-500/10">
                   <Camera className="w-6 h-6 text-blue-500" />
@@ -441,7 +441,7 @@ const SettingPage = () => {
             </div>
 
             {/* Update Name */}
-            <div className="backdrop-blur-2xl rounded-3xl p-8 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]">
+            <div className="backdrop-blur-2xl rounded-3xl p-8 border border-white/90 bg-white/60 shadow-lg">
               <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <div className="p-2 rounded-xl bg-purple-500/10">
                   <User className="w-6 h-6 text-purple-500" />
@@ -455,7 +455,7 @@ const SettingPage = () => {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                                        className="w-full px-4 py-3 rounded-xl border border-white/30 backdrop-blur-xl outline-none focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400/50 transition-all"
+                    className="w-full px-4 py-3 rounded-xl border border-white/30 bg-gray-200 focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all"
                     placeholder="Enter your name"
                   />
                 </div>
@@ -473,7 +473,7 @@ const SettingPage = () => {
             </div>
 
             {/* Update Email */}
-            <div className="backdrop-blur-2xl rounded-3xl p-8 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]">
+            <div className="backdrop-blur-2xl rounded-3xl p-8 border border-white/90 bg-white/60 shadow-lg">
               <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <div className="p-2 rounded-xl bg-green-500/10">
                   <Mail className="w-6 h-6 text-green-500" />
@@ -487,7 +487,7 @@ const SettingPage = () => {
                     type="email"
                     value={email}
                     disabled
-                    className="w-full px-4 py-3 rounded-xl border border-white/30 backdrop-blur-xl bg-gray-100/50 text-gray-600 cursor-not-allowed"
+                    className="w-full px-4 py-3 rounded-xl border border-white/30 bg-gray-200 bg-gray-100/50 text-gray-600 cursor-not-allowed"
                   />
                 </div>
                 <form onSubmit={handleUpdateEmail} className="space-y-4">
@@ -497,7 +497,7 @@ const SettingPage = () => {
                       type="email"
                       value={newEmail}
                       onChange={(e) => setNewEmail(e.target.value)}
-                                          className="w-full px-4 py-3 rounded-xl border border-white/30 backdrop-blur-xl outline-none focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400/50 transition-all"
+                      className="w-full px-4 py-3 rounded-xl border border-white/30 bg-gray-200 focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all"
                       placeholder="Enter new email address"
                     />
                   </div>
@@ -507,7 +507,7 @@ const SettingPage = () => {
                       type="password"
                       value={emailPassword}
                       onChange={(e) => setEmailPassword(e.target.value)}
-                                          className="w-full px-4 py-3 rounded-xl border border-white/30 backdrop-blur-xl outline-none focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400/50 transition-all"
+                      className="w-full px-4 py-3 rounded-xl border border-white/30 bg-gray-200 focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all"
                       placeholder="Enter your current password"
                     />
                   </div>
@@ -536,7 +536,7 @@ const SettingPage = () => {
             className="space-y-6"
           >
             {/* Change Password */}
-            <div className="backdrop-blur-2xl rounded-3xl p-8 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]">
+            <div className="backdrop-blur-2xl rounded-3xl p-8 border border-white/90 bg-white/60 shadow-lg">
               <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <div className="p-2 rounded-xl bg-blue-500/10">
                   <Lock className="w-6 h-6 text-blue-500" />
@@ -551,7 +551,7 @@ const SettingPage = () => {
                       type={showCurrentPassword ? 'text' : 'password'}
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
-                                         className="w-full px-4 py-3 rounded-xl border border-white/30 backdrop-blur-xl outline-none focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400/50 transition-all"
+                      className="w-full px-4 py-3 pr-12 rounded-xl border border-white/30 bg-gray-200 focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all"
                       placeholder="Enter current password"
                     />
                     <button
@@ -570,7 +570,7 @@ const SettingPage = () => {
                       type={showNewPassword ? 'text' : 'password'}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                                         className="w-full px-4 py-3 rounded-xl border border-white/30 backdrop-blur-xl outline-none focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400/50 transition-all"
+                      className="w-full px-4 py-3 pr-12 rounded-xl border border-white/30 bg-gray-200 focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all"
                       placeholder="Enter new password (min. 8 characters)"
                     />
                     <button
@@ -589,7 +589,7 @@ const SettingPage = () => {
                       type={showConfirmPassword ? 'text' : 'password'}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                                         className="w-full px-4 py-3 rounded-xl border border-white/30 backdrop-blur-xl outline-none focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400/50 transition-all"
+                      className="w-full px-4 py-3 pr-12 rounded-xl border border-white/30 bg-gray-200 focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all"
                       placeholder="Confirm new password"
                     />
                     <button
@@ -645,6 +645,32 @@ const SettingPage = () => {
                 Delete My Account
               </motion.button>
             </div>
+
+            {/* Logout */}
+            <div className="backdrop-blur-2xl rounded-3xl p-8 border border-white/90 bg-white/60 shadow-lg">
+              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-orange-500/10">
+                  <LogOut className="w-6 h-6 text-orange-500" />
+                </div>
+                Session Management
+              </h3>
+              <p className="text-gray-700 mb-6">
+                Sign out of your account on this device. You'll need to sign in again to access your account.
+              </p>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  localStorage.removeItem('user');
+                  localStorage.removeItem('token');
+                  window.location.href = '/login';
+                }}
+                className="px-8 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+              >
+                <LogOut className="w-5 h-5" />
+                Logout
+              </motion.button>
+            </div>
           </motion.div>
         )}
 
@@ -654,7 +680,7 @@ const SettingPage = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
-            className="backdrop-blur-2xl rounded-3xl p-8 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]"
+            className="backdrop-blur-2xl rounded-3xl p-8 border border-white/90 bg-white/60 shadow-lg"
           >
             <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
               <div className="p-2 rounded-xl bg-purple-500/10">
@@ -676,7 +702,7 @@ const SettingPage = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
-            className="backdrop-blur-2xl rounded-3xl p-8 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]"
+            className="backdrop-blur-2xl rounded-3xl p-8 border border-white/90 bg-white/60 shadow-lg"
           >
             <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
               <div className="p-2 rounded-xl bg-blue-500/10">
@@ -727,7 +753,7 @@ const SettingPage = () => {
                   type="password"
                   value={deletePassword}
                   onChange={(e) => setDeletePassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-red-200/50 backdrop-blur-xl focus:ring-2 focus:ring-red-400/50 focus:border-red-400/50 transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-red-200/50 bg-gray-200 focus:ring-2 focus:ring-red-400/50 focus:border-red-400/50 transition-all"
                   placeholder="Your password"
                   disabled={isSubmitting}
                 />
