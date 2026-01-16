@@ -505,8 +505,6 @@ const Registration = () => {
                 </div>
             )}
 
-        // Only showing the critical fix - the QR Payment Modal section
-
 {/* QR Payment Modal */}
 {showQr && registrationData && (
     <div className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 px-4">

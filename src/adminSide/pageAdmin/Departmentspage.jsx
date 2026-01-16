@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import DepartmentsForm from '../ConponentsAdmin/DepartmentsForm.jsx';
+import { fetchStudents } from "../../api/student_api.jsx";
 import {
   fetchDepartments,
   deleteDepartment,
@@ -39,6 +40,7 @@ const DepartmentsPage = () => {
   const [loading, setLoading] = useState(true);
   const [editingDepartment, setEditingDepartment] = useState(null);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [students, setStudents] = useState([]);
 
   useEffect(() => {
     loadDepartments();
@@ -56,6 +58,22 @@ const DepartmentsPage = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+  loadDepartments();
+  loadStudents();
+}, []);
+
+const loadStudents = async () => {
+  try {
+    const res = await fetchStudents();
+    setStudents(res.data?.data || []);
+  } catch (error) {
+    console.error("Failed to load students:", error);
+    setStudents([]);
+  }
+};
+
 
   const handleEdit = (department) => {
     setEditingDepartment(department);
@@ -76,11 +94,30 @@ const DepartmentsPage = () => {
     }
   };
 
-  const quickStats = [
-    { label: "Active", value: departments.length, color: "from-green-500 to-emerald-500", icon: TrendingUp },
-    { label: "Students", value: "1.2K", color: "from-blue-500 to-cyan-500", icon: Users },
-    { label: "Growth", value: "+15%", color: "from-purple-500 to-pink-500", icon: BarChart3 },
-  ];
+ const quickStats = [
+  {
+    label: "Departments",
+    value: departments.length,
+    color: "from-green-500 to-emerald-500",
+    icon: TrendingUp,
+  },
+  {
+    label: "Students",
+    value: students.length,
+    color: "from-blue-500 to-cyan-500",
+    icon: Users,
+  },
+  {
+    label: "Avg / Dept",
+    value:
+      departments.length === 0
+        ? 0
+        : Math.round(students.length / departments.length),
+    color: "from-purple-500 to-pink-500",
+    icon: BarChart3,
+  },
+];
+
 
   return (
     <div className="min-h-screen space-y-6">

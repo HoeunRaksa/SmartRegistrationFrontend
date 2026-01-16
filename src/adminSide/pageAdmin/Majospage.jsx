@@ -1,5 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+
 import MajorsForm from '../ConponentsAdmin/MajorsForm.jsx';
+import { fetchMajors } from "../../api/major_api.jsx";
+import { fetchStudents } from "../../api/student_api.jsx";
 import {
   GraduationCap,
   TrendingUp,
@@ -8,11 +11,59 @@ import {
 } from "lucide-react";
 
 const MajorsPage = () => {
-  const quickStats = [
-    { label: "Active", value: "8", color: "from-green-500 to-emerald-500", icon: TrendingUp },
-    { label: "Students", value: "856", color: "from-blue-500 to-cyan-500", icon: Users },
-    { label: "Growth", value: "+12%", color: "from-purple-500 to-pink-500", icon: BarChart3 },
+  
+  const [majors, setMajors] = useState([]);
+  const [students, setStudents] = useState([]);
+
+  useEffect(() => {
+    loadMajors();
+    loadStudents();
+  }, []);
+
+  const loadMajors = async () => {
+    try {
+      const res = await fetchMajors();
+      setMajors(res.data?.data || res.data || []);
+    } catch (err) {
+      console.error("Failed to load majors:", err);
+      setMajors([]);
+    }
+  };
+
+  const loadStudents = async () => {
+    try {
+      const res = await fetchStudents();
+      setStudents(res.data?.data || []);
+    } catch (err) {
+      console.error("Failed to load students:", err);
+      setStudents([]);
+    }
+  };
+    const quickStats = [
+    {
+      label: "Majors",
+      value: majors.length,
+      color: "from-green-500 to-emerald-500",
+      icon: TrendingUp,
+    },
+    {
+      label: "Students",
+      value: students.length,
+      color: "from-blue-500 to-cyan-500",
+      icon: Users,
+    },
+    {
+      label: "Avg / Major",
+      value:
+        majors.length === 0
+          ? 0
+          : Math.round(students.length / majors.length),
+      color: "from-purple-500 to-pink-500",
+      icon: BarChart3,
+    },
   ];
+
+
 
   return (
     <div className="min-h-screen space-y-6">
