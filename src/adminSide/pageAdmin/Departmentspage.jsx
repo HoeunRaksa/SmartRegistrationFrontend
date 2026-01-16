@@ -7,9 +7,6 @@ import {
 } from "../../api/department_api.jsx";
 import {
   Building2,
-  Home,
-  ChevronRight,
-  Settings,
   Users,
   TrendingUp,
   BarChart3,
@@ -19,10 +16,8 @@ import {
   Phone,
   Edit,
   Trash2,
-  Eye,
   X,
   Image as ImageIcon,
-  FileText,
 } from "lucide-react";
 
 /* ================== HELPER FUNCTIONS ================== */
@@ -88,67 +83,28 @@ const DepartmentsPage = () => {
   ];
 
   return (
-    <div className="min-h-screen p-6 space-y-6">
-      {/* ================= BREADCRUMB ================= */}
-      <div className="flex items-center gap-2 text-sm">
-        <div className="flex items-center gap-2 text-gray-600">
-          <Home className="w-4 h-4" />
-          <span>Home</span>
-        </div>
-        <ChevronRight className="w-4 h-4 text-gray-400" />
-        <div className="flex items-center gap-2 text-gray-600">
-          <Settings className="w-4 h-4" />
-          <span>Management</span>
-        </div>
-        <ChevronRight className="w-4 h-4 text-gray-400" />
-        <div className="flex items-center gap-2 text-blue-600 font-medium">
-          <Building2 className="w-4 h-4" />
-          <span>Departments</span>
-        </div>
-      </div>
-
-      {/* ================= HEADER ================= */}
-      <div className="bg-white/40 rounded-3xl p-6 border border-white/50 shadow-lg backdrop-blur-xl">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          {/* Title Section */}
-          <div className="flex items-start gap-4">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl blur-md opacity-50" />
-              <div className="relative p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-xl">
-                <Building2 className="w-8 h-8 text-white" />
+    <div className="min-h-screen space-y-6">
+      {/* ================= QUICK STATS ================= */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {quickStats.map((stat, i) => {
+          const Icon = stat.icon;
+          return (
+            <div 
+              key={i} 
+              className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white shadow-sm hover:shadow-md transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.color}`}>
+                  <Icon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                  <p className="text-xs text-gray-600">{stat.label}</p>
+                </div>
               </div>
             </div>
-
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-1">
-                Department Management
-              </h1>
-              <p className="text-sm text-gray-600">
-                Create, manage, and organize your academic departments
-              </p>
-            </div>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="flex gap-3">
-            {quickStats.map((stat, i) => {
-              const Icon = stat.icon;
-              return (
-                <div key={i} className="flex-1 min-w-[90px]">
-                  <div className="bg-white/50 rounded-2xl p-3 border border-white/40 shadow-md hover:shadow-lg transition-shadow">
-                    <div className={`inline-flex p-2 rounded-xl bg-gradient-to-br ${stat.color} mb-1.5`}>
-                      <Icon className="w-4 h-4 text-white" />
-                    </div>
-                    <p className="text-xl font-bold bg-gradient-to-br from-gray-800 to-gray-600 bg-clip-text text-transparent">
-                      {stat.value}
-                    </p>
-                    <p className="text-xs text-gray-600 font-medium">{stat.label}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+          );
+        })}
       </div>
 
       {/* ================= FORM ================= */}
@@ -183,7 +139,7 @@ const DepartmentsPage = () => {
 const DepartmentsList = ({ departments, loading, onEdit, onView, onDelete }) => {
   if (loading) {
     return (
-      <div className="rounded-2xl bg-white/40 border border-white/40 shadow-lg p-12 text-center">
+      <div className="rounded-2xl bg-white/40 border border-white shadow-lg p-12 text-center">
         <div className="inline-flex p-4 rounded-full bg-blue-100 mb-4">
           <Building2 className="w-8 h-8 text-blue-600 animate-pulse" />
         </div>
@@ -193,7 +149,7 @@ const DepartmentsList = ({ departments, loading, onEdit, onView, onDelete }) => 
   }
 
   return (
-    <div className="rounded-2xl bg-white/40 border border-white/40 shadow-lg p-5">
+    <div className="rounded-2xl bg-white/40 border border-white shadow-lg p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Grid3x3 className="w-5 h-5 text-blue-600" />
@@ -333,7 +289,7 @@ const DepartmentModal = ({ department, onClose }) => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.15 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+        className="fixed inset-0  z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
         onClick={onClose}
       >
         <motion.div

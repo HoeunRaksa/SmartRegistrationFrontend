@@ -7,6 +7,7 @@ import SubjectsPage from '../pageAdmin/Subjectpage.jsx';
 import StudentPage from '../pageAdmin/Studentpage.jsx';
 import RegistrationsPage from '../pageAdmin/Registrationspage.jsx';
 import StaffPage from '../pageAdmin/Staffpage.jsx';
+import SettingPage from '../pageAdmin/Settingpage.jsx';
 import {
   LayoutDashboard,
   GraduationCap,
@@ -23,7 +24,11 @@ import {
   Bell,
   User,
   LogOut,
-  User2Icon
+  User2Icon,
+  Sun,
+  Moon,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import Dashboard from '../../adminSide/ConponentsAdmin/dashboard.jsx';
 const profileFallback = "/assets/images/profile-fallback.png";
@@ -34,6 +39,8 @@ const AdminDashboard = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [notifications, setNotifications] = useState(3); // Example notification count
 
   const activeSection = section || 'dashboard';
 
@@ -72,6 +79,16 @@ const AdminDashboard = () => {
     navigate(`/admin/${sectionId}`);
   };
 
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
   // Render all sections but hide inactive ones - NO REMOUNTING!
   const renderAllSections = () => {
     return (
@@ -98,12 +115,7 @@ const AdminDashboard = () => {
           <RegistrationsPage />
         </div>
         <div style={{ display: activeSection === 'settings' ? 'block' : 'none' }}>
-          <div className="min-h-screen p-6">
-            <div className="backdrop-blur-2xl bg-white/30 rounded-3xl p-8 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Settings</h2>
-              <p className="text-gray-600">Settings component will be implemented here</p>
-            </div>
-          </div>
+         <SettingPage />
         </div>
       </>
     );
@@ -319,67 +331,124 @@ const AdminDashboard = () => {
 
       {/* ================= MAIN CONTENT ================= */}
       <div className={`transition-all duration-200 ${sidebarCollapsed ? 'md:ml-20' : 'md:ml-72'}`}>
-        {/* Top Bar */}
-        <header className="sticky top-0 z-30 backdrop-blur-2xl rounded-3xl bg-white/30 border-b border-white/20 shadow-[0_4px_24px_0_rgba(31,38,135,0.1)]">
-          <div className="flex items-center justify-between px-6 py-3">
-            <div className="flex items-center gap-4">
+        {/* ================= ENHANCED TOP BAR ================= */}
+        <header className="sticky top-0 z-30 backdrop-blur-2xl bg-white/40 border-b border-white/20 shadow-sm">
+          <div className="flex items-center justify-between px-4 md:px-6 py-3">
+            {/* Left Section */}
+            <div className="flex items-center gap-3">
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className="md:hidden p-2 rounded-xl bg-white/40 hover:bg-white/60 border border-white/30 transition-all shadow-sm"
+                className="md:hidden p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md"
               >
                 <Menu size={20} className="text-gray-700" />
               </button>
 
-              {/* Page Title */}
-              <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                {menuItems.find(item => item.id === activeSection)?.label || 'Dashboard'}
-              </h2>
+              {/* Page Title with Icon */}
+              <div className="flex items-center gap-3">
+                <div className="hidden sm:flex p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-md">
+                  {React.createElement(menuItems.find(item => item.id === activeSection)?.icon || LayoutDashboard, {
+                    size: 20,
+                    className: "text-white"
+                  })}
+                </div>
+                <div>
+                  <h2 className="text-lg md:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    {menuItems.find(item => item.id === activeSection)?.label || 'Dashboard'}
+                  </h2>
+                  <p className="hidden md:block text-xs text-gray-500">
+                    Welcome back, {user?.name?.split(' ')[0] || 'Admin'}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              {/* Search */}
-              <div className="hidden sm:flex items-center gap-2 backdrop-blur-xl bg-white/40 rounded-xl px-3 py-2 border border-white/30 shadow-sm hover:bg-white/50 transition-all">
+            {/* Right Section */}
+            <div className="flex items-center gap-2">
+              {/* Search Bar - Enhanced */}
+              <div className="hidden lg:flex items-center gap-2 backdrop-blur-xl bg-white/50 rounded-xl px-4 py-2.5 border border-white/40 shadow-sm hover:shadow-md hover:bg-white/60 transition-all min-w-[280px]">
                 <Search size={16} className="text-gray-500" />
                 <input
                   type="text"
-                  placeholder="Search..."
-                  className="bg-transparent outline-none text-sm placeholder-gray-400 w-32 lg:w-48 text-gray-700"
+                  placeholder="Search anything..."
+                  className="bg-transparent outline-none text-sm placeholder-gray-400 w-full text-gray-700 font-medium"
                 />
+                <kbd className="hidden xl:inline-flex px-2 py-1 text-xs font-semibold text-gray-600 bg-white/60 rounded border border-gray-300">
+                  ⌘K
+                </kbd>
               </div>
 
-              {/* Notifications */}
-              <button className="relative p-2 rounded-xl backdrop-blur-xl bg-white/40 hover:bg-white/60 border border-white/30 transition-all shadow-sm">
-                <Bell size={18} className="text-gray-700" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+              {/* Mobile Search Button */}
+              <button className="lg:hidden p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md">
+                <Search size={18} className="text-gray-700" />
               </button>
 
-              {/* Profile */}
-              <button className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl backdrop-blur-xl bg-white/40 hover:bg-white/60 border border-white/30 transition-all shadow-sm">
+              {/* Fullscreen Toggle */}
+              <button 
+                onClick={toggleFullscreen}
+                className="hidden md:flex p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md group"
+              >
+                {isFullscreen ? (
+                  <Minimize2 size={18} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
+                ) : (
+                  <Maximize2 size={18} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
+                )}
+              </button>
+
+              {/* Notifications - Enhanced */}
+              <button className="relative p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md group">
+                <Bell size={18} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
+                {notifications > 0 && (
+                  <>
+                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-[10px] font-bold text-white shadow-lg border-2 border-white">
+                      {notifications}
+                    </span>
+                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-400 animate-ping opacity-75"></span>
+                  </>
+                )}
+              </button>
+
+              {/* Profile Dropdown - Enhanced */}
+              <div className="hidden sm:flex items-center gap-2 pl-2 pr-3 py-2 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md cursor-pointer group">
                 {user?.profile_picture_url ? (
                   <img
                     src={user.profile_picture_url}
                     alt="Profile"
-                    className="w-7 h-7 rounded-lg object-cover"
+                    className="w-8 h-8 rounded-lg object-cover ring-2 ring-white/60 group-hover:ring-blue-400 transition-all"
                     onError={(e) => {
                       e.target.src = profileFallback;
                     }}
                   />
                 ) : (
-                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-md">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md ring-2 ring-white/60 group-hover:ring-blue-400 transition-all">
                     {user?.name?.charAt(0).toUpperCase() || 'A'}
                   </div>
                 )}
-                <span className="text-sm font-medium text-gray-700 hidden lg:block">
-                  {user?.name?.split(' ')[0] || 'Admin'}
-                </span>
-              </button>
+                <div className="hidden lg:block">
+                  <p className="text-sm font-semibold text-gray-800 leading-tight">
+                    {user?.name?.split(' ')[0] || 'Admin'}
+                  </p>
+                  <p className="text-xs text-gray-500 leading-tight">
+                    {user?.role || 'Administrator'}
+                  </p>
+                </div>
+                <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors hidden lg:block" />
+              </div>
             </div>
+          </div>
+
+          {/* Breadcrumb - Optional */}
+          <div className="hidden md:flex items-center gap-2 px-6 pb-3 text-xs text-gray-600">
+            <span className="hover:text-blue-600 cursor-pointer transition-colors">Home</span>
+            <ChevronRight size={12} className="text-gray-400" />
+            <span className="font-medium text-blue-600">
+              {menuItems.find(item => item.id === activeSection)?.label || 'Dashboard'}
+            </span>
           </div>
         </header>
 
         {/* Dynamic Content Area - ALL MOUNTED, JUST HIDDEN/SHOWN */}
-        <main className="min-h-screen relative z-10 w-full">
+        <main className="min-h-screen pt-6 relative z-10 w-full">
           {renderAllSections()}
         </main>
       </div>

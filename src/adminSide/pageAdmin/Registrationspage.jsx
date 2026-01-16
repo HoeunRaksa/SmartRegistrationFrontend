@@ -3,9 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { fetchRegistrations } from "../../api/registration_api";
 import {
   Users,
-  Home,
-  ChevronRight,
-  Settings,
   CheckCircle,
   XCircle,
   Clock,
@@ -15,11 +12,7 @@ import {
   Building2,
   GraduationCap,
   X,
-  UserCircle,
-  Calendar,
-  MapPin,
   DollarSign,
-  Filter,
   Search,
 } from "lucide-react";
 
@@ -27,7 +20,7 @@ const RegistrationPage = () => {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRegistration, setSelectedRegistration] = useState(null);
-  const [filter, setFilter] = useState('all'); // 'all', 'paid', 'pending'
+  const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -50,14 +43,12 @@ const RegistrationPage = () => {
 
   // Filter registrations
   const filteredRegistrations = registrations.filter(reg => {
-    // Filter by payment status
     const statusMatch = 
       filter === 'all' ? true :
       filter === 'paid' ? reg.payment_status === 'PAID' :
       filter === 'pending' ? (!reg.payment_status || reg.payment_status === 'PENDING') :
       true;
 
-    // Filter by search term
     const searchMatch = searchTerm === '' ? true :
       reg.full_name_en?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       reg.full_name_kh?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -69,83 +60,45 @@ const RegistrationPage = () => {
 
   const paidCount = registrations.filter(r => r.payment_status === 'PAID').length;
   const pendingCount = registrations.filter(r => !r.payment_status || r.payment_status === 'PENDING').length;
-  const totalRevenue = paidCount * 100; // Assuming $100 per registration
+  const totalRevenue = paidCount * 100;
 
   const quickStats = [
-    { label: "Total Registrations", value: registrations.length, color: "from-blue-500 to-cyan-500", icon: Users },
+    { label: "Total", value: registrations.length, color: "from-blue-500 to-cyan-500", icon: Users },
     { label: "Paid", value: paidCount, color: "from-green-500 to-emerald-500", icon: CheckCircle },
-    { label: "Pending Payment", value: pendingCount, color: "from-orange-500 to-red-500", icon: Clock },
+    { label: "Pending", value: pendingCount, color: "from-orange-500 to-red-500", icon: Clock },
     { label: "Revenue", value: `$${totalRevenue}`, color: "from-purple-500 to-pink-500", icon: DollarSign },
   ];
 
   return (
-    <div className="min-h-screen p-6 space-y-6">
-      {/* BREADCRUMB */}
-      <div className="flex items-center gap-2 text-sm">
-        <div className="flex items-center gap-2 text-gray-600">
-          <Home className="w-4 h-4" />
-          <span>Home</span>
-        </div>
-        <ChevronRight className="w-4 h-4 text-gray-400" />
-        <div className="flex items-center gap-2 text-gray-600">
-          <Settings className="w-4 h-4" />
-          <span>Management</span>
-        </div>
-        <ChevronRight className="w-4 h-4 text-gray-400" />
-        <div className="flex items-center gap-2 text-blue-600 font-medium">
-          <Users className="w-4 h-4" />
-          <span>Registrations</span>
-        </div>
-      </div>
-
-      {/* HEADER */}
-      <div className="bg-white/40 rounded-3xl p-6 border border-white/50 shadow-lg backdrop-blur-xl">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="flex items-start gap-4">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl blur-md opacity-50" />
-              <div className="relative p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-xl">
-                <Users className="w-8 h-8 text-white" />
+    <div className="min-h-screen space-y-6">
+      {/* ================= QUICK STATS ================= */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {quickStats.map((stat, i) => {
+          const Icon = stat.icon;
+          return (
+            <div 
+              key={i} 
+              className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/40 shadow-sm hover:shadow-md transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.color}`}>
+                  <Icon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                  <p className="text-xs text-gray-600">{stat.label}</p>
+                </div>
               </div>
             </div>
-
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-1">
-                Student Registrations
-              </h1>
-              <p className="text-sm text-gray-600">
-                View all student registrations and payment status
-              </p>
-            </div>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {quickStats.map((stat, i) => {
-              const Icon = stat.icon;
-              return (
-                <div key={i} className="min-w-[110px]">
-                  <div className="bg-white/50 rounded-2xl p-3 border border-white/40 shadow-md hover:shadow-lg transition-shadow">
-                    <div className={`inline-flex p-2 rounded-xl bg-gradient-to-br ${stat.color} mb-1.5`}>
-                      <Icon className="w-4 h-4 text-white" />
-                    </div>
-                    <p className="text-xl font-bold bg-gradient-to-br from-gray-800 to-gray-600 bg-clip-text text-transparent">
-                      {stat.value}
-                    </p>
-                    <p className="text-xs text-gray-600 font-medium">{stat.label}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+          );
+        })}
       </div>
 
-      {/* FILTERS & SEARCH */}
+      {/* ================= FILTERS & SEARCH ================= */}
       <div className="bg-white/40 rounded-2xl p-4 border border-white/40 shadow-md backdrop-blur-xl">
         <div className="flex flex-col md:flex-row gap-4 items-center">
           {/* Search */}
-          <div className="flex-1 relative">
+          <div className="flex-1 relative w-full">
             <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
             <input
               type="text"
@@ -157,7 +110,7 @@ const RegistrationPage = () => {
           </div>
 
           {/* Filter Buttons */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => setFilter('all')}
               className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all ${
@@ -194,14 +147,14 @@ const RegistrationPage = () => {
         </div>
       </div>
 
-      {/* REGISTRATIONS LIST */}
+      {/* ================= REGISTRATIONS LIST ================= */}
       <RegistrationsList
         registrations={filteredRegistrations}
         loading={loading}
         onView={setSelectedRegistration}
       />
 
-      {/* DETAIL MODAL */}
+      {/* ================= DETAIL MODAL ================= */}
       {selectedRegistration && (
         <RegistrationModal
           registration={selectedRegistration}
@@ -265,7 +218,6 @@ const EmptyState = () => (
 
 const RegistrationCard = ({ registration, onView }) => {
   const isPaid = registration.payment_status === 'PAID';
-  const isPending = !registration.payment_status || registration.payment_status === 'PENDING';
 
   return (
     <div
@@ -342,7 +294,7 @@ const RegistrationModal = ({ registration, onClose }) => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.15 }}
-        className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
         onClick={onClose}
       >
         <motion.div

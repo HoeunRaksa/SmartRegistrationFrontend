@@ -99,7 +99,7 @@ function AppContent() {
 
       {/* Main Content */}
       <main className={`relative w-full flex-1 flex flex-col z-10 ${shouldHideNavbar ? "pt-0" : "pt-24"}`}>
-        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="min-h-[calc(100vh-200px)]">
             {isAdminRoute ? (
               <MainRouter />

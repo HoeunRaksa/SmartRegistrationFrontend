@@ -122,44 +122,44 @@ const Dashboard = () => {
     { action: "Permissions verified", time: "Today" },
   ];
 
-// Real major names with student counts based on department relationship
-const topPerformingMajors = (() => {
-  if (majors.length === 0) {
-    return [{ name: "No majors yet", students: 0, growth: "0%", color: "from-gray-400 to-gray-500" }];
-  }
-
-  // Count students per department
-  const deptCounts = {};
-  
-  students.forEach(student => {
-    const deptId = student.department_id;
-    if (deptId) {
-      deptCounts[deptId] = (deptCounts[deptId] || 0) + 1;
+  // Real major names with student counts based on department relationship
+  const topPerformingMajors = (() => {
+    if (majors.length === 0) {
+      return [{ name: "No majors yet", students: 0, growth: "0%", color: "from-gray-400 to-gray-500" }];
     }
-  });
 
-  console.log("Department counts:", deptCounts);
-  console.log("All majors data:", majors); // SEE ALL MAJORS
+    // Count students per department
+    const deptCounts = {};
 
-  // Map majors with their department's student count
-  const result = majors
-    .map((major, index) => {
-      console.log(`Major ${index}:`, major); // SEE EACH MAJOR
-      
-      return {
-        name: major.name || major.title || major.major_name || "Unknown Major", // Try different field names
-        students: deptCounts[major.department_id] || 0,
-        growth: `+${Math.floor(Math.random() * 15 + 5)}%`,
-        color: ["from-blue-500 to-cyan-500", "from-purple-500 to-pink-500", "from-orange-500 to-red-500", "from-green-500 to-emerald-500"][index % 4]
-      };
-    })
-    .sort((a, b) => b.students - a.students)
-    .slice(0, 4);
+    students.forEach(student => {
+      const deptId = student.department_id;
+      if (deptId) {
+        deptCounts[deptId] = (deptCounts[deptId] || 0) + 1;
+      }
+    });
 
-  console.log("Final topPerformingMajors:", result); // SEE FINAL RESULT
-  
-  return result;
-})();
+    console.log("Department counts:", deptCounts);
+    console.log("All majors data:", majors); // SEE ALL MAJORS
+
+    // Map majors with their department's student count
+    const result = majors
+      .map((major, index) => {
+        console.log(`Major ${index}:`, major); // SEE EACH MAJOR
+
+        return {
+          name: major.name || major.title || major.major_name || "Unknown Major", // Try different field names
+          students: deptCounts[major.department_id] || 0,
+          growth: `+${Math.floor(Math.random() * 15 + 5)}%`,
+          color: ["from-blue-500 to-cyan-500", "from-purple-500 to-pink-500", "from-orange-500 to-red-500", "from-green-500 to-emerald-500"][index % 4]
+        };
+      })
+      .sort((a, b) => b.students - a.students)
+      .slice(0, 4);
+
+    console.log("Final topPerformingMajors:", result); // SEE FINAL RESULT
+
+    return result;
+  })();
 
   const upcomingEvents = [
     { title: "Faculty Meeting", date: "Jan 10, 2025", time: "10:00 AM" },
@@ -185,7 +185,7 @@ const topPerformingMajors = (() => {
   }
 
   return (
-    <div className="min-h-screen p-6 space-y-6 pb-8">
+    <div className="min-h-screen space-y-6 pb-8">
 
       {/* USER HEADER */}
       {user && (
@@ -193,9 +193,9 @@ const topPerformingMajors = (() => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="relative overflow-hidden backdrop-blur-2xl bg-white/30 rounded-3xl p-8 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]"
+          className="relative overflow-hidden backdrop-blur-2xl rounded-3xl p-8 border bg-white/70 border-white"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5" />
+          <div className="absolute inset-0" />
 
           <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div className="flex items-center gap-5">
@@ -272,7 +272,7 @@ const topPerformingMajors = (() => {
                 scale: 1.03,
                 transition: { type: "spring", stiffness: 400, damping: 10 }
               }}
-              className="group relative overflow-hidden backdrop-blur-2xl bg-white/30 rounded-3xl p-6 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] cursor-pointer"
+              className="group relative overflow-hidden backdrop-blur-2xl rounded-3xl p-6 border  bg-white/60 shadow-lg border-white  cursor-pointer"
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`} />
 
@@ -289,7 +289,7 @@ const topPerformingMajors = (() => {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: i * 0.1 + 0.3, type: "spring" }}
-                    className="flex items-center gap-1 text-xs bg-green-100/80 backdrop-blur-sm text-green-600 px-2.5 py-1.5 rounded-full font-semibold shadow-sm border border-green-200/50"
+                    className="flex items-center gap-1 text-xs backdrop-blur-sm text-green-600 px-2.5 py-1.5 rounded-full font-semibold shadow-sm border border-green-200/50"
                   >
                     <ArrowUp className="w-3 h-3" />
                     {stat.change}
@@ -320,16 +320,16 @@ const topPerformingMajors = (() => {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.5 }}
-          className="backdrop-blur-2xl bg-white/30 rounded-3xl p-6 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]"
+          className="backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white "
         >
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-blue-500/10 backdrop-blur-sm">
+              <div className="p-2 rounded-xl backdrop-blur-sm">
                 <Clock className="w-5 h-5 text-blue-500" />
               </div>
               Recent Activity
             </h3>
-            <span className="text-xs text-gray-600 bg-white/50 backdrop-blur-sm px-3 py-1 rounded-full border border-white/30">Live</span>
+            <span className="text-xs text-gray-600 backdrop-blur-sm px-3 py-1 rounded-full border bg-white/60 shadow-lg border-white ">Live</span>
           </div>
           <div className="space-y-3">
             {recentActivities.map((a, i) => (
@@ -339,7 +339,7 @@ const topPerformingMajors = (() => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.6 + i * 0.1 }}
                 whileHover={{ x: 4, scale: 1.02 }}
-                className="group bg-white/40 backdrop-blur-xl p-4 rounded-2xl border border-white/30 hover:border-blue-300/50 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
+                className="group backdrop-blur-xl p-4 rounded-2xl border bg-white/60 shadow-lg border-white  hover:border-blue-300/50 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -361,10 +361,10 @@ const topPerformingMajors = (() => {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.5 }}
-          className="backdrop-blur-2xl bg-white/30 rounded-3xl p-6 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]"
+          className="backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white "
         >
           <h3 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-purple-500/10 backdrop-blur-sm">
+            <div className="p-2 rounded-xl backdrop-blur-sm">
               <Sparkles className="w-5 h-5 text-purple-500" />
             </div>
             Quick Actions
@@ -402,7 +402,7 @@ const topPerformingMajors = (() => {
                   {isActive && (
                     <motion.div
                       layoutId="activeIndicator"
-                      className="absolute inset-0 bg-white/20 backdrop-blur-sm"
+                      className="absolute inset-0 backdrop-blur-sm"
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     />
                   )}
@@ -450,7 +450,7 @@ const topPerformingMajors = (() => {
                   exit={{ scale: 0.9, opacity: 0, y: 20 }}
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   onClick={(e) => e.stopPropagation()}
-                  className={`relative w-full max-w-7xl max-h-[90vh] overflow-y-auto rounded-3xl p-8 backdrop-blur-3xl bg-white/95 border ${borderColors[view]} shadow-2xl`}
+                  className={`relative w-full max-w-7xl max-h-[90vh] overflow-y-auto rounded-3xl p-8 backdrop-blur-3xl border ${borderColors[view]} shadow-2xl`}
                 >
                   <motion.button
                     whileHover={{ scale: 1.1, rotate: 90 }}
@@ -477,10 +477,10 @@ const topPerformingMajors = (() => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="backdrop-blur-2xl bg-white/30 rounded-3xl p-6 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]"
+          className="backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white "
         >
           <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-5">
-            <div className="p-2 rounded-xl bg-green-500/10 backdrop-blur-sm">
+            <div className="p-2 rounded-xl backdrop-blur-sm">
               <TrendingUp className="w-5 h-5 text-green-500" />
             </div>
             Top Performing Majors
@@ -493,17 +493,17 @@ const topPerformingMajors = (() => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.7 + i * 0.1 }}
                 whileHover={{ scale: 1.02, x: 4 }}
-                className="bg-white/40 backdrop-blur-xl p-5 rounded-2xl border border-white/30 hover:border-white/50 transition-all duration-300 shadow-sm hover:shadow-md"
+                className="backdrop-blur-xl p-5 rounded-2xl border border-white/30 hover:border-white/50 transition-all duration-300 shadow-sm hover:shadow-md"
               >
                 <div className="flex justify-between items-center mb-3">
                   <p className="font-semibold text-gray-800">{m.name}</p>
-                  <span className="flex items-center gap-1 text-sm font-bold text-green-600 bg-green-100/80 backdrop-blur-sm px-2.5 py-1 rounded-full border border-green-200/50">
+                  <span className="flex items-center gap-1 text-sm font-bold text-green-600 backdrop-blur-sm px-2.5 py-1 rounded-full border border-green-200/50">
                     <ArrowUp className="w-3 h-3" />
                     {m.growth}
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="flex-1 bg-gray-200/50 backdrop-blur-sm h-2.5 rounded-full overflow-hidden border border-white/30">
+                  <div className="flex-1 backdrop-blur-sm h-2.5 rounded-full overflow-hidden border border-white/30">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: m.students > 0 ? `${Math.min((m.students / Math.max(1, ...topPerformingMajors.map(maj => maj.students))) * 100, 100)}%` : "0%" }}
@@ -525,10 +525,10 @@ const topPerformingMajors = (() => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="backdrop-blur-2xl bg-white/30 rounded-3xl p-6 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]"
+          className="backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white "
         >
           <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-5">
-            <div className="p-2 rounded-xl bg-blue-500/10 backdrop-blur-sm">
+            <div className="p-2 rounded-xl backdrop-blur-sm">
               <Calendar className="w-5 h-5 text-blue-500" />
             </div>
             Upcoming Events
@@ -541,7 +541,7 @@ const topPerformingMajors = (() => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.7 + i * 0.1 }}
                 whileHover={{ scale: 1.02, x: -4 }}
-                className="group bg-white/40 backdrop-blur-xl p-5 rounded-2xl border border-white/30 hover:border-blue-300/50 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
+                className="group backdrop-blur-xl p-5 rounded-2xl border border-white/30 hover:border-blue-300/50 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -567,15 +567,15 @@ const topPerformingMajors = (() => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8 }}
-        className="backdrop-blur-2xl bg-white/30 rounded-3xl p-6 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]"
+        className="backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white "
       >
         <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-5">
-          <div className="p-2 rounded-xl bg-yellow-500/10 backdrop-blur-sm">
+          <div className="p-2 rounded-xl backdrop-blur-sm">
             <Award className="w-5 h-5 text-yellow-500" />
           </div>
           Academic Performance Overview
         </h3>
-        <div className="relative h-64 bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-xl rounded-2xl border border-white/30 flex items-center justify-center overflow-hidden">
+        <div className="relative h-64 bg-gradient-to-br from-transparent to-transparent backdrop-blur-xl rounded-2xl border border-white/30 flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-0 left-0 w-32 h-32 bg-blue-500 rounded-full blur-3xl animate-pulse" />
             <div className="absolute bottom-0 right-0 w-32 h-32 bg-purple-500 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />

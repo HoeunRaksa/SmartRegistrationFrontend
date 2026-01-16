@@ -3,12 +3,8 @@ import StudentsForm from "../ConponentsAdmin/StudentsForm.jsx";
 import StudentsTable from "../ConponentsAdmin/Studentstable.jsx";
 import StudentProfile from "../../gobalConponent/Studentprofile.jsx";
 import { fetchStudents } from "../../api/student_api.jsx";
-
 import {
   GraduationCap,
-  Home,
-  ChevronRight,
-  Settings,
   Users,
   TrendingUp,
   BarChart3,
@@ -28,7 +24,6 @@ const StudentPage = () => {
     try {
       setLoading(true);
       const res = await fetchStudents();
-      
       const studentsData = res.data?.data || res.data || [];
       setStudents(Array.isArray(studentsData) ? studentsData : []);
     } catch (error) {
@@ -49,93 +44,44 @@ const StudentPage = () => {
   };
 
   const quickStats = [
-    {
-      label: "Total Students",
-      value: students.length,
-      color: "from-blue-500 to-cyan-500",
-      icon: Users,
-    },
-    {
-      label: "Active",
-      value: students.length,
-      color: "from-green-500 to-emerald-500",
-      icon: TrendingUp,
-    },
-    {
-      label: "Departments",
-      value: new Set(students.map(s => s.department_id)).size || 0,
-      color: "from-purple-500 to-pink-500",
-      icon: BarChart3,
-    },
+    { label: "Total", value: students.length, color: "from-blue-500 to-cyan-500", icon: Users },
+    { label: "Active", value: students.length, color: "from-green-500 to-emerald-500", icon: TrendingUp },
+    { label: "Departments", value: new Set(students.map(s => s.department_id)).size || 0, color: "from-purple-500 to-pink-500", icon: BarChart3 },
   ];
 
   return (
-    <div className="min-h-screen p-6 space-y-6">
-      {/* BREADCRUMB */}
-      <div className="flex items-center gap-2 text-sm">
-        <div className="flex items-center gap-2 text-gray-600">
-          <Home className="w-4 h-4" />
-          <span>Home</span>
-        </div>
-        <ChevronRight className="w-4 h-4 text-gray-400" />
-        <div className="flex items-center gap-2 text-gray-600">
-          <Settings className="w-4 h-4" />
-          <span>Management</span>
-        </div>
-        <ChevronRight className="w-4 h-4 text-gray-400" />
-        <div className="flex items-center gap-2 text-blue-600 font-medium">
-          <GraduationCap className="w-4 h-4" />
-          <span>Students</span>
-        </div>
-      </div>
-
-      {/* HEADER */}
-      <div className="bg-white/40 rounded-3xl p-6 border border-white/50 shadow-lg backdrop-blur-xl">
-        <div className="flex flex-col lg:flex-row lg:justify-between gap-6">
-          <div className="flex items-start gap-4">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-xl">
-              <GraduationCap className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Students Management
-              </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Register, manage, and view student profiles
-              </p>
-            </div>
-          </div>
-
-          {/* QUICK STATS */}
-          <div className="flex gap-3">
-            {quickStats.map((stat, i) => {
-              const Icon = stat.icon;
-              return (
-                <div key={i} className="min-w-[110px]">
-                  <div className="bg-white/50 rounded-2xl p-3 shadow-md backdrop-blur-sm hover:shadow-lg transition-shadow">
-                    <div
-                      className={`inline-flex p-2 rounded-xl bg-gradient-to-br ${stat.color} shadow-lg`}
-                    >
-                      <Icon className="w-4 h-4 text-white" />
-                    </div>
-                    <p className="text-xl font-bold mt-2">{stat.value}</p>
-                    <p className="text-xs text-gray-600">{stat.label}</p>
-                  </div>
+    <div className="min-h-screen space-y-6">
+      {/* ================= QUICK STATS ================= */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {quickStats.map((stat, i) => {
+          const Icon = stat.icon;
+          return (
+            <div 
+              key={i} 
+              className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/40 shadow-sm hover:shadow-md transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.color}`}>
+                  <Icon className="w-5 h-5 text-white" />
                 </div>
-              );
-            })}
-          </div>
-        </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                  <p className="text-xs text-gray-600">{stat.label}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* FORM */}
+      {/* ================= FORM ================= */}
       <StudentsForm 
         onUpdate={reloadStudents}
         editingStudent={editingStudent}
         onCancelEdit={() => setEditingStudent(null)}
       />
 
-      {/* TABLE */}
+      {/* ================= TABLE ================= */}
       <StudentsTable
         students={students}
         loading={loading}
@@ -147,7 +93,7 @@ const StudentPage = () => {
         onEdit={handleEdit}
       />
 
-      {/* PROFILE MODAL */}
+      {/* ================= PROFILE MODAL ================= */}
       {selectedStudent && (
         <StudentProfile
           student={selectedStudent}
