@@ -455,7 +455,7 @@ const SettingPage = () => {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-white/30 bg-gray-200 focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     placeholder="Enter your name"
                   />
                 </div>
@@ -497,7 +497,7 @@ const SettingPage = () => {
                       type="email"
                       value={newEmail}
                       onChange={(e) => setNewEmail(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-white/30 bg-gray-200 focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all"
+                      className="w-full pl-10 pr-4 py-2.5 bg-white/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                       placeholder="Enter new email address"
                     />
                   </div>
@@ -507,7 +507,7 @@ const SettingPage = () => {
                       type="password"
                       value={emailPassword}
                       onChange={(e) => setEmailPassword(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-white/30 bg-gray-200 focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all"
+                      className="w-full pl-10 pr-4 py-2.5 bg-white/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                       placeholder="Enter your current password"
                     />
                   </div>
@@ -551,7 +551,7 @@ const SettingPage = () => {
                       type={showCurrentPassword ? 'text' : 'password'}
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="w-full px-4 py-3 pr-12 rounded-xl border border-white/30 bg-gray-200 focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all"
+                      className="w-full pl-10 pr-4 py-2.5 bg-white/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                       placeholder="Enter current password"
                     />
                     <button
@@ -570,7 +570,7 @@ const SettingPage = () => {
                       type={showNewPassword ? 'text' : 'password'}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full px-4 py-3 pr-12 rounded-xl border border-white/30 bg-gray-200 focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all"
+                      className="w-full pl-10 pr-4 py-2.5 bg-white/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                       placeholder="Enter new password (min. 8 characters)"
                     />
                     <button
@@ -589,7 +589,7 @@ const SettingPage = () => {
                       type={showConfirmPassword ? 'text' : 'password'}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-4 py-3 pr-12 rounded-xl border border-white/30 bg-gray-200 focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all"
+                      className="w-full pl-10 pr-4 py-2.5 bg-white/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                       placeholder="Confirm new password"
                     />
                     <button

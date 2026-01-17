@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { fetchRegistrations } from "../../api/registration_api";
 import {
   Users,
+  User,
   CheckCircle,
   XCircle,
   Clock,
@@ -218,6 +219,7 @@ const EmptyState = () => (
 
 const RegistrationCard = ({ registration, onView }) => {
   const isPaid = registration.payment_status === 'PAID';
+  const profileImage = registration.profile_picture_url || registration.profile_picture_path;
 
   return (
     <div
@@ -240,10 +242,31 @@ const RegistrationCard = ({ registration, onView }) => {
             </span>
           )}
         </div>
+        
+        {/* Profile Picture - Positioned at bottom of header, overlapping into content */}
+        <div className="absolute -bottom-10 left-4">
+          <div className="w-20 h-20 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white">
+            {profileImage ? (
+              <img
+                src={profileImage}
+                alt={registration.full_name_en}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200"><svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>';
+                }}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                <User className="w-10 h-10 text-gray-400" />
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Content */}
-      <div className="p-5">
+      {/* Content - Added padding-top to accommodate profile picture */}
+      <div className="p-5 pt-14">
         <h4 className="font-semibold text-gray-900 text-lg mb-1  group-hover:text-blue-600 transition-colors">
           {registration.full_name_en}
         </h4>
@@ -264,16 +287,16 @@ const RegistrationCard = ({ registration, onView }) => {
               <span>{registration.phone_number}</span>
             </div>
           )}
-          {registration.department && (
+          {registration.department_name && (
             <div className="flex items-center gap-2 text-xs text-gray-600">
               <Building2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-              <span className="truncate">{registration.department.name}</span>
+              <span className="truncate">{registration.department_name}</span>
             </div>
           )}
-          {registration.major && (
+          {registration.major_name && (
             <div className="flex items-center gap-2 text-xs text-gray-600">
               <GraduationCap className="w-3.5 h-3.5 text-orange-500 flex-shrink-0" />
-              <span className="truncate">{registration.major.name}</span>
+              <span className="truncate">{registration.major_name}</span>
             </div>
           )}
         </div>
@@ -286,6 +309,7 @@ const RegistrationCard = ({ registration, onView }) => {
 
 const RegistrationModal = ({ registration, onClose }) => {
   const isPaid = registration.payment_status === 'PAID';
+  const profileImage = registration.profile_picture_url || registration.profile_picture_path;
 
   return (
     <AnimatePresence>
@@ -314,20 +338,43 @@ const RegistrationModal = ({ registration, onClose }) => {
               <X className="w-5 h-5" />
             </button>
 
-            <h2 className="text-2xl font-bold text-white mb-2">Registration Details</h2>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-white/80">ID: {registration.id}</span>
-              {isPaid ? (
-                <span className="flex items-center gap-1 text-xs bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full border border-white/30">
-                  <CheckCircle className="w-3 h-3" />
-                  Payment Completed
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 text-xs bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full border border-white/30">
-                  <XCircle className="w-3 h-3" />
-                  Payment Pending
-                </span>
-              )}
+            <div className="flex items-start gap-4">
+              {/* Profile Picture in Modal */}
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-white shadow-lg flex-shrink-0">
+                {profileImage ? (
+                  <img
+                    src={profileImage}
+                    alt={registration.full_name_en}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200"><svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>';
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                    <User className="w-10 h-10 text-gray-400" />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold text-white mb-2">Registration Details</h2>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm text-white/80">ID: {registration.id}</span>
+                  {isPaid ? (
+                    <span className="flex items-center gap-1 text-xs bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full border border-white/30">
+                      <CheckCircle className="w-3 h-3" />
+                      Payment Completed
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-xs bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full border border-white/30">
+                      <XCircle className="w-3 h-3" />
+                      Payment Pending
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -353,8 +400,8 @@ const RegistrationModal = ({ registration, onClose }) => {
                 <InfoField label="High School" value={registration.high_school_name} />
                 <InfoField label="Graduation Year" value={registration.graduation_year} />
                 <InfoField label="Grade 12 Result" value={registration.grade12_result} />
-                <InfoField label="Department" value={registration.department?.name} />
-                <InfoField label="Major" value={registration.major?.name} />
+                <InfoField label="Department" value={registration.department_name} />
+                <InfoField label="Major" value={registration.major_name} />
                 <InfoField label="Faculty" value={registration.faculty} />
                 <InfoField label="Shift" value={registration.shift} />
                 <InfoField label="Batch" value={registration.batch} />
@@ -393,7 +440,7 @@ const RegistrationModal = ({ registration, onClose }) => {
                         {isPaid ? 'Payment Completed' : 'Payment Pending'}
                       </p>
                       <p className="text-sm text-gray-600">
-                        Registration Fee: $100.00
+                        Registration Fee: ${registration.payment_amount || '100.00'}
                       </p>
                     </div>
                   </div>

@@ -212,56 +212,6 @@ const handleLogout = async () => {
               <span className="font-medium text-sm">Logout</span>
             )}
           </button>
-          {/* User Profile */}
-          <div className={`mt-auto pt-4 border-t border-white/20 ${sidebarCollapsed ? 'flex justify-center' : ''}`}>
-
-            <div className="backdrop-blur-xl bg-white/40 rounded-2xl p-3 border border-white/30 shadow-sm cursor-pointer hover:bg-white/50 transition-all">
-              {sidebarCollapsed ? (
-                user?.profile_picture_url ? (
-                  <img
-                    src={user.profile_picture_url}
-                    alt="Profile"
-                    className="w-6 h-6 rounded-full object-cover"
-                    onError={(e) => {
-                      e.target.src = profileFallback;
-                    }}
-                  />
-                ) : (
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-lg">
-                    {user?.name?.charAt(0).toUpperCase() || 'A'}
-                  </div>
-                )
-              ) : (
-                <div className="flex items-center gap-3">
-                  {user?.profile_picture_url ? (
-                    <img
-                      src={user.profile_picture_url}
-                      alt="Profile"
-                      className="w-10 h-10 rounded-full object-cover border-2 border-white/40 shadow-md"
-                      onError={(e) => {
-                        e.target.src = profileFallback;
-                      }}
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg">
-                      {user?.name?.charAt(0).toUpperCase() || 'A'}
-                    </div>
-                  )}
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-800 text-sm">
-                      {user?.name || 'Admin User'}
-                    </p>
-                    <p className="text-xs text-gray-600">
-                      {user?.email || 'admin@novatech.edu'}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-            </div>
-
-          </div>
-
         </div>
       </motion.aside>
 

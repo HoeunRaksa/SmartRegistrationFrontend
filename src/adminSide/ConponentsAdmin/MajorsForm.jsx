@@ -13,6 +13,7 @@ import {
   Sparkles,
   FileText,
   Building2,
+  DollarSign,
 } from "lucide-react";
 
 /* ================== CONSTANTS ================== */
@@ -21,11 +22,13 @@ const INITIAL_FORM_STATE = {
   major_name: "",
   description: "",
   department_id: "",
+  registration_fee: "",
 };
 
 const INPUT_FIELDS = [
   { key: "major_name", icon: GraduationCap, placeholder: "Major Name", col: "md:col-span-2" },
   { key: "description", icon: FileText, placeholder: "Description", col: "md:col-span-2", multiline: true },
+  { key: "registration_fee", icon: DollarSign, placeholder: "Registration Fee (USD)", col: "md:col-span-2", type: "number" },
 ];
 
 /* ================== ANIMATION VARIANTS ================== */
@@ -71,6 +74,7 @@ const MajorsForm = ({ editingMajor, onSuccess, onCancel }) => {
         major_name: editingMajor.major_name || "",
         description: editingMajor.description || "",
         department_id: editingMajor.department_id || "",
+        registration_fee: editingMajor.registration_fee || "",
       });
     } else {
       setForm(INITIAL_FORM_STATE);
@@ -98,10 +102,16 @@ const MajorsForm = ({ editingMajor, onSuccess, onCancel }) => {
     setSuccess(false);
 
     try {
+      // Prepare form data with proper number conversion for registration_fee
+      const submitData = {
+        ...form,
+        registration_fee: form.registration_fee ? parseFloat(form.registration_fee) : undefined,
+      };
+
       if (isEditMode) {
-        await updateMajor(editingMajor.id, form);
+        await updateMajor(editingMajor.id, submitData);
       } else {
-        await createMajor(form);
+        await createMajor(submitData);
       }
 
       resetForm();
@@ -136,7 +146,7 @@ const MajorsForm = ({ editingMajor, onSuccess, onCancel }) => {
         className="relative overflow-hidden rounded-2xl bg-white/90 border border-white shadow-lg  p-5"
       >
         <FormHeader isEditMode={isEditMode} onCancel={resetForm} />
-        
+
         <motion.form
           onSubmit={handleSubmit}
           variants={animations.container}
@@ -159,11 +169,10 @@ const Alert = ({ type, message, onClose }) => (
     initial={{ opacity: 0, y: -10, scale: 0.95 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, scale: 0.95 }}
-    className={`flex items-center gap-3 p-4 rounded-2xl border shadow-sm ${
-      type === "success"
+    className={`flex items-center gap-3 p-4 rounded-2xl border shadow-sm ${type === "success"
         ? "bg-green-50 border-green-200"
         : "bg-red-50 border-red-200"
-    }`}
+      }`}
   >
     {type === "success" ? (
       <CheckCircle2 className="w-5 h-5 text-green-600" />
@@ -235,9 +244,12 @@ const InputField = ({ field, form, setForm }) => {
       ) : (
         <input
           name={field.key}
+          type={field.type || "text"}
           value={value}
           onChange={handleChange}
           placeholder={field.placeholder}
+          step={field.type === "number" ? "0.01" : undefined}
+          min={field.type === "number" ? "0" : undefined}
           className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
         />
       )}

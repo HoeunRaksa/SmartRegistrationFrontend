@@ -4,41 +4,28 @@ import {
   createSubject,
   updateSubject,
 } from "../../../src/api/subject_api.jsx";
-import { fetchDepartments } from "../../../src/api/department_api.jsx";
 import {
   BookOpen,
   X,
   CheckCircle2,
   AlertCircle,
   Sparkles,
-  Hash,
   FileText,
-  Building2,
   GraduationCap,
-  Clock,
 } from "lucide-react";
 
 /* ================== CONSTANTS ================== */
 
 const INITIAL_FORM_STATE = {
-  name: "",
-  code: "",
-  department_id: "",
-  credits: "",
+  subject_name: "",
   description: "",
-  prerequisites: "",
-  semester: "",
-  level: "",
+  credit: "",
 };
 
 const INPUT_FIELDS = [
-  { key: "name", icon: BookOpen, placeholder: "Subject Name", col: "md:col-span-2" },
-  { key: "code", icon: Hash, placeholder: "Subject Code (e.g., CS101)", col: "" },
-  { key: "credits", icon: GraduationCap, placeholder: "Credits", col: "", type: "number" },
-  { key: "semester", icon: Clock, placeholder: "Semester", col: "" },
-  { key: "level", icon: FileText, placeholder: "Level (e.g., Undergraduate)", col: "" },
-  { key: "description", icon: FileText, placeholder: "Description", col: "md:col-span-2", multiline: true },
-  { key: "prerequisites", icon: FileText, placeholder: "Prerequisites (optional)", col: "md:col-span-2", multiline: true },
+  { key: "subject_name", icon: BookOpen, placeholder: "Subject Name", col: "md:col-span-2" },
+  { key: "credit", icon: GraduationCap, placeholder: "Credits", col: "md:col-span-2", type: "number" },
+  { key: "description", icon: FileText, placeholder: "Description (optional)", col: "md:col-span-2", multiline: true },
 ];
 
 /* ================== ANIMATION VARIANTS ================== */
@@ -67,49 +54,24 @@ const animations = {
 
 const SubjectsForm = ({ onUpdate, editingSubject, onCancelEdit }) => {
   const [form, setForm] = useState(INITIAL_FORM_STATE);
-  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
 
   const isEditMode = !!editingSubject;
 
-  useEffect(() => {
-    loadDepartments();
-  }, []);
-
   // ✅ Populate form when editingSubject changes
   useEffect(() => {
     if (editingSubject) {
       setForm({
-        name: editingSubject.name || "",
-        code: editingSubject.code || "",
-        department_id: editingSubject.department_id || "",
-        credits: editingSubject.credits || "",
+        subject_name: editingSubject.subject_name || "",
         description: editingSubject.description || "",
-        prerequisites: editingSubject.prerequisites || "",
-        semester: editingSubject.semester || "",
-        level: editingSubject.level || "",
+        credit: editingSubject.credit || "",
       });
     } else {
       setForm(INITIAL_FORM_STATE);
     }
   }, [editingSubject]);
-
-  const loadDepartments = async () => {
-    try {
-      const res = await fetchDepartments();
-      const list = Array.isArray(res.data?.data)
-        ? res.data.data
-        : Array.isArray(res.data)
-        ? res.data
-        : [];
-      setDepartments(list);
-    } catch (err) {
-      console.error("Failed to load departments:", err);
-      setDepartments([]);
-    }
-  };
 
   const resetForm = () => {
     setForm(INITIAL_FORM_STATE);
@@ -125,11 +87,23 @@ const SubjectsForm = ({ onUpdate, editingSubject, onCancelEdit }) => {
     setSuccess(false);
 
     try {
+      // Prepare form data
+      const submitData = {
+        subject_name: form.subject_name.trim(),
+        description: form.description?.trim() || null,
+        credit: parseInt(form.credit, 10),
+      };
+
+      console.log("Submitting data:", submitData);
+
+      let response;
       if (isEditMode) {
-        await updateSubject(editingSubject.id, form);
+        response = await updateSubject(editingSubject.id, submitData);
       } else {
-        await createSubject(form);
+        response = await createSubject(submitData);
       }
+
+      console.log("Response:", response);
 
       resetForm();
       setSuccess(true);
@@ -137,14 +111,41 @@ const SubjectsForm = ({ onUpdate, editingSubject, onCancelEdit }) => {
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       console.error("Submit error:", err);
-      setError(err.response?.data?.message || err.message || "Failed to save subject");
+      console.error("Error response:", err.response);
+      console.error("Error response data:", err.response?.data);
+      
+      // Extract error message
+      let errorMessage = "Failed to save subject";
+      
+      if (err.response?.data) {
+        const data = err.response.data;
+        
+        console.log("Full error data:", data);
+        
+        // Laravel validation errors
+        if (data.errors) {
+          errorMessage = Object.values(data.errors).flat().join(", ");
+        } 
+        // Custom message
+        else if (data.message) {
+          errorMessage = data.message;
+        }
+        // Raw error (for debugging)
+        else if (typeof data === 'string') {
+          errorMessage = data.substring(0, 200); // First 200 chars
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {/* ================= ALERTS ================= */}
       <AnimatePresence>
         {success && (
@@ -162,7 +163,6 @@ const SubjectsForm = ({ onUpdate, editingSubject, onCancelEdit }) => {
         onSubmit={handleSubmit}
         form={form}
         setForm={setForm}
-        departments={departments}
         loading={loading}
       />
     </div>
@@ -198,12 +198,12 @@ const Alert = ({ type, message, onClose }) => (
   </motion.div>
 );
 
-const FormSection = ({ isEditMode, onCancel, onSubmit, form, setForm, departments, loading }) => (
+const FormSection = ({ isEditMode, onCancel, onSubmit, form, setForm, loading }) => (
   <motion.div
     variants={animations.fadeUp}
     initial="hidden"
     animate="show"
-    className="relative overflow-hidden rounded-2xl bg-white/90 border border-white shadow-lg  p-5"
+    className="relative overflow-hidden rounded-2xl bg-white/90 border border-white shadow-lg p-5"
   >
     <FormHeader isEditMode={isEditMode} onCancel={onCancel} />
     
@@ -214,7 +214,7 @@ const FormSection = ({ isEditMode, onCancel, onSubmit, form, setForm, department
       animate="show"
       className="space-y-3"
     >
-      <InputGrid form={form} setForm={setForm} departments={departments} />
+      <InputGrid form={form} setForm={setForm} />
       <SubmitButton loading={loading} isEditMode={isEditMode} />
     </motion.form>
   </motion.div>
@@ -243,36 +243,12 @@ const FormHeader = ({ isEditMode, onCancel }) => (
   </div>
 );
 
-const InputGrid = ({ form, setForm, departments }) => (
+const InputGrid = ({ form, setForm }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-    <DepartmentSelect form={form} setForm={setForm} departments={departments} />
-    
     {INPUT_FIELDS.map((field) => (
       <InputField key={field.key} field={field} form={form} setForm={setForm} />
     ))}
   </div>
-);
-
-const DepartmentSelect = ({ form, setForm, departments }) => (
-  <motion.div variants={animations.item} className="relative md:col-span-2">
-    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
-      <Building2 className="w-3.5 h-3.5" />
-    </div>
-    <select
-      name="department_id"
-      value={form.department_id}
-      onChange={(e) => setForm({ ...form, department_id: e.target.value })}
-      className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all appearance-none cursor-pointer"
-      required
-    >
-      <option value="">Select Department</option>
-      {departments.map((dept) => (
-        <option key={dept.id} value={dept.id}>
-          {dept.name}
-        </option>
-      ))}
-    </select>
-  </motion.div>
 );
 
 const InputField = ({ field, form, setForm }) => {
@@ -291,7 +267,7 @@ const InputField = ({ field, form, setForm }) => {
           value={value}
           onChange={handleChange}
           placeholder={field.placeholder}
-          rows={2}
+          rows={3}
           className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all resize-none"
         />
       ) : (
@@ -301,6 +277,9 @@ const InputField = ({ field, form, setForm }) => {
           value={value}
           onChange={handleChange}
           placeholder={field.placeholder}
+          min={field.type === "number" ? "1" : undefined}
+          step={field.type === "number" ? "1" : undefined}
+          required={field.key === "subject_name" || field.key === "credit"}
           className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
         />
       )}

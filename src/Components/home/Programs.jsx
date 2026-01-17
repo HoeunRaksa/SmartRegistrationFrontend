@@ -357,7 +357,7 @@ export default function Program() {
                 <span className="relative z-10">Contact Admissions</span>
               </a>
               <a
-                href="/programs"
+                href="/curriculum"
                 className="backdrop-blur-xl bg-white/60 text-gray-800 font-semibold px-8 py-4 rounded-xl hover:bg-white/80 hover:scale-105 transition-all duration-300 border-2 border-white/60 shadow-lg"
               >
                 View All Programs
