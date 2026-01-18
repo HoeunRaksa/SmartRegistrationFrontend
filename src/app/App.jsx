@@ -46,14 +46,18 @@ function AppContent() {
     if (pathname === "/") {
       if (user.role === "admin" || user.role === "staff") {
         navigate("/admin/dashboard", { replace: true });
+      } else if (user.role === "student") {
+        navigate("/student/dashboard", { replace: true });
       }
       return;
     }
 
-    // ✅ block login page
+    // ✅ block login page for authenticated users
     if (pathname === "/login") {
       if (user.role === "admin" || user.role === "staff") {
         navigate("/admin/dashboard", { replace: true });
+      } else if (user.role === "student") {
+        navigate("/student/dashboard", { replace: true });
       } else {
         navigate("/", { replace: true });
       }
@@ -62,8 +66,13 @@ function AppContent() {
 
   const pathname = location.pathname.toLowerCase();
   const isAdminRoute = pathname.startsWith("/admin");
-  const shouldHideNavbar = isAdminRoute;
-  const shouldHideFooter = isAdminRoute || pathname === "/registration" || pathname === "/login";
+  const isStudentRoute = pathname.startsWith("/student");
+  
+  // Hide navbar for all dashboard routes (admin, staff, student)
+  const shouldHideNavbar = isAdminRoute || isStudentRoute;
+  
+  // Hide footer for dashboard routes and auth pages
+  const shouldHideFooter = isAdminRoute || isStudentRoute || pathname === "/registration" || pathname === "/login";
 
   return (
     <div className="relative min-h-screen w-full flex flex-col bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
@@ -101,7 +110,7 @@ function AppContent() {
       <main className={`relative w-full flex-1 flex flex-col z-10 ${shouldHideNavbar ? "pt-0" : "pt-24"}`}>
         <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="min-h-[calc(100vh-200px)]">
-            {isAdminRoute ? (
+            {isAdminRoute || isStudentRoute ? (
               <MainRouter />
             ) : (
               <AnimatePresence mode="wait">

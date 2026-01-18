@@ -1,7 +1,7 @@
 import API from "./index"; // ✅ shared axios instance with token
 
 // ==============================
-// STUDENT API - FIXED VERSION
+// STUDENT API
 // ==============================
 
 /**
@@ -81,6 +81,20 @@ export const deleteStudent = async (id) => {
     return response;
   } catch (error) {
     console.error(`deleteStudent(${id}) error:`, error);
+    throw error;
+  }
+};
+
+// POST: Reset student password (Admin/Staff only)
+export const resetStudentPassword = async (id, newPassword) => {
+  try {
+    const response = await API.post(`/students/${id}/reset-password`, {
+      new_password: newPassword,
+      new_password_confirmation: newPassword
+    });
+    return response;
+  } catch (error) {
+    console.error(`resetStudentPassword(${id}) error:`, error);
     throw error;
   }
 };

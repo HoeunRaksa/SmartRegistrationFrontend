@@ -10,15 +10,19 @@ import NotificationInbox from "../pages/Notification";
 import Curriculum from "../pages/Curriculum";
 import NotFound from "../pages/NotFound";
 import PaymentForm from "../../src/Components/payment/PaymentForm";
+
 // Admin Pages
 import AdminDashboard from "../adminSide/pageAdmin/AdminDashboard";
+
+// Student Pages
+import StudentDashboard from "../studentSide/StudentPage/studentDashbord";
 
 // Components
 import ProtectedRoute from "./ProtectedRoute";
 
 /**
  * Main Application Router
- * Handles all routing logic with protected routes for admin access
+ * Handles all routing logic with protected routes for admin and student access
  */
 const MainRouter = () => {
   return (
@@ -42,7 +46,9 @@ const MainRouter = () => {
 
       {/* Curriculum Information */}
       <Route path="/curriculum" element={<Curriculum />} />
-       <Route path="/payment" element={<PaymentForm />} />
+
+      {/* Payment */}
+      <Route path="/payment" element={<PaymentForm />} />
 
       {/* ================= ADMIN ROUTES (PROTECTED) ================= */}
 
@@ -62,6 +68,28 @@ const MainRouter = () => {
         element={
           <ProtectedRoute allowedRoles={["admin", "staff"]}>
             <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* ================= STUDENT ROUTES (PROTECTED) ================= */}
+
+      {/* Student Base Route - Redirect to Dashboard */}
+      <Route
+        path="/student"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <Navigate to="/student/dashboard" replace />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Student Dashboard with Nested Sections */}
+      <Route
+        path="/student/:section?"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <StudentDashboard />
           </ProtectedRoute>
         }
       />

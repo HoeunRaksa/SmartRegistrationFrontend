@@ -30,12 +30,21 @@ const Login = () => {
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
-      console.log("✅ Logged in as:", user.name, "Role:", user.role);
+      console.log("✅ Logged in as:", user.name, "| Role:", user.role);
+      console.log("👤 User object:", user);
+
+      // Small delay to ensure localStorage is set
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Redirect based on role
       if (user.role === "admin" || user.role === "staff") {
+        console.log("🔄 Redirecting to admin dashboard...");
         navigate("/admin/dashboard", { replace: true });
+      } else if (user.role === "student") {
+        console.log("🔄 Redirecting to student dashboard...");
+        navigate("/student/dashboard", { replace: true });
       } else {
+        console.log("⚠️ Unknown role:", user.role, "- redirecting to home");
         navigate("/", { replace: true });
       }
     } catch (err) {

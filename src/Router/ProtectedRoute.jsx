@@ -46,7 +46,18 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   // Check if user has required role
   if (!allowedRoles.includes(user.role)) {
     console.log("❌ Access denied - Role:", user.role, "Required:", allowedRoles);
-    return <Navigate to="/" replace />;
+    
+    // Redirect based on user's actual role
+    if (user.role === "admin" || user.role === "staff") {
+      console.log("🔄 Redirecting admin/staff to /admin/dashboard");
+      return <Navigate to="/admin/dashboard" replace />;
+    } else if (user.role === "student") {
+      console.log("🔄 Redirecting student to /student/dashboard");
+      return <Navigate to="/student/dashboard" replace />;
+    } else {
+      console.log("🔄 Unknown role - redirecting to home");
+      return <Navigate to="/" replace />;
+    }
   }
 
   console.log("✅ Access granted - User:", user.name, "Role:", user.role);

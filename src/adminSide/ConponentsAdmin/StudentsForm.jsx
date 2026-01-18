@@ -5,6 +5,7 @@ import {
   fetchStudents,
   updateStudent,
   deleteStudent,
+  resetStudentPassword,
 } from "../../../src/api/student_api.jsx";
 import { fetchDepartments } from "../../../src/api/department_api.jsx";
 import {
@@ -23,6 +24,10 @@ import {
   Trash2,
   Edit,
   Eye,
+  Key,
+  RefreshCw,
+  Copy,
+  Lock,
 } from "lucide-react";
 
 /* ================== CONSTANTS ================== */
@@ -95,6 +100,13 @@ const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Password Reset States
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [resettingPassword, setResettingPassword] = useState(false);
+  const [passwordResetSuccess, setPasswordResetSuccess] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const isEditMode = !!editingStudent;
 
@@ -103,7 +115,7 @@ const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
     loadDepartments();
   }, []);
 
-  // ✅ NEW: Populate form when editingStudent changes
+  // ✅ Populate form when editingStudent changes
   useEffect(() => {
     if (editingStudent) {
       setForm({
@@ -121,8 +133,9 @@ const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
         parent_name: editingStudent.parent_name || "",
         parent_phone: editingStudent.parent_phone || "",
       });
+      setShowPasswordReset(false);
+      setPasswordResetSuccess(false);
     } else {
-      // ✅ Reset form when not editing
       setForm(INITIAL_FORM_STATE);
     }
   }, [editingStudent]);
@@ -144,8 +157,54 @@ const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
     }
   };
 
+  // Generate password: novatech + current datetime
+  const generatePassword = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    return `novatech${year}${month}${day}${hours}${minutes}${seconds}`;
+  };
+
+  const handleResetPassword = async () => {
+    if (!editingStudent) return;
+
+    const generatedPassword = generatePassword();
+    setNewPassword(generatedPassword);
+    setResettingPassword(true);
+
+    try {
+      await resetStudentPassword(editingStudent.id, generatedPassword);
+      setPasswordResetSuccess(true);
+      setShowPasswordReset(false);
+      
+      // Auto-hide success message after 10 seconds
+      setTimeout(() => {
+        setPasswordResetSuccess(false);
+      }, 10000);
+    } catch (err) {
+      console.error("Password reset error:", err);
+      setError(err.response?.data?.message || "Failed to reset password");
+    } finally {
+      setResettingPassword(false);
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(newPassword);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const resetForm = () => {
     setForm(INITIAL_FORM_STATE);
+    setShowPasswordReset(false);
+    setPasswordResetSuccess(false);
+    setNewPassword("");
     if (onCancelEdit) onCancelEdit();
   };
 
@@ -185,6 +244,58 @@ const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
         {error && (
           <Alert type="error" message={error} onClose={() => setError(null)} />
         )}
+        
+        {/* Password Reset Success Alert */}
+        {passwordResetSuccess && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            className="flex items-start gap-3 p-4 rounded-2xl border shadow-lg bg-green-50 border-green-200"
+          >
+            <div className="p-1 bg-green-100 rounded-full mt-0.5">
+              <CheckCircle2 className="w-5 h-5 text-green-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-green-800 mb-1">
+                Password Reset Successfully!
+              </p>
+              <div className="bg-white/60 rounded-lg p-3 border border-green-200">
+                <p className="text-xs text-green-700 mb-1 font-medium">New Password:</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 text-sm font-mono font-bold text-green-900 bg-green-50 px-3 py-1.5 rounded border border-green-200">
+                    {newPassword}
+                  </code>
+                  <button
+                    onClick={copyToClipboard}
+                    className="px-3 py-1.5 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg text-xs font-medium flex items-center gap-1 transition-colors"
+                  >
+                    {copied ? (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        Copy
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+              <p className="text-xs text-green-600 mt-2">
+                ⚠️ Please save this password. The student must use it to login.
+              </p>
+            </div>
+            <button
+              onClick={() => setPasswordResetSuccess(false)}
+              className="text-green-600 hover:text-green-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* ================= FORM ================= */}
@@ -196,6 +307,11 @@ const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
         setForm={setForm}
         departments={departments}
         loading={loading}
+        editingStudent={editingStudent}
+        showPasswordReset={showPasswordReset}
+        setShowPasswordReset={setShowPasswordReset}
+        handleResetPassword={handleResetPassword}
+        resettingPassword={resettingPassword}
       />
     </div>
   );
@@ -230,7 +346,20 @@ const Alert = ({ type, message, onClose }) => (
   </motion.div>
 );
 
-const FormSection = ({ isEditMode, onCancel, onSubmit, form, setForm, departments, loading }) => (
+const FormSection = ({ 
+  isEditMode, 
+  onCancel, 
+  onSubmit, 
+  form, 
+  setForm, 
+  departments, 
+  loading,
+  editingStudent,
+  showPasswordReset,
+  setShowPasswordReset,
+  handleResetPassword,
+  resettingPassword
+}) => (
   <motion.div
     variants={animations.fadeUp}
     initial="hidden"
@@ -247,6 +376,110 @@ const FormSection = ({ isEditMode, onCancel, onSubmit, form, setForm, department
       className="space-y-3"
     >
       <InputGrid form={form} setForm={setForm} departments={departments} />
+      
+      {/* Password Reset Section - Only in Edit Mode */}
+      {isEditMode && editingStudent && (
+        <motion.div 
+          variants={animations.item}
+          className="pt-4 border-t border-gray-200"
+        >
+          <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-4 border border-orange-200">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Key className="w-5 h-5 text-orange-600" />
+              </div>
+              <div className="flex-1">
+                <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                  Password Reset
+                </h4>
+                <p className="text-xs text-gray-600 mb-3">
+                  Generate a new password for {editingStudent.full_name_en}. 
+                  The password will be: <code className="font-mono font-semibold">novatech + current datetime</code>
+                </p>
+                
+                <AnimatePresence>
+                  {!showPasswordReset ? (
+                    <motion.button
+                      type="button"
+                      onClick={() => setShowPasswordReset(true)}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors shadow-md"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      Reset Password
+                    </motion.button>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-3"
+                    >
+                      <div className="bg-white/80 rounded-lg p-3 border border-orange-200">
+                        <p className="text-xs font-medium text-gray-700 mb-2">
+                          ⚠️ Are you sure you want to reset the password?
+                        </p>
+                        <ul className="text-xs text-gray-600 space-y-1 mb-3">
+                          <li className="flex items-start gap-2">
+                            <span className="text-orange-500 mt-0.5">•</span>
+                            <span>A new password will be generated automatically</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-orange-500 mt-0.5">•</span>
+                            <span>Student will be logged out from all devices</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-orange-500 mt-0.5">•</span>
+                            <span>You must save and share the new password with the student</span>
+                          </li>
+                        </ul>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <motion.button
+                          type="button"
+                          onClick={handleResetPassword}
+                          disabled={resettingPassword}
+                          whileHover={{ scale: resettingPassword ? 1 : 1.02 }}
+                          whileTap={{ scale: resettingPassword ? 1 : 0.98 }}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {resettingPassword ? (
+                            <>
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                              />
+                              Resetting...
+                            </>
+                          ) : (
+                            <>
+                              <Lock className="w-4 h-4" />
+                              Confirm Reset
+                            </>
+                          )}
+                        </motion.button>
+                        <motion.button
+                          type="button"
+                          onClick={() => setShowPasswordReset(false)}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          Cancel
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+      
       <SubmitButton loading={loading} isEditMode={isEditMode} />
     </motion.form>
   </motion.div>

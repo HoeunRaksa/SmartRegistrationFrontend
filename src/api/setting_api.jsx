@@ -1,43 +1,84 @@
-import API from '../api/index';
-// User Settings API
-export const userSettingsApi = {
-  // Get user profile
-  getProfile: () => API.get('/user/profile'),
+import API from './index';
 
-  // Update name
-  updateName: (name) => API.put('/user/update-name', { name }),
+const userSettingsApi = {
+  /**
+   * Get current user profile
+   */
+  getProfile: async () => {
+    return await API.get('/user/profile');
+  },
 
-  // Update email
-  updateEmail: (email, currentPassword) => 
-    API.put('/user/update-email', { email, current_password: currentPassword }),
+  /**
+   * Update user name
+   */
+  updateName: async (name) => {
+    return await API.put('/user/update-name', { name });
+  },
 
-  // Change password
-  changePassword: (currentPassword, newPassword, newPasswordConfirmation) =>
-    API.put('/user/change-password', {
-      current_password: currentPassword,
-      new_password: newPassword,
-      new_password_confirmation: newPasswordConfirmation,
-    }),
-
-  // Upload profile picture
-  uploadProfilePicture: (file) => {
-    const formData = new FormData();
-    formData.append('profile_picture', file);
-    
-    return API.post('/user/upload-profile-picture', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+  /**
+   * Update user email
+   */
+  updateEmail: async (email, currentPassword) => {
+    return await API.put('/user/update-email', {
+      email,
+      current_password: currentPassword
     });
   },
 
-  // Delete profile picture
-  deleteProfilePicture: () => API.delete('/user/delete-profile-picture'),
+  /**
+   * Change password
+   */
+  changePassword: async (currentPassword, newPassword, confirmPassword) => {
+    return await API.put('/user/change-password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+      new_password_confirmation: confirmPassword
+    });
+  },
 
-  // Delete account
-  deleteAccount: (password) => API.delete('/user/delete-account', { 
-    data: { password } 
-  }),
+  /**
+   * Upload profile picture
+   */
+  uploadProfilePicture: async (file) => {
+    const formData = new FormData();
+    formData.append('profile_picture', file);
+
+    return await API.post('/user/upload-profile-picture', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      }
+    });
+  },
+
+  /**
+   * Delete profile picture
+   */
+  deleteProfilePicture: async () => {
+    return await API.delete('/user/delete-profile-picture');
+  },
+
+  /**
+   * Delete user account
+   */
+  deleteAccount: async (password) => {
+    return await API.post('/user/delete-account', { password });
+  },
+
+  /**
+   * Logout user
+   */
+  logout: async () => {
+    try {
+      await API.post('/logout');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear local storage regardless of API call result
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+  }
 };
 
 export default userSettingsApi;
