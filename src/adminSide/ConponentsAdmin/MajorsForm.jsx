@@ -1,35 +1,17 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  createMajor,
-  updateMajor,
-} from "../../../src/api/major_api.jsx";
-import { fetchDepartments } from "../../../src/api/department_api.jsx";
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { createMajor, updateMajor } from "../../api/major_api.jsx";
+import { fetchDepartments } from "../../api/department_api.jsx";
 import {
   GraduationCap,
-  X,
-  CheckCircle2,
-  AlertCircle,
-  Sparkles,
-  FileText,
   Building2,
+  FileText,
   DollarSign,
+  Save,
+  X,
+  Upload,
+  Image as ImageIcon,
 } from "lucide-react";
-
-/* ================== CONSTANTS ================== */
-
-const INITIAL_FORM_STATE = {
-  major_name: "",
-  description: "",
-  department_id: "",
-  registration_fee: "",
-};
-
-const INPUT_FIELDS = [
-  { key: "major_name", icon: GraduationCap, placeholder: "Major Name", col: "md:col-span-2" },
-  { key: "description", icon: FileText, placeholder: "Description", col: "md:col-span-2", multiline: true },
-  { key: "registration_fee", icon: DollarSign, placeholder: "Registration Fee (USD)", col: "md:col-span-2", type: "number" },
-];
 
 /* ================== ANIMATION VARIANTS ================== */
 
@@ -38,31 +20,22 @@ const animations = {
     hidden: { opacity: 0, y: 24 },
     show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
   },
-  container: {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.15 } },
-  },
-  item: {
-    hidden: { opacity: 0, y: 18, scale: 0.96 },
-    show: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: { type: "spring", stiffness: 260, damping: 22 },
-    },
-  },
 };
 
 /* ================== COMPONENT ================== */
 
 const MajorsForm = ({ editingMajor, onSuccess, onCancel }) => {
-  const [form, setForm] = useState(INITIAL_FORM_STATE);
   const [departments, setDepartments] = useState([]);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [formData, setFormData] = useState({
+    major_name: "",
+    description: "",
+    department_id: "",
+    registration_fee: "",
+    image: null,
+  });
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState(null);
-
-  const isEditMode = !!editingMajor;
+  const [error, setError] = useState("");
 
   useEffect(() => {
     loadDepartments();
@@ -70,250 +43,331 @@ const MajorsForm = ({ editingMajor, onSuccess, onCancel }) => {
 
   useEffect(() => {
     if (editingMajor) {
-      setForm({
+      setFormData({
         major_name: editingMajor.major_name || "",
         description: editingMajor.description || "",
         department_id: editingMajor.department_id || "",
         registration_fee: editingMajor.registration_fee || "",
+        image: null,
       });
+      
+      // Set image preview if editing and image exists
+      if (editingMajor.image) {
+        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        setImagePreview(`${API_BASE_URL}/${editingMajor.image}`);
+      }
     } else {
-      setForm(INITIAL_FORM_STATE);
+      resetForm();
     }
   }, [editingMajor]);
 
   const loadDepartments = async () => {
     try {
       const res = await fetchDepartments();
-      setDepartments(res.data.data || []);
-    } catch {
+      setDepartments(res.data?.data || res.data || []);
+    } catch (err) {
+      console.error("Failed to load departments:", err);
       setDepartments([]);
     }
   };
 
-  const resetForm = () => {
-    setForm(INITIAL_FORM_STATE);
-    if (onCancel) onCancel();
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setError("");
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+      if (!validTypes.includes(file.type)) {
+        setError("Please upload a valid image file (JPEG, PNG, GIF, or WEBP)");
+        return;
+      }
+
+      // Validate file size (2MB max)
+      if (file.size > 2048 * 1024) {
+        setError("Image size should be less than 2MB");
+        return;
+      }
+
+      setFormData((prev) => ({ ...prev, image: file }));
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+      setError("");
+    }
+  };
+
+  const removeImage = () => {
+    setFormData((prev) => ({ ...prev, image: null }));
+    setImagePreview(null);
+    // Reset file input
+    const fileInput = document.getElementById("image-upload");
+    if (fileInput) fileInput.value = "";
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
-    setSuccess(false);
+    setError("");
 
     try {
-      // Prepare form data with proper number conversion for registration_fee
-      const submitData = {
-        ...form,
-        registration_fee: form.registration_fee ? parseFloat(form.registration_fee) : undefined,
-      };
-
-      if (isEditMode) {
+      if (editingMajor) {
+        // For update: send as object, updateMajor will convert to FormData
+        const submitData = {
+          major_name: formData.major_name,
+          description: formData.description || "",
+          department_id: formData.department_id,
+          registration_fee: formData.registration_fee || "100.00",
+        };
+        
+        if (formData.image) {
+          submitData.image = formData.image;
+        }
+        
         await updateMajor(editingMajor.id, submitData);
       } else {
+        // For create: send as FormData since we have an image
+        const submitData = new FormData();
+        submitData.append("major_name", formData.major_name);
+        submitData.append("description", formData.description || "");
+        submitData.append("department_id", formData.department_id);
+        submitData.append("registration_fee", formData.registration_fee || "100.00");
+        
+        if (formData.image) {
+          submitData.append("image", formData.image);
+        }
+        
         await createMajor(submitData);
       }
 
       resetForm();
-      setSuccess(true);
       if (onSuccess) onSuccess();
-      setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      console.error("Submit error:", err);
-      setError(err.response?.data?.message || err.message || "Failed to save major");
+      console.error("Failed to save major:", err);
+      setError(
+        err.response?.data?.message ||
+          err.response?.data?.error ||
+          "Failed to save major"
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="space-y-4">
-      {/* ================= ALERTS ================= */}
-      <AnimatePresence>
-        {success && (
-          <Alert type="success" message={`Major ${isEditMode ? "updated" : "created"} successfully!`} />
-        )}
-        {error && (
-          <Alert type="error" message={error} onClose={() => setError(null)} />
-        )}
-      </AnimatePresence>
+  const resetForm = () => {
+    setFormData({
+      major_name: "",
+      description: "",
+      department_id: "",
+      registration_fee: "",
+      image: null,
+    });
+    setImagePreview(null);
+    setError("");
+    const fileInput = document.getElementById("image-upload");
+    if (fileInput) fileInput.value = "";
+  };
 
-      {/* ================= FORM ================= */}
-      <motion.div
-        variants={animations.fadeUp}
-        initial="hidden"
-        animate="show"
-        className="relative overflow-hidden rounded-2xl bg-white/90 border border-white shadow-lg  p-5"
-      >
-        <FormHeader isEditMode={isEditMode} onCancel={resetForm} />
-
-        <motion.form
-          onSubmit={handleSubmit}
-          variants={animations.container}
-          initial="hidden"
-          animate="show"
-          className="space-y-3"
-        >
-          <InputGrid form={form} setForm={setForm} departments={departments} />
-          <SubmitButton loading={loading} isEditMode={isEditMode} />
-        </motion.form>
-      </motion.div>
-    </div>
-  );
-};
-
-/* ================== SUB-COMPONENTS ================== */
-
-const Alert = ({ type, message, onClose }) => (
-  <motion.div
-    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.95 }}
-    className={`flex items-center gap-3 p-4 rounded-2xl border shadow-sm ${type === "success"
-        ? "bg-green-50 border-green-200"
-        : "bg-red-50 border-red-200"
-      }`}
-  >
-    {type === "success" ? (
-      <CheckCircle2 className="w-5 h-5 text-green-600" />
-    ) : (
-      <AlertCircle className="w-5 h-5 text-red-600" />
-    )}
-    <p className={`text-sm font-medium ${type === "success" ? "text-green-800" : "text-red-800"}`}>
-      {message}
-    </p>
-    {onClose && (
-      <button onClick={onClose} className="ml-auto text-red-600 hover:text-red-800">
-        <X className="w-4 h-4" />
-      </button>
-    )}
-  </motion.div>
-);
-
-const FormHeader = ({ isEditMode, onCancel }) => (
-  <div className="flex items-center justify-between mb-4">
-    <div className="flex items-center gap-2">
-      <Sparkles className="w-4 h-4 text-purple-600" />
-      <h2 className="text-lg font-semibold text-gray-900">
-        {isEditMode ? "Edit Major" : "Create New Major"}
-      </h2>
-    </div>
-    {isEditMode && (
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={onCancel}
-        type="button"
-        className="text-sm text-gray-600 hover:text-red-600 transition-colors flex items-center gap-1"
-      >
-        <X className="w-4 h-4" />
-        Cancel
-      </motion.button>
-    )}
-  </div>
-);
-
-const InputGrid = ({ form, setForm, departments }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-    {INPUT_FIELDS.map((field) => (
-      <InputField key={field.key} field={field} form={form} setForm={setForm} />
-    ))}
-    <DepartmentSelect form={form} setForm={setForm} departments={departments} />
-  </div>
-);
-
-const InputField = ({ field, form, setForm }) => {
-  const Icon = field.icon;
-  const value = form[field.key] ?? "";
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleCancelEdit = () => {
+    resetForm();
+    if (onCancel) onCancel();
+  };
 
   return (
-    <motion.div variants={animations.item} className={`relative ${field.col}`}>
-      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
-        <Icon className="w-3.5 h-3.5" />
+    <motion.div
+      variants={animations.fadeUp}
+      initial="hidden"
+      animate="show"
+      className="rounded-2xl bg-white/40 backdrop-blur-sm border border-white/40 shadow-lg p-6"
+    >
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500">
+            <GraduationCap className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">
+              {editingMajor ? "Edit Major" : "Add New Major"}
+            </h2>
+            <p className="text-xs text-gray-600">
+              {editingMajor ? "Update major information" : "Create a new academic major"}
+            </p>
+          </div>
+        </div>
+
+        {editingMajor && (
+          <button
+            onClick={handleCancelEdit}
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-600" />
+          </button>
+        )}
       </div>
-      {field.multiline ? (
-        <textarea
-          name={field.key}
-          value={value}
-          onChange={handleChange}
-          placeholder={field.placeholder}
-          rows={2}
-          className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all resize-none"
-        />
-      ) : (
-        <input
-          name={field.key}
-          type={field.type || "text"}
-          value={value}
-          onChange={handleChange}
-          placeholder={field.placeholder}
-          step={field.type === "number" ? "0.01" : undefined}
-          min={field.type === "number" ? "0" : undefined}
-          className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
-        />
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+          {error}
+        </div>
       )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid md:grid-cols-2 gap-4">
+          {/* Major Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <GraduationCap className="w-4 h-4 inline mr-1" />
+              Major Name *
+            </label>
+            <input
+              type="text"
+              name="major_name"
+              value={formData.major_name}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              placeholder="e.g., Computer Science"
+            />
+          </div>
+
+          {/* Department */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Building2 className="w-4 h-4 inline mr-1" />
+              Department *
+            </label>
+            <select
+              name="department_id"
+              value={formData.department_id}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            >
+              <option value="">Select Department</option>
+              {departments.map((dept) => (
+                <option key={dept.id} value={dept.id}>
+                  {dept.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Registration Fee */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <DollarSign className="w-4 h-4 inline mr-1" />
+            Registration Fee
+          </label>
+          <input
+            type="number"
+            name="registration_fee"
+            value={formData.registration_fee}
+            onChange={handleChange}
+            step="0.01"
+            min="0"
+            className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            placeholder="100.00"
+          />
+        </div>
+
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <FileText className="w-4 h-4 inline mr-1" />
+            Description
+          </label>
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            rows="3"
+            className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+            placeholder="Enter major description..."
+          />
+        </div>
+
+        {/* Image Upload */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <ImageIcon className="w-4 h-4 inline mr-1" />
+            Major Image
+          </label>
+          
+          <div className="space-y-3">
+            {/* Image Preview */}
+            {imagePreview && (
+              <div className="relative inline-block">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-32 h-32 object-cover rounded-lg border-2 border-gray-200"
+                />
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            {/* Upload Button */}
+            <div className="flex items-center gap-3">
+              <label
+                htmlFor="image-upload"
+                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg cursor-pointer hover:from-blue-600 hover:to-purple-600 transition-all"
+              >
+                <Upload className="w-4 h-4" />
+                {imagePreview ? "Change Image" : "Upload Image"}
+              </label>
+              <input
+                id="image-upload"
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+              <span className="text-xs text-gray-500">
+                Max 2MB (JPEG, PNG, GIF, WEBP)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-3 pt-4">
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            <Save className="w-4 h-4" />
+            {loading ? "Saving..." : editingMajor ? "Update Major" : "Create Major"}
+          </button>
+
+          {editingMajor && (
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-all"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      </form>
     </motion.div>
   );
 };
-
-const DepartmentSelect = ({ form, setForm, departments }) => (
-  <motion.div variants={animations.item} className="relative md:col-span-2">
-    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
-      <Building2 className="w-3.5 h-3.5" />
-    </div>
-    <select
-      name="department_id"
-      value={form.department_id}
-      onChange={(e) => setForm({ ...form, department_id: e.target.value })}
-      className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all appearance-none cursor-pointer"
-      required
-    >
-      <option value="">Select Department</option>
-      {departments.map((dept) => (
-        <option key={dept.id} value={dept.id}>
-          {dept.name} ({dept.code})
-        </option>
-      ))}
-    </select>
-  </motion.div>
-);
-
-const SubmitButton = ({ loading, isEditMode }) => (
-  <motion.button
-    variants={animations.item}
-    whileHover={{ scale: 1.02, y: -2 }}
-    whileTap={{ scale: 0.98 }}
-    disabled={loading}
-    type="submit"
-    className="w-full relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 py-2.5 text-sm font-semibold text-white shadow-lg disabled:opacity-70 disabled:cursor-not-allowed transition-all"
-  >
-    {!loading && (
-      <motion.div
-        animate={{ x: ["-100%", "100%"] }}
-        transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-      />
-    )}
-
-    <span className="relative z-10 flex items-center justify-center gap-2">
-      {loading ? (
-        <>
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
-          />
-          {isEditMode ? "Updating Major..." : "Saving Major..."}
-        </>
-      ) : (
-        <>
-          <CheckCircle2 className="w-5 h-5" />
-          {isEditMode ? "Update Major" : "Create Major"}
-        </>
-      )}
-    </span>
-  </motion.button>
-);
 
 export default MajorsForm;

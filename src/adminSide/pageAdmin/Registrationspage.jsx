@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchRegistrations } from "../../api/registration_api";
+import RegistrationReportPage from "./RegistrationReportPage";
 import {
   Users,
   User,
@@ -15,6 +16,7 @@ import {
   X,
   DollarSign,
   Search,
+  FileText,
 } from "lucide-react";
 
 const RegistrationPage = () => {
@@ -23,6 +25,7 @@ const RegistrationPage = () => {
   const [selectedRegistration, setSelectedRegistration] = useState(null);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
     loadRegistrations();
@@ -144,6 +147,15 @@ const RegistrationPage = () => {
               <Clock className="w-4 h-4" />
               Pending ({pendingCount})
             </button>
+
+            {/* CREATE REPORT BUTTON */}
+            <button
+              onClick={() => setShowReportModal(true)}
+              className="px-4 py-2.5 rounded-xl font-medium text-sm bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 shadow-lg transition-all flex items-center gap-2"
+            >
+              <FileText className="w-4 h-4" />
+              Create Report
+            </button>
           </div>
         </div>
       </div>
@@ -162,7 +174,49 @@ const RegistrationPage = () => {
           onClose={() => setSelectedRegistration(null)}
         />
       )}
+
+      {/* ================= REPORT MODAL ================= */}
+      {showReportModal && (
+        <ReportModal onClose={() => setShowReportModal(false)} />
+      )}
     </div>
+  );
+};
+
+/* ================== REPORT MODAL ================== */
+
+const ReportModal = ({ onClose }) => {
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          onClick={(e) => e.stopPropagation()}
+          className="relative w-full max-w-7xl max-h-[95vh] overflow-y-auto bg-white rounded-3xl shadow-2xl"
+        >
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 z-50 p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors shadow-lg"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          {/* Report Page Content */}
+          <div className="p-6">
+            <RegistrationReportPage />
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 
@@ -243,7 +297,7 @@ const RegistrationCard = ({ registration, onView }) => {
           )}
         </div>
         
-        {/* Profile Picture - Positioned at bottom of header, overlapping into content */}
+        {/* Profile Picture */}
         <div className="absolute -bottom-10 left-4">
           <div className="w-20 h-20 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white">
             {profileImage ? (
@@ -265,9 +319,9 @@ const RegistrationCard = ({ registration, onView }) => {
         </div>
       </div>
 
-      {/* Content - Added padding-top to accommodate profile picture */}
+      {/* Content */}
       <div className="p-5 pt-14">
-        <h4 className="font-semibold text-gray-900 text-lg mb-1  group-hover:text-blue-600 transition-colors">
+        <h4 className="font-semibold text-gray-900 text-lg mb-1 group-hover:text-blue-600 transition-colors">
           {registration.full_name_en}
         </h4>
         {registration.full_name_kh && (

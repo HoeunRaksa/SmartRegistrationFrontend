@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { deleteMajor } from "../../../src/api/major_api.jsx";
+import { deleteMajor } from "../../api/major_api.jsx";
 import {
   GraduationCap,
   X,
@@ -100,6 +100,13 @@ const EmptyState = () => (
 );
 
 const MajorCard = ({ major, onEdit, onDelete }) => {
+  // Use the same API URL as your API configuration
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  
+  const imageUrl = major.image 
+    ? `${API_BASE_URL}/${major.image}`
+    : null;
+
   return (
     <motion.div
       variants={animations.card}
@@ -107,16 +114,37 @@ const MajorCard = ({ major, onEdit, onDelete }) => {
       whileTap={{ scale: 0.98 }}
       className="group relative overflow-hidden rounded-xl bg-white/60 border border-white/50 shadow-md hover:shadow-xl transition-all duration-300"
     >
-      <MajorCardHeader major={major} onEdit={onEdit} onDelete={onDelete} />
+      <MajorCardHeader 
+        major={major} 
+        imageUrl={imageUrl}
+        onEdit={onEdit} 
+        onDelete={onDelete} 
+      />
       <MajorCardContent major={major} />
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
     </motion.div>
   );
 };
 
-const MajorCardHeader = ({ major, onEdit, onDelete }) => (
+const MajorCardHeader = ({ major, imageUrl, onEdit, onDelete }) => (
   <div className="relative h-32 overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100">
-    <div className="w-full h-full flex items-center justify-center">
+    {imageUrl ? (
+      <img
+        src={imageUrl}
+        alt={major.major_name}
+        className="w-full h-full object-cover"
+        onError={(e) => {
+          // Fallback to icon if image fails to load
+          e.target.style.display = 'none';
+          e.target.nextSibling.style.display = 'flex';
+        }}
+      />
+    ) : null}
+    
+    <div 
+      className="w-full h-full flex items-center justify-center"
+      style={{ display: imageUrl ? 'none' : 'flex' }}
+    >
       <GraduationCap className="w-16 h-16 text-purple-300" />
     </div>
 

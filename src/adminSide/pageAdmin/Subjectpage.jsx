@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import SubjectsForm from "../ConponentsAdmin/SubjectsForm.jsx";
+import SubjectsList from "../ConponentsAdmin/SubjectsList.jsx";
 import { fetchSubjects } from "../../api/subject_api.jsx";
 import { fetchStudents } from "../../api/student_api.jsx";
 import {
@@ -12,6 +13,7 @@ import {
 const SubjectsPage = () => {
   const [subjects, setSubjects] = useState([]);
   const [students, setStudents] = useState([]);
+  const [editingSubject, setEditingSubject] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -44,6 +46,24 @@ const SubjectsPage = () => {
       console.error("Failed to load students:", error);
       setStudents([]);
     }
+  };
+
+  // ================= HANDLE EDIT =================
+  const handleEdit = (subject) => {
+    setEditingSubject(subject);
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // ================= HANDLE SUCCESS =================
+  const handleSuccess = () => {
+    loadSubjects();
+    setEditingSubject(null);
+  };
+
+  // ================= HANDLE CANCEL =================
+  const handleCancel = () => {
+    setEditingSubject(null);
   };
 
   // ================= REAL QUICK STATS =================
@@ -99,7 +119,19 @@ const SubjectsPage = () => {
       </div>
 
       {/* ================= FORM ================= */}
-      <SubjectsForm onUpdate={loadSubjects} />
+      <SubjectsForm 
+        editingSubject={editingSubject}
+        onSuccess={handleSuccess}
+        onCancel={handleCancel}
+        onUpdate={loadSubjects}
+      />
+
+      {/* ================= SUBJECTS LIST ================= */}
+      <SubjectsList 
+        subjects={subjects}
+        onEdit={handleEdit}
+        onRefresh={loadSubjects}
+      />
     </div>
   );
 };

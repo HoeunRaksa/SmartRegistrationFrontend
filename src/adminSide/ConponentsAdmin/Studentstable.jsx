@@ -177,13 +177,6 @@ const StudentsTable = ({ students, loading, onView, onUpdate, onEdit }) => {
         )}
       </AnimatePresence>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard label="Total Students" value={students.length} color="blue" />
-        <StatCard label="Active" value={students.length} color="green" />
-        <StatCard label="Departments" value={new Set(students.map(s => s.department_id)).size} color="purple" />
-      </div>
-
       {/* Search and Filters */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
