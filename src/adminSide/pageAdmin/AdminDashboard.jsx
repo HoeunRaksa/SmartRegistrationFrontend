@@ -7,8 +7,8 @@ import SubjectsPage from '../pageAdmin/Subjectpage.jsx';
 import StudentPage from '../pageAdmin/Studentpage.jsx';
 import RegistrationsPage from '../pageAdmin/Registrationspage.jsx';
 import StaffPage from '../pageAdmin/Staffpage.jsx';
-import SettingPage from '../pageAdmin/Settingpage.jsx';
-import {logoutApi} from '../../api/auth.jsx';
+import SettingPage from '../../gobalConponent/Settingpage.jsx';
+import { logoutApi } from '../../api/auth.jsx';
 import {
   LayoutDashboard,
   GraduationCap,
@@ -57,12 +57,12 @@ const AdminDashboard = () => {
     { id: 'settings', label: 'Settings', icon: Settings, gradient: 'from-gray-500 to-slate-500' },
   ];
 
-const handleLogout = async () => {
- await logoutApi().catch(() => {});
-  localStorage.removeItem('user');
-  localStorage.removeItem('token');
-  navigate('/login');
-};
+  const handleLogout = async () => {
+    await logoutApi().catch(() => { });
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
   // Load user data
   useEffect(() => {
     const stored = localStorage.getItem("user");

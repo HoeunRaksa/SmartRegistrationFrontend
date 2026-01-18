@@ -20,8 +20,8 @@ import {
   Globe,
   Smartphone,
 } from 'lucide-react';
-import userSettingsApi from '../../api/setting_api.jsx';
-import profileFallback from '../../assets/images/profile.png';
+import userSettingsApi from '../api/setting_api.jsx';
+import profileFallback from '../assets/images/profile.png';
 
 const SettingPage = () => {
   const [user, setUser] = useState(null);
@@ -121,7 +121,7 @@ const SettingPage = () => {
       setProfilePicture(null);
       setPreviewUrl(null);
       showMessage('success', 'Profile picture updated successfully!');
-      
+
       // Reload page to update all components
       setTimeout(() => window.location.reload(), 1500);
     } catch (error) {
@@ -142,7 +142,7 @@ const SettingPage = () => {
       localStorage.setItem('user', JSON.stringify(updatedUser));
       setPreviewUrl(null);
       showMessage('success', 'Profile picture removed successfully!');
-      
+
       // Reload page to update all components
       setTimeout(() => window.location.reload(), 1500);
     } catch (error) {
@@ -205,7 +205,7 @@ const SettingPage = () => {
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
-    
+
     if (!currentPassword || !newPassword || !confirmPassword) {
       showMessage('error', 'Please fill in all password fields');
       return;
@@ -284,7 +284,7 @@ const SettingPage = () => {
   return (
     <div className="min-h-screen space-y-6">
       {/* Header */}
-    
+
 
       {/* Message Alert */}
       <AnimatePresence>
@@ -293,11 +293,10 @@ const SettingPage = () => {
             initial={{ opacity: 0, y: -20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            className={`backdrop-blur-2xl rounded-2xl p-4 border shadow-lg flex items-center gap-3 ${
-              message.type === 'success'
+            className={`backdrop-blur-2xl rounded-2xl p-4 border shadow-lg flex items-center gap-3 ${message.type === 'success'
                 ? 'border-green-200/50 bg-green-50/50'
                 : 'border-red-200/50 bg-red-50/50'
-            }`}
+              }`}
           >
             {message.type === 'success' ? (
               <CheckCircle className="w-5 h-5 text-green-600" />
@@ -322,11 +321,10 @@ const SettingPage = () => {
               whileHover={{ scale: 1.02, y: -4 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setActiveTab(tab.id)}
-              className={`relative overflow-hidden p-6 rounded-2xl border transition-all ${
-                isActive
+              className={`relative overflow-hidden p-6 rounded-2xl border transition-all ${isActive
                   ? 'bg-gradient-to-br from-blue-500 to-purple-500 text-white border-transparent shadow-xl'
                   : 'backdrop-blur-2xl border-white/20 text-gray-700 hover:border-blue-300/50 shadow-md'
-              }`}
+                }`}
             >
               <div className="flex flex-col items-start gap-3">
                 <Icon className={`w-6 h-6 ${isActive ? 'text-white' : 'text-blue-500'}`} />
