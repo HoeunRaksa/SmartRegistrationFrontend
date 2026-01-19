@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import DepartmentsForm from '../ConponentsAdmin/DepartmentsForm.jsx';
 import { fetchStudents } from "../../api/student_api.jsx";
@@ -19,6 +19,10 @@ import {
   Trash2,
   X,
   Image as ImageIcon,
+  Search,
+  Filter,
+  XCircle,
+  SlidersHorizontal,
 } from "lucide-react";
 
 /* ================== HELPER FUNCTIONS ================== */
@@ -42,8 +46,15 @@ const DepartmentsPage = () => {
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [students, setStudents] = useState([]);
 
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedFaculty, setSelectedFaculty] = useState("all");
+  const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState("name"); // name, code, recent
+
   useEffect(() => {
     loadDepartments();
+    loadStudents();
   }, []);
 
   const loadDepartments = async () => {
@@ -59,21 +70,15 @@ const DepartmentsPage = () => {
     }
   };
 
-  useEffect(() => {
-  loadDepartments();
-  loadStudents();
-}, []);
-
-const loadStudents = async () => {
-  try {
-    const res = await fetchStudents();
-    setStudents(res.data?.data || []);
-  } catch (error) {
-    console.error("Failed to load students:", error);
-    setStudents([]);
-  }
-};
-
+  const loadStudents = async () => {
+    try {
+      const res = await fetchStudents();
+      setStudents(res.data?.data || []);
+    } catch (error) {
+      console.error("Failed to load students:", error);
+      setStudents([]);
+    }
+  };
 
   const handleEdit = (department) => {
     setEditingDepartment(department);
@@ -94,30 +99,82 @@ const loadStudents = async () => {
     }
   };
 
- const quickStats = [
-  {
-    label: "Departments",
-    value: departments.length,
-    color: "from-green-500 to-emerald-500",
-    icon: TrendingUp,
-  },
-  {
-    label: "Students",
-    value: students.length,
-    color: "from-blue-500 to-cyan-500",
-    icon: Users,
-  },
-  {
-    label: "Avg / Dept",
-    value:
-      departments.length === 0
-        ? 0
-        : Math.round(students.length / departments.length),
-    color: "from-purple-500 to-pink-500",
-    icon: BarChart3,
-  },
-];
+  // Get unique faculties for filter dropdown
+  const faculties = useMemo(() => {
+    const uniqueFaculties = [...new Set(departments.map(d => d.faculty).filter(Boolean))];
+    return uniqueFaculties.sort();
+  }, [departments]);
 
+  // Filter and sort departments
+  const filteredDepartments = useMemo(() => {
+    let result = [...departments];
+
+    // Search filter
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase();
+      result = result.filter(dept => 
+        dept.name?.toLowerCase().includes(search) ||
+        dept.code?.toLowerCase().includes(search) ||
+        dept.faculty?.toLowerCase().includes(search) ||
+        dept.description?.toLowerCase().includes(search)
+      );
+    }
+
+    // Faculty filter
+    if (selectedFaculty !== "all") {
+      result = result.filter(dept => dept.faculty === selectedFaculty);
+    }
+
+    // Sorting
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return (a.name || "").localeCompare(b.name || "");
+        case "code":
+          return (a.code || "").localeCompare(b.code || "");
+        case "recent":
+          return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+        default:
+          return 0;
+      }
+    });
+
+    return result;
+  }, [departments, searchTerm, selectedFaculty, sortBy]);
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedFaculty("all");
+    setSortBy("name");
+  };
+
+  const hasActiveFilters = searchTerm || selectedFaculty !== "all" || sortBy !== "name";
+
+  const quickStats = [
+    {
+      label: "Departments",
+      value: filteredDepartments.length,
+      total: departments.length,
+      color: "from-green-500 to-emerald-500",
+      icon: TrendingUp,
+    },
+    {
+      label: "Students",
+      value: students.length,
+      color: "from-blue-500 to-cyan-500",
+      icon: Users,
+    },
+    {
+      label: "Avg / Dept",
+      value:
+        departments.length === 0
+          ? 0
+          : Math.round(students.length / departments.length),
+      color: "from-purple-500 to-pink-500",
+      icon: BarChart3,
+    },
+  ];
 
   return (
     <div className="min-h-screen space-y-6">
@@ -135,7 +192,12 @@ const loadStudents = async () => {
                   <Icon className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {stat.value}
+                    {stat.total && stat.value !== stat.total && (
+                      <span className="text-sm text-gray-500 ml-1">/ {stat.total}</span>
+                    )}
+                  </p>
                   <p className="text-xs text-gray-600">{stat.label}</p>
                 </div>
               </div>
@@ -151,13 +213,115 @@ const loadStudents = async () => {
         onCancelEdit={() => setEditingDepartment(null)}
       />
 
+      {/* ================= FILTERS ================= */}
+      <div className="rounded-2xl bg-white/40 border border-white shadow-lg p-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Search Bar */}
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search departments by name, code, faculty..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white/80 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <XCircle className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Filter Toggle Button */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`px-4 py-2.5 rounded-xl border transition-all font-medium text-sm flex items-center gap-2 ${
+              showFilters || hasActiveFilters
+                ? 'bg-blue-500 text-white border-blue-500'
+                : 'bg-white/80 text-gray-700 border-gray-200 hover:bg-gray-50'
+            }`}
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+            <span>Filters</span>
+            {hasActiveFilters && !showFilters && (
+              <span className="bg-white/20 px-1.5 py-0.5 rounded text-xs">•</span>
+            )}
+          </button>
+        </div>
+
+        {/* Advanced Filters (Collapsible) */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="pt-4 mt-4 border-t border-gray-200 grid sm:grid-cols-3 gap-3">
+                {/* Faculty Filter */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                    Faculty
+                  </label>
+                  <select
+                    value={selectedFaculty}
+                    onChange={(e) => setSelectedFaculty(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  >
+                    <option value="all">All Faculties</option>
+                    {faculties.map(faculty => (
+                      <option key={faculty} value={faculty}>{faculty}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Sort By */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                    Sort By
+                  </label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  >
+                    <option value="name">Name (A-Z)</option>
+                    <option value="code">Code (A-Z)</option>
+                    <option value="recent">Recently Added</option>
+                  </select>
+                </div>
+
+                {/* Clear Filters */}
+                <div className="flex items-end">
+                  <button
+                    onClick={clearFilters}
+                    disabled={!hasActiveFilters}
+                    className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium flex items-center justify-center gap-2"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    Clear Filters
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
       {/* ================= DEPARTMENTS LIST ================= */}
       <DepartmentsList
-        departments={departments}
+        departments={filteredDepartments}
         loading={loading}
         onEdit={handleEdit}
         onView={setSelectedDepartment}
         onDelete={handleDelete}
+        searchTerm={searchTerm}
       />
 
       {/* ================= DETAIL MODAL ================= */}
@@ -173,7 +337,7 @@ const loadStudents = async () => {
 
 /* ================== SUB-COMPONENTS ================== */
 
-const DepartmentsList = ({ departments, loading, onEdit, onView, onDelete }) => {
+const DepartmentsList = ({ departments, loading, onEdit, onView, onDelete, searchTerm }) => {
   if (loading) {
     return (
       <div className="rounded-2xl bg-white/40 border border-white shadow-lg p-12 text-center">
@@ -190,15 +354,17 @@ const DepartmentsList = ({ departments, loading, onEdit, onView, onDelete }) => 
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Grid3x3 className="w-5 h-5 text-blue-600" />
-          <h3 className="text-lg font-semibold text-gray-900">All Departments</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            {searchTerm ? "Search Results" : "All Departments"}
+          </h3>
         </div>
         <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1.5 rounded-full font-semibold">
-          {departments.length} Total
+          {departments.length} {departments.length === 1 ? "Department" : "Departments"}
         </span>
       </div>
 
       {departments.length === 0 ? (
-        <EmptyState />
+        <EmptyState searchTerm={searchTerm} />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {departments.map((dept) => (
@@ -216,13 +382,24 @@ const DepartmentsList = ({ departments, loading, onEdit, onView, onDelete }) => 
   );
 };
 
-const EmptyState = () => (
+const EmptyState = ({ searchTerm }) => (
   <div className="text-center py-12">
     <div className="inline-flex p-6 rounded-full bg-gray-100 mb-4">
-      <Building2 className="w-12 h-12 text-gray-400" />
+      {searchTerm ? (
+        <Search className="w-12 h-12 text-gray-400" />
+      ) : (
+        <Building2 className="w-12 h-12 text-gray-400" />
+      )}
     </div>
-    <p className="text-gray-500 font-medium">No departments yet</p>
-    <p className="text-sm text-gray-400 mt-1">Create your first department to get started</p>
+    <p className="text-gray-500 font-medium">
+      {searchTerm ? "No departments found" : "No departments yet"}
+    </p>
+    <p className="text-sm text-gray-400 mt-1">
+      {searchTerm 
+        ? `Try adjusting your search or filters` 
+        : "Create your first department to get started"
+      }
+    </p>
   </div>
 );
 
@@ -326,7 +503,7 @@ const DepartmentModal = ({ department, onClose }) => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.15 }}
-        className="fixed inset-0  z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
         onClick={onClose}
       >
         <motion.div

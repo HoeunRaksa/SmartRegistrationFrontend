@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import DepartmentsForm from '../ConponentsAdmin/DepartmentsForm.jsx';
 import MajorsForm from '../ConponentsAdmin/MajorsForm.jsx';
 import SubjectsForm from '../ConponentsAdmin/SubjectsForm.jsx';
@@ -11,20 +11,21 @@ import {
   GraduationCap,
   Users,
   BookOpen,
-  FileText,
   TrendingUp,
   Calendar,
-  Award,
   ArrowUp,
   Sparkles,
   ChevronRight,
   Loader,
+  UserCheck,
+  Grid3x3,
 } from "lucide-react";
 import profileFallback from "../../assets/images/profile.png";
 import { fetchDepartments } from "../../api/department_api.jsx";
 import { fetchMajors } from "../../api/major_api.jsx";
 import { fetchSubjects } from "../../api/subject_api.jsx";
 import { fetchStudents } from "../../api/student_api.jsx";
+import { fetchRegistrations } from "../../api/registration_api.jsx";
 
 const Dashboard = () => {
   const [activeView, setActiveView] = useState('admin/dashboard');
@@ -35,6 +36,7 @@ const Dashboard = () => {
   const [majors, setMajors] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [students, setStudents] = useState([]);
+  const [registrations, setRegistrations] = useState([]);
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -55,28 +57,62 @@ const Dashboard = () => {
     try {
       setLoading(true);
 
-      const [deptRes, majorRes, subjectRes, studentRes] = await Promise.all([
+      const [deptRes, majorRes, subjectRes, studentRes, regRes] = await Promise.all([
         fetchDepartments(),
         fetchMajors(),
         fetchSubjects(),
         fetchStudents(),
+        fetchRegistrations(),
       ]);
+      // Add these new stats calculations
+const advancedStats = useMemo(() => {
+  const totalCapacity = departments.length * 100; // Assume 100 students per dept capacity
+  const enrollmentRate = totalCapacity > 0 ? (students.length / totalCapacity) * 100 : 0;
+  
+  const thisMonthRegs = registrations.filter(r => {
+    const regDate = new Date(r.created_at);
+    const now = new Date();
+    return regDate.getMonth() === now.getMonth() && regDate.getFullYear() === now.getFullYear();
+  }).length;
+  
+  const lastMonthRegs = registrations.filter(r => {
+    const regDate = new Date(r.created_at);
+    const lastMonth = new Date();
+    lastMonth.setMonth(lastMonth.getMonth() - 1);
+    return regDate.getMonth() === lastMonth.getMonth() && regDate.getFullYear() === lastMonth.getFullYear();
+  }).length;
+  
+  const growthRate = lastMonthRegs > 0 ? ((thisMonthRegs - lastMonthRegs) / lastMonthRegs * 100).toFixed(1) : 0;
+  
+  return {
+    enrollmentRate: enrollmentRate.toFixed(1),
+    monthlyGrowth: growthRate,
+    avgStudentsPerDept: departments.length > 0 ? (students.length / departments.length).toFixed(1) : 0,
+    majorsPerDept: departments.length > 0 ? (majors.length / departments.length).toFixed(1) : 0
+  };
+}, [students, departments, majors, registrations]);
 
       const deptsData = deptRes.data?.data || deptRes.data || [];
       const majorsData = majorRes.data?.data || majorRes.data || [];
       const subjectsData = subjectRes.data?.data || subjectRes.data || [];
       const studentsData = studentRes.data?.data || studentRes.data || [];
+      const regsData = regRes.data?.data || regRes.data || [];
 
       setDepartments(Array.isArray(deptsData) ? deptsData : []);
       setMajors(Array.isArray(majorsData) ? majorsData : []);
       setSubjects(Array.isArray(subjectsData) ? subjectsData : []);
       setStudents(Array.isArray(studentsData) ? studentsData : []);
+      setRegistrations(Array.isArray(regsData) ? regsData : []);
 
       console.log("Dashboard data loaded:", {
         departments: deptsData.length,
         majors: majorsData.length,
         subjects: subjectsData.length,
-        students: studentsData.length
+        students: studentsData.length,
+        totalRegistrations: regsData.length,
+        pendingRegistrations: regsData.filter(r => 
+          r.payment_status === 'PENDING' || r.payment_status === null || r.payment_status === ''
+        ).length
       });
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
@@ -85,52 +121,100 @@ const Dashboard = () => {
     }
   };
 
+  // Filter registrations to only count those with payment_status = 'PENDING' or role 'register'
+  // These are actual registrations that haven't been converted to students yet
+  const pendingRegistrations = useMemo(() => {
+    return registrations.filter(r => {
+      // Only count registrations that are still pending (not yet students)
+      const isPending = r.payment_status === 'PENDING' || r.payment_status === null || r.payment_status === '';
+      return isPending;
+    });
+  }, [registrations]);
+
+  // Calculate real growth (pending registrations from last 7 days)
+  const recentRegistrationsCount = useMemo(() => {
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    
+    return pendingRegistrations.filter(r => {
+      if (!r.created_at) return false;
+      const created = new Date(r.created_at);
+      return created > weekAgo;
+    }).length;
+  }, [pendingRegistrations]);
+
   const stats = [
     {
       label: "Total Departments",
       value: departments.length,
-      change: "+2",
+      change: departments.length > 0 ? `${departments.length} active` : "0",
       gradient: "from-blue-500 to-cyan-500",
       icon: Building2
     },
     {
       label: "Active Majors",
       value: majors.length,
-      change: "+5",
+      change: majors.length > 0 ? `${majors.length} programs` : "0",
       gradient: "from-purple-500 to-pink-500",
       icon: GraduationCap
     },
     {
-      label: "Total Students",
+      label: "Total  Students enrolled",
       value: students.length,
-      change: `+${Math.floor(students.length * 0.08)}`,
+      change: students.length > 0 ? `${students.length} enrolled` : "0",
       gradient: "from-orange-500 to-red-500",
       icon: Users
     },
     {
-      label: "Subjects",
-      value: subjects.length,
-      change: "+12",
+      label: "Pending Registrations",
+      value: pendingRegistrations.length,
+      change: recentRegistrationsCount > 0 ? `+${recentRegistrationsCount} this week` : "No recent",
       gradient: "from-green-500 to-emerald-500",
-      icon: BookOpen
+      icon: UserCheck
     },
   ];
 
-  const recentActivities = [
-    { action: "Logged into dashboard", time: "Just now" },
-    { action: "System data synced", time: "1 hour ago" },
-    { action: "Permissions verified", time: "Today" },
-  ];
+  // Real major performance data based on actual registrations
+  const topPerformingMajors = useMemo(() => {
+    if (majors.length === 0 || registrations.length === 0) {
+      return [];
+    }
 
-  // Real major names with student counts based on department relationship
-  const topPerformingMajors = (() => {
-    if (majors.length === 0) {
-      return [{ name: "No majors yet", students: 0, growth: "0%", color: "from-gray-400 to-gray-500" }];
+    // Count registrations per major
+    const majorCounts = {};
+    registrations.forEach(reg => {
+      const majorId = reg.major_id;
+      if (majorId) {
+        majorCounts[majorId] = (majorCounts[majorId] || 0) + 1;
+      }
+    });
+
+    // Map majors with their registration counts
+    const result = majors
+      .map(major => {
+        const count = majorCounts[major.id] || 0;
+        return {
+          id: major.id,
+          name: major.major_name || "Unknown Major",
+          students: count,
+          departmentName: major.department?.name || "N/A"
+        };
+      })
+      .filter(m => m.students > 0) // Only show majors with students
+      .sort((a, b) => b.students - a.students)
+      .slice(0, 5); // Top 5
+
+    return result;
+  }, [majors, registrations]);
+
+  // Real department breakdown
+  const departmentBreakdown = useMemo(() => {
+    if (departments.length === 0 || students.length === 0) {
+      return [];
     }
 
     // Count students per department
     const deptCounts = {};
-
     students.forEach(student => {
       const deptId = student.department_id;
       if (deptId) {
@@ -138,34 +222,50 @@ const Dashboard = () => {
       }
     });
 
-    console.log("Department counts:", deptCounts);
-    console.log("All majors data:", majors); // SEE ALL MAJORS
+    return departments
+      .map(dept => ({
+        id: dept.id,
+        name: dept.name,
+        code: dept.code,
+        studentCount: deptCounts[dept.id] || 0
+      }))
+      .filter(d => d.studentCount > 0)
+      .sort((a, b) => b.studentCount - a.studentCount)
+      .slice(0, 5); // Top 5
+  }, [departments, students]);
 
-    // Map majors with their department's student count
-    const result = majors
-      .map((major, index) => {
-        console.log(`Major ${index}:`, major); // SEE EACH MAJOR
-
+  // Recent pending registrations (last 5)
+  const recentRegistrations = useMemo(() => {
+    return [...pendingRegistrations]
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, 5)
+      .map(reg => {
+        const dept = departments.find(d => d.id === reg.department_id);
+        const major = majors.find(m => m.id === reg.major_id);
         return {
-          name: major.name || major.title || major.major_name || "Unknown Major", // Try different field names
-          students: deptCounts[major.department_id] || 0,
-          growth: `+${Math.floor(Math.random() * 15 + 5)}%`,
-          color: ["from-blue-500 to-cyan-500", "from-purple-500 to-pink-500", "from-orange-500 to-red-500", "from-green-500 to-emerald-500"][index % 4]
+          id: reg.id,
+          name: reg.full_name_en || `${reg.first_name} ${reg.last_name}`,
+          department: dept?.name || "Unknown",
+          major: major?.major_name || "Unknown",
+          date: new Date(reg.created_at).toLocaleDateString(),
+          status: reg.payment_status || "PENDING"
         };
-      })
-      .sort((a, b) => b.students - a.students)
-      .slice(0, 4);
+      });
+  }, [pendingRegistrations, departments, majors]);
 
-    console.log("Final topPerformingMajors:", result); // SEE FINAL RESULT
+  // Gender statistics
+  const genderStats = useMemo(() => {
+    const male = students.filter(s => s.gender === 'Male').length;
+    const female = students.filter(s => s.gender === 'Female').length;
+    const total = students.length;
 
-    return result;
-  })();
-
-  const upcomingEvents = [
-    { title: "Faculty Meeting", date: "Jan 10, 2025", time: "10:00 AM" },
-    { title: "Student Orientation", date: "Jan 12, 2025", time: "2:00 PM" },
-    { title: "Exam Schedule Release", date: "Jan 15, 2025", time: "9:00 AM" },
-  ];
+    return {
+      male,
+      female,
+      malePercentage: total > 0 ? Math.round((male / total) * 100) : 0,
+      femalePercentage: total > 0 ? Math.round((female / total) * 100) : 0
+    };
+  }, [students]);
 
   if (loading) {
     return (
@@ -245,7 +345,7 @@ const Dashboard = () => {
               </div>
               <div className="text-xs text-gray-600 mt-1 flex items-center justify-end gap-1">
                 <Calendar className="w-3 h-3" />
-                <Clock />
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
               </div>
             </motion.div>
           </div>
@@ -272,7 +372,7 @@ const Dashboard = () => {
                 scale: 1.03,
                 transition: { type: "spring", stiffness: 400, damping: 10 }
               }}
-              className="group relative overflow-hidden backdrop-blur-2xl rounded-3xl p-6 border  bg-white/60 shadow-lg border-white  cursor-pointer"
+              className="group relative overflow-hidden backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white cursor-pointer"
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`} />
 
@@ -285,15 +385,9 @@ const Dashboard = () => {
                   >
                     <Icon size={24} className="text-white" />
                   </motion.div>
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: i * 0.1 + 0.3, type: "spring" }}
-                    className="flex items-center gap-1 text-xs backdrop-blur-sm text-green-600 px-2.5 py-1.5 rounded-full font-semibold shadow-sm border border-green-200/50"
-                  >
-                    <ArrowUp className="w-3 h-3" />
+                  <span className="text-xs text-gray-600 px-2.5 py-1.5 rounded-full font-medium border border-gray-200 bg-white/50">
                     {stat.change}
-                  </motion.span>
+                  </span>
                 </div>
                 <motion.h3
                   initial={{ opacity: 0 }}
@@ -312,48 +406,67 @@ const Dashboard = () => {
         })}
       </div>
 
-      {/* ACTIVITY + QUICK ACTIONS */}
+      {/* RECENT ACTIVITY + QUICK ACTIONS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* Activity */}
+        {/* Recent Registrations */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.5 }}
-          className="backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white "
+          className="backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white"
         >
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <div className="p-2 rounded-xl backdrop-blur-sm">
-                <Clock className="w-5 h-5 text-blue-500" />
+              <div className="p-2 rounded-xl bg-blue-100">
+                <UserCheck className="w-5 h-5 text-blue-500" />
               </div>
-              Recent Activity
+              Pending Registrations
             </h3>
-            <span className="text-xs text-gray-600 backdrop-blur-sm px-3 py-1 rounded-full border bg-white/60 shadow-lg border-white ">Live</span>
+            <span className="text-xs text-gray-600 backdrop-blur-sm px-3 py-1 rounded-full border bg-white/60 shadow-sm border-white">
+              {recentRegistrations.length} pending
+            </span>
           </div>
-          <div className="space-y-3">
-            {recentActivities.map((a, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 + i * 0.1 }}
-                whileHover={{ x: 4, scale: 1.02 }}
-                className="group backdrop-blur-xl p-4 rounded-2xl border bg-white/60 shadow-lg border-white  hover:border-blue-300/50 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800">{a.action}</p>
-                    <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-                      {user?.name} • {a.time}
-                    </p>
+          
+          {recentRegistrations.length === 0 ? (
+            <div className="text-center py-8">
+              <UserCheck className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 text-sm">No registrations yet</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentRegistrations.map((reg, i) => (
+                <motion.div
+                  key={reg.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 + i * 0.1 }}
+                  whileHover={{ x: 4, scale: 1.02 }}
+                  className="group backdrop-blur-xl p-4 rounded-2xl border bg-white/60 shadow-sm border-white hover:border-blue-300/50 transition-all duration-300 cursor-pointer hover:shadow-md"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-gray-800">{reg.name}</p>
+                      <p className="text-xs text-gray-600 mt-1">{reg.major} - {reg.department}</p>
+                      <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1.5">
+                        <Calendar className="w-3 h-3" />
+                        {reg.date}
+                        <span className="mx-1">•</span>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          reg.status === 'COMPLETED' || reg.status === 'PAID' 
+                            ? 'bg-green-100 text-green-700' 
+                            : 'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {reg.status}
+                        </span>
+                      </p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </motion.div>
 
         {/* Quick Actions */}
@@ -361,10 +474,10 @@ const Dashboard = () => {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.5 }}
-          className="backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white "
+          className="backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white"
         >
           <h3 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-2">
-            <div className="p-2 rounded-xl backdrop-blur-sm">
+            <div className="p-2 rounded-xl bg-purple-100">
               <Sparkles className="w-5 h-5 text-purple-500" />
             </div>
             Quick Actions
@@ -402,7 +515,7 @@ const Dashboard = () => {
                   {isActive && (
                     <motion.div
                       layoutId="activeIndicator"
-                      className="absolute inset-0 backdrop-blur-sm"
+                      className="absolute inset-0 bg-white/10 backdrop-blur-sm"
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     />
                   )}
@@ -441,7 +554,7 @@ const Dashboard = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="absolute h-[60%] inset-0 z-50 flex items-center justify-center bg-gray-300/10 backdrop-blur-sm p-4"
+                className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/20 backdrop-blur-sm p-4"
                 onClick={() => setActiveView("admin/dashboard")}
               >
                 <motion.div
@@ -450,7 +563,7 @@ const Dashboard = () => {
                   exit={{ scale: 0.9, opacity: 0, y: 20 }}
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   onClick={(e) => e.stopPropagation()}
-                  className={`relative w-full max-w-7xl max-h-[90vh] overflow-y-auto rounded-3xl p-8 backdrop-blur-3xl border ${borderColors[view]} shadow-2xl`}
+                  className={`relative w-full max-w-7xl max-h-[90vh] overflow-y-auto rounded-3xl p-8 bg-white/95 backdrop-blur-3xl border ${borderColors[view]} shadow-2xl`}
                 >
                   <motion.button
                     whileHover={{ scale: 1.1, rotate: 90 }}
@@ -469,128 +582,192 @@ const Dashboard = () => {
 
       </div>
 
-      {/* MAJORS + EVENTS */}
+      {/* TOP MAJORS + DEPARTMENTS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* Top Majors */}
+        {/* Top Performing Majors */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white "
+          className="backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white"
         >
           <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-5">
-            <div className="p-2 rounded-xl backdrop-blur-sm">
+            <div className="p-2 rounded-xl bg-green-100">
               <TrendingUp className="w-5 h-5 text-green-500" />
             </div>
-            Top Performing Majors
+            Top Majors by Enrollment
           </h3>
-          <div className="space-y-4">
-            {topPerformingMajors.map((m, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7 + i * 0.1 }}
-                whileHover={{ scale: 1.02, x: 4 }}
-                className="backdrop-blur-xl p-5 rounded-2xl border border-white/30 hover:border-white/50 transition-all duration-300 shadow-sm hover:shadow-md"
-              >
-                <div className="flex justify-between items-center mb-3">
-                  <p className="font-semibold text-gray-800">{m.name}</p>
-                  <span className="flex items-center gap-1 text-sm font-bold text-green-600 backdrop-blur-sm px-2.5 py-1 rounded-full border border-green-200/50">
-                    <ArrowUp className="w-3 h-3" />
-                    {m.growth}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 backdrop-blur-sm h-2.5 rounded-full overflow-hidden border border-white/30">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: m.students > 0 ? `${Math.min((m.students / Math.max(1, ...topPerformingMajors.map(maj => maj.students))) * 100, 100)}%` : "0%" }}
-                      transition={{ delay: 0.8 + i * 0.1, duration: 1, ease: "easeOut" }}
-                      className={`h-full rounded-full bg-gradient-to-r ${m.color} shadow-sm`}
-                    />
-                  </div>
-                  <span className="text-xs font-semibold text-gray-600 min-w-[60px] text-right">
-                    {m.students} students
-                  </span>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          
+          {topPerformingMajors.length === 0 ? (
+            <div className="text-center py-8">
+              <GraduationCap className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 text-sm">No enrollments yet</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {topPerformingMajors.map((m, i) => {
+                const maxStudents = Math.max(...topPerformingMajors.map(maj => maj.students));
+                const percentage = (m.students / maxStudents) * 100;
+                
+                return (
+                  <motion.div
+                    key={m.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.7 + i * 0.1 }}
+                    whileHover={{ scale: 1.02, x: 4 }}
+                    className="backdrop-blur-xl p-5 rounded-2xl border border-white/30 hover:border-white/50 transition-all duration-300 shadow-sm hover:shadow-md bg-white/40"
+                  >
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-800">{m.name}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{m.departmentName}</p>
+                      </div>
+                      <span className="flex items-center gap-1 text-sm font-bold text-green-600 backdrop-blur-sm px-2.5 py-1 rounded-full border border-green-200/50 bg-green-50">
+                        {m.students} students
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 bg-gray-200/50 h-2.5 rounded-full overflow-hidden border border-white/30">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${percentage}%` }}
+                          transition={{ delay: 0.8 + i * 0.1, duration: 1, ease: "easeOut" }}
+                          className="h-full rounded-full bg-gradient-to-r from-green-500 to-emerald-500 shadow-sm"
+                        />
+                      </div>
+                      <span className="text-xs font-semibold text-gray-600 min-w-[45px] text-right">
+                        {Math.round(percentage)}%
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </motion.div>
 
-        {/* Events */}
+        {/* Department Breakdown */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white "
+          className="backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white"
         >
           <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-5">
-            <div className="p-2 rounded-xl backdrop-blur-sm">
-              <Calendar className="w-5 h-5 text-blue-500" />
+            <div className="p-2 rounded-xl bg-blue-100">
+              <Grid3x3 className="w-5 h-5 text-blue-500" />
             </div>
-            Upcoming Events
+            Students by Department
           </h3>
-          <div className="space-y-4">
-            {upcomingEvents.map((e, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7 + i * 0.1 }}
-                whileHover={{ scale: 1.02, x: -4 }}
-                className="group backdrop-blur-xl p-5 rounded-2xl border border-white/30 hover:border-blue-300/50 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-800 mb-2">{e.title}</p>
-                    <p className="text-xs text-gray-600 flex items-center gap-2">
-                      <Calendar className="w-3 h-3 text-blue-500" />
-                      {e.date}
-                      <span className="text-gray-400">•</span>
-                      <Clock className="w-3 h-3 text-purple-500" />
-                      {e.time}
-                    </p>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          
+          {departmentBreakdown.length === 0 ? (
+            <div className="text-center py-8">
+              <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 text-sm">No students yet</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {departmentBreakdown.map((dept, i) => {
+                const colors = [
+                  "from-blue-500 to-cyan-500",
+                  "from-purple-500 to-pink-500",
+                  "from-orange-500 to-red-500",
+                  "from-green-500 to-emerald-500",
+                  "from-indigo-500 to-purple-500"
+                ];
+                const maxCount = Math.max(...departmentBreakdown.map(d => d.studentCount));
+                const percentage = (dept.studentCount / maxCount) * 100;
+
+                return (
+                  <motion.div
+                    key={dept.id}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.7 + i * 0.1 }}
+                    whileHover={{ scale: 1.02, x: -4 }}
+                    className="backdrop-blur-xl p-5 rounded-2xl border border-white/30 hover:border-blue-300/50 transition-all duration-300 shadow-sm hover:shadow-md bg-white/40"
+                  >
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-800">{dept.name}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Code: {dept.code}</p>
+                      </div>
+                      <span className="text-sm font-bold text-blue-600 backdrop-blur-sm px-2.5 py-1 rounded-full border border-blue-200/50 bg-blue-50">
+                        {dept.studentCount}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 bg-gray-200/50 h-2.5 rounded-full overflow-hidden border border-white/30">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${percentage}%` }}
+                          transition={{ delay: 0.8 + i * 0.1, duration: 1, ease: "easeOut" }}
+                          className={`h-full rounded-full bg-gradient-to-r ${colors[i % colors.length]} shadow-sm`}
+                        />
+                      </div>
+                      <span className="text-xs font-semibold text-gray-600 min-w-[45px] text-right">
+                        {Math.round(percentage)}%
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </motion.div>
       </div>
 
-      {/* CHART */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8 }}
-        className="backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white "
-      >
-        <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-5">
-          <div className="p-2 rounded-xl backdrop-blur-sm">
-            <Award className="w-5 h-5 text-yellow-500" />
+      {/* GENDER DISTRIBUTION */}
+      {students.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white"
+        >
+          <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-5">
+            <div className="p-2 rounded-xl bg-purple-100">
+              <Users className="w-5 h-5 text-purple-500" />
+            </div>
+            Gender Distribution
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="backdrop-blur-xl p-6 rounded-2xl border border-white/30 bg-white/40">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm font-medium text-gray-700">Male Students</p>
+                <p className="text-2xl font-bold text-blue-600">{genderStats.male}</p>
+              </div>
+              <div className="relative h-3 bg-gray-200/50 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${genderStats.malePercentage}%` }}
+                  transition={{ delay: 1, duration: 1, ease: "easeOut" }}
+                  className="absolute h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
+                />
+              </div>
+              <p className="text-xs text-gray-600 mt-2">{genderStats.malePercentage}% of total students</p>
+            </div>
+
+            <div className="backdrop-blur-xl p-6 rounded-2xl border border-white/30 bg-white/40">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm font-medium text-gray-700">Female Students</p>
+                <p className="text-2xl font-bold text-pink-600">{genderStats.female}</p>
+              </div>
+              <div className="relative h-3 bg-gray-200/50 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${genderStats.femalePercentage}%` }}
+                  transition={{ delay: 1, duration: 1, ease: "easeOut" }}
+                  className="absolute h-full bg-gradient-to-r from-pink-500 to-rose-500 rounded-full"
+                />
+              </div>
+              <p className="text-xs text-gray-600 mt-2">{genderStats.femalePercentage}% of total students</p>
+            </div>
           </div>
-          Academic Performance Overview
-        </h3>
-        <div className="relative h-64 bg-gradient-to-br from-transparent to-transparent backdrop-blur-xl rounded-2xl border border-white/30 flex items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 left-0 w-32 h-32 bg-blue-500 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-0 right-0 w-32 h-32 bg-purple-500 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-          </div>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className="relative text-gray-600 font-medium flex items-center gap-2"
-          >
-            <Sparkles className="w-5 h-5" />
-            Chart coming soon
-          </motion.p>
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
 
     </div>
   );

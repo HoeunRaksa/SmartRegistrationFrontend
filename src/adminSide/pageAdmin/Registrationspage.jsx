@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchRegistrations } from "../../api/registration_api";
+import { fetchDepartments } from "../../api/department_api";
+import { fetchMajors } from "../../api/major_api";
 import RegistrationReportPage from "./RegistrationReportPage";
 import {
   Users,
@@ -17,6 +19,8 @@ import {
   DollarSign,
   Search,
   FileText,
+  Filter,
+  SlidersHorizontal,
 } from "lucide-react";
 
 const RegistrationPage = () => {
@@ -26,51 +30,93 @@ const RegistrationPage = () => {
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showReportModal, setShowReportModal] = useState(false);
+  
+  // Filter states
+  const [selectedDepartment, setSelectedDepartment] = useState('all');
+  const [selectedMajor, setSelectedMajor] = useState('all');
+  
+  // For dropdown options
+  const [departments, setDepartments] = useState([]);
+  const [majors, setMajors] = useState([]);
 
   useEffect(() => {
-    loadRegistrations();
+    loadAllData();
   }, []);
 
-  const loadRegistrations = async () => {
+  const loadAllData = async () => {
     try {
       setLoading(true);
-      const res = await fetchRegistrations();
-      const regData = res.data?.data || res.data || [];
+      
+      const [regRes, deptRes, majorRes] = await Promise.all([
+        fetchRegistrations(),
+        fetchDepartments(),
+        fetchMajors()
+      ]);
+      
+      const regData = regRes.data?.data || regRes.data || [];
+      const deptData = deptRes.data?.data || deptRes.data || [];
+      const majorData = majorRes.data?.data || majorRes.data || [];
+      
       setRegistrations(Array.isArray(regData) ? regData : []);
+      setDepartments(Array.isArray(deptData) ? deptData : []);
+      setMajors(Array.isArray(majorData) ? majorData : []);
     } catch (error) {
-      console.error("Failed to load registrations:", error);
+      console.error("Failed to load data:", error);
       setRegistrations([]);
+      setDepartments([]);
+      setMajors([]);
     } finally {
       setLoading(false);
     }
   };
 
   // Filter registrations
-  const filteredRegistrations = registrations.filter(reg => {
-    const statusMatch = 
-      filter === 'all' ? true :
-      filter === 'paid' ? reg.payment_status === 'PAID' :
-      filter === 'pending' ? (!reg.payment_status || reg.payment_status === 'PENDING') :
-      true;
+  const filteredRegistrations = useMemo(() => {
+    return registrations.filter(reg => {
+      // Payment status filter
+      const statusMatch = 
+        filter === 'all' ? true :
+        filter === 'paid' ? reg.payment_status === 'PAID' :
+        filter === 'pending' ? (!reg.payment_status || reg.payment_status === 'PENDING') :
+        true;
 
-    const searchMatch = searchTerm === '' ? true :
-      reg.full_name_en?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      reg.full_name_kh?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      reg.personal_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      reg.phone_number?.includes(searchTerm);
+      // Search filter
+      const searchMatch = searchTerm === '' ? true :
+        reg.full_name_en?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        reg.full_name_kh?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        reg.personal_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        reg.phone_number?.includes(searchTerm);
 
-    return statusMatch && searchMatch;
-  });
+      // Department filter
+      const departmentMatch = 
+        selectedDepartment === 'all' ? true :
+        reg.department_id === parseInt(selectedDepartment);
 
-  const paidCount = registrations.filter(r => r.payment_status === 'PAID').length;
-  const pendingCount = registrations.filter(r => !r.payment_status || r.payment_status === 'PENDING').length;
-  const totalRevenue = paidCount * 100;
+      // Major filter
+      const majorMatch = 
+        selectedMajor === 'all' ? true :
+        reg.major_id === parseInt(selectedMajor);
+
+      return statusMatch && searchMatch && departmentMatch && majorMatch;
+    });
+  }, [registrations, filter, searchTerm, selectedDepartment, selectedMajor]);
+
+  const paidCount = filteredRegistrations.filter(r => r.payment_status === 'PAID').length;
+  const pendingCount = filteredRegistrations.filter(r => !r.payment_status || r.payment_status === 'PENDING').length;
+  
+  // Calculate real total revenue from paid registrations (filtered)
+  const totalRevenue = filteredRegistrations
+    .filter(r => r.payment_status === 'PAID')
+    .reduce((sum, reg) => {
+      const amount = parseFloat(reg.payment_amount) || 0;
+      return sum + amount;
+    }, 0);
 
   const quickStats = [
-    { label: "Total", value: registrations.length, color: "from-blue-500 to-cyan-500", icon: Users },
+    { label: "Total", value: filteredRegistrations.length, color: "from-blue-500 to-cyan-500", icon: Users },
     { label: "Paid", value: paidCount, color: "from-green-500 to-emerald-500", icon: CheckCircle },
     { label: "Pending", value: pendingCount, color: "from-orange-500 to-red-500", icon: Clock },
-    { label: "Revenue", value: `$${totalRevenue}`, color: "from-purple-500 to-pink-500", icon: DollarSign },
+    { label: "Revenue", value: `$${totalRevenue.toFixed(2)}`, color: "from-purple-500 to-pink-500", icon: DollarSign },
   ];
 
   return (
@@ -100,8 +146,8 @@ const RegistrationPage = () => {
 
       {/* ================= FILTERS & SEARCH ================= */}
       <div className="bg-white/40 rounded-2xl p-4 border border-white/40 shadow-md backdrop-blur-xl">
-        <div className="flex flex-col md:flex-row gap-4 items-center">
-          {/* Search */}
+        <div className="flex flex-col gap-4">
+          {/* Row 1: Search */}
           <div className="flex-1 relative w-full">
             <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
             <input
@@ -113,45 +159,103 @@ const RegistrationPage = () => {
             />
           </div>
 
-          {/* Filter Buttons */}
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => setFilter('all')}
-              className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all ${
-                filter === 'all'
-                  ? 'bg-blue-500 text-white shadow-lg'
-                  : 'bg-white/50 text-gray-700 hover:bg-white/70'
-              }`}
-            >
-              All ({registrations.length})
-            </button>
-            <button
-              onClick={() => setFilter('paid')}
-              className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${
-                filter === 'paid'
-                  ? 'bg-green-500 text-white shadow-lg'
-                  : 'bg-white/50 text-gray-700 hover:bg-white/70'
-              }`}
-            >
-              <CheckCircle className="w-4 h-4" />
-              Paid ({paidCount})
-            </button>
-            <button
-              onClick={() => setFilter('pending')}
-              className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${
-                filter === 'pending'
-                  ? 'bg-orange-500 text-white shadow-lg'
-                  : 'bg-white/50 text-gray-700 hover:bg-white/70'
-              }`}
-            >
-              <Clock className="w-4 h-4" />
-              Pending ({pendingCount})
-            </button>
+          {/* Row 2: Filters */}
+          <div className="flex flex-wrap gap-3 items-center">
+            {/* Department Filter */}
+            <div className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-blue-500" />
+              <select
+                value={selectedDepartment}
+                onChange={(e) => {
+                  setSelectedDepartment(e.target.value);
+                  setSelectedMajor('all'); // Reset major when department changes
+                }}
+                className="px-3 py-2 bg-white/50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              >
+                <option value="all">All Departments</option>
+                {departments.map(dept => (
+                  <option key={dept.id} value={dept.id}>{dept.name}</option>
+                ))}
+              </select>
+            </div>
 
-            {/* CREATE REPORT BUTTON */}
+            {/* Major Filter */}
+            <div className="flex items-center gap-2">
+              <GraduationCap className="w-4 h-4 text-orange-500" />
+              <select
+                value={selectedMajor}
+                onChange={(e) => setSelectedMajor(e.target.value)}
+                className="px-3 py-2 bg-white/50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              >
+                <option value="all">All Majors</option>
+                {majors
+                  .filter(major => 
+                    selectedDepartment === 'all' || 
+                    major.department_id === parseInt(selectedDepartment)
+                  )
+                  .map(major => (
+                    <option key={major.id} value={major.id}>{major.major_name}</option>
+                  ))
+                }
+              </select>
+            </div>
+
+            {/* Status Filter Buttons */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setFilter('all')}
+                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+                  filter === 'all'
+                    ? 'bg-blue-500 text-white shadow-lg'
+                    : 'bg-white/50 text-gray-700 hover:bg-white/70'
+                }`}
+              >
+                All ({registrations.length})
+              </button>
+              <button
+                onClick={() => setFilter('paid')}
+                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${
+                  filter === 'paid'
+                    ? 'bg-green-500 text-white shadow-lg'
+                    : 'bg-white/50 text-gray-700 hover:bg-white/70'
+                }`}
+              >
+                <CheckCircle className="w-4 h-4" />
+                Paid
+              </button>
+              <button
+                onClick={() => setFilter('pending')}
+                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${
+                  filter === 'pending'
+                    ? 'bg-orange-500 text-white shadow-lg'
+                    : 'bg-white/50 text-gray-700 hover:bg-white/70'
+                }`}
+              >
+                <Clock className="w-4 h-4" />
+                Pending
+              </button>
+            </div>
+
+            {/* Clear Filters Button */}
+            {(searchTerm || selectedDepartment !== 'all' || selectedMajor !== 'all' || filter !== 'all') && (
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedDepartment('all');
+                  setSelectedMajor('all');
+                  setFilter('all');
+                }}
+                className="px-4 py-2 rounded-xl font-medium text-sm bg-gray-500 text-white hover:bg-gray-600 shadow-lg transition-all flex items-center gap-2"
+              >
+                <XCircle className="w-4 h-4" />
+                Clear Filters
+              </button>
+            )}
+
+            {/* Create Report Button */}
             <button
               onClick={() => setShowReportModal(true)}
-              className="px-4 py-2.5 rounded-xl font-medium text-sm bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 shadow-lg transition-all flex items-center gap-2"
+              className="ml-auto px-4 py-2 rounded-xl font-medium text-sm bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 shadow-lg transition-all flex items-center gap-2"
             >
               <FileText className="w-4 h-4" />
               Create Report
@@ -233,28 +337,62 @@ const RegistrationsList = ({ registrations, loading, onView }) => {
   }
 
   return (
-    <div className="rounded-2xl bg-white/40 border  border-white/40 shadow-lg p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Grid3x3 className="w-5 h-5 text-blue-600" />
-          <h3 className="text-lg font-semibold text-gray-900">All Registrations</h3>
+    <div className="rounded-2xl bg-white/40 border border-white/40 shadow-lg overflow-hidden">
+      <div className="p-5 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Grid3x3 className="w-5 h-5 text-blue-600" />
+            <h3 className="text-lg font-semibold text-gray-900">All Registrations</h3>
+          </div>
+          <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1.5 rounded-full font-semibold">
+            {registrations.length} {registrations.length === 1 ? 'Result' : 'Results'}
+          </span>
         </div>
-        <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1.5 rounded-full font-semibold">
-          {registrations.length} {registrations.length === 1 ? 'Result' : 'Results'}
-        </span>
       </div>
 
       {registrations.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {registrations.map((reg) => (
-            <RegistrationCard
-              key={reg.id}
-              registration={reg}
-              onView={onView}
-            />
-          ))}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50/80 border-b border-gray-200">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Profile
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Contact
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Department
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Major
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Payment
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {registrations.map((reg) => (
+                <RegistrationRow
+                  key={reg.id}
+                  registration={reg}
+                  onView={onView}
+                />
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
@@ -271,93 +409,131 @@ const EmptyState = () => (
   </div>
 );
 
-const RegistrationCard = ({ registration, onView }) => {
+const RegistrationRow = ({ registration, onView }) => {
   const isPaid = registration.payment_status === 'PAID';
   const profileImage = registration.profile_picture_url || registration.profile_picture_path;
 
   return (
-    <div
+    <motion.tr
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      whileHover={{ backgroundColor: 'rgba(59, 130, 246, 0.05)' }}
+      className="bg-white/60 hover:bg-blue-50/50 transition-colors cursor-pointer"
       onClick={() => onView(registration)}
-      className="group relative overflow-hidden rounded-xl bg-white/60 border border-white/50 shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-200 cursor-pointer"
     >
-      {/* Header */}
-      <div className={`relative h-24 p-4 ${isPaid ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gradient-to-br from-orange-500 to-red-600'}`}>
-        <div className="flex justify-between items-start">
-          <span className="text-xs text-white/80">ID: {registration.id}</span>
-          {isPaid ? (
-            <span className="flex items-center gap-1 text-xs bg-white/20 backdrop-blur-sm text-white px-2 py-1 rounded-full border border-white/30">
-              <CheckCircle className="w-3 h-3" />
-              Paid
-            </span>
+      {/* Profile Picture */}
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="w-12 h-12 rounded-full overflow-hidden bg-white shadow-sm border-2 border-gray-200">
+          {profileImage ? (
+            <img
+              src={profileImage}
+              alt={registration.full_name_en}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200"><svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>';
+              }}
+            />
           ) : (
-            <span className="flex items-center gap-1 text-xs bg-white/20 backdrop-blur-sm text-white px-2 py-1 rounded-full border border-white/30">
-              <Clock className="w-3 h-3" />
-              Pending
-            </span>
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+              <User className="w-6 h-6 text-gray-400" />
+            </div>
           )}
         </div>
-        
-        {/* Profile Picture */}
-        <div className="absolute -bottom-10 left-4">
-          <div className="w-20 h-20 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white">
-            {profileImage ? (
-              <img
-                src={profileImage}
-                alt={registration.full_name_en}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200"><svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>';
-                }}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                <User className="w-10 h-10 text-gray-400" />
-              </div>
-            )}
-          </div>
+      </td>
+
+      {/* Name */}
+      <td className="px-6 py-4">
+        <div>
+          <p className="text-sm font-semibold text-gray-900">{registration.full_name_en}</p>
+          {registration.full_name_kh && (
+            <p className="text-xs text-gray-500 mt-0.5">{registration.full_name_kh}</p>
+          )}
+          <p className="text-xs text-gray-400 mt-0.5">ID: {registration.id}</p>
         </div>
-      </div>
+      </td>
 
-      {/* Content */}
-      <div className="p-5 pt-14">
-        <h4 className="font-semibold text-gray-900 text-lg mb-1 group-hover:text-blue-600 transition-colors">
-          {registration.full_name_en}
-        </h4>
-        {registration.full_name_kh && (
-          <p className="text-sm text-gray-600 mb-3">{registration.full_name_kh}</p>
-        )}
-
-        <div className="space-y-2">
+      {/* Contact */}
+      <td className="px-6 py-4">
+        <div className="space-y-1">
           {registration.personal_email && (
-            <div className="flex items-center gap-2 text-xs text-gray-600">
+            <div className="flex items-center gap-1.5 text-xs text-gray-600">
               <Mail className="w-3.5 h-3.5 text-purple-500 flex-shrink-0" />
-              <span className="truncate">{registration.personal_email}</span>
+              <span className="truncate max-w-[200px]">{registration.personal_email}</span>
             </div>
           )}
           {registration.phone_number && (
-            <div className="flex items-center gap-2 text-xs text-gray-600">
+            <div className="flex items-center gap-1.5 text-xs text-gray-600">
               <Phone className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
               <span>{registration.phone_number}</span>
             </div>
           )}
-          {registration.department_name && (
-            <div className="flex items-center gap-2 text-xs text-gray-600">
-              <Building2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-              <span className="truncate">{registration.department_name}</span>
-            </div>
-          )}
-          {registration.major_name && (
-            <div className="flex items-center gap-2 text-xs text-gray-600">
-              <GraduationCap className="w-3.5 h-3.5 text-orange-500 flex-shrink-0" />
-              <span className="truncate">{registration.major_name}</span>
-            </div>
-          )}
         </div>
-      </div>
+      </td>
 
-      <div className={`absolute bottom-0 left-0 right-0 h-1 ${isPaid ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-orange-500 to-red-500'} scale-x-0 group-hover:scale-x-100 transition-transform duration-300`} />
-    </div>
+      {/* Department */}
+      <td className="px-6 py-4">
+        {registration.department_name ? (
+          <div className="flex items-center gap-1.5">
+            <Building2 className="w-4 h-4 text-blue-500 flex-shrink-0" />
+            <span className="text-sm text-gray-700">{registration.department_name}</span>
+          </div>
+        ) : (
+          <span className="text-sm text-gray-400">N/A</span>
+        )}
+      </td>
+
+      {/* Major */}
+      <td className="px-6 py-4">
+        {registration.major_name ? (
+          <div className="flex items-center gap-1.5">
+            <GraduationCap className="w-4 h-4 text-orange-500 flex-shrink-0" />
+            <span className="text-sm text-gray-700">{registration.major_name}</span>
+          </div>
+        ) : (
+          <span className="text-sm text-gray-400">N/A</span>
+        )}
+      </td>
+
+      {/* Payment Amount */}
+      <td className="px-6 py-4">
+        <div className="flex items-center gap-1.5">
+          <DollarSign className="w-4 h-4 text-purple-500 flex-shrink-0" />
+          <span className="text-sm font-medium text-gray-700">
+            ${parseFloat(registration.payment_amount || 0).toFixed(2)}
+          </span>
+        </div>
+      </td>
+
+      {/* Status */}
+      <td className="px-6 py-4 whitespace-nowrap">
+        {isPaid ? (
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
+            <CheckCircle className="w-3.5 h-3.5" />
+            Paid
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 border border-orange-200">
+            <Clock className="w-3.5 h-3.5" />
+            Pending
+          </span>
+        )}
+      </td>
+
+      {/* Actions */}
+      <td className="px-6 py-4 whitespace-nowrap">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onView(registration);
+          }}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors shadow-sm"
+        >
+          <User className="w-3.5 h-3.5" />
+          View
+        </button>
+      </td>
+    </motion.tr>
   );
 };
 
@@ -494,7 +670,7 @@ const RegistrationModal = ({ registration, onClose }) => {
                         {isPaid ? 'Payment Completed' : 'Payment Pending'}
                       </p>
                       <p className="text-sm text-gray-600">
-                        Registration Fee: ${registration.payment_amount || '100.00'}
+                        Registration Fee: ${parseFloat(registration.payment_amount || 0).toFixed(2)}
                       </p>
                     </div>
                   </div>
