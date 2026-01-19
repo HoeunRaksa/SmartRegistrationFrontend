@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import DepartmentsPage from '../pageAdmin/Departmentspage.jsx';
-import MajorsPage from '../pageAdmin/Majospage.jsx';
-import SubjectsPage from '../pageAdmin/Subjectpage.jsx';
-import StudentPage from '../pageAdmin/Studentpage.jsx';
-import RegistrationsPage from '../pageAdmin/Registrationspage.jsx';
-import StaffPage from '../pageAdmin/Staffpage.jsx';
-import SettingPage from '../../gobalConponent/Settingpage.jsx';
-import { logoutApi } from '../../api/auth.jsx';
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import DepartmentsPage from "../pageAdmin/Departmentspage.jsx";
+import MajorsPage from "../pageAdmin/Majospage.jsx";
+import SubjectsPage from "../pageAdmin/Subjectpage.jsx";
+import StudentPage from "../pageAdmin/Studentpage.jsx";
+import RegistrationsPage from "../pageAdmin/Registrationspage.jsx";
+import StaffPage from "../pageAdmin/Staffpage.jsx";
+import SettingPage from "../../gobalConponent/Settingpage.jsx";
+import { logoutApi } from "../../api/auth.jsx";
 import {
   LayoutDashboard,
   GraduationCap,
@@ -23,47 +23,53 @@ import {
   X,
   Search,
   Bell,
-  User,
   LogOut,
   User2Icon,
-  Sun,
-  Moon,
   Maximize2,
-  Minimize2
-} from 'lucide-react';
-import Dashboard from '../../adminSide/ConponentsAdmin/dashboard.jsx';
-import { a } from 'framer-motion/client';
+  Minimize2,
+} from "lucide-react";
+import Dashboard from "../../adminSide/ConponentsAdmin/dashboard.jsx";
+
 const profileFallback = "/assets/images/profile-fallback.png";
 
 const AdminDashboard = () => {
   const { section } = useParams();
   const navigate = useNavigate();
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [notifications, setNotifications] = useState(3); // Example notification count
+  const [notifications] = useState(3); // example count
 
-  const activeSection = section || 'dashboard';
+  const activeSection = section || "dashboard";
 
-  const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, gradient: 'from-blue-500 to-cyan-500' },
-    { id: 'departments', label: 'Departments', icon: Building2, gradient: 'from-purple-500 to-pink-500' },
-    { id: 'majors', label: 'Majors', icon: GraduationCap, gradient: 'from-orange-500 to-red-500' },
-    { id: 'subjects', label: 'Subjects', icon: BookOpen, gradient: 'from-green-500 to-emerald-500' },
-    { id: 'students', label: 'Students', icon: Users, gradient: 'from-indigo-500 to-blue-500' },
-    { id: 'staff', label: 'Staff', icon: User2Icon, gradient: 'from-indigo-500 to-blue-500' },
-    { id: 'registrations', label: 'Registrations', icon: FileText, gradient: 'from-pink-500 to-rose-500' },
-    { id: 'settings', label: 'Settings', icon: Settings, gradient: 'from-gray-500 to-slate-500' },
-  ];
+  const menuItems = useMemo(
+    () => [
+      { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, gradient: "from-blue-500 to-cyan-500" },
+      { id: "departments", label: "Departments", icon: Building2, gradient: "from-purple-500 to-pink-500" },
+      { id: "majors", label: "Majors", icon: GraduationCap, gradient: "from-orange-500 to-red-500" },
+      { id: "subjects", label: "Subjects", icon: BookOpen, gradient: "from-green-500 to-emerald-500" },
+      { id: "students", label: "Students", icon: Users, gradient: "from-indigo-500 to-blue-500" },
+      { id: "staff", label: "Staff", icon: User2Icon, gradient: "from-indigo-500 to-blue-500" },
+      { id: "registrations", label: "Registrations", icon: FileText, gradient: "from-pink-500 to-rose-500" },
+      { id: "settings", label: "Settings", icon: Settings, gradient: "from-gray-500 to-slate-500" },
+    ],
+    []
+  );
 
-  const handleLogout = async () => {
-    await logoutApi().catch(() => { });
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    navigate('/login');
-  };
-  // Load user data
+  const activeMenuItem = useMemo(
+    () => menuItems.find((item) => item.id === activeSection) || menuItems[0],
+    [menuItems, activeSection]
+  );
+
+  const handleLogout = useCallback(async () => {
+    await logoutApi().catch(() => {});
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    navigate("/login");
+  }, [navigate]);
+
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (stored) {
@@ -75,76 +81,72 @@ const AdminDashboard = () => {
     }
   }, []);
 
-  // Validate section
   useEffect(() => {
-    const validSections = menuItems.map(item => item.id);
+    const validSections = menuItems.map((item) => item.id);
     if (section && !validSections.includes(section)) {
-      navigate('/admin/dashboard', { replace: true });
+      navigate("/admin/dashboard", { replace: true });
     }
-  }, [section, navigate]);
+  }, [section, navigate, menuItems]);
 
-  const handleSectionChange = (sectionId) => {
-    navigate(`/admin/${sectionId}`);
-  };
+  const handleSectionChange = useCallback(
+    (sectionId) => {
+      navigate(`/admin/${sectionId}`);
+    },
+    [navigate]
+  );
 
-  const toggleFullscreen = () => {
+  const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-      setIsFullscreen(true);
+      document.documentElement.requestFullscreen?.();
     } else {
-      document.exitFullscreen();
-      setIsFullscreen(false);
+      document.exitFullscreen?.();
     }
-  };
+  }, []);
 
-  // Render all sections but hide inactive ones - NO REMOUNTING!
-  const renderAllSections = () => {
-    return (
-      <>
-        <div style={{ display: activeSection === 'dashboard' ? 'block' : 'none' }}>
-          <Dashboard />
-        </div>
-        <div style={{ display: activeSection === 'departments' ? 'block' : 'none' }}>
-          <DepartmentsPage />
-        </div>
-        <div style={{ display: activeSection === 'majors' ? 'block' : 'none' }}>
-          <MajorsPage />
-        </div>
-        <div style={{ display: activeSection === 'subjects' ? 'block' : 'none' }}>
-          <SubjectsPage />
-        </div>
-        <div style={{ display: activeSection === 'students' ? 'block' : 'none' }}>
-          <StudentPage />
-        </div>
-        <div style={{ display: activeSection === 'staff' ? 'block' : 'none' }}>
-          <StaffPage />
-        </div>
-        <div style={{ display: activeSection === 'registrations' ? 'block' : 'none' }}>
-          <RegistrationsPage />
-        </div>
-        <div style={{ display: activeSection === 'settings' ? 'block' : 'none' }}>
-          <SettingPage />
-        </div>
-      </>
-    );
-  };
+  useEffect(() => {
+    const onFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
+  }, []);
+
+  const renderAllSections = () => (
+    <>
+      <div style={{ display: activeSection === "dashboard" ? "block" : "none" }}>
+        <Dashboard />
+      </div>
+      <div style={{ display: activeSection === "departments" ? "block" : "none" }}>
+        <DepartmentsPage />
+      </div>
+      <div style={{ display: activeSection === "majors" ? "block" : "none" }}>
+        <MajorsPage />
+      </div>
+      <div style={{ display: activeSection === "subjects" ? "block" : "none" }}>
+        <SubjectsPage />
+      </div>
+      <div style={{ display: activeSection === "students" ? "block" : "none" }}>
+        <StudentPage />
+      </div>
+      <div style={{ display: activeSection === "staff" ? "block" : "none" }}>
+        <StaffPage />
+      </div>
+      <div style={{ display: activeSection === "registrations" ? "block" : "none" }}>
+        <RegistrationsPage />
+      </div>
+      <div style={{ display: activeSection === "settings" ? "block" : "none" }}>
+        <SettingPage />
+      </div>
+    </>
+  );
 
   return (
-
     <div className="min-h-screen w-full relative overflow-hidden">
       {/* ================= BACKGROUND SYSTEM ================= */}
-
-      {/* Base gradient */}
       <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/30" />
-
-      {/* Static orbs - no animation */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl" />
         <div className="absolute top-1/3 right-10 w-[500px] h-[500px] bg-purple-400/20 rounded-full blur-3xl" />
         <div className="absolute bottom-20 left-1/4 w-80 h-80 bg-pink-400/20 rounded-full blur-3xl" />
       </div>
-
-      {/* Grid pattern - no animation */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-[0.03]">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
       </div>
@@ -156,8 +158,6 @@ const AdminDashboard = () => {
         className="fixed left-0 top-0 h-screen backdrop-blur-2xl bg-white/30 border-r border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.2)] z-40 hidden md:block"
       >
         <div className="flex flex-col h-full p-4">
-
-          {/* Logo */}
           <div className="flex items-center justify-between mb-8 px-2">
             {!sidebarCollapsed && (
               <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
@@ -165,52 +165,50 @@ const AdminDashboard = () => {
               </h1>
             )}
             <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              onClick={() => setSidebarCollapsed((v) => !v)}
               className="p-2 rounded-xl backdrop-blur-xl bg-white/40 hover:bg-white/60 transition-all border border-white/30 shadow-sm"
+              aria-label="Toggle sidebar"
+              type="button"
             >
-              {sidebarCollapsed ? <ChevronRight size={20} className="text-gray-700" /> : <ChevronLeft size={20} className="text-gray-700" />}
+              {sidebarCollapsed ? (
+                <ChevronRight size={20} className="text-gray-700" />
+              ) : (
+                <ChevronLeft size={20} className="text-gray-700" />
+              )}
             </button>
           </div>
 
-          {/* Menu Items */}
           <nav className="flex-1 space-y-2 overflow-y-auto scrollbar-hide">
-
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeSection === item.id;
+
               return (
                 <button
                   key={item.id}
                   onClick={() => handleSectionChange(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
-                    ? 'backdrop-blur-xl bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
-                    : 'backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40'
-                    } border border-white/30`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
+                    isActive
+                      ? "backdrop-blur-xl bg-gradient-to-r " + item.gradient + " text-white shadow-lg"
+                      : "backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40"
+                  } border border-white/30`}
+                  type="button"
                 >
-
                   <Icon size={20} className={isActive ? "drop-shadow-sm" : ""} />
-                  {!sidebarCollapsed && (
-                    <span className="font-medium text-sm">
-                      {item.label}
-                    </span>
-                  )}
-                  {isActive && !sidebarCollapsed && (
-                    <div className="ml-auto w-2 h-2 rounded-full bg-white shadow-lg" />
-                  )}
-
+                  {!sidebarCollapsed && <span className="font-medium text-sm">{item.label}</span>}
+                  {isActive && !sidebarCollapsed && <div className="ml-auto w-2 h-2 rounded-full bg-white shadow-lg" />}
                 </button>
               );
             })}
-            {/* Logout Button */}
           </nav>
+
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-2 rounded-2xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-5"
+            type="button"
           >
             <LogOut size={20} />
-            {!sidebarCollapsed && (
-              <span className="font-medium text-sm">Logout</span>
-            )}
+            {!sidebarCollapsed && <span className="font-medium text-sm">Logout</span>}
           </button>
         </div>
       </motion.aside>
@@ -242,6 +240,8 @@ const AdminDashboard = () => {
                   <button
                     onClick={() => setMobileMenuOpen(false)}
                     className="p-2 rounded-xl backdrop-blur-xl bg-white/40 hover:bg-white/60 transition-all border border-white/30"
+                    aria-label="Close menu"
+                    type="button"
                   >
                     <X size={20} className="text-gray-700" />
                   </button>
@@ -251,6 +251,7 @@ const AdminDashboard = () => {
                   {menuItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = activeSection === item.id;
+
                     return (
                       <button
                         key={item.id}
@@ -258,30 +259,29 @@ const AdminDashboard = () => {
                           handleSectionChange(item.id);
                           setMobileMenuOpen(false);
                         }}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
-                          ? 'backdrop-blur-xl bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
-                          : 'backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40'
-                          } border border-white/30`}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
+                          isActive
+                            ? "backdrop-blur-xl bg-gradient-to-r " + item.gradient + " text-white shadow-lg"
+                            : "backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40"
+                        } border border-white/30`}
+                        type="button"
                       >
                         <Icon size={20} />
                         <span className="font-medium text-sm">{item.label}</span>
-
                       </button>
                     );
-
                   })}
                 </nav>
+
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-3 px-4 py-2 rounded-2xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-5"
+                  type="button"
                 >
                   <LogOut size={20} />
-                  {!sidebarCollapsed && (
-                    <span className="font-medium text-sm">Logout</span>
-                  )}
+                  <span className="font-medium text-sm">Logout</span>
                 </button>
 
-                {/* Mobile User Profile */}
                 <div className="mt-auto pt-4 border-t border-white/20">
                   <div className="backdrop-blur-xl bg-white/40 rounded-2xl p-3 border border-white/30">
                     <div className="flex items-center gap-3">
@@ -291,21 +291,17 @@ const AdminDashboard = () => {
                           alt="Profile"
                           className="w-10 h-10 rounded-full object-cover border-2 border-white/40 shadow-md"
                           onError={(e) => {
-                            e.target.src = profileFallback;
+                            e.currentTarget.src = profileFallback;
                           }}
                         />
                       ) : (
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg">
-                          {user?.name?.charAt(0).toUpperCase() || 'A'}
+                          {user?.name?.charAt(0).toUpperCase() || "A"}
                         </div>
                       )}
                       <div className="flex-1">
-                        <p className="font-semibold text-gray-800 text-sm">
-                          {user?.name || 'Admin User'}
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          {user?.email || 'admin@novatech.edu'}
-                        </p>
+                        <p className="font-semibold text-gray-800 text-sm">{user?.name || "Admin User"}</p>
+                        <p className="text-xs text-gray-600">{user?.email || "admin@novatech.edu"}</p>
                       </div>
                     </div>
                   </div>
@@ -317,42 +313,35 @@ const AdminDashboard = () => {
       </AnimatePresence>
 
       {/* ================= MAIN CONTENT ================= */}
-      <div className={`transition-all duration-200 ${sidebarCollapsed ? 'md:ml-20' : 'md:ml-72'}`}>
-        {/* ================= ENHANCED TOP BAR ================= */}
+      <div className={`transition-all duration-200 ${sidebarCollapsed ? "md:ml-20" : "md:ml-72"}`}>
         <header className="sticky top-0 z-30 backdrop-blur-2xl bg-white/40 border-b border-white/20 shadow-sm">
           <div className="flex items-center justify-between px-4 md:px-6 py-3">
-            {/* Left Section */}
             <div className="flex items-center gap-3">
-              {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
                 className="md:hidden p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md"
+                type="button"
+                aria-label="Open menu"
               >
                 <Menu size={20} className="text-gray-700" />
               </button>
 
-              {/* Page Title with Icon */}
               <div className="flex items-center gap-3">
                 <div className="hidden sm:flex p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-md">
-                  {React.createElement(menuItems.find(item => item.id === activeSection)?.icon || LayoutDashboard, {
-                    size: 20,
-                    className: "text-white"
-                  })}
+                  {React.createElement(activeMenuItem.icon, { size: 20, className: "text-white" })}
                 </div>
                 <div>
                   <h2 className="text-lg md:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    {menuItems.find(item => item.id === activeSection)?.label || 'Dashboard'}
+                    {activeMenuItem.label}
                   </h2>
                   <p className="hidden md:block text-xs text-gray-500">
-                    Welcome back, {user?.name?.split(' ')[0] || 'Admin'}
+                    Welcome back, {user?.name?.split(" ")[0] || "Admin"}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Right Section */}
             <div className="flex items-center gap-2">
-              {/* Search Bar - Enhanced */}
               <div className="hidden lg:flex items-center gap-2 backdrop-blur-xl bg-white/50 rounded-xl px-4 py-2.5 border border-white/40 shadow-sm hover:shadow-md hover:bg-white/60 transition-all min-w-[280px]">
                 <Search size={16} className="text-gray-500" />
                 <input
@@ -365,15 +354,19 @@ const AdminDashboard = () => {
                 </kbd>
               </div>
 
-              {/* Mobile Search Button */}
-              <button className="lg:hidden p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md">
+              <button
+                className="lg:hidden p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md"
+                type="button"
+                aria-label="Search"
+              >
                 <Search size={18} className="text-gray-700" />
               </button>
 
-              {/* Fullscreen Toggle */}
               <button
                 onClick={toggleFullscreen}
                 className="hidden md:flex p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md group"
+                type="button"
+                aria-label="Toggle fullscreen"
               >
                 {isFullscreen ? (
                   <Minimize2 size={18} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
@@ -382,20 +375,22 @@ const AdminDashboard = () => {
                 )}
               </button>
 
-              {/* Notifications - Enhanced */}
-              <button className="relative p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md group">
+              <button
+                className="relative p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md group"
+                type="button"
+                aria-label="Notifications"
+              >
                 <Bell size={18} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
                 {notifications > 0 && (
                   <>
                     <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-[10px] font-bold text-white shadow-lg border-2 border-white">
                       {notifications}
                     </span>
-                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-400 animate-ping opacity-75"></span>
+                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-400 animate-ping opacity-75" />
                   </>
                 )}
               </button>
 
-              {/* Profile Dropdown - Enhanced */}
               <div className="hidden sm:flex items-center gap-2 pl-2 pr-3 py-2 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md cursor-pointer group">
                 {user?.profile_picture_url ? (
                   <img
@@ -403,52 +398,39 @@ const AdminDashboard = () => {
                     alt="Profile"
                     className="w-8 h-8 rounded-lg object-cover ring-2 ring-white/60 group-hover:ring-blue-400 transition-all"
                     onError={(e) => {
-                      e.target.src = profileFallback;
+                      e.currentTarget.src = profileFallback;
                     }}
                   />
                 ) : (
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md ring-2 ring-white/60 group-hover:ring-blue-400 transition-all">
-                    {user?.name?.charAt(0).toUpperCase() || 'A'}
+                    {user?.name?.charAt(0).toUpperCase() || "A"}
                   </div>
                 )}
                 <div className="hidden lg:block">
                   <p className="text-sm font-semibold text-gray-800 leading-tight">
-                    {user?.name?.split(' ')[0] || 'Admin'}
+                    {user?.name?.split(" ")[0] || "Admin"}
                   </p>
-                  <p className="text-xs text-gray-500 leading-tight">
-                    {user?.role || 'Administrator'}
-                  </p>
+                  <p className="text-xs text-gray-500 leading-tight">{user?.role || "Administrator"}</p>
                 </div>
                 <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors hidden lg:block" />
               </div>
             </div>
           </div>
 
-          {/* Breadcrumb - Optional */}
           <div className="hidden md:flex items-center gap-2 px-6 pb-3 text-xs text-gray-600">
             <span className="hover:text-blue-600 cursor-pointer transition-colors">Home</span>
             <ChevronRight size={12} className="text-gray-400" />
-            <span className="font-medium text-blue-600">
-              {menuItems.find(item => item.id === activeSection)?.label || 'Dashboard'}
-            </span>
+            <span className="font-medium text-blue-600">{activeMenuItem.label}</span>
           </div>
         </header>
 
-        {/* Dynamic Content Area - ALL MOUNTED, JUST HIDDEN/SHOWN */}
-        <main className="min-h-screen pt-6 relative z-10 w-full">
-          {renderAllSections()}
-        </main>
+        <main className="min-h-screen pt-6 relative z-10 w-full">{renderAllSections()}</main>
       </div>
 
       <style>
         {`
-          .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-          }
-          .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-          }
+          .scrollbar-hide::-webkit-scrollbar { display: none; }
+          .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         `}
       </style>
     </div>

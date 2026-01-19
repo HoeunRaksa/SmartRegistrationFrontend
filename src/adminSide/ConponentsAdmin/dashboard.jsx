@@ -64,33 +64,6 @@ const Dashboard = () => {
         fetchStudents(),
         fetchRegistrations(),
       ]);
-      // Add these new stats calculations
-const advancedStats = useMemo(() => {
-  const totalCapacity = departments.length * 100; // Assume 100 students per dept capacity
-  const enrollmentRate = totalCapacity > 0 ? (students.length / totalCapacity) * 100 : 0;
-  
-  const thisMonthRegs = registrations.filter(r => {
-    const regDate = new Date(r.created_at);
-    const now = new Date();
-    return regDate.getMonth() === now.getMonth() && regDate.getFullYear() === now.getFullYear();
-  }).length;
-  
-  const lastMonthRegs = registrations.filter(r => {
-    const regDate = new Date(r.created_at);
-    const lastMonth = new Date();
-    lastMonth.setMonth(lastMonth.getMonth() - 1);
-    return regDate.getMonth() === lastMonth.getMonth() && regDate.getFullYear() === lastMonth.getFullYear();
-  }).length;
-  
-  const growthRate = lastMonthRegs > 0 ? ((thisMonthRegs - lastMonthRegs) / lastMonthRegs * 100).toFixed(1) : 0;
-  
-  return {
-    enrollmentRate: enrollmentRate.toFixed(1),
-    monthlyGrowth: growthRate,
-    avgStudentsPerDept: departments.length > 0 ? (students.length / departments.length).toFixed(1) : 0,
-    majorsPerDept: departments.length > 0 ? (majors.length / departments.length).toFixed(1) : 0
-  };
-}, [students, departments, majors, registrations]);
 
       const deptsData = deptRes.data?.data || deptRes.data || [];
       const majorsData = majorRes.data?.data || majorRes.data || [];
@@ -110,7 +83,7 @@ const advancedStats = useMemo(() => {
         subjects: subjectsData.length,
         students: studentsData.length,
         totalRegistrations: regsData.length,
-        pendingRegistrations: regsData.filter(r => 
+        pendingRegistrations: regsData.filter(r =>
           r.payment_status === 'PENDING' || r.payment_status === null || r.payment_status === ''
         ).length
       });
@@ -121,21 +94,20 @@ const advancedStats = useMemo(() => {
     }
   };
 
-  // Filter registrations to only count those with payment_status = 'PENDING' or role 'register'
-  // These are actual registrations that haven't been converted to students yet
   const pendingRegistrations = useMemo(() => {
     return registrations.filter(r => {
-      // Only count registrations that are still pending (not yet students)
-      const isPending = r.payment_status === 'PENDING' || r.payment_status === null || r.payment_status === '';
+      const isPending =
+        r.payment_status === 'PENDING' ||
+        r.payment_status === null ||
+        r.payment_status === '';
       return isPending;
     });
   }, [registrations]);
 
-  // Calculate real growth (pending registrations from last 7 days)
   const recentRegistrationsCount = useMemo(() => {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
-    
+
     return pendingRegistrations.filter(r => {
       if (!r.created_at) return false;
       const created = new Date(r.created_at);
@@ -174,23 +146,16 @@ const advancedStats = useMemo(() => {
     },
   ];
 
-  // Real major performance data based on actual registrations
   const topPerformingMajors = useMemo(() => {
-    if (majors.length === 0 || registrations.length === 0) {
-      return [];
-    }
+    if (majors.length === 0 || registrations.length === 0) return [];
 
-    // Count registrations per major
     const majorCounts = {};
     registrations.forEach(reg => {
       const majorId = reg.major_id;
-      if (majorId) {
-        majorCounts[majorId] = (majorCounts[majorId] || 0) + 1;
-      }
+      if (majorId) majorCounts[majorId] = (majorCounts[majorId] || 0) + 1;
     });
 
-    // Map majors with their registration counts
-    const result = majors
+    return majors
       .map(major => {
         const count = majorCounts[major.id] || 0;
         return {
@@ -200,26 +165,18 @@ const advancedStats = useMemo(() => {
           departmentName: major.department?.name || "N/A"
         };
       })
-      .filter(m => m.students > 0) // Only show majors with students
+      .filter(m => m.students > 0)
       .sort((a, b) => b.students - a.students)
-      .slice(0, 5); // Top 5
-
-    return result;
+      .slice(0, 5);
   }, [majors, registrations]);
 
-  // Real department breakdown
   const departmentBreakdown = useMemo(() => {
-    if (departments.length === 0 || students.length === 0) {
-      return [];
-    }
+    if (departments.length === 0 || students.length === 0) return [];
 
-    // Count students per department
     const deptCounts = {};
     students.forEach(student => {
       const deptId = student.department_id;
-      if (deptId) {
-        deptCounts[deptId] = (deptCounts[deptId] || 0) + 1;
-      }
+      if (deptId) deptCounts[deptId] = (deptCounts[deptId] || 0) + 1;
     });
 
     return departments
@@ -231,10 +188,9 @@ const advancedStats = useMemo(() => {
       }))
       .filter(d => d.studentCount > 0)
       .sort((a, b) => b.studentCount - a.studentCount)
-      .slice(0, 5); // Top 5
+      .slice(0, 5);
   }, [departments, students]);
 
-  // Recent pending registrations (last 5)
   const recentRegistrations = useMemo(() => {
     return [...pendingRegistrations]
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -253,7 +209,6 @@ const advancedStats = useMemo(() => {
       });
   }, [pendingRegistrations, departments, majors]);
 
-  // Gender statistics
   const genderStats = useMemo(() => {
     const male = students.filter(s => s.gender === 'Male').length;
     const female = students.filter(s => s.gender === 'Female').length;
@@ -312,6 +267,7 @@ const advancedStats = useMemo(() => {
                 />
                 <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-white shadow-lg" />
               </motion.div>
+
               <div>
                 <motion.h2
                   initial={{ opacity: 0, x: -20 }}
@@ -322,6 +278,7 @@ const advancedStats = useMemo(() => {
                   Welcome back, {user.name}
                   <Sparkles className="w-6 h-6 text-yellow-500" />
                 </motion.h2>
+
                 <motion.p
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -334,20 +291,33 @@ const advancedStats = useMemo(() => {
               </div>
             </div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4 }}
-              className="text-right"
-            >
-              <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                <Clock />
-              </div>
-              <div className="text-xs text-gray-600 mt-1 flex items-center justify-end gap-1">
-                <Calendar className="w-3 h-3" />
-                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
-              </div>
-            </motion.div>
+            <div className="flex flex-col items-end gap-3">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4 }}
+                className="text-right"
+              >
+                <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  <Clock />
+                </div>
+                <div className="text-xs text-gray-600 mt-1 flex items-center justify-end gap-1">
+                  <Calendar className="w-3 h-3" />
+                  {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                </div>
+              </motion.div>
+
+              {/* Refresh button placed correctly */}
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={loadAllData}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/70 border border-white shadow-sm text-sm font-semibold text-gray-800 hover:bg-white transition"
+              >
+                <ArrowUp className="w-4 h-4" />
+                Refresh
+              </motion.button>
+            </div>
           </div>
         </motion.div>
       )}
@@ -406,6 +376,122 @@ const advancedStats = useMemo(() => {
         })}
       </div>
 
+      {/* SYSTEM OVERVIEW */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+        className="backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white"
+      >
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-emerald-100">
+                <TrendingUp className="w-5 h-5 text-emerald-600" />
+              </div>
+              System Overview
+            </h3>
+            <p className="text-sm text-gray-600 mt-1">
+              Real-time summary from your backend data.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full md:w-auto">
+            <div className="px-4 py-3 rounded-2xl bg-white/70 border border-white shadow-sm">
+              <p className="text-xs text-gray-600">Total Subjects</p>
+              <p className="text-2xl font-bold text-gray-900">{subjects.length}</p>
+            </div>
+
+            <div className="px-4 py-3 rounded-2xl bg-white/70 border border-white shadow-sm">
+              <p className="text-xs text-gray-600">Total Registrations</p>
+              <p className="text-2xl font-bold text-gray-900">{registrations.length}</p>
+            </div>
+
+            <div className="px-4 py-3 rounded-2xl bg-white/70 border border-white shadow-sm">
+              <p className="text-xs text-gray-600">Completed Payments</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {registrations.filter(r => r.payment_status === "PAID" || r.payment_status === "COMPLETED").length}
+              </p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* TODAY'S SNAPSHOT */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.45 }}
+        className="grid grid-cols-1 md:grid-cols-3 gap-6"
+      >
+        {[
+          {
+            title: "New Students Today",
+            value: students.filter(s => {
+              if (!s.created_at) return false;
+              const d = new Date(s.created_at);
+              const now = new Date();
+              return d.toDateString() === now.toDateString();
+            }).length,
+            icon: Users,
+            badge: "Live",
+            gradient: "from-blue-500 to-cyan-500"
+          },
+          {
+            title: "New Registrations Today",
+            value: registrations.filter(r => {
+              if (!r.created_at) return false;
+              const d = new Date(r.created_at);
+              const now = new Date();
+              return d.toDateString() === now.toDateString();
+            }).length,
+            icon: UserCheck,
+            badge: "Live",
+            gradient: "from-purple-500 to-pink-500"
+          },
+          {
+            title: "Pending Today",
+            value: registrations.filter(r => {
+              if (!r.created_at) return false;
+              const isPending = r.payment_status === "PENDING" || r.payment_status === null || r.payment_status === "";
+              const d = new Date(r.created_at);
+              const now = new Date();
+              return isPending && d.toDateString() === now.toDateString();
+            }).length,
+            icon: TrendingUp,
+            badge: "Today",
+            gradient: "from-green-500 to-emerald-500"
+          }
+        ].map((card, i) => {
+          const Icon = card.icon;
+          return (
+            <motion.div
+              key={card.title}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: 0.55 + i * 0.08, type: "spring", stiffness: 200, damping: 15 }}
+              whileHover={{ y: -6, scale: 1.02 }}
+              className="relative overflow-hidden backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white"
+            >
+              <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-[0.06]`} />
+              <div className="relative z-10 flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">{card.title}</p>
+                  <p className="text-4xl font-bold text-gray-900 mt-1">{card.value}</p>
+                  <span className="inline-flex items-center gap-1 mt-3 text-xs font-semibold px-3 py-1 rounded-full border border-white bg-white/70 text-gray-700">
+                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    {card.badge}
+                  </span>
+                </div>
+                <div className={`p-3 rounded-2xl bg-gradient-to-br ${card.gradient} shadow-lg`}>
+                  <Icon className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+      </motion.div>
+
       {/* RECENT ACTIVITY + QUICK ACTIONS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
@@ -427,7 +513,7 @@ const advancedStats = useMemo(() => {
               {recentRegistrations.length} pending
             </span>
           </div>
-          
+
           {recentRegistrations.length === 0 ? (
             <div className="text-center py-8">
               <UserCheck className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -453,8 +539,8 @@ const advancedStats = useMemo(() => {
                         {reg.date}
                         <span className="mx-1">•</span>
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                          reg.status === 'COMPLETED' || reg.status === 'PAID' 
-                            ? 'bg-green-100 text-green-700' 
+                          reg.status === 'COMPLETED' || reg.status === 'PAID'
+                            ? 'bg-green-100 text-green-700'
                             : 'bg-yellow-100 text-yellow-700'
                         }`}>
                           {reg.status}
@@ -579,7 +665,108 @@ const advancedStats = useMemo(() => {
             );
           })}
         </AnimatePresence>
+      </div>
 
+      {/* RECENT STUDENTS + SUBJECTS SUMMARY */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Students */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.7 }}
+          className="backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white"
+        >
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-orange-100">
+                <Users className="w-5 h-5 text-orange-600" />
+              </div>
+              Latest Students
+            </h3>
+            <span className="text-xs text-gray-600 backdrop-blur-sm px-3 py-1 rounded-full border bg-white/60 shadow-sm border-white">
+              {students.length} total
+            </span>
+          </div>
+
+          {students.length === 0 ? (
+            <div className="text-center py-8">
+              <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 text-sm">No students yet</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {[...students]
+                .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+                .slice(0, 5)
+                .map((s, i) => (
+                  <motion.div
+                    key={s.id || i}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.8 + i * 0.08 }}
+                    whileHover={{ x: 4, scale: 1.02 }}
+                    className="group backdrop-blur-xl p-4 rounded-2xl border bg-white/60 shadow-sm border-white hover:border-orange-300/50 transition-all duration-300 cursor-pointer hover:shadow-md"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-gray-800">
+                          {s.full_name_en || s.full_name || `${s.first_name || ""} ${s.last_name || ""}`.trim() || "Student"}
+                        </p>
+                        <p className="text-xs text-gray-600 mt-1">
+                          ID: {s.student_code || s.student_id || "N/A"} • Gender: {s.gender || "N/A"}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1.5">
+                          <Calendar className="w-3 h-3" />
+                          {s.created_at ? new Date(s.created_at).toLocaleDateString() : "N/A"}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-orange-500 transition-colors" />
+                    </div>
+                  </motion.div>
+                ))}
+            </div>
+          )}
+        </motion.div>
+
+        {/* Subjects Summary */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.7 }}
+          className="backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white"
+        >
+          <h3 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-green-100">
+              <BookOpen className="w-5 h-5 text-green-600" />
+            </div>
+            Subjects Summary
+          </h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-5 rounded-2xl bg-white/70 border border-white shadow-sm">
+              <p className="text-xs text-gray-600">Total Subjects</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{subjects.length}</p>
+              <p className="text-xs text-gray-500 mt-2">All subjects in system</p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white/70 border border-white shadow-sm">
+              <p className="text-xs text-gray-600">Departments with Subjects</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">
+                {new Set(subjects.map(s => s.department_id).filter(Boolean)).size}
+              </p>
+              <p className="text-xs text-gray-500 mt-2">Coverage overview</p>
+            </div>
+
+            <div className="sm:col-span-2 p-5 rounded-2xl bg-white/70 border border-white shadow-sm">
+              <p className="text-xs text-gray-600 mb-2">Quick Insight</p>
+              <p className="text-sm text-gray-700">
+                Your system has <span className="font-bold">{subjects.length}</span> subjects across{" "}
+                <span className="font-bold">{departments.length}</span> departments and{" "}
+                <span className="font-bold">{majors.length}</span> majors.
+              </p>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
       {/* TOP MAJORS + DEPARTMENTS */}
@@ -598,7 +785,7 @@ const advancedStats = useMemo(() => {
             </div>
             Top Majors by Enrollment
           </h3>
-          
+
           {topPerformingMajors.length === 0 ? (
             <div className="text-center py-8">
               <GraduationCap className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -609,7 +796,7 @@ const advancedStats = useMemo(() => {
               {topPerformingMajors.map((m, i) => {
                 const maxStudents = Math.max(...topPerformingMajors.map(maj => maj.students));
                 const percentage = (m.students / maxStudents) * 100;
-                
+
                 return (
                   <motion.div
                     key={m.id}
@@ -661,7 +848,7 @@ const advancedStats = useMemo(() => {
             </div>
             Students by Department
           </h3>
-          
+
           {departmentBreakdown.length === 0 ? (
             <div className="text-center py-8">
               <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-3" />

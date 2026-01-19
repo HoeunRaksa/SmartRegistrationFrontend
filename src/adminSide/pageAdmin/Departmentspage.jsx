@@ -1,11 +1,8 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import DepartmentsForm from '../ConponentsAdmin/DepartmentsForm.jsx';
+import DepartmentsForm from "../ConponentsAdmin/DepartmentsForm.jsx";
 import { fetchStudents } from "../../api/student_api.jsx";
-import {
-  fetchDepartments,
-  deleteDepartment,
-} from "../../api/department_api.jsx";
+import { fetchDepartments, deleteDepartment } from "../../api/department_api.jsx";
 import {
   Building2,
   Users,
@@ -20,161 +17,161 @@ import {
   X,
   Image as ImageIcon,
   Search,
-  Filter,
   XCircle,
   SlidersHorizontal,
 } from "lucide-react";
 
-/* ================== HELPER FUNCTIONS ================== */
+/* ================== HELPERS ================== */
 
 const getImageUrl = (department) => {
-  if (department?.image_url) {
-    return department.image_url;
-  }
-  if (department?.image_path) {
-    return `${department.image_path}`;
-  }
-  return null;
+  const url = department?.image_url || department?.image_path;
+  return url ? String(url) : null;
 };
+
+const safeArray = (maybeArray) => (Array.isArray(maybeArray) ? maybeArray : []);
 
 /* ================== MAIN COMPONENT ================== */
 
 const DepartmentsPage = () => {
   const [departments, setDepartments] = useState([]);
+  const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const [editingDepartment, setEditingDepartment] = useState(null);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
-  const [students, setStudents] = useState([]);
 
-  // Filter states
+  // Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFaculty, setSelectedFaculty] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState("name"); // name, code, recent
 
-  useEffect(() => {
-    loadDepartments();
-    loadStudents();
-  }, []);
-
-  const loadDepartments = async () => {
+  const loadDepartments = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetchDepartments();
-      setDepartments(res.data?.data || []);
+      const data = res?.data?.data ?? res?.data ?? [];
+      setDepartments(safeArray(data));
     } catch (error) {
       console.error("Failed to load departments:", error);
       setDepartments([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const loadStudents = async () => {
+  const loadStudents = useCallback(async () => {
     try {
       const res = await fetchStudents();
-      setStudents(res.data?.data || []);
+      const data = res?.data?.data ?? res?.data ?? [];
+      setStudents(safeArray(data));
     } catch (error) {
       console.error("Failed to load students:", error);
       setStudents([]);
     }
-  };
+  }, []);
 
-  const handleEdit = (department) => {
+  useEffect(() => {
+    loadDepartments();
+    loadStudents();
+  }, [loadDepartments, loadStudents]);
+
+  const handleEdit = useCallback((department) => {
     setEditingDepartment(department);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  }, []);
 
-  const handleDelete = async (departmentId) => {
-    if (!window.confirm('Are you sure you want to delete this department? This action cannot be undone.')) {
-      return;
-    }
+  const handleDelete = useCallback(
+    async (departmentId) => {
+      const ok = window.confirm(
+        "Are you sure you want to delete this department? This action cannot be undone."
+      );
+      if (!ok) return;
 
-    try {
-      await deleteDepartment(departmentId);
-      loadDepartments();
-    } catch (err) {
-      console.error("Delete error:", err);
-      alert(err.response?.data?.message || "Failed to delete department");
-    }
-  };
+      try {
+        await deleteDepartment(departmentId);
+        await loadDepartments();
+      } catch (err) {
+        console.error("Delete error:", err);
+        alert(err?.response?.data?.message || "Failed to delete department");
+      }
+    },
+    [loadDepartments]
+  );
 
-  // Get unique faculties for filter dropdown
   const faculties = useMemo(() => {
-    const uniqueFaculties = [...new Set(departments.map(d => d.faculty).filter(Boolean))];
-    return uniqueFaculties.sort();
+    const list = departments.map((d) => d?.faculty).filter(Boolean);
+    return [...new Set(list)].sort((a, b) => String(a).localeCompare(String(b)));
   }, [departments]);
 
-  // Filter and sort departments
   const filteredDepartments = useMemo(() => {
     let result = [...departments];
 
-    // Search filter
     if (searchTerm.trim()) {
       const search = searchTerm.toLowerCase();
-      result = result.filter(dept => 
-        dept.name?.toLowerCase().includes(search) ||
-        dept.code?.toLowerCase().includes(search) ||
-        dept.faculty?.toLowerCase().includes(search) ||
-        dept.description?.toLowerCase().includes(search)
-      );
+      result = result.filter((dept) => {
+        const name = (dept?.name || "").toLowerCase();
+        const code = (dept?.code || "").toLowerCase();
+        const faculty = (dept?.faculty || "").toLowerCase();
+        const desc = (dept?.description || "").toLowerCase();
+        return (
+          name.includes(search) ||
+          code.includes(search) ||
+          faculty.includes(search) ||
+          desc.includes(search)
+        );
+      });
     }
 
-    // Faculty filter
     if (selectedFaculty !== "all") {
-      result = result.filter(dept => dept.faculty === selectedFaculty);
+      result = result.filter((dept) => dept?.faculty === selectedFaculty);
     }
 
-    // Sorting
     result.sort((a, b) => {
-      switch (sortBy) {
-        case "name":
-          return (a.name || "").localeCompare(b.name || "");
-        case "code":
-          return (a.code || "").localeCompare(b.code || "");
-        case "recent":
-          return new Date(b.created_at || 0) - new Date(a.created_at || 0);
-        default:
-          return 0;
-      }
+      if (sortBy === "name") return (a?.name || "").localeCompare(b?.name || "");
+      if (sortBy === "code") return (a?.code || "").localeCompare(b?.code || "");
+      if (sortBy === "recent") return new Date(b?.created_at || 0) - new Date(a?.created_at || 0);
+      return 0;
     });
 
     return result;
   }, [departments, searchTerm, selectedFaculty, sortBy]);
 
-  // Clear all filters
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setSearchTerm("");
     setSelectedFaculty("all");
     setSortBy("name");
-  };
+  }, []);
 
-  const hasActiveFilters = searchTerm || selectedFaculty !== "all" || sortBy !== "name";
+  const hasActiveFilters = Boolean(searchTerm) || selectedFaculty !== "all" || sortBy !== "name";
 
-  const quickStats = [
-    {
-      label: "Departments",
-      value: filteredDepartments.length,
-      total: departments.length,
-      color: "from-green-500 to-emerald-500",
-      icon: TrendingUp,
-    },
-    {
-      label: "Students",
-      value: students.length,
-      color: "from-blue-500 to-cyan-500",
-      icon: Users,
-    },
-    {
-      label: "Avg / Dept",
-      value:
-        departments.length === 0
-          ? 0
-          : Math.round(students.length / departments.length),
-      color: "from-purple-500 to-pink-500",
-      icon: BarChart3,
-    },
-  ];
+  const quickStats = useMemo(() => {
+    const deptCount = departments.length;
+    const studentCount = students.length;
+    const avg = deptCount === 0 ? 0 : Math.round(studentCount / deptCount);
+
+    return [
+      {
+        label: "Departments",
+        value: filteredDepartments.length,
+        total: deptCount,
+        color: "from-green-500 to-emerald-500",
+        icon: TrendingUp,
+      },
+      {
+        label: "Students",
+        value: studentCount,
+        color: "from-blue-500 to-cyan-500",
+        icon: Users,
+      },
+      {
+        label: "Avg / Dept",
+        value: avg,
+        color: "from-purple-500 to-pink-500",
+        icon: BarChart3,
+      },
+    ];
+  }, [departments.length, students.length, filteredDepartments.length]);
 
   return (
     <div className="min-h-screen space-y-6">
@@ -183,8 +180,8 @@ const DepartmentsPage = () => {
         {quickStats.map((stat, i) => {
           const Icon = stat.icon;
           return (
-            <div 
-              key={i} 
+            <div
+              key={i}
               className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white shadow-sm hover:shadow-md transition-all"
             >
               <div className="flex items-center gap-3">
@@ -194,9 +191,10 @@ const DepartmentsPage = () => {
                 <div>
                   <p className="text-2xl font-bold text-gray-900">
                     {stat.value}
-                    {stat.total && stat.value !== stat.total && (
-                      <span className="text-sm text-gray-500 ml-1">/ {stat.total}</span>
-                    )}
+                    {typeof stat.total === "number" &&
+                      stat.total !== stat.value && (
+                        <span className="text-sm text-gray-500 ml-1">/ {stat.total}</span>
+                      )}
                   </p>
                   <p className="text-xs text-gray-600">{stat.label}</p>
                 </div>
@@ -216,7 +214,7 @@ const DepartmentsPage = () => {
       {/* ================= FILTERS ================= */}
       <div className="rounded-2xl bg-white/40 border border-white shadow-lg p-4">
         <div className="flex flex-col sm:flex-row gap-3">
-          {/* Search Bar */}
+          {/* Search */}
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -224,25 +222,28 @@ const DepartmentsPage = () => {
               placeholder="Search departments by name, code, faculty..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white/80 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
+              className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-gray-200 bg-white/80 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
             />
             {searchTerm && (
               <button
+                type="button"
                 onClick={() => setSearchTerm("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                aria-label="Clear search"
               >
                 <XCircle className="w-4 h-4" />
               </button>
             )}
           </div>
 
-          {/* Filter Toggle Button */}
+          {/* Toggle Filters */}
           <button
-            onClick={() => setShowFilters(!showFilters)}
+            type="button"
+            onClick={() => setShowFilters((v) => !v)}
             className={`px-4 py-2.5 rounded-xl border transition-all font-medium text-sm flex items-center gap-2 ${
               showFilters || hasActiveFilters
-                ? 'bg-blue-500 text-white border-blue-500'
-                : 'bg-white/80 text-gray-700 border-gray-200 hover:bg-gray-50'
+                ? "bg-blue-500 text-white border-blue-500"
+                : "bg-white/80 text-gray-700 border-gray-200 hover:bg-gray-50"
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
@@ -253,7 +254,7 @@ const DepartmentsPage = () => {
           </button>
         </div>
 
-        {/* Advanced Filters (Collapsible) */}
+        {/* Advanced Filters */}
         <AnimatePresence>
           {showFilters && (
             <motion.div
@@ -264,28 +265,26 @@ const DepartmentsPage = () => {
               className="overflow-hidden"
             >
               <div className="pt-4 mt-4 border-t border-gray-200 grid sm:grid-cols-3 gap-3">
-                {/* Faculty Filter */}
+                {/* Faculty */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                    Faculty
-                  </label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Faculty</label>
                   <select
                     value={selectedFaculty}
                     onChange={(e) => setSelectedFaculty(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   >
                     <option value="all">All Faculties</option>
-                    {faculties.map(faculty => (
-                      <option key={faculty} value={faculty}>{faculty}</option>
+                    {faculties.map((faculty) => (
+                      <option key={faculty} value={faculty}>
+                        {faculty}
+                      </option>
                     ))}
                   </select>
                 </div>
 
-                {/* Sort By */}
+                {/* Sort */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                    Sort By
-                  </label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Sort By</label>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
@@ -297,9 +296,10 @@ const DepartmentsPage = () => {
                   </select>
                 </div>
 
-                {/* Clear Filters */}
+                {/* Clear */}
                 <div className="flex items-end">
                   <button
+                    type="button"
                     onClick={clearFilters}
                     disabled={!hasActiveFilters}
                     className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium flex items-center justify-center gap-2"
@@ -314,7 +314,7 @@ const DepartmentsPage = () => {
         </AnimatePresence>
       </div>
 
-      {/* ================= DEPARTMENTS LIST ================= */}
+      {/* ================= LIST ================= */}
       <DepartmentsList
         departments={filteredDepartments}
         loading={loading}
@@ -324,12 +324,9 @@ const DepartmentsPage = () => {
         searchTerm={searchTerm}
       />
 
-      {/* ================= DETAIL MODAL ================= */}
+      {/* ================= MODAL ================= */}
       {selectedDepartment && (
-        <DepartmentModal
-          department={selectedDepartment}
-          onClose={() => setSelectedDepartment(null)}
-        />
+        <DepartmentModal department={selectedDepartment} onClose={() => setSelectedDepartment(null)} />
       )}
     </div>
   );
@@ -385,20 +382,11 @@ const DepartmentsList = ({ departments, loading, onEdit, onView, onDelete, searc
 const EmptyState = ({ searchTerm }) => (
   <div className="text-center py-12">
     <div className="inline-flex p-6 rounded-full bg-gray-100 mb-4">
-      {searchTerm ? (
-        <Search className="w-12 h-12 text-gray-400" />
-      ) : (
-        <Building2 className="w-12 h-12 text-gray-400" />
-      )}
+      {searchTerm ? <Search className="w-12 h-12 text-gray-400" /> : <Building2 className="w-12 h-12 text-gray-400" />}
     </div>
-    <p className="text-gray-500 font-medium">
-      {searchTerm ? "No departments found" : "No departments yet"}
-    </p>
+    <p className="text-gray-500 font-medium">{searchTerm ? "No departments found" : "No departments yet"}</p>
     <p className="text-sm text-gray-400 mt-1">
-      {searchTerm 
-        ? `Try adjusting your search or filters` 
-        : "Create your first department to get started"
-      }
+      {searchTerm ? "Try adjusting your search or filters" : "Create your first department to get started"}
     </p>
   </div>
 );
@@ -410,14 +398,21 @@ const DepartmentCard = ({ department, onEdit, onView, onDelete }) => {
     <div
       onClick={() => onView(department)}
       className="group relative overflow-hidden rounded-xl bg-white/60 border border-white/50 shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-200 cursor-pointer"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") onView(department);
+      }}
     >
-      {/* Image Section */}
       <div className="relative h-48 overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100">
         {imageUrl ? (
           <img
             src={imageUrl}
-            alt={department.name}
+            alt={department?.name || "Department"}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -425,61 +420,60 @@ const DepartmentCard = ({ department, onEdit, onView, onDelete }) => {
           </div>
         )}
 
-        {/* Hover overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
 
-        {/* Action Buttons */}
         <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <button
+            type="button"
             className="p-2 rounded-full bg-white/90 shadow-lg hover:bg-white transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               onEdit(department);
             }}
+            aria-label="Edit department"
           >
             <Edit className="w-4 h-4 text-blue-600" />
           </button>
 
           <button
+            type="button"
             className="p-2 rounded-full bg-white/90 shadow-lg hover:bg-white transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               onDelete(department.id);
             }}
+            aria-label="Delete department"
           >
             <Trash2 className="w-4 h-4 text-red-600" />
           </button>
         </div>
       </div>
 
-      {/* Content Section */}
       <div className="p-5">
         <h4 className="font-semibold text-gray-900 text-lg mb-1 group-hover:text-blue-600 transition-colors">
-          {department.name}
+          {department?.name || "Unnamed Department"}
         </h4>
 
         <div className="flex items-center gap-2 mb-3">
           <span className="inline-flex items-center gap-1 text-xs bg-blue-100 text-blue-600 px-2.5 py-1 rounded-full font-medium">
             <Code className="w-3 h-3" />
-            {department.code}
+            {department?.code || "N/A"}
           </span>
-          {department.faculty && (
-            <span className="text-xs text-gray-500">• {department.faculty}</span>
-          )}
+          {department?.faculty && <span className="text-xs text-gray-500">• {department.faculty}</span>}
         </div>
 
-        {department.description && (
+        {department?.description && (
           <p className="text-xs text-gray-600 line-clamp-2 mb-3">{department.description}</p>
         )}
 
         <div className="space-y-1.5 pt-3 border-t border-gray-200">
-          {department.contact_email && (
+          {department?.contact_email && (
             <div className="flex items-center gap-2 text-xs text-gray-600">
               <Mail className="w-3.5 h-3.5 text-purple-500" />
               <span className="truncate">{department.contact_email}</span>
             </div>
           )}
-          {department.phone_number && (
+          {department?.phone_number && (
             <div className="flex items-center gap-2 text-xs text-gray-600">
               <Phone className="w-3.5 h-3.5 text-green-500" />
               <span>{department.phone_number}</span>
@@ -514,14 +508,9 @@ const DepartmentModal = ({ department, onClose }) => {
           onClick={(e) => e.stopPropagation()}
           className="relative max-w-2xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden"
         >
-          {/* Header with Image */}
           <div className="relative h-64 bg-gradient-to-br from-blue-500 to-purple-600">
             {imageUrl ? (
-              <img
-                src={imageUrl}
-                alt={department.name}
-                className="w-full h-full object-cover"
-              />
+              <img src={imageUrl} alt={department?.name || "Department"} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <Building2 className="w-24 h-24 text-white/30" />
@@ -530,38 +519,33 @@ const DepartmentModal = ({ department, onClose }) => {
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
             <button
+              type="button"
               onClick={onClose}
               className="absolute top-4 right-4 p-2 rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/30 transition-colors"
+              aria-label="Close modal"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="absolute bottom-6 left-6 right-6">
-              <h2 className="text-3xl font-bold text-white mb-2">{department.name}</h2>
+              <h2 className="text-3xl font-bold text-white mb-2">{department?.name || "Department"}</h2>
               <span className="inline-flex items-center gap-1 text-sm bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full">
                 <Code className="w-4 h-4" />
-                {department.code}
+                {department?.code || "N/A"}
               </span>
             </div>
           </div>
 
-          {/* Content */}
           <div className="p-6 space-y-4">
-            {department.title && (
-              <InfoField label="Title" value={department.title} />
-            )}
-            {department.faculty && (
-              <InfoField label="Faculty" value={department.faculty} />
-            )}
-            {department.description && (
-              <InfoField label="Description" value={department.description} />
-            )}
+            {department?.title && <InfoField label="Title" value={department.title} />}
+            {department?.faculty && <InfoField label="Faculty" value={department.faculty} />}
+            {department?.description && <InfoField label="Description" value={department.description} />}
 
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-              {department.contact_email && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
+              {department?.contact_email && (
                 <ContactField icon={Mail} label="Email" value={department.contact_email} iconColor="text-purple-500" />
               )}
-              {department.phone_number && (
+              {department?.phone_number && (
                 <ContactField icon={Phone} label="Phone" value={department.phone_number} iconColor="text-green-500" />
               )}
             </div>
@@ -584,7 +568,7 @@ const ContactField = ({ icon: Icon, label, value, iconColor }) => (
     <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">{label}</p>
     <div className="flex items-center gap-2 text-sm text-gray-800">
       <Icon className={`w-4 h-4 ${iconColor}`} />
-      <span>{value}</span>
+      <span className="break-words">{value}</span>
     </div>
   </div>
 );
