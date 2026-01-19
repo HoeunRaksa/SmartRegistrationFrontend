@@ -88,35 +88,69 @@ const StudentsTable = ({ students, loading, onView, onUpdate, onEdit }) => {
     }
   };
 
-  const handleExport = () => {
-    const headers = ["Student Code", "Name (EN)", "Name (KH)", "Gender", "Phone", "Generation"];
-    const csvRows = currentStudents.map(student => [
-      student.student_code,
-      student.full_name_en,
-      student.full_name_kh || "",
-      student.gender,
-      student.phone_number || "",
-      student.generation || ""
-    ]);
+const handleExport = () => {
+  const dataToExport = filteredStudents; // or students
 
-    const csvContent = [
-      headers.join(","),
-      ...csvRows.map(row => row.map(cell => `"${cell}"`).join(","))
-    ].join("\n");
+  // ✅ choose ONLY needed columns here
+  const columns = [
+    { key: "student_code", label: "Student Code" },
+    { key: "full_name_en", label: "Name (EN)" },
+    { key: "full_name_kh", label: "Name (KH)" },
+    { key: "gender", label: "Gender" },
+    { key: "date_of_birth", label: "Date of Birth" },
+    { key: "nationality", label: "Nationality" },
+    { key: "phone_number", label: "Phone" },
+    { key: "address", label: "Address" },
+    { key: "generation", label: "Generation" },
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `students_${new Date().toISOString().split("T")[0]}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    setSuccess("Students data exported successfully!");
-    setTimeout(() => setSuccess(null), 3000);
+    // relations (real data)
+    { key: "department.name", label: "Department" },
+    { key: "department.code", label: "Dept Code" },
+    { key: "user.email", label: "User Email" },
+    { key: "registration.payment_status", label: "Payment Status" },
+
+    // optional
+    { key: "profile_picture_url", label: "Profile Picture URL" },
+    { key: "created_at", label: "Created At" },
+  ];
+
+  const getValue = (obj, path) =>
+    path.split(".").reduce((acc, k) => (acc && acc[k] != null ? acc[k] : ""), obj);
+
+  const escapeCSV = (v) => `"${String(v ?? "").replaceAll('"', '""')}"`;
+
+  const normalizeCell = (key, v) => {
+    // keep codes/phones as text for Excel
+    if (/phone|student_code|student_id/i.test(key) && v !== "") return `="${v}"`;
+    return v ?? "";
   };
+
+  const headers = columns.map((c) => c.label);
+
+  const rows = dataToExport.map((s) =>
+    columns.map((c) => normalizeCell(c.key, getValue(s, c.key)))
+  );
+
+  const csv = "\uFEFF" + [
+    headers.map(escapeCSV).join(","),
+    ...rows.map((r) => r.map(escapeCSV).join(",")),
+  ].join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `students_${new Date().toISOString().split("T")[0]}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  URL.revokeObjectURL(url);
+};
+
+
+
 
   // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;

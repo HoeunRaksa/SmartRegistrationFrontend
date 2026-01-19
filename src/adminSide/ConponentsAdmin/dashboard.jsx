@@ -538,11 +538,10 @@ const Dashboard = () => {
                         <Calendar className="w-3 h-3" />
                         {reg.date}
                         <span className="mx-1">•</span>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                          reg.status === 'COMPLETED' || reg.status === 'PAID'
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${reg.status === 'COMPLETED' || reg.status === 'PAID'
                             ? 'bg-green-100 text-green-700'
                             : 'bg-yellow-100 text-yellow-700'
-                        }`}>
+                          }`}>
                           {reg.status}
                         </span>
                       </p>
@@ -752,7 +751,12 @@ const Dashboard = () => {
             <div className="p-5 rounded-2xl bg-white/70 border border-white shadow-sm">
               <p className="text-xs text-gray-600">Departments with Subjects</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">
-                {new Set(subjects.map(s => s.department_id).filter(Boolean)).size}
+                {new Set(
+                  majors
+                    .filter(m => m?.subjects?.length > 0)
+                    .map(m => m?.department_id || m?.department?.id)
+                    .filter(Boolean)
+                ).size}
               </p>
               <p className="text-xs text-gray-500 mt-2">Coverage overview</p>
             </div>
@@ -767,6 +771,7 @@ const Dashboard = () => {
             </div>
           </div>
         </motion.div>
+
       </div>
 
       {/* TOP MAJORS + DEPARTMENTS */}

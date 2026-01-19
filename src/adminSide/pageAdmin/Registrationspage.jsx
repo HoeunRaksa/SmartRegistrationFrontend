@@ -1,9 +1,16 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { fetchRegistrations } from "../../api/registration_api";
+import { fetchRegistrations, adminGenerateQr, markPaidCash } from "../../api/registration_api";
 import { fetchDepartments } from "../../api/department_api";
 import { fetchMajors } from "../../api/major_api";
 import RegistrationReportPage from "./RegistrationReportPage";
+import PaymentForm from "../../Components/payment/PaymentForm.jsx";
+import { ToastContext } from "../../Components/Context/ToastProvider.jsx";
+
+
+
+
+
 import {
   Users,
   User,
@@ -30,15 +37,17 @@ const RegistrationPage = () => {
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showReportModal, setShowReportModal] = useState(false);
-  
+
   // Filter states
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [selectedMajor, setSelectedMajor] = useState('all');
-  
+
   // For dropdown options
   const [departments, setDepartments] = useState([]);
   const [majors, setMajors] = useState([]);
-
+  const [showAdminQr, setShowAdminQr] = useState(false);
+  const [adminQrReg, setAdminQrReg] = useState(null);
+  const toast = useContext(ToastContext); 
   useEffect(() => {
     loadAllData();
   }, []);
@@ -46,17 +55,17 @@ const RegistrationPage = () => {
   const loadAllData = async () => {
     try {
       setLoading(true);
-      
+
       const [regRes, deptRes, majorRes] = await Promise.all([
         fetchRegistrations(),
         fetchDepartments(),
         fetchMajors()
       ]);
-      
+
       const regData = regRes.data?.data || regRes.data || [];
       const deptData = deptRes.data?.data || deptRes.data || [];
       const majorData = majorRes.data?.data || majorRes.data || [];
-      
+
       setRegistrations(Array.isArray(regData) ? regData : []);
       setDepartments(Array.isArray(deptData) ? deptData : []);
       setMajors(Array.isArray(majorData) ? majorData : []);
@@ -74,11 +83,11 @@ const RegistrationPage = () => {
   const filteredRegistrations = useMemo(() => {
     return registrations.filter(reg => {
       // Payment status filter
-      const statusMatch = 
+      const statusMatch =
         filter === 'all' ? true :
-        filter === 'paid' ? reg.payment_status === 'PAID' :
-        filter === 'pending' ? (!reg.payment_status || reg.payment_status === 'PENDING') :
-        true;
+          filter === 'paid' ? reg.payment_status === 'PAID' :
+            filter === 'pending' ? (!reg.payment_status || reg.payment_status === 'PENDING') :
+              true;
 
       // Search filter
       const searchMatch = searchTerm === '' ? true :
@@ -88,14 +97,14 @@ const RegistrationPage = () => {
         reg.phone_number?.includes(searchTerm);
 
       // Department filter
-      const departmentMatch = 
+      const departmentMatch =
         selectedDepartment === 'all' ? true :
-        reg.department_id === parseInt(selectedDepartment);
+          reg.department_id === parseInt(selectedDepartment);
 
       // Major filter
-      const majorMatch = 
+      const majorMatch =
         selectedMajor === 'all' ? true :
-        reg.major_id === parseInt(selectedMajor);
+          reg.major_id === parseInt(selectedMajor);
 
       return statusMatch && searchMatch && departmentMatch && majorMatch;
     });
@@ -103,7 +112,7 @@ const RegistrationPage = () => {
 
   const paidCount = filteredRegistrations.filter(r => r.payment_status === 'PAID').length;
   const pendingCount = filteredRegistrations.filter(r => !r.payment_status || r.payment_status === 'PENDING').length;
-  
+
   // Calculate real total revenue from paid registrations (filtered)
   const totalRevenue = filteredRegistrations
     .filter(r => r.payment_status === 'PAID')
@@ -126,8 +135,8 @@ const RegistrationPage = () => {
         {quickStats.map((stat, i) => {
           const Icon = stat.icon;
           return (
-            <div 
-              key={i} 
+            <div
+              key={i}
               className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/40 shadow-sm hover:shadow-md transition-all"
             >
               <div className="flex items-center gap-3">
@@ -189,8 +198,8 @@ const RegistrationPage = () => {
               >
                 <option value="all">All Majors</option>
                 {majors
-                  .filter(major => 
-                    selectedDepartment === 'all' || 
+                  .filter(major =>
+                    selectedDepartment === 'all' ||
                     major.department_id === parseInt(selectedDepartment)
                   )
                   .map(major => (
@@ -204,32 +213,29 @@ const RegistrationPage = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => setFilter('all')}
-                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
-                  filter === 'all'
-                    ? 'bg-blue-500 text-white shadow-lg'
-                    : 'bg-white/50 text-gray-700 hover:bg-white/70'
-                }`}
+                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${filter === 'all'
+                  ? 'bg-blue-500 text-white shadow-lg'
+                  : 'bg-white/50 text-gray-700 hover:bg-white/70'
+                  }`}
               >
                 All ({registrations.length})
               </button>
               <button
                 onClick={() => setFilter('paid')}
-                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${
-                  filter === 'paid'
-                    ? 'bg-green-500 text-white shadow-lg'
-                    : 'bg-white/50 text-gray-700 hover:bg-white/70'
-                }`}
+                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${filter === 'paid'
+                  ? 'bg-green-500 text-white shadow-lg'
+                  : 'bg-white/50 text-gray-700 hover:bg-white/70'
+                  }`}
               >
                 <CheckCircle className="w-4 h-4" />
                 Paid
               </button>
               <button
                 onClick={() => setFilter('pending')}
-                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${
-                  filter === 'pending'
-                    ? 'bg-orange-500 text-white shadow-lg'
-                    : 'bg-white/50 text-gray-700 hover:bg-white/70'
-                }`}
+                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${filter === 'pending'
+                  ? 'bg-orange-500 text-white shadow-lg'
+                  : 'bg-white/50 text-gray-700 hover:bg-white/70'
+                  }`}
               >
                 <Clock className="w-4 h-4" />
                 Pending
@@ -270,14 +276,42 @@ const RegistrationPage = () => {
         loading={loading}
         onView={setSelectedRegistration}
       />
+      {/* ================= ADMIN QR MODAL ================= */}
+      {showAdminQr && adminQrReg && (
+        <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <PaymentForm
+            registrationId={adminQrReg.id}
+            amount={adminQrReg.payment_amount}
+            registrationData={{ data: { registration_id: adminQrReg.id, payment_amount: adminQrReg.payment_amount } }}
+            onClose={() => {
+              setShowAdminQr(false);
+              setAdminQrReg(null);
+            }}
+            onSuccess={async () => {
+              setShowAdminQr(false);
+              setAdminQrReg(null);
+              await loadAllData();
+            }}
+          />
+        </div>
+      )}
+
 
       {/* ================= DETAIL MODAL ================= */}
       {selectedRegistration && (
-        <RegistrationModal
-          registration={selectedRegistration}
-          onClose={() => setSelectedRegistration(null)}
-        />
-      )}
+  <RegistrationModal
+    registration={selectedRegistration}
+    onClose={() => setSelectedRegistration(null)}
+    onRefresh={loadAllData}
+    onOpenQr={(reg) => {
+      setAdminQrReg(reg);
+      setShowAdminQr(true);
+    }}
+    toast={toast}
+  />
+)}
+
+
 
       {/* ================= REPORT MODAL ================= */}
       {showReportModal && (
@@ -537,7 +571,7 @@ const RegistrationRow = ({ registration, onView }) => {
   );
 };
 
-const RegistrationModal = ({ registration, onClose }) => {
+const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }) => {
   const isPaid = registration.payment_status === 'PAID';
   const profileImage = registration.profile_picture_url || registration.profile_picture_path;
 
@@ -551,6 +585,7 @@ const RegistrationModal = ({ registration, onClose }) => {
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
         onClick={onClose}
       >
+
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -674,6 +709,7 @@ const RegistrationModal = ({ registration, onClose }) => {
                       </p>
                     </div>
                   </div>
+
                   {isPaid && (
                     <div className="text-right">
                       <p className="text-xs text-gray-500">Paid on</p>
@@ -683,8 +719,51 @@ const RegistrationModal = ({ registration, onClose }) => {
                     </div>
                   )}
                 </div>
+
+                {/* ✅ ADMIN ACTION BUTTONS */}
+                {!isPaid && (
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <button
+                      onClick={async () => {
+                        try {
+                          await adminGenerateQr(registration.id);
+                          toast?.success("QR generated successfully");
+                          onOpenQr(registration);
+                        } catch (e) {
+                          console.error(e);
+                          toast?.error(e.response?.data?.message || "Failed to generate QR");
+                        }
+                      }}
+                      className="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      Generate QR Again
+                    </button>
+
+
+                    <button
+                      onClick={async () => {
+                        if (!confirm("Mark this registration as PAID (Cash)?")) return;
+
+                        try {
+                          await markPaidCash(registration.id);
+                          toast?.success("Marked as PAID (Cash)");
+                          await onRefresh();
+                          onClose();
+                        } catch (e) {
+                          console.error(e);
+                          toast?.error(e.response?.data?.message || "Failed to mark paid");
+                        }
+                      }}
+                      className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700"
+                    >
+                      Mark Paid (Cash)
+                    </button>
+
+                  </div>
+                )}
               </div>
             </Section>
+
           </div>
         </motion.div>
       </motion.div>

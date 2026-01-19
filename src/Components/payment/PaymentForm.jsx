@@ -129,7 +129,7 @@ const PaymentForm = ({
   const isFinalStatus = status === "PAID" || status === "SUCCESS" || status === "FAILED" || status === "CANCELED";
 
   return (
-    <div className="relative w-full max-w-md backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/80 to-white/70 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.2)] border-2 border-white/60 overflow-hidden mx-4">
+    <div className="relative z-50 w-full max-w-md backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/80 to-white/70 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.2)] border-2 border-white/60 overflow-hidden mx-4">
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
 
       <button

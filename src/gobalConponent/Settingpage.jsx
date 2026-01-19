@@ -297,40 +297,7 @@ const SettingPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
-      {/* HERO HEADER */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/30 bg-white/50 backdrop-blur-2xl shadow-lg">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10" />
-        <div className="relative p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/30 to-purple-500/30 blur-xl" />
-              <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg">
-                {ActiveTab ? <ActiveTab.icon className="w-7 h-7 text-white" /> : <SlidersHorizontal className="w-7 h-7 text-white" />}
-              </div>
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Account Settings</h1>
-              <p className="text-sm text-gray-600 mt-1">
-                {ActiveTab?.description || "Manage your profile, security, and preferences"}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-3 rounded-2xl border border-white/40 bg-white/60 backdrop-blur-xl px-4 py-3 shadow-sm">
-              <img
-                src={user?.profile_picture_url || profileFallback}
-                alt="User"
-                className="w-10 h-10 rounded-xl object-cover ring-2 ring-white/60"
-              />
-              <div className="leading-tight">
-                <p className="text-sm font-semibold text-gray-900">{user?.name || "User"}</p>
-                <p className="text-xs text-gray-600">{user?.email || "—"}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+   
 
       {/* MESSAGE ALERT */}
       <AnimatePresence>

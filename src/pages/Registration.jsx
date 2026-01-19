@@ -19,9 +19,9 @@ import {
     CheckCircle,
 } from "lucide-react";
 import PaymentForm from "../Components/payment/PaymentForm.jsx";
-import { submitRegistration } from "../api/registration_api.jsx";
-import { fetchDepartments, fetchMajorsByDepartment } from '../api/department_api.jsx';
-import { fetchMajor } from '../api/major_api.jsx';
+import { submitRegistration, payLater as payLaterApi } from "../api/registration_api.jsx";
+import { fetchDepartments, fetchMajorsByDepartment } from "../api/department_api.jsx";
+import { fetchMajor } from "../api/major_api.jsx";
 
 export const ToastContext = createContext();
 
@@ -60,21 +60,18 @@ const Registration = () => {
         address: "",
         currentAddress: "",
 
-        // Father
         fatherName: "",
         fathersDateOfBirth: "",
         fathersNationality: "",
         fathersJob: "",
         fathersPhoneNumber: "",
 
-        // Mother
         motherName: "",
         motherDateOfBirth: "",
         motherNationality: "",
         mothersJob: "",
         motherPhoneNumber: "",
 
-        // Guardian & Emergency
         guardianName: "",
         guardianPhoneNumber: "",
         emergencyContactName: "",
@@ -85,15 +82,12 @@ const Registration = () => {
         const loadDepartments = async () => {
             try {
                 const response = await fetchDepartments();
-                if (response.data.success) {
-                    setDepartments(response.data.data);
-                }
+                if (response.data.success) setDepartments(response.data.data);
             } catch (err) {
                 console.error("Error loading departments:", err);
                 setError("Failed to load departments. Please refresh the page.");
             }
         };
-
         loadDepartments();
     }, []);
 
@@ -107,9 +101,7 @@ const Registration = () => {
         const loadMajors = async () => {
             try {
                 const response = await fetchMajorsByDepartment(form.departmentId);
-                if (response.data.success) {
-                    setMajors(response.data.data);
-                }
+                if (response.data.success) setMajors(response.data.data);
             } catch (err) {
                 console.error("Error loading majors:", err);
                 setError("Failed to load majors for selected department.");
@@ -121,14 +113,11 @@ const Registration = () => {
 
     useEffect(() => {
         if (form.departmentId) {
-            const selectedDept = departments.find(d => d.id === parseInt(form.departmentId));
-            if (selectedDept && selectedDept.faculty) {
-                setForm(prev => ({ ...prev, faculty: selectedDept.faculty }));
-            }
+            const selectedDept = departments.find((d) => d.id === parseInt(form.departmentId));
+            if (selectedDept?.faculty) setForm((prev) => ({ ...prev, faculty: selectedDept.faculty }));
         }
     }, [form.departmentId, departments]);
 
-    // Fetch major fee when major is selected
     useEffect(() => {
         if (!form.majorId) {
             setSelectedMajorFee(null);
@@ -138,9 +127,7 @@ const Registration = () => {
         const loadMajorFee = async () => {
             try {
                 const response = await fetchMajor(form.majorId);
-                if (response.data) {
-                    setSelectedMajorFee(Number(response.data.registration_fee ?? 100));
-                }
+                if (response.data) setSelectedMajorFee(Number(response.data.registration_fee ?? 100));
             } catch (err) {
                 console.error("Error loading major fee:", err);
                 setSelectedMajorFee(100);
@@ -150,32 +137,29 @@ const Registration = () => {
         loadMajorFee();
     }, [form.majorId]);
 
-
     const handleChange = (e) => {
         const { name, value, files } = e.target;
 
         if (files && files[0]) {
             const file = files[0];
-            const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+            const validTypes = ["image/jpeg", "image/jpg", "image/png"];
 
             if (!validTypes.includes(file.type)) {
                 setError("Please upload a valid image file (JPG, JPEG, or PNG)");
-                e.target.value = '';
+                e.target.value = "";
                 return;
             }
 
             if (file.size > 5 * 1024 * 1024) {
                 setError("Image size must be less than 5MB");
-                e.target.value = '';
+                e.target.value = "";
                 return;
             }
 
-            setForm({ ...form, [name]: file });
-
-            const previewUrl = URL.createObjectURL(file);
-            setProfilePreview(previewUrl);
+            setForm((prev) => ({ ...prev, [name]: file }));
+            setProfilePreview(URL.createObjectURL(file));
         } else {
-            setForm({ ...form, [name]: value });
+            setForm((prev) => ({ ...prev, [name]: value }));
         }
 
         if (error) setError(null);
@@ -236,89 +220,120 @@ const Registration = () => {
         try {
             setLoading(true);
             const response = await submitRegistration(formData);
-            console.log("Registration Success:", response.data);
-
             return response.data;
-        } catch (error) {
-            console.error("Registration Error:", error.response?.data || error.message);
+        } catch (err) {
+            console.error("Registration Error:", err.response?.data || err.message);
 
-            if (error.response?.data?.errors) {
-                const errors = error.response.data.errors;
-                const errorMessages = Object.values(errors).flat().join('\n');
+            if (err.response?.data?.errors) {
+                const errors = err.response.data.errors;
+                const errorMessages = Object.values(errors).flat().join("\n");
                 setError(errorMessages);
             } else {
-                setError(error.response?.data?.message || "Registration failed. Please try again.");
+                setError(err.response?.data?.message || "Registration failed. Please try again.");
             }
 
-            throw error;
+            throw err;
         } finally {
             setLoading(false);
         }
     };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Validate required fields
-        if (!form.firstName || !form.lastName || !form.personalEmail || !form.departmentId || !form.majorId || !form.highSchoolName) {
+        if (
+            !form.firstName ||
+            !form.lastName ||
+            !form.personalEmail ||
+            !form.departmentId ||
+            !form.majorId ||
+            !form.highSchoolName
+        ) {
             setError("Please fill in all required fields");
             return;
         }
 
         setShowPaymentChoice(true);
     };
+const ensureRegistration = async () => {
+  if (registrationData?.data?.registration_id) return registrationData;
+
+  const regData = await formSubmit();
+  setRegistrationData(regData);
+  return regData;
+};
 
     const handlePaymentMethodSelect = async (method) => {
         setShowPaymentChoice(false);
 
-        if (method === 'qr') {
-            // First submit registration, then show QR
-            try {
-                setLoading(true);
-                const regData = await formSubmit();
-                setRegistrationData(regData);
+        try {
+            const regData = await ensureRegistration(); // ✅ create only once
+            const registrationId = regData?.data?.registration_id;
+
+            if (method === "qr") {
                 setShowQr(true);
-            } catch (error) {
-                // Error already handled in formSubmit
-                console.error("Failed to create registration for payment");
+                return;
             }
-        } else if (method === 'later') {
-            await handlePayLater();
+
+            if (method === "later") {
+                if (registrationId) {
+                    await payLaterApi(registrationId); // ✅ mark as pay later/pending
+                }
+
+                setSuccess({
+                    title: "Registration Submitted Successfully!",
+                    message:
+                        "Your registration has been created. Please complete payment within 7 days at the university finance office.",
+                    data: regData,
+                });
+
+                setTimeout(() => {
+                    resetForm();
+                    setSuccess(null);
+                    setRegistrationData(null);
+                }, 8000);
+            }
+        } catch (e) {
+            // formSubmit already sets error
         }
     };
 
+
+    // ✅ UPDATED: call payLater API so admin sees it as "pending pay later"
     const handlePayLater = async () => {
         try {
             const regData = await formSubmit();
 
-            // Show success message
+            const registrationId = regData?.data?.registration_id;
+            if (registrationId) {
+                await payLaterApi(registrationId);
+            }
+
             setSuccess({
                 title: "Registration Submitted Successfully!",
-                message: `Your registration has been created. Please complete payment within 7 days at the university finance office.`,
-                data: regData
+                message:
+                    "Your registration has been created. Please complete payment within 7 days at the university finance office.",
+                data: regData,
             });
 
-            // Reset form after 5 seconds
             setTimeout(() => {
                 resetForm();
                 setSuccess(null);
+                setRegistrationData(null);
             }, 8000);
-        } catch (error) {
-            // Error already handled in formSubmit
+        } catch {
+            // error already handled
         }
     };
 
     const handlePaymentSuccess = () => {
-        // Payment completed, show success
         setShowQr(false);
 
         setSuccess({
             title: "Payment Completed!",
             message: "Your registration and payment have been successfully processed.",
-            data: registrationData
+            data: registrationData,
         });
 
-        // Reset form after 8 seconds
         setTimeout(() => {
             resetForm();
             setSuccess(null);
@@ -348,29 +363,35 @@ const Registration = () => {
             profilePicture: null,
             address: "",
             currentAddress: "",
+
             fatherName: "",
             fathersDateOfBirth: "",
             fathersNationality: "",
             fathersJob: "",
             fathersPhoneNumber: "",
+
             motherName: "",
             motherDateOfBirth: "",
             motherNationality: "",
             mothersJob: "",
             motherPhoneNumber: "",
+
             guardianName: "",
             guardianPhoneNumber: "",
             emergencyContactName: "",
             emergencyContactPhoneNumber: "",
         });
+
         setProfilePreview(null);
         setSelectedMajorFee(null);
     };
 
-    const inputClass = "w-full backdrop-blur-xl bg-white/60 border-2 border-white/40 focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 rounded-xl px-4 py-3 outline-none transition-all duration-300 text-gray-800 placeholder-gray-400 font-medium shadow-lg";
+    const inputClass =
+        "w-full backdrop-blur-xl bg-white/60 border-2 border-white/40 focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 rounded-xl px-4 py-3 outline-none transition-all duration-300 text-gray-800 placeholder-gray-400 font-medium shadow-lg";
     const labelClass = "block text-sm font-semibold text-gray-700 mb-2 ml-1";
 
     return (
+
         <section className="min-h-screen -mt-9 relative overflow-hidden font-sans rounded-lg bg-gradient-to-br ">
             {/* Animated background elements */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -505,21 +526,22 @@ const Registration = () => {
                 </div>
             )}
 
-{/* QR Payment Modal */}
-{showQr && registrationData && (
-    <div className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 px-4">
-        <PaymentForm
-            registrationId={registrationData.data?.registration_id} 
-            amount={registrationData.data?.payment_amount || selectedMajorFee}
-            registrationData={registrationData}
-            onClose={() => {
-                setShowQr(false);
-                setRegistrationData(null);
-            }}
-            onSuccess={handlePaymentSuccess}
-        />
-    </div>
-)}
+            {/* QR Payment Modal */}
+            {showQr && registrationData && (
+                <div className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 px-4">
+                    <PaymentForm
+                        registrationId={registrationData.data?.registration_id}
+                        amount={registrationData.data?.payment_amount || selectedMajorFee}
+                        registrationData={registrationData}
+                        onClose={() => {
+                            setShowQr(false);
+                            setShowPaymentChoice(true); // ✅ show option again
+                        }}
+
+                        onSuccess={handlePaymentSuccess}
+                    />
+                </div>
+            )}
 
 
             {/* Error Toast */}

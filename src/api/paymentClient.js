@@ -7,5 +7,10 @@ const PaymentAPI = axios.create({
     Accept: 'application/json',
   },
 });
+PaymentAPI.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
 export default PaymentAPI;

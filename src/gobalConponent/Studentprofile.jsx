@@ -171,6 +171,10 @@ const StudentProfile = ({ student, onClose }) => {
                     value={student.user_id ? `#${student.user_id}` : null}
                   />
                 </div>
+                 <MetaBlock
+                    label="Registration ID"
+                    value={student.registration_id ? `#${student.r}` : null}
+                  />
 
               </motion.section>
             </div>

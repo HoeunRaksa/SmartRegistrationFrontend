@@ -11,10 +11,10 @@ import {
   PieChart,
   RefreshCw,
 } from "lucide-react";
-import { 
-  generateRegistrationReport, 
+import {
+  generateRegistrationReport,
   generateAndDownloadReport,
-  getRegistrationSummary 
+  getRegistrationSummary
 } from "../../api/registration_api";
 import { fetchDepartments } from "../../api/department_api";
 import { fetchMajors } from "../../api/major_api";
@@ -35,6 +35,20 @@ const RegistrationReportPage = () => {
     date_from: "",
     date_to: "",
   });
+const buildAcademicYears = (pastYears = 8, futureYears = 6) => {
+  const now = new Date().getFullYear();
+  const start = now - pastYears;
+  const end = now + futureYears;
+
+  const years = [];
+  for (let y = start; y <= end; y++) {
+    years.push(`${y}-${y + 1}`);
+  }
+  return years;
+};
+const academicYearOptions = buildAcademicYears(5, 5); // ✅ 12 past, 8 future
+
+
 
   useEffect(() => {
     loadDepartments();
@@ -207,19 +221,26 @@ const RegistrationReportPage = () => {
           </div>
 
           {/* Academic Year */}
+          {/* Academic Year */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Academic Year
             </label>
-            <input
-              type="text"
+            <select
               name="academic_year"
               value={filters.academic_year}
               onChange={handleFilterChange}
-              placeholder="e.g., 2024-2025"
               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
-            />
+            >
+              <option value="">All Academic Years</option>
+              {academicYearOptions.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
           </div>
+
 
           {/* Shift */}
           <div>
@@ -388,20 +409,18 @@ const ReportTable = ({ registrations }) => (
               </td>
               <td className="px-6 py-4 text-sm text-gray-900">{reg.full_name_en}</td>
               <td className="px-6 py-4">
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  reg.gender === 'Male' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'
-                }`}>
+                <span className={`text-xs px-2 py-1 rounded-full ${reg.gender === 'Male' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'
+                  }`}>
                   {reg.gender}
                 </span>
               </td>
               <td className="px-6 py-4 text-sm text-gray-600">{reg.department?.name || 'N/A'}</td>
               <td className="px-6 py-4 text-sm text-gray-600">{reg.major?.major_name || 'N/A'}</td>
               <td className="px-6 py-4">
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  reg.payment_status === 'COMPLETED' ? 'bg-green-100 text-green-600' :
-                  reg.payment_status === 'PENDING' ? 'bg-yellow-100 text-yellow-600' :
-                  'bg-red-100 text-red-600'
-                }`}>
+                <span className={`text-xs px-2 py-1 rounded-full ${reg.payment_status === 'COMPLETED' ? 'bg-green-100 text-green-600' :
+                    reg.payment_status === 'PENDING' ? 'bg-yellow-100 text-yellow-600' :
+                      'bg-red-100 text-red-600'
+                  }`}>
                   {reg.payment_status}
                 </span>
               </td>
