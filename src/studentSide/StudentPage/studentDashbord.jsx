@@ -3,6 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { logoutApi } from '../../api/auth.jsx';
 import SettingPage from '../../gobalConponent/Settingpage.jsx';
+import DashboardHome from './DashboardHome.jsx';
+import CoursesPage from './CoursesPage.jsx';
+import SchedulePage from './SchedulePage.jsx';
+import GradesPage from './GradesPage.jsx';
+import AssignmentsPage from './AssignmentsPage.jsx';
+import AttendancePage from './AttendancePage.jsx';
+import MessagesPage from './MessagesPage.jsx';
+import ProfilePage from './ProfilePage.jsx';
 import {
     LayoutDashboard,
     GraduationCap,
@@ -163,24 +171,29 @@ const StudentDashboard = () => {
         </motion.div>
     );
 
-const renderAllSections = () => {
-  return (
-    <>
-      {menuItems.map((item) => (
-        <div key={item.id} style={{ display: activeSection === item.id ? 'block' : 'none' }}>
-          {item.id === 'settings' ? (
-            <SettingPage />
-          ) : (
-            <ComingSoonSection
-              title={item.label}
-              icon={item.icon}
-              gradient={item.gradient}
-            />
-          )}
-        </div>
-      ))}
-    </>
-  );
+const renderSection = () => {
+  switch (activeSection) {
+    case 'dashboard':
+      return <DashboardHome />;
+    case 'courses':
+      return <CoursesPage />;
+    case 'schedule':
+      return <SchedulePage />;
+    case 'grades':
+      return <GradesPage />;
+    case 'assignments':
+      return <AssignmentsPage />;
+    case 'attendance':
+      return <AttendancePage />;
+    case 'messages':
+      return <MessagesPage />;
+    case 'profile':
+      return <ProfilePage />;
+    case 'settings':
+      return <SettingPage />;
+    default:
+      return <DashboardHome />;
+  }
 };
 
     return (
@@ -482,7 +495,7 @@ const renderAllSections = () => {
 
                 {/* Dynamic Content Area */}
                 <main className="min-h-screen pt-6 relative z-10 w-full">
-                    {renderAllSections()}
+                    {renderSection()}
                 </main>
             </div>
 
