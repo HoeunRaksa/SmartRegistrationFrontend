@@ -1,15 +1,15 @@
 import React, { useEffect, useState, useMemo, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { fetchRegistrations, adminGenerateQr, markPaidCash } from "../../api/registration_api";
+import {
+  fetchRegistrations,
+  adminGenerateQr,
+  markPaidCash,
+} from "../../api/registration_api";
 import { fetchDepartments } from "../../api/department_api";
 import { fetchMajors } from "../../api/major_api";
 import RegistrationReportPage from "./RegistrationReportPage";
 import PaymentForm from "../../Components/payment/PaymentForm.jsx";
 import { ToastContext } from "../../Components/Context/ToastProvider.jsx";
-
-
-
-
 
 import {
   Users,
@@ -26,28 +26,31 @@ import {
   DollarSign,
   Search,
   FileText,
-  Filter,
-  SlidersHorizontal,
 } from "lucide-react";
 
 const RegistrationPage = () => {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRegistration, setSelectedRegistration] = useState(null);
-  const [filter, setFilter] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const [showReportModal, setShowReportModal] = useState(false);
 
   // Filter states
-  const [selectedDepartment, setSelectedDepartment] = useState('all');
-  const [selectedMajor, setSelectedMajor] = useState('all');
+  const [selectedDepartment, setSelectedDepartment] = useState("all");
+  const [selectedMajor, setSelectedMajor] = useState("all");
 
   // For dropdown options
   const [departments, setDepartments] = useState([]);
   const [majors, setMajors] = useState([]);
+
+  // QR modal
   const [showAdminQr, setShowAdminQr] = useState(false);
   const [adminQrReg, setAdminQrReg] = useState(null);
-  const toast = useContext(ToastContext); 
+
+  // ✅ Toast only declared ONCE here
+  const toast = useContext(ToastContext);
+
   useEffect(() => {
     loadAllData();
   }, []);
@@ -59,7 +62,7 @@ const RegistrationPage = () => {
       const [regRes, deptRes, majorRes] = await Promise.all([
         fetchRegistrations(),
         fetchDepartments(),
-        fetchMajors()
+        fetchMajors(),
       ]);
 
       const regData = regRes.data?.data || regRes.data || [];
@@ -74,6 +77,7 @@ const RegistrationPage = () => {
       setRegistrations([]);
       setDepartments([]);
       setMajors([]);
+      toast?.error?.("Failed to load registrations");
     } finally {
       setLoading(false);
     }
@@ -81,51 +85,78 @@ const RegistrationPage = () => {
 
   // Filter registrations
   const filteredRegistrations = useMemo(() => {
-    return registrations.filter(reg => {
+    return registrations.filter((reg) => {
       // Payment status filter
       const statusMatch =
-        filter === 'all' ? true :
-          filter === 'paid' ? reg.payment_status === 'PAID' :
-            filter === 'pending' ? (!reg.payment_status || reg.payment_status === 'PENDING') :
-              true;
+        filter === "all"
+          ? true
+          : filter === "paid"
+          ? reg.payment_status === "PAID"
+          : filter === "pending"
+          ? !reg.payment_status || reg.payment_status === "PENDING"
+          : true;
 
       // Search filter
-      const searchMatch = searchTerm === '' ? true :
-        reg.full_name_en?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        reg.full_name_kh?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        reg.personal_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        reg.phone_number?.includes(searchTerm);
+      const s = searchTerm.toLowerCase();
+      const searchMatch =
+        searchTerm === ""
+          ? true
+          : reg.full_name_en?.toLowerCase().includes(s) ||
+            reg.full_name_kh?.toLowerCase().includes(s) ||
+            reg.personal_email?.toLowerCase().includes(s) ||
+            reg.phone_number?.includes(searchTerm);
 
       // Department filter
       const departmentMatch =
-        selectedDepartment === 'all' ? true :
-          reg.department_id === parseInt(selectedDepartment);
+        selectedDepartment === "all"
+          ? true
+          : reg.department_id === parseInt(selectedDepartment);
 
       // Major filter
       const majorMatch =
-        selectedMajor === 'all' ? true :
-          reg.major_id === parseInt(selectedMajor);
+        selectedMajor === "all" ? true : reg.major_id === parseInt(selectedMajor);
 
       return statusMatch && searchMatch && departmentMatch && majorMatch;
     });
   }, [registrations, filter, searchTerm, selectedDepartment, selectedMajor]);
 
-  const paidCount = filteredRegistrations.filter(r => r.payment_status === 'PAID').length;
-  const pendingCount = filteredRegistrations.filter(r => !r.payment_status || r.payment_status === 'PENDING').length;
+  const paidCount = filteredRegistrations.filter(
+    (r) => r.payment_status === "PAID"
+  ).length;
+  const pendingCount = filteredRegistrations.filter(
+    (r) => !r.payment_status || r.payment_status === "PENDING"
+  ).length;
 
   // Calculate real total revenue from paid registrations (filtered)
   const totalRevenue = filteredRegistrations
-    .filter(r => r.payment_status === 'PAID')
-    .reduce((sum, reg) => {
-      const amount = parseFloat(reg.payment_amount) || 0;
-      return sum + amount;
-    }, 0);
+    .filter((r) => r.payment_status === "PAID")
+    .reduce((sum, reg) => sum + (parseFloat(reg.payment_amount) || 0), 0);
 
   const quickStats = [
-    { label: "Total", value: filteredRegistrations.length, color: "from-blue-500 to-cyan-500", icon: Users },
-    { label: "Paid", value: paidCount, color: "from-green-500 to-emerald-500", icon: CheckCircle },
-    { label: "Pending", value: pendingCount, color: "from-orange-500 to-red-500", icon: Clock },
-    { label: "Revenue", value: `$${totalRevenue.toFixed(2)}`, color: "from-purple-500 to-pink-500", icon: DollarSign },
+    {
+      label: "Total",
+      value: filteredRegistrations.length,
+      color: "from-blue-500 to-cyan-500",
+      icon: Users,
+    },
+    {
+      label: "Paid",
+      value: paidCount,
+      color: "from-green-500 to-emerald-500",
+      icon: CheckCircle,
+    },
+    {
+      label: "Pending",
+      value: pendingCount,
+      color: "from-orange-500 to-red-500",
+      icon: Clock,
+    },
+    {
+      label: "Revenue",
+      value: `$${totalRevenue.toFixed(2)}`,
+      color: "from-purple-500 to-pink-500",
+      icon: DollarSign,
+    },
   ];
 
   return (
@@ -140,7 +171,9 @@ const RegistrationPage = () => {
               className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/40 shadow-sm hover:shadow-md transition-all"
             >
               <div className="flex items-center gap-3">
-                <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.color}`}>
+                <div
+                  className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.color}`}
+                >
                   <Icon className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -177,13 +210,15 @@ const RegistrationPage = () => {
                 value={selectedDepartment}
                 onChange={(e) => {
                   setSelectedDepartment(e.target.value);
-                  setSelectedMajor('all'); // Reset major when department changes
+                  setSelectedMajor("all"); // Reset major when department changes
                 }}
                 className="px-3 py-2 bg-white/50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
               >
                 <option value="all">All Departments</option>
-                {departments.map(dept => (
-                  <option key={dept.id} value={dept.id}>{dept.name}</option>
+                {departments.map((dept) => (
+                  <option key={dept.id} value={dept.id}>
+                    {dept.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -198,44 +233,49 @@ const RegistrationPage = () => {
               >
                 <option value="all">All Majors</option>
                 {majors
-                  .filter(major =>
-                    selectedDepartment === 'all' ||
-                    major.department_id === parseInt(selectedDepartment)
+                  .filter(
+                    (major) =>
+                      selectedDepartment === "all" ||
+                      major.department_id === parseInt(selectedDepartment)
                   )
-                  .map(major => (
-                    <option key={major.id} value={major.id}>{major.major_name}</option>
-                  ))
-                }
+                  .map((major) => (
+                    <option key={major.id} value={major.id}>
+                      {major.major_name}
+                    </option>
+                  ))}
               </select>
             </div>
 
             {/* Status Filter Buttons */}
             <div className="flex gap-2">
               <button
-                onClick={() => setFilter('all')}
-                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${filter === 'all'
-                  ? 'bg-blue-500 text-white shadow-lg'
-                  : 'bg-white/50 text-gray-700 hover:bg-white/70'
-                  }`}
+                onClick={() => setFilter("all")}
+                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+                  filter === "all"
+                    ? "bg-blue-500 text-white shadow-lg"
+                    : "bg-white/50 text-gray-700 hover:bg-white/70"
+                }`}
               >
                 All ({registrations.length})
               </button>
               <button
-                onClick={() => setFilter('paid')}
-                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${filter === 'paid'
-                  ? 'bg-green-500 text-white shadow-lg'
-                  : 'bg-white/50 text-gray-700 hover:bg-white/70'
-                  }`}
+                onClick={() => setFilter("paid")}
+                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${
+                  filter === "paid"
+                    ? "bg-green-500 text-white shadow-lg"
+                    : "bg-white/50 text-gray-700 hover:bg-white/70"
+                }`}
               >
                 <CheckCircle className="w-4 h-4" />
                 Paid
               </button>
               <button
-                onClick={() => setFilter('pending')}
-                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${filter === 'pending'
-                  ? 'bg-orange-500 text-white shadow-lg'
-                  : 'bg-white/50 text-gray-700 hover:bg-white/70'
-                  }`}
+                onClick={() => setFilter("pending")}
+                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${
+                  filter === "pending"
+                    ? "bg-orange-500 text-white shadow-lg"
+                    : "bg-white/50 text-gray-700 hover:bg-white/70"
+                }`}
               >
                 <Clock className="w-4 h-4" />
                 Pending
@@ -243,13 +283,16 @@ const RegistrationPage = () => {
             </div>
 
             {/* Clear Filters Button */}
-            {(searchTerm || selectedDepartment !== 'all' || selectedMajor !== 'all' || filter !== 'all') && (
+            {(searchTerm ||
+              selectedDepartment !== "all" ||
+              selectedMajor !== "all" ||
+              filter !== "all") && (
               <button
                 onClick={() => {
-                  setSearchTerm('');
-                  setSelectedDepartment('all');
-                  setSelectedMajor('all');
-                  setFilter('all');
+                  setSearchTerm("");
+                  setSelectedDepartment("all");
+                  setSelectedMajor("all");
+                  setFilter("all");
                 }}
                 className="px-4 py-2 rounded-xl font-medium text-sm bg-gray-500 text-white hover:bg-gray-600 shadow-lg transition-all flex items-center gap-2"
               >
@@ -276,13 +319,19 @@ const RegistrationPage = () => {
         loading={loading}
         onView={setSelectedRegistration}
       />
+
       {/* ================= ADMIN QR MODAL ================= */}
       {showAdminQr && adminQrReg && (
         <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <PaymentForm
             registrationId={adminQrReg.id}
             amount={adminQrReg.payment_amount}
-            registrationData={{ data: { registration_id: adminQrReg.id, payment_amount: adminQrReg.payment_amount } }}
+            registrationData={{
+              data: {
+                registration_id: adminQrReg.id,
+                payment_amount: adminQrReg.payment_amount,
+              },
+            }}
             onClose={() => {
               setShowAdminQr(false);
               setAdminQrReg(null);
@@ -296,33 +345,27 @@ const RegistrationPage = () => {
         </div>
       )}
 
-
       {/* ================= DETAIL MODAL ================= */}
       {selectedRegistration && (
-  <RegistrationModal
-    registration={selectedRegistration}
-    onClose={() => setSelectedRegistration(null)}
-    onRefresh={loadAllData}
-    onOpenQr={(reg) => {
-      setAdminQrReg(reg);
-      setShowAdminQr(true);
-    }}
-    toast={toast}
-  />
-)}
-
-
+        <RegistrationModal
+          registration={selectedRegistration}
+          onClose={() => setSelectedRegistration(null)}
+          onRefresh={loadAllData}
+          onOpenQr={(reg) => {
+            setAdminQrReg(reg);
+            setShowAdminQr(true);
+          }}
+          toast={toast} // ✅ pass toast
+        />
+      )}
 
       {/* ================= REPORT MODAL ================= */}
-      {showReportModal && (
-        <ReportModal onClose={() => setShowReportModal(false)} />
-      )}
+      {showReportModal && <ReportModal onClose={() => setShowReportModal(false)} />}
     </div>
   );
 };
 
 /* ================== REPORT MODAL ================== */
-
 const ReportModal = ({ onClose }) => {
   return (
     <AnimatePresence>
@@ -379,7 +422,7 @@ const RegistrationsList = ({ registrations, loading, onView }) => {
             <h3 className="text-lg font-semibold text-gray-900">All Registrations</h3>
           </div>
           <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1.5 rounded-full font-semibold">
-            {registrations.length} {registrations.length === 1 ? 'Result' : 'Results'}
+            {registrations.length} {registrations.length === 1 ? "Result" : "Results"}
           </span>
         </div>
       </div>
@@ -419,11 +462,7 @@ const RegistrationsList = ({ registrations, loading, onView }) => {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {registrations.map((reg) => (
-                <RegistrationRow
-                  key={reg.id}
-                  registration={reg}
-                  onView={onView}
-                />
+                <RegistrationRow key={reg.id} registration={reg} onView={onView} />
               ))}
             </tbody>
           </table>
@@ -444,14 +483,14 @@ const EmptyState = () => (
 );
 
 const RegistrationRow = ({ registration, onView }) => {
-  const isPaid = registration.payment_status === 'PAID';
+  const isPaid = registration.payment_status === "PAID";
   const profileImage = registration.profile_picture_url || registration.profile_picture_path;
 
   return (
     <motion.tr
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      whileHover={{ backgroundColor: 'rgba(59, 130, 246, 0.05)' }}
+      whileHover={{ backgroundColor: "rgba(59, 130, 246, 0.05)" }}
       className="bg-white/60 hover:bg-blue-50/50 transition-colors cursor-pointer"
       onClick={() => onView(registration)}
     >
@@ -464,8 +503,9 @@ const RegistrationRow = ({ registration, onView }) => {
               alt={registration.full_name_en}
               className="w-full h-full object-cover"
               onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200"><svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>';
+                e.target.style.display = "none";
+                e.target.parentElement.innerHTML =
+                  '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200"><svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>';
               }}
             />
           ) : (
@@ -572,7 +612,7 @@ const RegistrationRow = ({ registration, onView }) => {
 };
 
 const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }) => {
-  const isPaid = registration.payment_status === 'PAID';
+  const isPaid = registration.payment_status === "PAID";
   const profileImage = registration.profile_picture_url || registration.profile_picture_path;
 
   return (
@@ -585,7 +625,6 @@ const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
         onClick={onClose}
       >
-
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -595,7 +634,13 @@ const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }
           className="relative max-w-3xl w-full max-h-[75vh] overflow-y-auto bg-white rounded-3xl shadow-2xl"
         >
           {/* Header */}
-          <div className={`sticky top-0 p-6 z-10 ${isPaid ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gradient-to-br from-orange-500 to-red-600'}`}>
+          <div
+            className={`sticky top-0 p-6 z-10 ${
+              isPaid
+                ? "bg-gradient-to-br from-green-500 to-emerald-600"
+                : "bg-gradient-to-br from-orange-500 to-red-600"
+            }`}
+          >
             <button
               onClick={onClose}
               className="absolute top-4 right-4 p-2 rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/30 transition-colors"
@@ -604,7 +649,6 @@ const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }
             </button>
 
             <div className="flex items-start gap-4">
-              {/* Profile Picture in Modal */}
               <div className="w-20 h-20 rounded-full overflow-hidden bg-white shadow-lg flex-shrink-0">
                 {profileImage ? (
                   <img
@@ -612,8 +656,9 @@ const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }
                     alt={registration.full_name_en}
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200"><svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>';
+                      e.target.style.display = "none";
+                      e.target.parentElement.innerHTML =
+                        '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200"><svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>';
                     }}
                   />
                 ) : (
@@ -624,7 +669,9 @@ const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }
               </div>
 
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-white mb-2">Registration Details</h2>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  Registration Details
+                </h2>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm text-white/80">ID: {registration.id}</span>
                   {isPaid ? (
@@ -645,7 +692,6 @@ const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }
 
           {/* Content */}
           <div className="p-6 space-y-6">
-            {/* Personal Information */}
             <Section title="Personal Information">
               <InfoGrid>
                 <InfoField label="Full Name (EN)" value={registration.full_name_en} />
@@ -659,7 +705,6 @@ const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }
               </InfoGrid>
             </Section>
 
-            {/* Education Information */}
             <Section title="Education Information">
               <InfoGrid>
                 <InfoField label="High School" value={registration.high_school_name} />
@@ -674,7 +719,6 @@ const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }
               </InfoGrid>
             </Section>
 
-            {/* Parent/Guardian Information */}
             <Section title="Parent/Guardian Information">
               <InfoGrid>
                 <InfoField label="Father's Name" value={registration.father_name} />
@@ -686,9 +730,14 @@ const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }
               </InfoGrid>
             </Section>
 
-            {/* Payment Status */}
             <Section title="Payment Information">
-              <div className={`p-4 rounded-xl ${isPaid ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'}`}>
+              <div
+                className={`p-4 rounded-xl ${
+                  isPaid
+                    ? "bg-green-50 border border-green-200"
+                    : "bg-orange-50 border border-orange-200"
+                }`}
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {isPaid ? (
@@ -701,8 +750,8 @@ const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }
                       </div>
                     )}
                     <div>
-                      <p className={`font-semibold ${isPaid ? 'text-green-700' : 'text-orange-700'}`}>
-                        {isPaid ? 'Payment Completed' : 'Payment Pending'}
+                      <p className={`font-semibold ${isPaid ? "text-green-700" : "text-orange-700"}`}>
+                        {isPaid ? "Payment Completed" : "Payment Pending"}
                       </p>
                       <p className="text-sm text-gray-600">
                         Registration Fee: ${parseFloat(registration.payment_amount || 0).toFixed(2)}
@@ -714,24 +763,23 @@ const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }
                     <div className="text-right">
                       <p className="text-xs text-gray-500">Paid on</p>
                       <p className="text-sm font-medium text-gray-700">
-                        {registration.payment_date || 'Date unavailable'}
+                        {registration.payment_date || "Date unavailable"}
                       </p>
                     </div>
                   )}
                 </div>
 
-                {/* ✅ ADMIN ACTION BUTTONS */}
                 {!isPaid && (
                   <div className="mt-4 flex flex-wrap gap-3">
                     <button
                       onClick={async () => {
                         try {
                           await adminGenerateQr(registration.id);
-                          toast?.success("QR generated successfully");
+                          toast?.success?.("QR generated successfully");
                           onOpenQr(registration);
                         } catch (e) {
                           console.error(e);
-                          toast?.error(e.response?.data?.message || "Failed to generate QR");
+                          toast?.error?.(e.response?.data?.message || "Failed to generate QR");
                         }
                       }}
                       className="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
@@ -739,31 +787,28 @@ const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }
                       Generate QR Again
                     </button>
 
-
                     <button
                       onClick={async () => {
                         if (!confirm("Mark this registration as PAID (Cash)?")) return;
 
                         try {
                           await markPaidCash(registration.id);
-                          toast?.success("Marked as PAID (Cash)");
+                          toast?.success?.("Marked as PAID (Cash)");
                           await onRefresh();
                           onClose();
                         } catch (e) {
                           console.error(e);
-                          toast?.error(e.response?.data?.message || "Failed to mark paid");
+                          toast?.error?.(e.response?.data?.message || "Failed to mark paid");
                         }
                       }}
                       className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700"
                     >
                       Mark Paid (Cash)
                     </button>
-
                   </div>
                 )}
               </div>
             </Section>
-
           </div>
         </motion.div>
       </motion.div>
@@ -778,11 +823,7 @@ const Section = ({ title, children }) => (
   </div>
 );
 
-const InfoGrid = ({ children }) => (
-  <div className="grid grid-cols-2 gap-4">
-    {children}
-  </div>
-);
+const InfoGrid = ({ children }) => <div className="grid grid-cols-2 gap-4">{children}</div>;
 
 const InfoField = ({ label, value, fullWidth = false }) => (
   <div className={fullWidth ? "col-span-2" : ""}>
