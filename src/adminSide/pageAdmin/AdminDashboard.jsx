@@ -16,7 +16,7 @@ import AttendancePage from "../pageAdmin/AttendancePage.jsx";
 import SchedulesPage from "../pageAdmin/SchedulesPage.jsx";
 import CoursesPage from "../pageAdmin/CoursesPage.jsx";
 import MajorSubjectsPage from "../pageAdmin/MajorSubjectsPage.jsx";
-
+import TeacherPage from '../pageAdmin/TeacherPage.jsx';
 import { logoutApi } from "../../api/auth.jsx";
 import {
   LayoutDashboard,
@@ -95,6 +95,7 @@ const AdminDashboard = () => {
     { id: "enrollments", label: "Enrollments", icon: BookOpen, gradient: "from-blue-500 to-purple-500" },
 
     // Staff
+    { id: "teachers", label: "Teachers", icon: User2Icon, gradient: "from-indigo-500 to-blue-500" },
     { id: "staff", label: "Staff", icon: User2Icon, gradient: "from-indigo-500 to-blue-500" },
 
     // System
@@ -193,6 +194,9 @@ const AdminDashboard = () => {
         <div style={{ display: activeSection === "courses" ? "block" : "none" }}>
           <CoursesPage />
         </div>
+         <div style={{ display: activeSection === "teachers" ? "block" : "none" }}>
+          <TeacherPage />
+        </div>
       </>
     );
   };
@@ -247,7 +251,7 @@ const AdminDashboard = () => {
                 <button
                   key={item.id}
                   onClick={() => handleSectionChange(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all ${
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
                     isActive
                       ? "backdrop-blur-xl bg-gradient-to-r " +
                         item.gradient +
