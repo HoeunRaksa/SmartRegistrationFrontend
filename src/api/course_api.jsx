@@ -34,3 +34,6 @@ export const enrollInCourse = async (courseId) => {
 export const dropCourse = async (courseId) => {
   return await API.delete(`/student/courses/${courseId}/drop`);
 };
+
+// Alias for admin pages compatibility
+export const fetchCourses = fetchAllCourses;
