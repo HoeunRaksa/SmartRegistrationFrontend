@@ -8,6 +8,11 @@ import StudentPage from '../pageAdmin/Studentpage.jsx';
 import RegistrationsPage from '../pageAdmin/Registrationspage.jsx';
 import StaffPage from '../pageAdmin/Staffpage.jsx';
 import SettingPage from '../../gobalConponent/Settingpage.jsx';
+import EnrollmentsPage from '../pageAdmin/EnrollmentsPage.jsx';
+import GradesPage from '../pageAdmin/GradesPage.jsx';
+import AssignmentsPage from '../pageAdmin/AssignmentsPage.jsx';
+import AttendancePage from '../pageAdmin/AttendancePage.jsx';
+import SchedulesPage from '../pageAdmin/SchedulesPage.jsx';
 import { logoutApi } from '../../api/auth.jsx';
 import {
   LayoutDashboard,
@@ -29,7 +34,11 @@ import {
   Sun,
   Moon,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Award,
+  ClipboardList,
+  CheckSquare,
+  Calendar
 } from 'lucide-react';
 import Dashboard from '../../adminSide/ConponentsAdmin/dashboard.jsx';
 import { a } from 'framer-motion/client';
@@ -54,6 +63,11 @@ const AdminDashboard = () => {
     { id: 'students', label: 'Students', icon: Users, gradient: 'from-indigo-500 to-blue-500' },
     { id: 'staff', label: 'Staff', icon: User2Icon, gradient: 'from-indigo-500 to-blue-500' },
     { id: 'registrations', label: 'Registrations', icon: FileText, gradient: 'from-pink-500 to-rose-500' },
+    { id: 'enrollments', label: 'Enrollments', icon: BookOpen, gradient: 'from-blue-500 to-purple-500' },
+    { id: 'grades', label: 'Grades', icon: Award, gradient: 'from-purple-500 to-pink-500' },
+    { id: 'assignments', label: 'Assignments', icon: ClipboardList, gradient: 'from-orange-500 to-amber-500' },
+    { id: 'attendance', label: 'Attendance', icon: CheckSquare, gradient: 'from-green-500 to-teal-500' },
+    { id: 'schedules', label: 'Schedules', icon: Calendar, gradient: 'from-cyan-500 to-blue-500' },
     { id: 'settings', label: 'Settings', icon: Settings, gradient: 'from-gray-500 to-slate-500' },
   ];
 
@@ -124,6 +138,21 @@ const AdminDashboard = () => {
         </div>
         <div style={{ display: activeSection === 'settings' ? 'block' : 'none' }}>
           <SettingPage />
+        </div>
+        <div style={{ display: activeSection === 'enrollments' ? 'block' : 'none' }}>
+          <EnrollmentsPage />
+        </div>
+        <div style={{ display: activeSection === 'grades' ? 'block' : 'none' }}>
+          <GradesPage />
+        </div>
+        <div style={{ display: activeSection === 'assignments' ? 'block' : 'none' }}>
+          <AssignmentsPage />
+        </div>
+        <div style={{ display: activeSection === 'attendance' ? 'block' : 'none' }}>
+          <AttendancePage />
+        </div>
+        <div style={{ display: activeSection === 'schedules' ? 'block' : 'none' }}>
+          <SchedulesPage />
         </div>
       </>
     );
