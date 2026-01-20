@@ -1,14 +1,19 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import DepartmentsPage from "../pageAdmin/Departmentspage.jsx";
-import MajorsPage from "../pageAdmin/Majospage.jsx";
-import SubjectsPage from "../pageAdmin/Subjectpage.jsx";
-import StudentPage from "../pageAdmin/Studentpage.jsx";
-import RegistrationsPage from "../pageAdmin/Registrationspage.jsx";
-import StaffPage from "../pageAdmin/Staffpage.jsx";
-import SettingPage from "../../gobalConponent/Settingpage.jsx";
-import { logoutApi } from "../../api/auth.jsx";
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import DepartmentsPage from '../pageAdmin/Departmentspage.jsx';
+import MajorsPage from '../pageAdmin/Majospage.jsx';
+import SubjectsPage from '../pageAdmin/Subjectpage.jsx';
+import StudentPage from '../pageAdmin/Studentpage.jsx';
+import RegistrationsPage from '../pageAdmin/Registrationspage.jsx';
+import StaffPage from '../pageAdmin/Staffpage.jsx';
+import SettingPage from '../../gobalConponent/Settingpage.jsx';
+import EnrollmentsPage from '../pageAdmin/EnrollmentsPage.jsx';
+import GradesPage from '../pageAdmin/GradesPage.jsx';
+import AssignmentsPage from '../pageAdmin/AssignmentsPage.jsx';
+import AttendancePage from '../pageAdmin/AttendancePage.jsx';
+import SchedulesPage from '../pageAdmin/SchedulesPage.jsx';
+import { logoutApi } from '../../api/auth.jsx';
 import {
   LayoutDashboard,
   GraduationCap,
@@ -27,9 +32,13 @@ import {
   User2Icon,
   Maximize2,
   Minimize2,
-} from "lucide-react";
-import Dashboard from "../../adminSide/ConponentsAdmin/dashboard.jsx";
-
+  Award,
+  ClipboardList,
+  CheckSquare,
+  Calendar
+} from 'lucide-react';
+import Dashboard from '../../adminSide/ConponentsAdmin/dashboard.jsx';
+import { a } from 'framer-motion/client';
 const profileFallback = "/assets/images/profile-fallback.png";
 
 const AdminDashboard = () => {
@@ -44,31 +53,21 @@ const AdminDashboard = () => {
 
   const activeSection = section || "dashboard";
 
-  const menuItems = useMemo(
-    () => [
-      { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, gradient: "from-blue-500 to-cyan-500" },
-      { id: "departments", label: "Departments", icon: Building2, gradient: "from-purple-500 to-pink-500" },
-      { id: "majors", label: "Majors", icon: GraduationCap, gradient: "from-orange-500 to-red-500" },
-      { id: "subjects", label: "Subjects", icon: BookOpen, gradient: "from-green-500 to-emerald-500" },
-      { id: "students", label: "Students", icon: Users, gradient: "from-indigo-500 to-blue-500" },
-      { id: "staff", label: "Staff", icon: User2Icon, gradient: "from-indigo-500 to-blue-500" },
-      { id: "registrations", label: "Registrations", icon: FileText, gradient: "from-pink-500 to-rose-500" },
-      { id: "settings", label: "Settings", icon: Settings, gradient: "from-gray-500 to-slate-500" },
-    ],
-    []
-  );
-
-  const activeMenuItem = useMemo(
-    () => menuItems.find((item) => item.id === activeSection) || menuItems[0],
-    [menuItems, activeSection]
-  );
-
-  const handleLogout = useCallback(async () => {
-    await logoutApi().catch(() => {});
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    navigate("/login");
-  }, [navigate]);
+  const menuItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, gradient: 'from-blue-500 to-cyan-500' },
+    { id: 'departments', label: 'Departments', icon: Building2, gradient: 'from-purple-500 to-pink-500' },
+    { id: 'majors', label: 'Majors', icon: GraduationCap, gradient: 'from-orange-500 to-red-500' },
+    { id: 'subjects', label: 'Subjects', icon: BookOpen, gradient: 'from-green-500 to-emerald-500' },
+    { id: 'students', label: 'Students', icon: Users, gradient: 'from-indigo-500 to-blue-500' },
+    { id: 'staff', label: 'Staff', icon: User2Icon, gradient: 'from-indigo-500 to-blue-500' },
+    { id: 'registrations', label: 'Registrations', icon: FileText, gradient: 'from-pink-500 to-rose-500' },
+    { id: 'enrollments', label: 'Enrollments', icon: BookOpen, gradient: 'from-blue-500 to-purple-500' },
+    { id: 'grades', label: 'Grades', icon: Award, gradient: 'from-purple-500 to-pink-500' },
+    { id: 'assignments', label: 'Assignments', icon: ClipboardList, gradient: 'from-orange-500 to-amber-500' },
+    { id: 'attendance', label: 'Attendance', icon: CheckSquare, gradient: 'from-green-500 to-teal-500' },
+    { id: 'schedules', label: 'Schedules', icon: Calendar, gradient: 'from-cyan-500 to-blue-500' },
+    { id: 'settings', label: 'Settings', icon: Settings, gradient: 'from-gray-500 to-slate-500' },
+  ];
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -103,40 +102,52 @@ const AdminDashboard = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const onFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", onFullscreenChange);
-    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
-  }, []);
-
-  const renderAllSections = () => (
-    <>
-      <div style={{ display: activeSection === "dashboard" ? "block" : "none" }}>
-        <Dashboard />
-      </div>
-      <div style={{ display: activeSection === "departments" ? "block" : "none" }}>
-        <DepartmentsPage />
-      </div>
-      <div style={{ display: activeSection === "majors" ? "block" : "none" }}>
-        <MajorsPage />
-      </div>
-      <div style={{ display: activeSection === "subjects" ? "block" : "none" }}>
-        <SubjectsPage />
-      </div>
-      <div style={{ display: activeSection === "students" ? "block" : "none" }}>
-        <StudentPage />
-      </div>
-      <div style={{ display: activeSection === "staff" ? "block" : "none" }}>
-        <StaffPage />
-      </div>
-      <div style={{ display: activeSection === "registrations" ? "block" : "none" }}>
-        <RegistrationsPage />
-      </div>
-      <div style={{ display: activeSection === "settings" ? "block" : "none" }}>
-        <SettingPage />
-      </div>
-    </>
-  );
+  // Render all sections but hide inactive ones - NO REMOUNTING!
+  const renderAllSections = () => {
+    return (
+      <>
+        <div style={{ display: activeSection === 'dashboard' ? 'block' : 'none' }}>
+          <Dashboard />
+        </div>
+        <div style={{ display: activeSection === 'departments' ? 'block' : 'none' }}>
+          <DepartmentsPage />
+        </div>
+        <div style={{ display: activeSection === 'majors' ? 'block' : 'none' }}>
+          <MajorsPage />
+        </div>
+        <div style={{ display: activeSection === 'subjects' ? 'block' : 'none' }}>
+          <SubjectsPage />
+        </div>
+        <div style={{ display: activeSection === 'students' ? 'block' : 'none' }}>
+          <StudentPage />
+        </div>
+        <div style={{ display: activeSection === 'staff' ? 'block' : 'none' }}>
+          <StaffPage />
+        </div>
+        <div style={{ display: activeSection === 'registrations' ? 'block' : 'none' }}>
+          <RegistrationsPage />
+        </div>
+        <div style={{ display: activeSection === 'settings' ? 'block' : 'none' }}>
+          <SettingPage />
+        </div>
+        <div style={{ display: activeSection === 'enrollments' ? 'block' : 'none' }}>
+          <EnrollmentsPage />
+        </div>
+        <div style={{ display: activeSection === 'grades' ? 'block' : 'none' }}>
+          <GradesPage />
+        </div>
+        <div style={{ display: activeSection === 'assignments' ? 'block' : 'none' }}>
+          <AssignmentsPage />
+        </div>
+        <div style={{ display: activeSection === 'attendance' ? 'block' : 'none' }}>
+          <AttendancePage />
+        </div>
+        <div style={{ display: activeSection === 'schedules' ? 'block' : 'none' }}>
+          <SchedulesPage />
+        </div>
+      </>
+    );
+  };
 
   return (
     <div className="min-h-screen w-full relative overflow-hidden">
