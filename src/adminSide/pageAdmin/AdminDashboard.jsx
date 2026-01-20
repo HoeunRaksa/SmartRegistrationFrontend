@@ -1,20 +1,23 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
-import { useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import DepartmentsPage from '../pageAdmin/Departmentspage.jsx';
-import MajorsPage from '../pageAdmin/Majospage.jsx';
-import SubjectsPage from '../pageAdmin/Subjectpage.jsx';
-import StudentPage from '../pageAdmin/Studentpage.jsx';
-import RegistrationsPage from '../pageAdmin/Registrationspage.jsx';
-import StaffPage from '../pageAdmin/Staffpage.jsx';
-import SettingPage from '../../gobalConponent/Settingpage.jsx';
-import EnrollmentsPage from '../pageAdmin/EnrollmentsPage.jsx';
-import GradesPage from '../pageAdmin/GradesPage.jsx';
-import AssignmentsPage from '../pageAdmin/AssignmentsPage.jsx';
-import AttendancePage from '../pageAdmin/AttendancePage.jsx';
-import SchedulesPage from '../pageAdmin/SchedulesPage.jsx';
-import { logoutApi } from '../../api/auth.jsx';
+import DepartmentsPage from "../pageAdmin/Departmentspage.jsx";
+import MajorsPage from "../pageAdmin/Majospage.jsx";
+import SubjectsPage from "../pageAdmin/Subjectpage.jsx";
+import StudentPage from "../pageAdmin/Studentpage.jsx";
+import RegistrationsPage from "../pageAdmin/Registrationspage.jsx";
+import StaffPage from "../pageAdmin/Staffpage.jsx";
+import SettingPage from "../../gobalConponent/Settingpage.jsx";
+import EnrollmentsPage from "../pageAdmin/EnrollmentsPage.jsx";
+import GradesPage from "../pageAdmin/GradesPage.jsx";
+import AssignmentsPage from "../pageAdmin/AssignmentsPage.jsx";
+import AttendancePage from "../pageAdmin/AttendancePage.jsx";
+import SchedulesPage from "../pageAdmin/SchedulesPage.jsx";
+import CoursesPage from "../pageAdmin/CoursesPage.jsx";
+import MajorSubjectsPage from "../pageAdmin/MajorSubjectsPage.jsx";
+
+import { logoutApi } from "../../api/auth.jsx";
 import {
   LayoutDashboard,
   GraduationCap,
@@ -36,54 +39,71 @@ import {
   Award,
   ClipboardList,
   CheckSquare,
-  Calendar
-} from 'lucide-react';
-import Dashboard from '../../adminSide/ConponentsAdmin/dashboard.jsx';
+  Calendar,
+  Link2,
+} from "lucide-react";
+
+import Dashboard from "../../adminSide/ConponentsAdmin/dashboard.jsx";
+
 const profileFallback = "/assets/images/profile-fallback.png";
 
 const AdminDashboard = () => {
   const { section } = useParams();
   const navigate = useNavigate();
-const handleLogout = async () => {
-  try {
-    await logoutApi();
-  } catch (err) {
-    console.error("Logout API error:", err);
-  } finally {
-    // Always clear local auth data
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-
-    // Redirect to login
-    window.location.href = "/login";
-  }
-};
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [notifications] = useState(3); // example count
+  const [notifications] = useState(3);
 
   const activeSection = section || "dashboard";
 
+  const handleLogout = async () => {
+    try {
+      await logoutApi();
+    } catch (err) {
+      console.error("Logout API error:", err);
+    } finally {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+    }
+  };
 
+  // ✅ No group / no logic change: just reorder items for easier finding
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, gradient: 'from-blue-500 to-cyan-500' },
-    { id: 'departments', label: 'Departments', icon: Building2, gradient: 'from-purple-500 to-pink-500' },
-    { id: 'majors', label: 'Majors', icon: GraduationCap, gradient: 'from-orange-500 to-red-500' },
-    { id: 'subjects', label: 'Subjects', icon: BookOpen, gradient: 'from-green-500 to-emerald-500' },
-    { id: 'students', label: 'Students', icon: Users, gradient: 'from-indigo-500 to-blue-500' },
-    { id: 'staff', label: 'Staff', icon: User2Icon, gradient: 'from-indigo-500 to-blue-500' },
-    { id: 'registrations', label: 'Registrations', icon: FileText, gradient: 'from-pink-500 to-rose-500' },
-    { id: 'enrollments', label: 'Enrollments', icon: BookOpen, gradient: 'from-blue-500 to-purple-500' },
-    { id: 'grades', label: 'Grades', icon: Award, gradient: 'from-purple-500 to-pink-500' },
-    { id: 'assignments', label: 'Assignments', icon: ClipboardList, gradient: 'from-orange-500 to-amber-500' },
-    { id: 'attendance', label: 'Attendance', icon: CheckSquare, gradient: 'from-green-500 to-teal-500' },
-    { id: 'schedules', label: 'Schedules', icon: Calendar, gradient: 'from-cyan-500 to-blue-500' },
-    { id: 'settings', label: 'Settings', icon: Settings, gradient: 'from-gray-500 to-slate-500' },
+    // Dashboard
+    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, gradient: "from-blue-500 to-cyan-500" },
+
+    // Academic setup (order: Department → Major → Subject → MajorSubject)
+    { id: "departments", label: "Departments", icon: Building2, gradient: "from-purple-500 to-pink-500" },
+    { id: "majors", label: "Majors", icon: GraduationCap, gradient: "from-orange-500 to-red-500" },
+    { id: "subjects", label: "Subjects", icon: BookOpen, gradient: "from-green-500 to-emerald-500" },
+    { id: "major-subjects", label: "Major Subjects", icon: Link2, gradient: "from-cyan-500 to-blue-500" },
+
+    // Course flow
+    { id: "courses", label: "Courses", icon: BookOpen, gradient: "from-blue-500 to-cyan-500" },
+    { id: "schedules", label: "Schedules", icon: Calendar, gradient: "from-cyan-500 to-blue-500" },
+    { id: "assignments", label: "Assignments", icon: ClipboardList, gradient: "from-orange-500 to-amber-500" },
+    { id: "attendance", label: "Attendance", icon: CheckSquare, gradient: "from-green-500 to-teal-500" },
+    { id: "grades", label: "Grades", icon: Award, gradient: "from-purple-500 to-pink-500" },
+
+    // Student management
+    { id: "students", label: "Students", icon: Users, gradient: "from-indigo-500 to-blue-500" },
+    { id: "registrations", label: "Registrations", icon: FileText, gradient: "from-pink-500 to-rose-500" },
+    { id: "enrollments", label: "Enrollments", icon: BookOpen, gradient: "from-blue-500 to-purple-500" },
+
+    // Staff
+    { id: "staff", label: "Staff", icon: User2Icon, gradient: "from-indigo-500 to-blue-500" },
+
+    // System
+    { id: "settings", label: "Settings", icon: Settings, gradient: "from-gray-500 to-slate-500" },
   ];
-const activeMenuItem = menuItems.find((item) => item.id === activeSection) || menuItems[0];
+
+  const activeMenuItem =
+    menuItems.find((item) => item.id === activeSection) || menuItems[0];
+
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (stored) {
@@ -100,7 +120,7 @@ const activeMenuItem = menuItems.find((item) => item.id === activeSection) || me
     if (section && !validSections.includes(section)) {
       navigate("/admin/dashboard", { replace: true });
     }
-  }, [section, navigate, menuItems]);
+  }, [section, navigate]); // ✅ keep dependencies stable (no menuItems)
 
   const handleSectionChange = useCallback(
     (sectionId) => {
@@ -117,48 +137,61 @@ const activeMenuItem = menuItems.find((item) => item.id === activeSection) || me
     }
   }, []);
 
+  useEffect(() => {
+    const onFsChange = () =>
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
   // Render all sections but hide inactive ones - NO REMOUNTING!
   const renderAllSections = () => {
     return (
       <>
-        <div style={{ display: activeSection === 'dashboard' ? 'block' : 'none' }}>
+        <div style={{ display: activeSection === "dashboard" ? "block" : "none" }}>
           <Dashboard />
         </div>
-        <div style={{ display: activeSection === 'departments' ? 'block' : 'none' }}>
+        <div style={{ display: activeSection === "departments" ? "block" : "none" }}>
           <DepartmentsPage />
         </div>
-        <div style={{ display: activeSection === 'majors' ? 'block' : 'none' }}>
+        <div style={{ display: activeSection === "majors" ? "block" : "none" }}>
           <MajorsPage />
         </div>
-        <div style={{ display: activeSection === 'subjects' ? 'block' : 'none' }}>
+        <div style={{ display: activeSection === "subjects" ? "block" : "none" }}>
           <SubjectsPage />
         </div>
-        <div style={{ display: activeSection === 'students' ? 'block' : 'none' }}>
+        <div style={{ display: activeSection === "major-subjects" ? "block" : "none" }}>
+          <MajorSubjectsPage />
+        </div>
+        <div style={{ display: activeSection === "students" ? "block" : "none" }}>
           <StudentPage />
         </div>
-        <div style={{ display: activeSection === 'staff' ? 'block' : 'none' }}>
+        <div style={{ display: activeSection === "staff" ? "block" : "none" }}>
           <StaffPage />
         </div>
-        <div style={{ display: activeSection === 'registrations' ? 'block' : 'none' }}>
+        <div style={{ display: activeSection === "registrations" ? "block" : "none" }}>
           <RegistrationsPage />
         </div>
-        <div style={{ display: activeSection === 'settings' ? 'block' : 'none' }}>
+        <div style={{ display: activeSection === "settings" ? "block" : "none" }}>
           <SettingPage />
         </div>
-        <div style={{ display: activeSection === 'enrollments' ? 'block' : 'none' }}>
+        <div style={{ display: activeSection === "enrollments" ? "block" : "none" }}>
           <EnrollmentsPage />
         </div>
-        <div style={{ display: activeSection === 'grades' ? 'block' : 'none' }}>
+        <div style={{ display: activeSection === "grades" ? "block" : "none" }}>
           <GradesPage />
         </div>
-        <div style={{ display: activeSection === 'assignments' ? 'block' : 'none' }}>
+        <div style={{ display: activeSection === "assignments" ? "block" : "none" }}>
           <AssignmentsPage />
         </div>
-        <div style={{ display: activeSection === 'attendance' ? 'block' : 'none' }}>
+        <div style={{ display: activeSection === "attendance" ? "block" : "none" }}>
           <AttendancePage />
         </div>
-        <div style={{ display: activeSection === 'schedules' ? 'block' : 'none' }}>
+        <div style={{ display: activeSection === "schedules" ? "block" : "none" }}>
           <SchedulesPage />
+        </div>
+        <div style={{ display: activeSection === "courses" ? "block" : "none" }}>
+          <CoursesPage />
         </div>
       </>
     );
@@ -184,7 +217,7 @@ const activeMenuItem = menuItems.find((item) => item.id === activeSection) || me
         className="fixed left-0 top-0 h-screen backdrop-blur-2xl bg-white/30 border-r border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.2)] z-40 hidden md:block"
       >
         <div className="flex flex-col h-full p-4">
-          <div className="flex items-center justify-between mb-8 px-2">
+          <div className="flex items-center justify-between mb-6 px-2">
             {!sidebarCollapsed && (
               <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                 NovaTech
@@ -204,7 +237,8 @@ const activeMenuItem = menuItems.find((item) => item.id === activeSection) || me
             </button>
           </div>
 
-          <nav className="flex-1 space-y-2 overflow-y-auto scrollbar-hide">
+          {/* ✅ smaller menu to reduce height: smaller padding + smaller icon */}
+          <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-hide">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeSection === item.id;
@@ -213,16 +247,22 @@ const activeMenuItem = menuItems.find((item) => item.id === activeSection) || me
                 <button
                   key={item.id}
                   onClick={() => handleSectionChange(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all ${
                     isActive
-                      ? "backdrop-blur-xl bg-gradient-to-r " + item.gradient + " text-white shadow-lg"
+                      ? "backdrop-blur-xl bg-gradient-to-r " +
+                        item.gradient +
+                        " text-white shadow-lg"
                       : "backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40"
                   } border border-white/30`}
                   type="button"
                 >
-                  <Icon size={20} className={isActive ? "drop-shadow-sm" : ""} />
-                  {!sidebarCollapsed && <span className="font-medium text-sm">{item.label}</span>}
-                  {isActive && !sidebarCollapsed && <div className="ml-auto w-2 h-2 rounded-full bg-white shadow-lg" />}
+                  <Icon size={18} className={isActive ? "drop-shadow-sm" : ""} />
+                  {!sidebarCollapsed && (
+                    <span className="font-medium text-[13px]">{item.label}</span>
+                  )}
+                  {isActive && !sidebarCollapsed && (
+                    <div className="ml-auto w-2 h-2 rounded-full bg-white shadow-lg" />
+                  )}
                 </button>
               );
             })}
@@ -230,11 +270,11 @@ const activeMenuItem = menuItems.find((item) => item.id === activeSection) || me
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2 rounded-2xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-5"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-4"
             type="button"
           >
-            <LogOut size={20} />
-            {!sidebarCollapsed && <span className="font-medium text-sm">Logout</span>}
+            <LogOut size={18} />
+            {!sidebarCollapsed && <span className="font-medium text-[13px]">Logout</span>}
           </button>
         </div>
       </motion.aside>
@@ -259,7 +299,7 @@ const activeMenuItem = menuItems.find((item) => item.id === activeSection) || me
               className="fixed left-0 top-0 h-screen w-72 backdrop-blur-2xl bg-white/40 border-r border-white/20 shadow-2xl z-50 md:hidden"
             >
               <div className="flex flex-col h-full p-4">
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center justify-between mb-6">
                   <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                     NovaTech
                   </h1>
@@ -273,7 +313,8 @@ const activeMenuItem = menuItems.find((item) => item.id === activeSection) || me
                   </button>
                 </div>
 
-                <nav className="flex-1 space-y-2 overflow-y-auto">
+                {/* ✅ smaller menu for mobile too */}
+                <nav className="flex-1 space-y-1 overflow-y-auto">
                   {menuItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = activeSection === item.id;
@@ -285,15 +326,17 @@ const activeMenuItem = menuItems.find((item) => item.id === activeSection) || me
                           handleSectionChange(item.id);
                           setMobileMenuOpen(false);
                         }}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all ${
                           isActive
-                            ? "backdrop-blur-xl bg-gradient-to-r " + item.gradient + " text-white shadow-lg"
+                            ? "backdrop-blur-xl bg-gradient-to-r " +
+                              item.gradient +
+                              " text-white shadow-lg"
                             : "backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40"
                         } border border-white/30`}
                         type="button"
                       >
-                        <Icon size={20} />
-                        <span className="font-medium text-sm">{item.label}</span>
+                        <Icon size={18} />
+                        <span className="font-medium text-[13px]">{item.label}</span>
                       </button>
                     );
                   })}
@@ -301,11 +344,11 @@ const activeMenuItem = menuItems.find((item) => item.id === activeSection) || me
 
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-2 rounded-2xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-5"
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-4"
                   type="button"
                 >
-                  <LogOut size={20} />
-                  <span className="font-medium text-sm">Logout</span>
+                  <LogOut size={18} />
+                  <span className="font-medium text-[13px]">Logout</span>
                 </button>
 
                 <div className="mt-auto pt-4 border-t border-white/20">
@@ -326,8 +369,12 @@ const activeMenuItem = menuItems.find((item) => item.id === activeSection) || me
                         </div>
                       )}
                       <div className="flex-1">
-                        <p className="font-semibold text-gray-800 text-sm">{user?.name || "Admin User"}</p>
-                        <p className="text-xs text-gray-600">{user?.email || "admin@novatech.edu"}</p>
+                        <p className="font-semibold text-gray-800 text-sm">
+                          {user?.name || "Admin User"}
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          {user?.email || "admin@novatech.edu"}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -354,7 +401,10 @@ const activeMenuItem = menuItems.find((item) => item.id === activeSection) || me
 
               <div className="flex items-center gap-3">
                 <div className="hidden sm:flex p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-md">
-                  {React.createElement(activeMenuItem.icon, { size: 20, className: "text-white" })}
+                  {React.createElement(activeMenuItem.icon, {
+                    size: 20,
+                    className: "text-white",
+                  })}
                 </div>
                 <div>
                   <h2 className="text-lg md:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -436,9 +486,14 @@ const activeMenuItem = menuItems.find((item) => item.id === activeSection) || me
                   <p className="text-sm font-semibold text-gray-800 leading-tight">
                     {user?.name?.split(" ")[0] || "Admin"}
                   </p>
-                  <p className="text-xs text-gray-500 leading-tight">{user?.role || "Administrator"}</p>
+                  <p className="text-xs text-gray-500 leading-tight">
+                    {user?.role || "Administrator"}
+                  </p>
                 </div>
-                <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors hidden lg:block" />
+                <ChevronRight
+                  size={16}
+                  className="text-gray-400 group-hover:text-gray-600 transition-colors hidden lg:block"
+                />
               </div>
             </div>
           </div>

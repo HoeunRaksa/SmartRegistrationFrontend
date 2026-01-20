@@ -51,8 +51,7 @@ const SubjectsPage = () => {
   // ================= HANDLE EDIT =================
   const handleEdit = (subject) => {
     setEditingSubject(subject);
-    // Scroll to form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // ================= HANDLE SUCCESS =================
@@ -82,10 +81,7 @@ const SubjectsPage = () => {
     },
     {
       label: "Avg / Subject",
-      value:
-        subjects.length === 0
-          ? 0
-          : Math.round(students.length / subjects.length),
+      value: subjects.length === 0 ? 0 : Math.round(students.length / subjects.length),
       color: "from-purple-500 to-pink-500",
       icon: BarChart3,
     },
@@ -119,7 +115,7 @@ const SubjectsPage = () => {
       </div>
 
       {/* ================= FORM ================= */}
-      <SubjectsForm 
+      <SubjectsForm
         editingSubject={editingSubject}
         onSuccess={handleSuccess}
         onCancel={handleCancel}
@@ -127,7 +123,7 @@ const SubjectsPage = () => {
       />
 
       {/* ================= SUBJECTS LIST ================= */}
-      <SubjectsList 
+      <SubjectsList
         subjects={subjects}
         onEdit={handleEdit}
         onRefresh={loadSubjects}

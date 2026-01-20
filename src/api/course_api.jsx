@@ -35,17 +35,55 @@ export const dropCourse = async (courseId) => {
   return await API.delete(`/student/courses/${courseId}/drop`);
 };
 
+
+// Alias used in many pages
+export const fetchCourses = async () => {
+  return await fetchAllCourses();
+};
 export const fetchAllCourses = async () => {
   try {
     const response = await API.get("/courses");
-    return response; // keep raw axios response
+    const data = extractData(response);
+    return {
+      data: {
+        data: Array.isArray(data) ? data : []
+      }
+    };
   } catch (error) {
     console.error("fetchAllCourses error:", error);
     throw error;
   }
 };
 
-// Alias used in many pages
-export const fetchCourses = async () => {
-  return await fetchAllCourses();
+// POST: Create course
+export const createCourse = async (courseData) => {
+  try {
+    const response = await API.post("/courses", courseData);
+    return response;
+  } catch (error) {
+    console.error("createCourse error:", error);
+    throw error;
+  }
+};
+
+// PUT: Update course
+export const updateCourse = async (courseId, courseData) => {
+  try {
+    const response = await API.put(`/courses/${courseId}`, courseData);
+    return response;
+  } catch (error) {
+    console.error("updateCourse error:", error);
+    throw error;
+  }
+};
+
+// DELETE: Delete course
+export const deleteCourse = async (courseId) => {
+  try {
+    const response = await API.delete(`/courses/${courseId}`);
+    return response;
+  } catch (error) {
+    console.error("deleteCourse error:", error);
+    throw error;
+  }
 };
