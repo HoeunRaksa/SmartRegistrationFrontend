@@ -113,3 +113,6 @@ export const fetchCourseMaterials = async (courseId) => {
     throw error;
   }
 };
+
+// Alias for admin pages compatibility
+export const fetchCourses = fetchAllCourses;
