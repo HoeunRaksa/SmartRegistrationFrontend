@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import DepartmentsPage from '../pageAdmin/Departmentspage.jsx';
@@ -38,12 +39,25 @@ import {
   Calendar
 } from 'lucide-react';
 import Dashboard from '../../adminSide/ConponentsAdmin/dashboard.jsx';
-import { a } from 'framer-motion/client';
 const profileFallback = "/assets/images/profile-fallback.png";
 
 const AdminDashboard = () => {
   const { section } = useParams();
   const navigate = useNavigate();
+const handleLogout = async () => {
+  try {
+    await logoutApi();
+  } catch (err) {
+    console.error("Logout API error:", err);
+  } finally {
+    // Always clear local auth data
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    // Redirect to login
+    window.location.href = "/login";
+  }
+};
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -52,6 +66,7 @@ const AdminDashboard = () => {
   const [notifications] = useState(3); // example count
 
   const activeSection = section || "dashboard";
+
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, gradient: 'from-blue-500 to-cyan-500' },
@@ -68,7 +83,7 @@ const AdminDashboard = () => {
     { id: 'schedules', label: 'Schedules', icon: Calendar, gradient: 'from-cyan-500 to-blue-500' },
     { id: 'settings', label: 'Settings', icon: Settings, gradient: 'from-gray-500 to-slate-500' },
   ];
-
+const activeMenuItem = menuItems.find((item) => item.id === activeSection) || menuItems[0];
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (stored) {

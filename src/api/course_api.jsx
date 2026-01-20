@@ -35,5 +35,17 @@ export const dropCourse = async (courseId) => {
   return await API.delete(`/student/courses/${courseId}/drop`);
 };
 
-// Alias for admin pages compatibility
-export const fetchCourses = fetchAllCourses;
+export const fetchAllCourses = async () => {
+  try {
+    const response = await API.get("/courses");
+    return response; // keep raw axios response
+  } catch (error) {
+    console.error("fetchAllCourses error:", error);
+    throw error;
+  }
+};
+
+// Alias used in many pages
+export const fetchCourses = async () => {
+  return await fetchAllCourses();
+};
