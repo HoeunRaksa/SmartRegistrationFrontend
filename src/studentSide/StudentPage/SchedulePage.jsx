@@ -20,6 +20,7 @@ const SchedulePage = () => {
   const [loading, setLoading] = useState(true);
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [viewMode, setViewMode] = useState('week'); // 'week' or 'day'
+  const [error, setError] = useState('');
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const timeSlots = [
@@ -34,99 +35,23 @@ const SchedulePage = () => {
   const loadSchedule = async () => {
     try {
       setLoading(true);
+      setError('');
+
       const [scheduleRes, todayRes] = await Promise.all([
-        fetchStudentSchedule().catch(() => ({ data: { data: [] } })),
-        fetchTodaySchedule().catch(() => ({ data: { data: [] } }))
+        fetchStudentSchedule(),
+        fetchTodaySchedule()
       ]);
 
-      // Mock data if API fails
-      const mockSchedule = [
-        {
-          id: 1,
-          course_code: 'CS101',
-          course_name: 'Introduction to Computer Science',
-          instructor: 'Dr. Sarah Johnson',
-          day: 'Monday',
-          start_time: '10:00',
-          end_time: '11:30',
-          room: 'Room 301',
-          color: 'from-blue-500 to-cyan-500'
-        },
-        {
-          id: 2,
-          course_code: 'CS101',
-          course_name: 'Introduction to Computer Science',
-          instructor: 'Dr. Sarah Johnson',
-          day: 'Wednesday',
-          start_time: '10:00',
-          end_time: '11:30',
-          room: 'Room 301',
-          color: 'from-blue-500 to-cyan-500'
-        },
-        {
-          id: 3,
-          course_code: 'MATH201',
-          course_name: 'Calculus II',
-          instructor: 'Prof. Michael Chen',
-          day: 'Tuesday',
-          start_time: '14:00',
-          end_time: '15:30',
-          room: 'Room 205',
-          color: 'from-purple-500 to-pink-500'
-        },
-        {
-          id: 4,
-          course_code: 'MATH201',
-          course_name: 'Calculus II',
-          instructor: 'Prof. Michael Chen',
-          day: 'Thursday',
-          start_time: '14:00',
-          end_time: '15:30',
-          room: 'Room 205',
-          color: 'from-purple-500 to-pink-500'
-        },
-        {
-          id: 5,
-          course_code: 'ENG102',
-          course_name: 'Academic Writing',
-          instructor: 'Dr. Emily White',
-          day: 'Monday',
-          start_time: '13:00',
-          end_time: '14:00',
-          room: 'Room 112',
-          color: 'from-green-500 to-emerald-500'
-        },
-        {
-          id: 6,
-          course_code: 'ENG102',
-          course_name: 'Academic Writing',
-          instructor: 'Dr. Emily White',
-          day: 'Wednesday',
-          start_time: '13:00',
-          end_time: '14:00',
-          room: 'Room 112',
-          color: 'from-green-500 to-emerald-500'
-        },
-        {
-          id: 7,
-          course_code: 'ENG102',
-          course_name: 'Academic Writing',
-          instructor: 'Dr. Emily White',
-          day: 'Friday',
-          start_time: '13:00',
-          end_time: '14:00',
-          room: 'Room 112',
-          color: 'from-green-500 to-emerald-500'
-        }
-      ];
+      const scheduleData = scheduleRes?.data?.data;
+      const todayData = todayRes?.data?.data;
 
-      const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-      const mockToday = mockSchedule.filter(item => item.day === today);
-
-      setSchedule(scheduleRes.data?.data?.length > 0 ? scheduleRes.data.data : mockSchedule);
-      setTodayClasses(todayRes.data?.data?.length > 0 ? todayRes.data.data : mockToday);
-    } catch (error) {
-      console.error('Failed to load schedule:', error);
+      setSchedule(Array.isArray(scheduleData) ? scheduleData : []);
+      setTodayClasses(Array.isArray(todayData) ? todayData : []);
+    } catch (err) {
+      console.error('Failed to load schedule:', err);
+      setError(err?.response?.data?.message || 'Failed to load schedule. Please try again.');
+      setSchedule([]);
+      setTodayClasses([]);
     } finally {
       setLoading(false);
     }
@@ -134,16 +59,30 @@ const SchedulePage = () => {
 
   const handleDownload = async () => {
     try {
+      setError('');
       const response = await downloadSchedule();
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+
+      const blob = new Blob([response.data], {
+        type: response.headers?.['content-type'] || 'application/octet-stream'
+      });
+
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', 'my-schedule.pdf');
+
+      // backend may send filename via content-disposition
+      const disposition = response.headers?.['content-disposition'] || '';
+      const match = disposition.match(/filename="(.+)"/);
+      const filename = match?.[1] || 'my-schedule.json';
+
+      link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
       link.remove();
-    } catch (error) {
-      console.error('Failed to download schedule:', error);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to download schedule:', err);
+      setError(err?.response?.data?.message || 'Failed to download schedule.');
     }
   };
 
@@ -167,6 +106,42 @@ const SchedulePage = () => {
     return { start: startRow + 1, span: Math.max(1, Math.floor(duration)) };
   };
 
+  const startOfWeek = (date) => {
+    const d = new Date(date);
+    const day = d.getDay(); // 0 Sunday - 6 Saturday
+    const diff = (day === 0 ? -6 : 1) - day; // make Monday start
+    d.setDate(d.getDate() + diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
+  const endOfWeek = (date) => {
+    const start = startOfWeek(date);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+    return end;
+  };
+
+  const formatWeekRange = (date) => {
+    const start = startOfWeek(date);
+    const end = endOfWeek(date);
+    const opts = { month: 'short', day: 'numeric' };
+    return `${start.toLocaleDateString('en-US', opts)} - ${end.toLocaleDateString('en-US', opts)}`;
+  };
+
+  const goPrevWeek = () => {
+    const d = new Date(currentWeek);
+    d.setDate(d.getDate() - 7);
+    setCurrentWeek(d);
+  };
+
+  const goNextWeek = () => {
+    const d = new Date(currentWeek);
+    d.setDate(d.getDate() + 7);
+    setCurrentWeek(d);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -182,12 +157,53 @@ const SchedulePage = () => {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Error Banner */}
+      {error && (
+        <div className="backdrop-blur-xl bg-red-50/70 border border-red-200/70 rounded-2xl p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-semibold text-red-700">{error}</p>
+            <button
+              onClick={loadSchedule}
+              className="mt-2 text-sm font-semibold text-red-700 hover:text-red-800 underline"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Class Schedule</h2>
           <p className="text-gray-600">View your weekly class timetable</p>
+
+          {/* Week Navigator (UI exists in imports) */}
+          <div className="mt-3 inline-flex items-center gap-2 backdrop-blur-xl bg-white/60 border border-white/40 rounded-xl px-3 py-2">
+            <button
+              onClick={goPrevWeek}
+              className="p-2 rounded-lg hover:bg-white/70 transition-all"
+              aria-label="Previous week"
+            >
+              <ChevronLeft className="w-5 h-5 text-gray-700" />
+            </button>
+
+            <div className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+              <CalendarIcon className="w-4 h-4 text-gray-600" />
+              {formatWeekRange(currentWeek)}
+            </div>
+
+            <button
+              onClick={goNextWeek}
+              className="p-2 rounded-lg hover:bg-white/70 transition-all"
+              aria-label="Next week"
+            >
+              <ChevronRight className="w-5 h-5 text-gray-700" />
+            </button>
+          </div>
         </div>
+
         <div className="flex gap-2">
           <button
             onClick={() => setViewMode('week')}

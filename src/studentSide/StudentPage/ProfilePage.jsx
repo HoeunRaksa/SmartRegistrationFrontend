@@ -15,6 +15,10 @@ import {
   Loader
 } from 'lucide-react';
 import profileFallback from '../../assets/images/profile.png';
+import { fetchStudentCourses } from '../../api/course_api';
+import { fetchStudentSchedule } from '../../api/schedule_api';
+import { fetchStudentGrades, fetchStudentGpa } from '../../api/grade_api';
+import { fetchStudentProfile } from "../../api/student_api";
 
 const ProfilePage = () => {
   const [student, setStudent] = useState(null);
@@ -27,71 +31,83 @@ const ProfilePage = () => {
   const loadStudentProfile = async () => {
     try {
       setLoading(true);
-      const userData = JSON.parse(localStorage.getItem('user') || '{}');
 
-      // Mock student data
-      const mockStudent = {
-        id: userData.id || 1,
-        student_code: 'STU2024001',
-        name: userData.name || 'John Smith',
-        email: userData.email || 'john.smith@university.edu',
-        phone: '+1 (555) 123-4567',
-        date_of_birth: '2003-05-15',
-        gender: 'Male',
-        address: '123 University Ave, Campus City, ST 12345',
-        profile_picture_url: userData.profile_picture_url || null,
+      // Load profile first (from students table + relations)
+      const profileRes = await fetchStudentProfile().catch(() => null);
+      const profileData = profileRes?.data?.data || null;
 
-        // Academic Info
-        department: 'Computer Science',
-        major: 'Software Engineering',
-        year: '2nd Year',
-        semester: 'Spring 2026',
-        enrollment_date: '2024-09-01',
-        expected_graduation: '2028-05-31',
-        academic_status: 'Active',
+      // Load GPA (real route) - safe
+      const gpaRes = await fetchStudentGpa().catch(() => null);
+      const gpaData =
+        gpaRes?.data?.data ??
+        gpaRes?.data ??
+        null;
 
-        // GPA and Credits
-        current_gpa: 3.75,
-        cumulative_gpa: 3.68,
-        total_credits: 45,
-        credits_earned: 45,
+      // Load enrolled courses (real) - safe
+      const coursesRes = await fetchStudentCourses().catch(() => ({ data: { data: [] } }));
+      const courses =
+        coursesRes?.data?.data && Array.isArray(coursesRes.data.data)
+          ? coursesRes.data.data
+          : [];
 
-        // Contact Info
-        emergency_contact_name: 'Jane Smith',
-        emergency_contact_phone: '+1 (555) 987-6543',
-        emergency_contact_relation: 'Mother',
+      // Load grades (optional, real) - safe
+      const gradesRes = await fetchStudentGrades().catch(() => ({ data: { data: [] } }));
+      const grades =
+        gradesRes?.data?.data && Array.isArray(gradesRes.data.data)
+          ? gradesRes.data.data
+          : [];
 
-        // Additional Info
-        nationality: 'United States',
-        admission_type: 'Regular Admission',
-        scholarship: 'Merit Scholarship 50%',
+      // Load schedule (optional, real) - safe
+      const scheduleRes = await fetchStudentSchedule().catch(() => ({ data: { data: [] } }));
+      const schedule =
+        scheduleRes?.data?.data && Array.isArray(scheduleRes.data.data)
+          ? scheduleRes.data.data
+          : [];
 
-        // Enrolled Courses
-        enrolled_courses: [
-          {
-            course_code: 'CS101',
-            course_name: 'Introduction to Computer Science',
-            credits: 3,
-            instructor: 'Dr. Sarah Johnson'
-          },
-          {
-            course_code: 'MATH201',
-            course_name: 'Calculus II',
-            credits: 4,
-            instructor: 'Prof. Michael Chen'
-          },
-          {
-            course_code: 'ENG102',
-            course_name: 'Academic Writing',
-            credits: 3,
-            instructor: 'Dr. Emily White'
-          }
-        ]
+      // Normalize enrolled courses for UI (if backend returns different keys)
+      const normalizedCourses = courses.map((c) => ({
+        course_code: c.course_code ?? c.code ?? c.course?.course_code ?? c.course?.code ?? '--',
+        course_name: c.course_name ?? c.name ?? c.course?.course_name ?? c.course?.name ?? '--',
+        credits: c.credits ?? c.course?.credits ?? 0,
+        instructor: c.instructor ?? c.teacher ?? c.course?.instructor ?? '--',
+      }));
+
+      // Merge all real data into one student object WITHOUT breaking your UI keys
+      const mergedStudent = {
+        ...(profileData || {}),
+        // GPA keys (support different response shapes)
+        current_gpa:
+          gpaData?.current_gpa ??
+          gpaData?.gpa ??
+          profileData?.current_gpa ??
+          null,
+        cumulative_gpa:
+          gpaData?.cumulative_gpa ??
+          gpaData?.cgpa ??
+          profileData?.cumulative_gpa ??
+          null,
+
+        // Credits (if backend provides credits later, it will override)
+        credits_earned:
+          profileData?.credits_earned ??
+          profileData?.total_credits ??
+          0,
+
+        // Courses (prefer profile enrolled_courses if backend already returns it)
+        enrolled_courses:
+          Array.isArray(profileData?.enrolled_courses) && profileData.enrolled_courses.length > 0
+            ? profileData.enrolled_courses
+            : normalizedCourses,
+
+        // Attach optional data if you want later
+        grades,
+        schedule,
       };
 
-      setStudent(mockStudent);
+      setStudent(mergedStudent);
     } catch (error) {
-      console.error('Failed to load student profile:', error);
+      console.error("Failed to load student profile:", error);
+      setStudent(null);
     } finally {
       setLoading(false);
     }
@@ -128,27 +144,27 @@ const ProfilePage = () => {
             />
           </div>
           <div className="text-center md:text-left text-white flex-1">
-            <h1 className="text-3xl font-bold mb-2">{student?.name}</h1>
+            <h1 className="text-3xl font-bold mb-2">{student?.name || '--'}</h1>
             <div className="flex flex-wrap gap-3 justify-center md:justify-start mb-3">
               <div className="flex items-center gap-2 px-3 py-1 bg-white/20 rounded-lg">
                 <IdCard className="w-4 h-4" />
-                <span className="font-semibold">{student?.student_code}</span>
+                <span className="font-semibold">{student?.student_code || '--'}</span>
               </div>
               <div className="flex items-center gap-2 px-3 py-1 bg-white/20 rounded-lg">
                 <Building className="w-4 h-4" />
-                <span>{student?.department}</span>
+                <span>{student?.department || '--'}</span>
               </div>
               <div className="flex items-center gap-2 px-3 py-1 bg-white/20 rounded-lg">
                 <GraduationCap className="w-4 h-4" />
-                <span>{student?.major}</span>
+                <span>{student?.major || '--'}</span>
               </div>
             </div>
             <div className="flex flex-wrap gap-2 justify-center md:justify-start text-sm opacity-90">
-              <span>{student?.year}</span>
+              <span>{student?.year || '--'}</span>
               <span>•</span>
-              <span>{student?.semester}</span>
+              <span>{student?.semester || '--'}</span>
               <span>•</span>
-              <span className="px-2 py-0.5 bg-green-500/30 rounded">{student?.academic_status}</span>
+              <span className="px-2 py-0.5 bg-green-500/30 rounded">{student?.academic_status || '--'}</span>
             </div>
           </div>
         </div>
@@ -165,7 +181,11 @@ const ProfilePage = () => {
           <div className="flex items-center justify-between">
             <div className="text-white">
               <p className="text-sm opacity-90 mb-1">Current GPA</p>
-              <p className="text-3xl font-bold">{student?.current_gpa?.toFixed(2)}</p>
+              <p className="text-3xl font-bold">
+                {student?.current_gpa !== null && student?.current_gpa !== undefined
+                  ? Number(student.current_gpa).toFixed(2)
+                  : '--'}
+              </p>
             </div>
             <div className="p-3 bg-white/20 rounded-xl">
               <Award className="w-8 h-8 text-white" />
@@ -182,7 +202,11 @@ const ProfilePage = () => {
           <div className="flex items-center justify-between">
             <div className="text-white">
               <p className="text-sm opacity-90 mb-1">Cumulative GPA</p>
-              <p className="text-3xl font-bold">{student?.cumulative_gpa?.toFixed(2)}</p>
+              <p className="text-3xl font-bold">
+                {student?.cumulative_gpa !== null && student?.cumulative_gpa !== undefined
+                  ? Number(student.cumulative_gpa).toFixed(2)
+                  : '--'}
+              </p>
             </div>
             <div className="p-3 bg-white/20 rounded-xl">
               <GraduationCap className="w-8 h-8 text-white" />
@@ -199,7 +223,7 @@ const ProfilePage = () => {
           <div className="flex items-center justify-between">
             <div className="text-white">
               <p className="text-sm opacity-90 mb-1">Credits Earned</p>
-              <p className="text-3xl font-bold">{student?.credits_earned}</p>
+              <p className="text-3xl font-bold">{student?.credits_earned ?? 0}</p>
             </div>
             <div className="p-3 bg-white/20 rounded-xl">
               <BookOpen className="w-8 h-8 text-white" />
@@ -244,14 +268,14 @@ const ProfilePage = () => {
               <Mail className="w-5 h-5 text-blue-500 mt-1" />
               <div>
                 <div className="text-sm text-gray-600">Email</div>
-                <div className="font-semibold text-gray-900">{student?.email}</div>
+                <div className="font-semibold text-gray-900">{student?.email || '--'}</div>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <Phone className="w-5 h-5 text-green-500 mt-1" />
               <div>
                 <div className="text-sm text-gray-600">Phone</div>
-                <div className="font-semibold text-gray-900">{student?.phone}</div>
+                <div className="font-semibold text-gray-900">{student?.phone || student?.phone_number || '--'}</div>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -259,11 +283,13 @@ const ProfilePage = () => {
               <div>
                 <div className="text-sm text-gray-600">Date of Birth</div>
                 <div className="font-semibold text-gray-900">
-                  {new Date(student?.date_of_birth).toLocaleDateString('en-US', {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
+                  {student?.date_of_birth
+                    ? new Date(student.date_of_birth).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })
+                    : '--'}
                 </div>
               </div>
             </div>
@@ -271,14 +297,14 @@ const ProfilePage = () => {
               <User className="w-5 h-5 text-orange-500 mt-1" />
               <div>
                 <div className="text-sm text-gray-600">Gender</div>
-                <div className="font-semibold text-gray-900">{student?.gender}</div>
+                <div className="font-semibold text-gray-900">{student?.gender || '--'}</div>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <MapPin className="w-5 h-5 text-red-500 mt-1" />
               <div>
                 <div className="text-sm text-gray-600">Address</div>
-                <div className="font-semibold text-gray-900">{student?.address}</div>
+                <div className="font-semibold text-gray-900">{student?.address || '--'}</div>
               </div>
             </div>
           </div>
@@ -302,14 +328,14 @@ const ProfilePage = () => {
               <Building className="w-5 h-5 text-blue-500 mt-1" />
               <div>
                 <div className="text-sm text-gray-600">Department</div>
-                <div className="font-semibold text-gray-900">{student?.department}</div>
+                <div className="font-semibold text-gray-900">{student?.department || '--'}</div>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <BookOpen className="w-5 h-5 text-green-500 mt-1" />
               <div>
                 <div className="text-sm text-gray-600">Major</div>
-                <div className="font-semibold text-gray-900">{student?.major}</div>
+                <div className="font-semibold text-gray-900">{student?.major || '--'}</div>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -317,11 +343,13 @@ const ProfilePage = () => {
               <div>
                 <div className="text-sm text-gray-600">Enrollment Date</div>
                 <div className="font-semibold text-gray-900">
-                  {new Date(student?.enrollment_date).toLocaleDateString('en-US', {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
+                  {student?.enrollment_date
+                    ? new Date(student.enrollment_date).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })
+                    : '--'}
                 </div>
               </div>
             </div>
@@ -330,10 +358,12 @@ const ProfilePage = () => {
               <div>
                 <div className="text-sm text-gray-600">Expected Graduation</div>
                 <div className="font-semibold text-gray-900">
-                  {new Date(student?.expected_graduation).toLocaleDateString('en-US', {
-                    month: 'long',
-                    year: 'numeric'
-                  })}
+                  {student?.expected_graduation
+                    ? new Date(student.expected_graduation).toLocaleDateString('en-US', {
+                        month: 'long',
+                        year: 'numeric'
+                      })
+                    : '--'}
                 </div>
               </div>
             </div>
@@ -367,21 +397,21 @@ const ProfilePage = () => {
               <User className="w-5 h-5 text-blue-500 mt-1" />
               <div>
                 <div className="text-sm text-gray-600">Name</div>
-                <div className="font-semibold text-gray-900">{student?.emergency_contact_name}</div>
+                <div className="font-semibold text-gray-900">{student?.emergency_contact_name || student?.parent_name || '--'}</div>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <Phone className="w-5 h-5 text-green-500 mt-1" />
               <div>
                 <div className="text-sm text-gray-600">Phone</div>
-                <div className="font-semibold text-gray-900">{student?.emergency_contact_phone}</div>
+                <div className="font-semibold text-gray-900">{student?.emergency_contact_phone || student?.parent_phone || '--'}</div>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <Users className="w-5 h-5 text-purple-500 mt-1" />
               <div>
                 <div className="text-sm text-gray-600">Relation</div>
-                <div className="font-semibold text-gray-900">{student?.emergency_contact_relation}</div>
+                <div className="font-semibold text-gray-900">{student?.emergency_contact_relation || 'Parent'}</div>
               </div>
             </div>
           </div>
@@ -401,7 +431,7 @@ const ProfilePage = () => {
             Current Courses
           </h2>
           <div className="space-y-3">
-            {student?.enrolled_courses?.map((course, index) => (
+            {(student?.enrolled_courses || []).map((course, index) => (
               <div
                 key={index}
                 className="p-4 bg-gradient-to-r from-blue-50/50 to-purple-50/50 rounded-xl border border-blue-100"

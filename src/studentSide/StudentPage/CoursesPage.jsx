@@ -7,18 +7,20 @@ import {
   Calendar,
   Plus,
   Trash2,
-  FileText,
   GraduationCap,
   AlertCircle,
   CheckCircle,
   Loader,
   Search,
-  Filter,
-  X,
   BookMarked,
   Award
 } from 'lucide-react';
-import { fetchStudentCourses, fetchAvailableCourses, enrollInCourse, dropCourse } from '../../api/course_api';
+import {
+  fetchStudentCourses,
+  fetchAvailableCourses,
+  enrollInCourse,
+  dropCourse
+} from '../../api/course_api';
 
 const CoursesPage = () => {
   const [enrolledCourses, setEnrolledCourses] = useState([]);
@@ -26,7 +28,6 @@ const CoursesPage = () => {
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [activeTab, setActiveTab] = useState('enrolled'); // 'enrolled' or 'available'
 
@@ -34,111 +35,97 @@ const CoursesPage = () => {
     loadCourses();
   }, []);
 
-  const loadCourses = async () => {
-    try {
-      setLoading(true);
-      const [enrolledRes, availableRes] = await Promise.all([
-        fetchStudentCourses().catch(() => ({ data: { data: [] } })),
-        fetchAvailableCourses().catch(() => ({ data: { data: [] } }))
-      ]);
-
-      // Use mock data if API fails
-      const mockEnrolled = [
-        {
-          id: 1,
-          course_code: 'CS101',
-          course_name: 'Introduction to Computer Science',
-          instructor: 'Dr. Sarah Johnson',
-          credits: 3,
-          schedule: 'Mon, Wed 10:00 - 11:30 AM',
-          enrolled_students: 45,
-          max_students: 50,
-          progress: 65,
-          room: 'Room 301'
-        },
-        {
-          id: 2,
-          course_code: 'MATH201',
-          course_name: 'Calculus II',
-          instructor: 'Prof. Michael Chen',
-          credits: 4,
-          schedule: 'Tue, Thu 2:00 - 3:30 PM',
-          enrolled_students: 38,
-          max_students: 40,
-          progress: 45,
-          room: 'Room 205'
-        },
-        {
-          id: 3,
-          course_code: 'ENG102',
-          course_name: 'Academic Writing',
-          instructor: 'Dr. Emily White',
-          credits: 3,
-          schedule: 'Mon, Wed, Fri 1:00 - 2:00 PM',
-          enrolled_students: 30,
-          max_students: 35,
-          progress: 72,
-          room: 'Room 112'
-        }
-      ];
-
-      const mockAvailable = [
-        {
-          id: 4,
-          course_code: 'CS202',
-          course_name: 'Data Structures and Algorithms',
-          instructor: 'Dr. James Wilson',
-          credits: 4,
-          schedule: 'Tue, Thu 10:00 - 12:00 PM',
-          enrolled_students: 32,
-          max_students: 40,
-          prerequisites: ['CS101'],
-          room: 'Room 302'
-        },
-        {
-          id: 5,
-          course_code: 'PHY101',
-          course_name: 'General Physics I',
-          instructor: 'Prof. Lisa Anderson',
-          credits: 3,
-          schedule: 'Mon, Wed 3:00 - 4:30 PM',
-          enrolled_students: 28,
-          max_students: 35,
-          prerequisites: [],
-          room: 'Lab 101'
-        }
-      ];
-
-      setEnrolledCourses(enrolledRes.data?.data?.length > 0 ? enrolledRes.data.data : mockEnrolled);
-      setAvailableCourses(availableRes.data?.data?.length > 0 ? availableRes.data.data : mockAvailable);
-    } catch (error) {
-      console.error('Failed to load courses:', error);
-      showMessage('error', 'Failed to load courses');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const showMessage = (type, text) => {
     setMessage({ type, text });
     setTimeout(() => setMessage({ type: '', text: '' }), 5000);
   };
 
+  const buildScheduleText = (courseOrEnrollment) => {
+    // backend may send schedules on course: course.class_schedules
+    const course = courseOrEnrollment?.course || courseOrEnrollment;
+
+    const schedules = course?.class_schedules || course?.schedules || [];
+    if (!Array.isArray(schedules) || schedules.length === 0) {
+      // maybe enrollment sends schedule string already
+      return courseOrEnrollment?.schedule || course?.schedule || '—';
+    }
+
+    // Example output: "Mon 10:00-11:30, Wed 10:00-11:30"
+    const dayShort = (d) => {
+      const map = {
+        Monday: 'Mon',
+        Tuesday: 'Tue',
+        Wednesday: 'Wed',
+        Thursday: 'Thu',
+        Friday: 'Fri',
+        Saturday: 'Sat',
+        Sunday: 'Sun',
+      };
+      return map[d] || d;
+    };
+
+    return schedules
+      .map((s) => `${dayShort(s.day_of_week)} ${s.start_time}-${s.end_time}`)
+      .join(', ');
+  };
+
+  const normalizeCourse = (item) => {
+    // item may be:
+    // 1) enrollment: { course: {...}, progress, status ... }
+    // 2) course: {...}
+    const course = item?.course || item;
+
+    return {
+      id: course?.id,
+      course_code: course?.course_code || course?.code || '—',
+      course_name: course?.course_name || course?.name || course?.title || '—',
+      instructor: course?.instructor || course?.instructor_name || '—',
+      credits: Number(course?.credits || 0),
+      schedule: buildScheduleText(item),
+      enrolled_students: Number(course?.enrolled_students || course?.current_students || 0),
+      max_students: Number(course?.max_students || course?.capacity || 0),
+      room:
+        course?.room ||
+        (Array.isArray(course?.class_schedules) && course.class_schedules[0]?.room) ||
+        '—',
+      prerequisites: Array.isArray(course?.prerequisites) ? course.prerequisites : [],
+      progress: Number(item?.progress ?? course?.progress ?? 0),
+    };
+  };
+
+  const loadCourses = async () => {
+    try {
+      setLoading(true);
+
+      const [enrolledRes, availableRes] = await Promise.all([
+        fetchStudentCourses(),
+        fetchAvailableCourses(),
+      ]);
+
+      const enrolled = Array.isArray(enrolledRes?.data?.data) ? enrolledRes.data.data : [];
+      const available = Array.isArray(availableRes?.data?.data) ? availableRes.data.data : [];
+
+      setEnrolledCourses(enrolled.map(normalizeCourse));
+      setAvailableCourses(available.map(normalizeCourse));
+    } catch (error) {
+      console.error('Failed to load courses:', error);
+      showMessage('error', error?.response?.data?.message || 'Failed to load courses');
+      setEnrolledCourses([]);
+      setAvailableCourses([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleEnroll = async (courseId) => {
     try {
       setEnrolling(true);
-      await enrollInCourse(courseId).catch(() => {
-        // Mock enrollment
-        const course = availableCourses.find(c => c.id === courseId);
-        if (course) {
-          setEnrolledCourses([...enrolledCourses, { ...course, progress: 0 }]);
-          setAvailableCourses(availableCourses.filter(c => c.id !== courseId));
-        }
-      });
+      await enrollInCourse(courseId);
       showMessage('success', 'Successfully enrolled in course!');
       await loadCourses();
     } catch (error) {
-      showMessage('error', error.response?.data?.message || 'Failed to enroll in course');
+      console.error('Enroll error:', error);
+      showMessage('error', error?.response?.data?.message || 'Failed to enroll in course');
     } finally {
       setEnrolling(false);
     }
@@ -149,33 +136,27 @@ const CoursesPage = () => {
 
     try {
       setEnrolling(true);
-      await dropCourse(courseId).catch(() => {
-        // Mock drop
-        const course = enrolledCourses.find(c => c.id === courseId);
-        if (course) {
-          setAvailableCourses([...availableCourses, course]);
-          setEnrolledCourses(enrolledCourses.filter(c => c.id !== courseId));
-        }
-      });
+      await dropCourse(courseId);
       showMessage('success', 'Successfully dropped course');
       await loadCourses();
     } catch (error) {
-      showMessage('error', error.response?.data?.message || 'Failed to drop course');
+      console.error('Drop error:', error);
+      showMessage('error', error?.response?.data?.message || 'Failed to drop course');
     } finally {
       setEnrolling(false);
     }
   };
 
-  const filteredEnrolledCourses = enrolledCourses.filter(course =>
-    course.course_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    course.course_code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    course.instructor?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredEnrolledCourses = enrolledCourses.filter((course) =>
+    (course.course_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (course.course_code || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (course.instructor || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredAvailableCourses = availableCourses.filter(course =>
-    course.course_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    course.course_code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    course.instructor?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredAvailableCourses = availableCourses.filter((course) =>
+    (course.course_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (course.course_code || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (course.instructor || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (loading) {
@@ -463,12 +444,12 @@ const CoursesPage = () => {
 
                   <button
                     onClick={() => handleEnroll(course.id)}
-                    disabled={enrolling || course.enrolled_students >= course.max_students}
+                    disabled={enrolling || (course.max_students > 0 && course.enrolled_students >= course.max_students)}
                     className="w-full px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {enrolling ? (
                       <Loader className="w-5 h-5 animate-spin" />
-                    ) : course.enrolled_students >= course.max_students ? (
+                    ) : (course.max_students > 0 && course.enrolled_students >= course.max_students) ? (
                       'Course Full'
                     ) : (
                       <>

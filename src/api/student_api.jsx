@@ -98,3 +98,7 @@ export const resetStudentPassword = async (id, newPassword) => {
     throw error;
   }
 };
+
+export const fetchStudentProfile = async () => {
+  return await API.get("/student/profile");
+};

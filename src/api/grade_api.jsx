@@ -60,16 +60,19 @@ export const fetchTranscript = async () => {
   }
 };
 
-// GET: Fetch GPA information
+// ✅ GET: Fetch GPA information (matches backend route: /student/grades/gpa)
 export const fetchGPA = async () => {
   try {
-    const response = await API.get("/student/gpa");
+    const response = await API.get("/student/grades/gpa");
     return response;
   } catch (error) {
     console.error("fetchGPA error:", error);
     throw error;
   }
 };
+
+// ✅ Alias export so ProfilePage can import fetchStudentGpa without error
+export const fetchStudentGpa = fetchGPA;
 
 // GET: Download transcript as PDF
 export const downloadTranscript = async () => {

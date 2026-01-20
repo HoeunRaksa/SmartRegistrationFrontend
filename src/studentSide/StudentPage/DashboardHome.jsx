@@ -7,13 +7,38 @@ import {
   Award,
   Clock,
   TrendingUp,
-  CheckCircle,
   FileText,
   Users,
   Bell,
   ArrowRight,
   Loader
 } from 'lucide-react';
+
+import API from '../../api'; // <-- change path if your axios instance is elsewhere
+
+// ---------- helpers ----------
+const extractData = (response) => {
+  if (response?.data?.data !== undefined) return response.data.data;
+  if (response?.data !== undefined) return response.data;
+  return null;
+};
+
+const formatTimeAgo = (dateStr) => {
+  try {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000);
+    if (diff < 60) return `${diff}s ago`;
+    const m = Math.floor(diff / 60);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    const d = Math.floor(h / 24);
+    return `${d}d ago`;
+  } catch {
+    return '';
+  }
+};
 
 const DashboardHome = () => {
   const [loading, setLoading] = useState(true);
@@ -28,109 +53,151 @@ const DashboardHome = () => {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      // Mock dashboard data
-      const mockData = {
-        student: {
-          name: user.name || 'Student',
-          student_code: 'STU2024001',
-          major: 'Software Engineering',
-          year: '2nd Year'
-        },
-        stats: {
-          gpa: 3.75,
-          enrolled_courses: 5,
-          attendance: 85.7,
-          pending_assignments: 3
-        },
-        todayClasses: [
-          {
-            id: 1,
-            course_code: 'CS101',
-            course_name: 'Introduction to Computer Science',
-            time: '10:00 AM - 11:30 AM',
-            room: 'Room 301',
-            instructor: 'Dr. Sarah Johnson'
-          },
-          {
-            id: 2,
-            course_code: 'ENG102',
-            course_name: 'Academic Writing',
-            time: '1:00 PM - 2:00 PM',
-            room: 'Room 112',
-            instructor: 'Dr. Emily White'
-          }
-        ],
-        recentGrades: [
-          {
-            id: 1,
-            course_code: 'MATH201',
-            course_name: 'Calculus II',
-            assignment: 'Problem Set 3',
-            grade: 68,
-            total: 75,
-            date: '2026-01-18'
-          },
-          {
-            id: 2,
-            course_code: 'PHY101',
-            course_name: 'General Physics I',
-            assignment: 'Lab Report: Basic Circuits',
-            grade: 38,
-            total: 40,
-            date: '2026-01-17'
-          }
-        ],
-        pendingAssignments: [
-          {
-            id: 1,
-            course_code: 'CS101',
-            title: 'Programming Assignment 1',
-            due_date: '2026-01-25',
-            due_time: '23:59',
-            points: 100
-          },
-          {
-            id: 2,
-            course_code: 'ENG102',
-            title: 'Essay: Impact of Technology',
-            due_date: '2026-01-22',
-            due_time: '17:00',
-            points: 50
-          },
-          {
-            id: 3,
-            course_code: 'CS202',
-            title: 'Project Proposal',
-            due_date: '2026-01-28',
-            due_time: '23:59',
-            points: 60
-          }
-        ],
-        notifications: [
-          {
-            id: 1,
-            message: 'New assignment posted in CS101',
-            time: '2 hours ago',
-            type: 'assignment'
-          },
-          {
-            id: 2,
-            message: 'Grade posted for MATH201 Problem Set 3',
-            time: '5 hours ago',
-            type: 'grade'
-          },
-          {
-            id: 3,
-            message: 'Reminder: ENG102 essay due tomorrow',
-            time: '1 day ago',
-            type: 'reminder'
-          }
-        ]
+
+      // call only existing APIs
+      const [
+        enrolledCoursesRes,
+        todayScheduleRes,
+        gradesRes,
+        gpaRes,
+        assignmentsRes,
+        attendanceStatsRes,
+        conversationsRes,
+      ] = await Promise.all([
+        API.get('/student/courses/enrolled').catch(() => ({ data: { data: [] } })),
+        API.get('/student/schedule/today').catch(() => ({ data: { data: [] } })),
+        API.get('/student/grades').catch(() => ({ data: { data: [] } })),
+        API.get('/student/grades/gpa').catch(() => ({ data: { data: { gpa: 0 } } })),
+        API.get('/student/assignments').catch(() => ({ data: { data: [] } })),
+        API.get('/student/attendance/stats').catch(() => ({ data: { data: { total: 0, present: 0 } } })),
+        API.get('/student/messages/conversations').catch(() => ({ data: { data: [] } })),
+      ]);
+
+      const enrolledCourses = Array.isArray(extractData(enrolledCoursesRes)) ? extractData(enrolledCoursesRes) : [];
+      const todaySchedule = Array.isArray(extractData(todayScheduleRes)) ? extractData(todayScheduleRes) : [];
+      const grades = Array.isArray(extractData(gradesRes)) ? extractData(gradesRes) : [];
+      const gpaData = extractData(gpaRes) || { gpa: 0 };
+      const assignments = Array.isArray(extractData(assignmentsRes)) ? extractData(assignmentsRes) : [];
+      const attendanceStats = extractData(attendanceStatsRes) || { total: 0, present: 0 };
+      const conversations = Array.isArray(extractData(conversationsRes)) ? extractData(conversationsRes) : [];
+
+      // -------- Student info (NO profile endpoint used) --------
+      const student = {
+        name: user?.name || 'Student',
+        student_code: user?.student_code || '—',
+        major: user?.major || '—',
+        year: user?.year || '—',
       };
 
-      setDashboardData(mockData);
+      // -------- Stats --------
+      const gpa = Number(gpaData?.gpa || 0);
+
+      const totalAttend = Number(attendanceStats?.total || 0);
+      const presentAttend = Number(attendanceStats?.present || 0);
+      const attendancePercent = totalAttend > 0 ? (presentAttend / totalAttend) * 100 : 0;
+
+      // pending assignments = assignments without submissions
+      const pendingAssignmentsRaw = assignments.filter((a) => {
+        const subs = a?.submissions;
+        if (!subs) return true;
+        if (Array.isArray(subs) && subs.length === 0) return true;
+        return false;
+      });
+
+      // map pending assignments to UI format
+      const pendingAssignments = pendingAssignmentsRaw
+        .slice()
+        .sort((a, b) => new Date(a?.due_date || '2100-01-01') - new Date(b?.due_date || '2100-01-01'))
+        .map((a) => ({
+          id: a?.id,
+          course_code: a?.course?.course_code || a?.course?.code || '—',
+          title: a?.title || '—',
+          due_date: a?.due_date,
+          due_time: a?.due_time || '',
+          points: Number(a?.points || 0),
+        }));
+
+      // today classes map
+      const todayClasses = todaySchedule.map((s) => ({
+        id: s?.id,
+        course_code: s?.course?.course_code || s?.course?.code || '—',
+        course_name: s?.course?.course_name || s?.course?.title || '—',
+        time: `${s?.start_time || ''} - ${s?.end_time || ''}`,
+        room: s?.room || '—',
+        instructor: s?.course?.instructor_name || s?.course?.instructor || '—',
+      }));
+
+      // recent grades map (latest 5)
+      const recentGrades = grades
+        .slice(0, 5)
+        .map((g) => ({
+          id: g?.id,
+          course_code: g?.course?.course_code || g?.course?.code || '—',
+          course_name: g?.course?.course_name || g?.course?.title || '—',
+          assignment: g?.assignment_name || '—',
+          grade: Number(g?.score || 0),
+          total: Number(g?.total_points || 0),
+          date: g?.created_at || g?.updated_at || new Date().toISOString(),
+        }));
+
+      // notifications built from REAL data (grades + pending assignments + conversations)
+      const notifications = [];
+
+      recentGrades.slice(0, 3).forEach((gr) => {
+        notifications.push({
+          id: `g-${gr.id}`,
+          message: `Grade posted: ${gr.course_code} - ${gr.assignment}`,
+          time: formatTimeAgo(gr.date),
+          type: 'grade',
+        });
+      });
+
+      pendingAssignments.slice(0, 3).forEach((a) => {
+        notifications.push({
+          id: `a-${a.id}`,
+          message: `Assignment pending: ${a.title}`,
+          time: a?.due_date ? `Due ${new Date(a.due_date).toLocaleDateString()}` : '',
+          type: 'assignment',
+        });
+      });
+
+      if (conversations.length > 0) {
+        notifications.push({
+          id: `m-1`,
+          message: `You have ${conversations.length} conversation(s)`,
+          time: 'Now',
+          type: 'message',
+        });
+      }
+
+      setDashboardData({
+        student,
+        stats: {
+          gpa,
+          enrolled_courses: enrolledCourses.length,
+          attendance: attendancePercent,
+          pending_assignments: pendingAssignments.length,
+        },
+        todayClasses,
+        recentGrades,
+        pendingAssignments,
+        notifications,
+      });
     } catch (error) {
       console.error('Failed to load dashboard:', error);
+      setDashboardData({
+        student: {
+          name: user?.name || 'Student',
+          student_code: user?.student_code || '—',
+          major: user?.major || '—',
+          year: user?.year || '—',
+        },
+        stats: { gpa: 0, enrolled_courses: 0, attendance: 0, pending_assignments: 0 },
+        todayClasses: [],
+        recentGrades: [],
+        pendingAssignments: [],
+        notifications: [],
+      });
     } finally {
       setLoading(false);
     }
@@ -192,7 +259,7 @@ const DashboardHome = () => {
           <div className="flex items-center justify-between">
             <div className="text-white">
               <p className="text-sm opacity-90 mb-1">Current GPA</p>
-              <p className="text-3xl font-bold">{dashboardData?.stats?.gpa?.toFixed(2)}</p>
+              <p className="text-3xl font-bold">{Number(dashboardData?.stats?.gpa || 0).toFixed(2)}</p>
             </div>
             <div className="p-3 bg-white/20 rounded-xl">
               <Award className="w-8 h-8 text-white" />
@@ -228,7 +295,7 @@ const DashboardHome = () => {
           <div className="flex items-center justify-between">
             <div className="text-white">
               <p className="text-sm opacity-90 mb-1">Attendance</p>
-              <p className="text-3xl font-bold">{dashboardData?.stats?.attendance?.toFixed(1)}%</p>
+              <p className="text-3xl font-bold">{Number(dashboardData?.stats?.attendance || 0).toFixed(1)}%</p>
             </div>
             <div className="p-3 bg-white/20 rounded-xl">
               <TrendingUp className="w-8 h-8 text-white" />
@@ -346,9 +413,7 @@ const DashboardHome = () => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.6 + index * 0.1 }}
                   className={`p-4 rounded-xl border ${
-                    isUrgent
-                      ? 'bg-red-50/50 border-red-200'
-                      : 'bg-orange-50/50 border-orange-200'
+                    isUrgent ? 'bg-red-50/50 border-red-200' : 'bg-orange-50/50 border-orange-200'
                   }`}
                 >
                   <div className="flex items-start justify-between mb-2">
@@ -398,37 +463,45 @@ const DashboardHome = () => {
             </button>
           </div>
           <div className="space-y-3">
-            {dashboardData?.recentGrades?.map((grade, index) => (
-              <motion.div
-                key={grade.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8 + index * 0.1 }}
-                className="p-4 bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-xl border border-green-100"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <div className="font-semibold text-gray-900">{grade.assignment}</div>
-                    <div className="text-sm text-gray-600">{grade.course_code} - {grade.course_name}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-green-600">
-                      {grade.grade}/{grade.total}
+            {dashboardData?.recentGrades?.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Award className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p className="font-semibold">No grades yet</p>
+                <p className="text-sm">Grades will appear here once posted.</p>
+              </div>
+            ) : (
+              dashboardData?.recentGrades?.map((grade, index) => (
+                <motion.div
+                  key={grade.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 + index * 0.1 }}
+                  className="p-4 bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-xl border border-green-100"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <div className="font-semibold text-gray-900">{grade.assignment}</div>
+                      <div className="text-sm text-gray-600">{grade.course_code} - {grade.course_name}</div>
                     </div>
-                    <div className="text-sm text-gray-600">
-                      {((grade.grade / grade.total) * 100).toFixed(0)}%
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-green-600">
+                        {grade.grade}/{grade.total}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {grade.total > 0 ? ((grade.grade / grade.total) * 100).toFixed(0) : 0}%
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="text-xs text-gray-500">
-                  Posted: {new Date(grade.date).toLocaleDateString()}
-                </div>
-              </motion.div>
-            ))}
+                  <div className="text-xs text-gray-500">
+                    Posted: {new Date(grade.date).toLocaleDateString()}
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         </motion.div>
 
-        {/* Recent Notifications */}
+        {/* Notifications */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -444,25 +517,33 @@ const DashboardHome = () => {
             </h2>
           </div>
           <div className="space-y-3">
-            {dashboardData?.notifications?.map((notification, index) => (
-              <motion.div
-                key={notification.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8 + index * 0.1 }}
-                className="p-4 bg-purple-50/50 rounded-xl border border-purple-100"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Bell className="w-4 h-4 text-purple-600" />
+            {dashboardData?.notifications?.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Bell className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p className="font-semibold">No notifications</p>
+                <p className="text-sm">You’re all caught up.</p>
+              </div>
+            ) : (
+              dashboardData?.notifications?.map((notification, index) => (
+                <motion.div
+                  key={notification.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 + index * 0.1 }}
+                  className="p-4 bg-purple-50/50 rounded-xl border border-purple-100"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <Bell className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">{notification.message}</p>
+                      <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">{notification.message}</p>
-                    <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))
+            )}
           </div>
         </motion.div>
       </div>

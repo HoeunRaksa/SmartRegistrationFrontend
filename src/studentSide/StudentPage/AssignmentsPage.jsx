@@ -16,7 +16,7 @@ import {
   BookOpen,
   Award
 } from 'lucide-react';
-import { fetchStudentAssignments, submitAssignment, deleteSubmission } from '../../api/assignment_api';
+import { fetchStudentAssignments, submitAssignment,  } from '../../api/assignment_api';
 
 const AssignmentsPage = () => {
   const [assignments, setAssignments] = useState([]);

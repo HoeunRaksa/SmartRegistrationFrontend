@@ -61,23 +61,20 @@ export const fetchAssignmentDetails = async (assignmentId) => {
 };
 
 // POST: Submit assignment
-export const submitAssignment = async (assignmentId, formData) => {
+export const submitAssignment = async (assignmentId, file) => {
   try {
-    const response = await API.post(
-      `/student/assignments/${assignmentId}/submit`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    );
+    const formData = new FormData();
+    formData.append("assignment_id", assignmentId);
+    formData.append("file", file);
+
+    const response = await API.post("/student/assignments/submit", formData);
     return response;
   } catch (error) {
     console.error(`submitAssignment(${assignmentId}) error:`, error);
     throw error;
   }
 };
+
 
 // PUT: Update assignment submission
 export const updateAssignmentSubmission = async (assignmentId, submissionId, formData) => {
