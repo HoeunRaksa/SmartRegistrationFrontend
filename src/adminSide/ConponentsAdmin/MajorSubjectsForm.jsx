@@ -209,12 +209,7 @@ const MajorSubjectsForm = ({ onSuccess }) => {
       animate="show"
       className="relative overflow-hidden rounded-3xl border border-white/60 bg-white/55 backdrop-blur-2xl shadow-[0_22px_70px_-30px_rgba(15,23,42,0.35)] p-6 md:p-7"
     >
-      {/* soft accents */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl" />
-        <div className="absolute -bottom-28 -left-28 h-80 w-80 rounded-full bg-purple-400/20 blur-3xl" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.06)_1px,transparent_1px)] bg-[size:28px_28px] opacity-[0.12]" />
-      </div>
+ 
 
       {/* HEADER */}
       <div className="relative flex items-start justify-between gap-4 mb-5">
