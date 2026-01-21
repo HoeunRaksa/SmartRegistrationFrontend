@@ -1,5 +1,5 @@
 // ==============================
-// registration_api.jsx (FULL, CLEAN, NO REDUNDANCY)
+// registration_api.jsx (FULL, CLEAN, NO REDUNDANCY) ✅ FIXED
 // ==============================
 import API from "./index";
 import PaymentAPI from "./paymentClient";
@@ -35,17 +35,29 @@ export const deleteRegistration = (id) => API.delete(`/registers/${id}`);
 // PAY LATER (NEW OPTION)
 // backend route: POST /registrations/{id}/pay-later
 // ==============================
-export const payLater = (id) => API.post(`/registrations/${id}/pay-later`);
-export const adminGenerateQr = (registrationId) => {
-  return PaymentAPI.post("/payment/generate-qr", { registration_id: registrationId });
-};
-
+export const payLater = (id, semester = 1) =>
+  API.post(`/registrations/${id}/pay-later`, { semester });
 
 // ==============================
-// ADMIN CASH PAYMENT (OPTIONAL)
-// backend route: POST /admin/registrations/{id}/mark-paid
+// ✅ ADMIN GENERATE QR (FIXED)
+// backend route: POST /payment/generate-qr
 // ==============================
-export const markPaidCash = (id) => API.post(`/admin/registrations/${id}/mark-paid`);
+// IMPORTANT: use PaymentAPI (has baseURL /api + correct headers)
+// NOTE: semester is optional; backend defaults to 1
+export const adminGenerateQr = (id, semester = 1) =>
+  PaymentAPI.post(`/payment/generate-qr`, {
+    registration_id: id,
+    semester: parseInt(semester, 10) || 1,
+  });
+
+// ==============================
+// ✅ ADMIN CASH PAYMENT (FIXED)
+// backend route: PUT /admin/registrations/{id}/mark-paid-cash
+// ==============================
+export const markPaidCash = (id, semester = 1) =>
+  API.put(`/admin/registrations/${id}/mark-paid-cash`, {
+    semester: parseInt(semester, 10) || 1,
+  });
 
 // ==============================
 // REGISTRATION REPORTS
@@ -94,10 +106,13 @@ export const generateAndDownloadReport = async (filters = {}, filename = null) =
 };
 
 // ==============================
-// PAYMENT (QR)
+// PAYMENT (QR) ✅ UPDATED to support semester
 // ==============================
-export const generatePaymentQR = (registrationId) =>
-  PaymentAPI.post("/payment/generate-qr", { registration_id: registrationId });
+export const generatePaymentQR = (registrationId, semester = 1) =>
+  PaymentAPI.post("/payment/generate-qr", {
+    registration_id: registrationId,
+    semester: parseInt(semester, 10) || 1,
+  });
 
 export const checkPaymentStatus = (tranId) =>
   PaymentAPI.get(`/payment/check-status/${tranId}`);

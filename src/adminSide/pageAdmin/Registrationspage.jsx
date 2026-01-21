@@ -1,10 +1,6 @@
 import React, { useEffect, useState, useMemo, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  fetchRegistrations,
-  adminGenerateQr,
-  markPaidCash,
-} from "../../api/registration_api";
+import { fetchRegistrations, adminGenerateQr, markPaidCash } from "../../api/registration_api";
 import { fetchDepartments } from "../../api/department_api";
 import { fetchMajors } from "../../api/major_api";
 import RegistrationReportPage from "./RegistrationReportPage";
@@ -48,19 +44,44 @@ const RegistrationPage = () => {
   const [showAdminQr, setShowAdminQr] = useState(false);
   const [adminQrReg, setAdminQrReg] = useState(null);
 
-  // ✅ Toast only declared ONCE here
+  // ✅ semester selector
+  const [selectedSemester, setSelectedSemester] = useState("1");
+
   const toast = useContext(ToastContext);
 
   useEffect(() => {
     loadAllData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ✅ reload registrations when semester changes (important!)
+  useEffect(() => {
+    loadRegistrationsOnly();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSemester]);
+
+  const loadRegistrationsOnly = async () => {
+    try {
+      setLoading(true);
+      const regRes = await fetchRegistrations({ semester: parseInt(selectedSemester, 10) || 1 });
+
+      const regData = regRes.data?.data || regRes.data || [];
+      setRegistrations(Array.isArray(regData) ? regData : []);
+    } catch (error) {
+      console.error("Failed to load registrations:", error);
+      setRegistrations([]);
+      toast?.error?.("Failed to load registrations");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadAllData = async () => {
     try {
       setLoading(true);
 
       const [regRes, deptRes, majorRes] = await Promise.all([
-        fetchRegistrations(),
+        fetchRegistrations({ semester: parseInt(selectedSemester, 10) || 1 }),
         fetchDepartments(),
         fetchMajors(),
       ]);
@@ -83,17 +104,38 @@ const RegistrationPage = () => {
     }
   };
 
+  // ✅ Helpers (normalize new/old backend fields)
+  // IMPORTANT: prefer PERIOD status (student_academic_periods) first
+  const getPaymentStatus = (reg) =>
+    reg?.period_payment_status ??
+    reg?.academic_payment_status ??
+    reg?.payment_status ??
+    "PENDING";
+
+  const getPaidAt = (reg) =>
+    reg?.period_paid_at ?? reg?.paid_at ?? reg?.payment_date ?? null;
+
+  const getAmount = (reg) =>
+    reg?.period_tuition_amount ??
+    reg?.tuition_amount ??
+    reg?.payment_amount ??
+    reg?.registration_fee ??
+    reg?.amount ??
+    0;
+
   // Filter registrations
   const filteredRegistrations = useMemo(() => {
     return registrations.filter((reg) => {
+      const status = (getPaymentStatus(reg) || "PENDING").toUpperCase();
+
       // Payment status filter
       const statusMatch =
         filter === "all"
           ? true
           : filter === "paid"
-          ? reg.payment_status === "PAID"
+          ? status === "PAID"
           : filter === "pending"
-          ? !reg.payment_status || reg.payment_status === "PENDING"
+          ? status === "PENDING"
           : true;
 
       // Search filter
@@ -121,42 +163,23 @@ const RegistrationPage = () => {
   }, [registrations, filter, searchTerm, selectedDepartment, selectedMajor]);
 
   const paidCount = filteredRegistrations.filter(
-    (r) => r.payment_status === "PAID"
-  ).length;
-  const pendingCount = filteredRegistrations.filter(
-    (r) => !r.payment_status || r.payment_status === "PENDING"
+    (r) => (getPaymentStatus(r) || "").toUpperCase() === "PAID"
   ).length;
 
-  // Calculate real total revenue from paid registrations (filtered)
+  const pendingCount = filteredRegistrations.filter((r) => {
+    const s = (getPaymentStatus(r) || "PENDING").toUpperCase();
+    return s === "PENDING";
+  }).length;
+
   const totalRevenue = filteredRegistrations
-    .filter((r) => r.payment_status === "PAID")
-    .reduce((sum, reg) => sum + (parseFloat(reg.payment_amount) || 0), 0);
+    .filter((r) => (getPaymentStatus(r) || "").toUpperCase() === "PAID")
+    .reduce((sum, reg) => sum + (parseFloat(getAmount(reg)) || 0), 0);
 
   const quickStats = [
-    {
-      label: "Total",
-      value: filteredRegistrations.length,
-      color: "from-blue-500 to-cyan-500",
-      icon: Users,
-    },
-    {
-      label: "Paid",
-      value: paidCount,
-      color: "from-green-500 to-emerald-500",
-      icon: CheckCircle,
-    },
-    {
-      label: "Pending",
-      value: pendingCount,
-      color: "from-orange-500 to-red-500",
-      icon: Clock,
-    },
-    {
-      label: "Revenue",
-      value: `$${totalRevenue.toFixed(2)}`,
-      color: "from-purple-500 to-pink-500",
-      icon: DollarSign,
-    },
+    { label: "Total", value: filteredRegistrations.length, color: "from-blue-500 to-cyan-500", icon: Users },
+    { label: "Paid", value: paidCount, color: "from-green-500 to-emerald-500", icon: CheckCircle },
+    { label: "Pending", value: pendingCount, color: "from-orange-500 to-red-500", icon: Clock },
+    { label: "Revenue", value: `$${totalRevenue.toFixed(2)}`, color: "from-purple-500 to-pink-500", icon: DollarSign },
   ];
 
   return (
@@ -171,9 +194,7 @@ const RegistrationPage = () => {
               className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/40 shadow-sm hover:shadow-md transition-all"
             >
               <div className="flex items-center gap-3">
-                <div
-                  className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.color}`}
-                >
+                <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.color}`}>
                   <Icon className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -210,7 +231,7 @@ const RegistrationPage = () => {
                 value={selectedDepartment}
                 onChange={(e) => {
                   setSelectedDepartment(e.target.value);
-                  setSelectedMajor("all"); // Reset major when department changes
+                  setSelectedMajor("all");
                 }}
                 className="px-3 py-2 bg-white/50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
               >
@@ -243,6 +264,19 @@ const RegistrationPage = () => {
                       {major.major_name}
                     </option>
                   ))}
+              </select>
+            </div>
+
+            {/* Semester selector */}
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-indigo-500" />
+              <select
+                value={selectedSemester}
+                onChange={(e) => setSelectedSemester(e.target.value)}
+                className="px-3 py-2 bg-white/50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              >
+                <option value="1">Semester 1</option>
+                <option value="2">Semester 2</option>
               </select>
             </div>
 
@@ -318,6 +352,8 @@ const RegistrationPage = () => {
         registrations={filteredRegistrations}
         loading={loading}
         onView={setSelectedRegistration}
+        getPaymentStatus={getPaymentStatus}
+        getAmount={getAmount}
       />
 
       {/* ================= ADMIN QR MODAL ================= */}
@@ -325,13 +361,14 @@ const RegistrationPage = () => {
         <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <PaymentForm
             registrationId={adminQrReg.id}
-            amount={adminQrReg.payment_amount}
+            amount={getAmount(adminQrReg)}
             registrationData={{
               data: {
                 registration_id: adminQrReg.id,
-                payment_amount: adminQrReg.payment_amount,
+                payment_amount: getAmount(adminQrReg),
               },
             }}
+            semester={parseInt(selectedSemester, 10) || 1}
             onClose={() => {
               setShowAdminQr(false);
               setAdminQrReg(null);
@@ -339,7 +376,7 @@ const RegistrationPage = () => {
             onSuccess={async () => {
               setShowAdminQr(false);
               setAdminQrReg(null);
-              await loadAllData();
+              await loadRegistrationsOnly();
             }}
           />
         </div>
@@ -350,12 +387,16 @@ const RegistrationPage = () => {
         <RegistrationModal
           registration={selectedRegistration}
           onClose={() => setSelectedRegistration(null)}
-          onRefresh={loadAllData}
+          onRefresh={loadRegistrationsOnly}
           onOpenQr={(reg) => {
             setAdminQrReg(reg);
             setShowAdminQr(true);
           }}
-          toast={toast} // ✅ pass toast
+          toast={toast}
+          selectedSemester={parseInt(selectedSemester, 10) || 1}
+          getPaymentStatus={getPaymentStatus}
+          getPaidAt={getPaidAt}
+          getAmount={getAmount}
         />
       )}
 
@@ -383,7 +424,6 @@ const ReportModal = ({ onClose }) => {
           onClick={(e) => e.stopPropagation()}
           className="relative w-full max-w-7xl max-h-[95vh] overflow-y-auto bg-white rounded-3xl shadow-2xl"
         >
-          {/* Close Button */}
           <button
             onClick={onClose}
             className="absolute top-4 right-4 z-50 p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors shadow-lg"
@@ -391,7 +431,6 @@ const ReportModal = ({ onClose }) => {
             <X className="w-5 h-5" />
           </button>
 
-          {/* Report Page Content */}
           <div className="p-6">
             <RegistrationReportPage />
           </div>
@@ -401,7 +440,7 @@ const ReportModal = ({ onClose }) => {
   );
 };
 
-const RegistrationsList = ({ registrations, loading, onView }) => {
+const RegistrationsList = ({ registrations, loading, onView, getPaymentStatus, getAmount }) => {
   if (loading) {
     return (
       <div className="rounded-2xl bg-white/40 border border-white/40 shadow-lg p-12 text-center">
@@ -434,35 +473,25 @@ const RegistrationsList = ({ registrations, loading, onView }) => {
           <table className="w-full">
             <thead className="bg-gray-50/80 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Profile
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Contact
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Department
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Major
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Payment
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Actions
-                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Profile</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Contact</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Department</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Major</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Payment</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {registrations.map((reg) => (
-                <RegistrationRow key={reg.id} registration={reg} onView={onView} />
+                <RegistrationRow
+                  key={reg.id}
+                  registration={reg}
+                  onView={onView}
+                  getPaymentStatus={getPaymentStatus}
+                  getAmount={getAmount}
+                />
               ))}
             </tbody>
           </table>
@@ -482,8 +511,10 @@ const EmptyState = () => (
   </div>
 );
 
-const RegistrationRow = ({ registration, onView }) => {
-  const isPaid = registration.payment_status === "PAID";
+const RegistrationRow = ({ registration, onView, getPaymentStatus, getAmount }) => {
+  const status = (getPaymentStatus(registration) || "PENDING").toUpperCase();
+  const isPaid = status === "PAID";
+
   const profileImage = registration.profile_picture_url || registration.profile_picture_path;
 
   return (
@@ -494,7 +525,6 @@ const RegistrationRow = ({ registration, onView }) => {
       className="bg-white/60 hover:bg-blue-50/50 transition-colors cursor-pointer"
       onClick={() => onView(registration)}
     >
-      {/* Profile Picture */}
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="w-12 h-12 rounded-full overflow-hidden bg-white shadow-sm border-2 border-gray-200">
           {profileImage ? (
@@ -516,18 +546,14 @@ const RegistrationRow = ({ registration, onView }) => {
         </div>
       </td>
 
-      {/* Name */}
       <td className="px-6 py-4">
         <div>
           <p className="text-sm font-semibold text-gray-900">{registration.full_name_en}</p>
-          {registration.full_name_kh && (
-            <p className="text-xs text-gray-500 mt-0.5">{registration.full_name_kh}</p>
-          )}
+          {registration.full_name_kh && <p className="text-xs text-gray-500 mt-0.5">{registration.full_name_kh}</p>}
           <p className="text-xs text-gray-400 mt-0.5">ID: {registration.id}</p>
         </div>
       </td>
 
-      {/* Contact */}
       <td className="px-6 py-4">
         <div className="space-y-1">
           {registration.personal_email && (
@@ -545,7 +571,6 @@ const RegistrationRow = ({ registration, onView }) => {
         </div>
       </td>
 
-      {/* Department */}
       <td className="px-6 py-4">
         {registration.department_name ? (
           <div className="flex items-center gap-1.5">
@@ -557,7 +582,6 @@ const RegistrationRow = ({ registration, onView }) => {
         )}
       </td>
 
-      {/* Major */}
       <td className="px-6 py-4">
         {registration.major_name ? (
           <div className="flex items-center gap-1.5">
@@ -569,17 +593,15 @@ const RegistrationRow = ({ registration, onView }) => {
         )}
       </td>
 
-      {/* Payment Amount */}
       <td className="px-6 py-4">
         <div className="flex items-center gap-1.5">
           <DollarSign className="w-4 h-4 text-purple-500 flex-shrink-0" />
           <span className="text-sm font-medium text-gray-700">
-            ${parseFloat(registration.payment_amount || 0).toFixed(2)}
+            ${parseFloat(getAmount(registration) || 0).toFixed(2)}
           </span>
         </div>
       </td>
 
-      {/* Status */}
       <td className="px-6 py-4 whitespace-nowrap">
         {isPaid ? (
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
@@ -594,7 +616,6 @@ const RegistrationRow = ({ registration, onView }) => {
         )}
       </td>
 
-      {/* Actions */}
       <td className="px-6 py-4 whitespace-nowrap">
         <button
           onClick={(e) => {
@@ -611,8 +632,20 @@ const RegistrationRow = ({ registration, onView }) => {
   );
 };
 
-const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }) => {
-  const isPaid = registration.payment_status === "PAID";
+const RegistrationModal = ({
+  registration,
+  onClose,
+  onRefresh,
+  onOpenQr,
+  toast,
+  selectedSemester,
+  getPaymentStatus,
+  getPaidAt,
+  getAmount,
+}) => {
+  const status = (getPaymentStatus(registration) || "PENDING").toUpperCase();
+  const isPaid = status === "PAID";
+
   const profileImage = registration.profile_picture_url || registration.profile_picture_path;
 
   return (
@@ -633,12 +666,9 @@ const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }
           onClick={(e) => e.stopPropagation()}
           className="relative max-w-3xl w-full max-h-[75vh] overflow-y-auto bg-white rounded-3xl shadow-2xl"
         >
-          {/* Header */}
           <div
             className={`sticky top-0 p-6 z-10 ${
-              isPaid
-                ? "bg-gradient-to-br from-green-500 to-emerald-600"
-                : "bg-gradient-to-br from-orange-500 to-red-600"
+              isPaid ? "bg-gradient-to-br from-green-500 to-emerald-600" : "bg-gradient-to-br from-orange-500 to-red-600"
             }`}
           >
             <button
@@ -669,9 +699,7 @@ const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }
               </div>
 
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-white mb-2">
-                  Registration Details
-                </h2>
+                <h2 className="text-2xl font-bold text-white mb-2">Registration Details</h2>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm text-white/80">ID: {registration.id}</span>
                   {isPaid ? (
@@ -690,7 +718,6 @@ const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }
             </div>
           </div>
 
-          {/* Content */}
           <div className="p-6 space-y-6">
             <Section title="Personal Information">
               <InfoGrid>
@@ -733,9 +760,7 @@ const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }
             <Section title="Payment Information">
               <div
                 className={`p-4 rounded-xl ${
-                  isPaid
-                    ? "bg-green-50 border border-green-200"
-                    : "bg-orange-50 border border-orange-200"
+                  isPaid ? "bg-green-50 border border-green-200" : "bg-orange-50 border border-orange-200"
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -754,8 +779,9 @@ const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }
                         {isPaid ? "Payment Completed" : "Payment Pending"}
                       </p>
                       <p className="text-sm text-gray-600">
-                        Registration Fee: ${parseFloat(registration.payment_amount || 0).toFixed(2)}
+                        Registration Fee: ${parseFloat(getAmount(registration) || 0).toFixed(2)}
                       </p>
+                      <p className="text-xs text-gray-500 mt-1">Semester: {selectedSemester}</p>
                     </div>
                   </div>
 
@@ -763,7 +789,7 @@ const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }
                     <div className="text-right">
                       <p className="text-xs text-gray-500">Paid on</p>
                       <p className="text-sm font-medium text-gray-700">
-                        {registration.payment_date || "Date unavailable"}
+                        {getPaidAt(registration) || "Date unavailable"}
                       </p>
                     </div>
                   )}
@@ -774,12 +800,28 @@ const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }
                     <button
                       onClick={async () => {
                         try {
-                          await adminGenerateQr(registration.id);
+                          await adminGenerateQr(registration.id, selectedSemester);
                           toast?.success?.("QR generated successfully");
                           onOpenQr(registration);
                         } catch (e) {
-                          console.error(e);
-                          toast?.error?.(e.response?.data?.message || "Failed to generate QR");
+                          console.log("=== GENERATE QR ERROR ===");
+                          console.log("status:", e.response?.status);
+                          console.log("data:", e.response?.data);
+                          console.log("headers:", e.response?.headers);
+                          console.log("========================");
+
+                          const msg =
+                            e.response?.data?.message ||
+                            e.response?.data?.error ||
+                            "Failed to generate QR";
+
+                          toast?.error?.(msg);
+
+                          // ✅ if conflict (already paid) refresh list so status becomes PAID
+                          if (e.response?.status === 409) {
+                            await onRefresh();
+                            onClose();
+                          }
                         }
                       }}
                       className="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
@@ -792,7 +834,7 @@ const RegistrationModal = ({ registration, onClose, onRefresh, onOpenQr, toast }
                         if (!confirm("Mark this registration as PAID (Cash)?")) return;
 
                         try {
-                          await markPaidCash(registration.id);
+                          await markPaidCash(registration.id, selectedSemester);
                           toast?.success?.("Marked as PAID (Cash)");
                           await onRefresh();
                           onClose();

@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { CheckCircle, Loader, CloudOff, Info, Download, X } from "lucide-react";
-import { generatePaymentQR, checkPaymentStatus } from "../../api/payment_api";
+import { generatePaymentQR, checkPaymentStatus } from "../../api/registration_api";
 
 const PaymentForm = ({
   registrationId,
   amount,
   registrationData,
   onClose,
-  onSuccess
+  onSuccess,
+  semester = 1, // ✅ NEW (safe default)
 }) => {
   const [qrImage, setQrImage] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -29,12 +30,14 @@ const PaymentForm = ({
     setError(null);
 
     try {
-      console.log('=== QR GENERATION DEBUG ===');
-      console.log('Registration ID:', registrationId);
-      console.log('Amount:', amount);
-      console.log('==========================');
+      console.log("=== QR GENERATION DEBUG ===");
+      console.log("Registration ID:", registrationId);
+      console.log("Amount:", amount);
+      console.log("Semester:", semester);
+      console.log("==========================");
 
-      const response = await generatePaymentQR(registrationId);
+      // ✅ NEW: pass semester
+      const response = await generatePaymentQR(registrationId, semester);
       const data = response.data;
 
       console.log("PayWay API Response:", data);
@@ -49,11 +52,14 @@ const PaymentForm = ({
       setQrImage(qr.qrImage);
       setTranId(tran_id);
 
-      console.log('✅ QR Code loaded successfully');
-
+      console.log("✅ QR Code loaded successfully");
     } catch (err) {
       console.error("Error generating QR:", err);
-      const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message || "Failed to generate QR code";
+      const errorMessage =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to generate QR code";
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -72,7 +78,7 @@ const PaymentForm = ({
   useEffect(() => {
     if (!tranId) return;
 
-    console.log('Starting payment status polling for:', tranId);
+    console.log("Starting payment status polling for:", tranId);
 
     const pollStatus = async () => {
       try {
@@ -83,18 +89,16 @@ const PaymentForm = ({
         setStatus(statusMsg);
 
         if (statusMsg === "PAID") {
-          console.log('✅ Payment completed successfully!');
+          console.log("✅ Payment completed successfully!");
           clearInterval(pollingIntervalRef.current);
 
           setTimeout(() => {
             onSuccess?.();
           }, 1000);
-
         } else if (statusMsg === "FAILED" || statusMsg === "CANCELED") {
-          console.log('❌ Payment failed or canceled');
+          console.log("❌ Payment failed or canceled");
           clearInterval(pollingIntervalRef.current);
         }
-
       } catch (err) {
         console.error("Error polling status:", err);
       }
@@ -112,11 +116,9 @@ const PaymentForm = ({
     };
   }, [tranId, onSuccess]);
 
-
   const handleDownloadQR = () => {
     if (!qrImage) return;
 
-    // Create temporary link to download image
     const link = document.createElement("a");
     link.href = qrImage;
     link.download = `ABA_Payment_QR_${tranId}.png`;
@@ -126,7 +128,8 @@ const PaymentForm = ({
     document.body.removeChild(link);
   };
 
-  const isFinalStatus = status === "PAID" || status === "SUCCESS" || status === "FAILED" || status === "CANCELED";
+  const isFinalStatus =
+    status === "PAID" || status === "SUCCESS" || status === "FAILED" || status === "CANCELED";
 
   return (
     <div className="relative z-50 w-full max-w-md backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/80 to-white/70 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.2)] border-2 border-white/60 overflow-hidden mx-4">
@@ -135,7 +138,7 @@ const PaymentForm = ({
       <button
         onClick={onClose}
         className="absolute top-4 right-4 z-10 backdrop-blur-xl bg-white/60 p-2 rounded-full hover:bg-white/80 transition-all duration-300 border border-white/40"
-        disabled={status === 'PAID' || status === 'SUCCESS'}
+        disabled={status === "PAID" || status === "SUCCESS"}
       >
         <X size={20} className="text-gray-600" />
       </button>
@@ -143,27 +146,32 @@ const PaymentForm = ({
       <div className="relative backdrop-blur-xl bg-gradient-to-r from-[#005788] to-[#0077b6] p-6 text-center border-b border-white/20">
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
         <h2 className="relative text-2xl font-bold text-white drop-shadow-lg">ABA PAY</h2>
-        <p className="relative text-blue-100 text-sm mt-1 font-medium">Scan to complete registration payment</p>
+        <p className="relative text-blue-100 text-sm mt-1 font-medium">
+          Scan to complete registration payment
+        </p>
       </div>
 
       <div className="backdrop-blur-xl bg-white/40 border-b border-white/30 px-4 py-3 space-y-1">
         {registrationData && (
           <>
             <p className="text-xs text-gray-600">
-              <span className="font-medium">Student:</span> {registrationData.data?.full_name_en || `${registrationData.data?.first_name} ${registrationData.data?.last_name}`}
+              <span className="font-medium">Student:</span>{" "}
+              {registrationData.data?.full_name_en ||
+                `${registrationData.data?.first_name} ${registrationData.data?.last_name}`}
             </p>
             <p className="text-xs text-gray-600">
-              <span className="font-medium">Student Code:</span> {registrationData.student_account?.student_code || 'Pending'}
+              <span className="font-medium">Student Code:</span>{" "}
+              {registrationData.student_account?.student_code || "Pending"}
             </p>
           </>
         )}
         <p className="text-xs text-gray-600">
           <span className="font-medium">Amount:</span>
-          <span className="text-lg font-bold text-green-600 ml-2">${amount ? parseFloat(amount).toFixed(2) : '0.00'}</span>
+          <span className="text-lg font-bold text-green-600 ml-2">
+            ${amount ? parseFloat(amount).toFixed(2) : "0.00"}
+          </span>
         </p>
-        {tranId && (
-          <p className="text-xs text-gray-500 font-mono">Transaction: {tranId}</p>
-        )}
+        {tranId && <p className="text-xs text-gray-500 font-mono">Transaction: {tranId}</p>}
       </div>
 
       <div className="p-8 flex flex-col items-center">
@@ -207,14 +215,24 @@ const PaymentForm = ({
           )}
         </div>
 
-        <div className={`backdrop-blur-xl px-6 py-3 rounded-2xl border-2 shadow-lg w-full ${status === "PAID" || status === "SUCCESS" ? "bg-green-50/80 border-green-200/60" :
-          status === "FAILED" || status === "CANCELED" ? "bg-red-50/80 border-red-200/60" :
-            "bg-blue-50/80 border-blue-200/60"
-          }`}>
-          <div className={`flex items-center justify-center gap-3 font-bold text-lg ${status === "PAID" || status === "SUCCESS" ? "text-green-600" :
-            status === "FAILED" || status === "CANCELED" ? "text-red-600" :
-              "text-blue-600"
-            }`}>
+        <div
+          className={`backdrop-blur-xl px-6 py-3 rounded-2xl border-2 shadow-lg w-full ${
+            status === "PAID" || status === "SUCCESS"
+              ? "bg-green-50/80 border-green-200/60"
+              : status === "FAILED" || status === "CANCELED"
+              ? "bg-red-50/80 border-red-200/60"
+              : "bg-blue-50/80 border-blue-200/60"
+          }`}
+        >
+          <div
+            className={`flex items-center justify-center gap-3 font-bold text-lg ${
+              status === "PAID" || status === "SUCCESS"
+                ? "text-green-600"
+                : status === "FAILED" || status === "CANCELED"
+                ? "text-red-600"
+                : "text-blue-600"
+            }`}
+          >
             {status === "PAID" || status === "SUCCESS" ? (
               <>
                 <div className="backdrop-blur-xl bg-green-500/10 p-2 rounded-lg">
@@ -253,19 +271,30 @@ const PaymentForm = ({
         )}
 
         <div className="flex gap-3 mt-6 w-full">
-          {qrImage && status === 'PENDING' && (
-            <button onClick={handleDownloadQR} className="relative flex-1 py-3 px-4 rounded-xl backdrop-blur-xl bg-white/60 border-2 border-white/60 text-gray-700 hover:bg-white/80 hover:scale-[1.02] transition-all duration-300 font-semibold shadow-lg overflow-hidden group flex items-center justify-center gap-2">
+          {qrImage && status === "PENDING" && (
+            <button
+              onClick={handleDownloadQR}
+              className="relative flex-1 py-3 px-4 rounded-xl backdrop-blur-xl bg-white/60 border-2 border-white/60 text-gray-700 hover:bg-white/80 hover:scale-[1.02] transition-all duration-300 font-semibold shadow-lg overflow-hidden group flex items-center justify-center gap-2"
+            >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
               <Download size={18} />
               <span className="relative z-10">Download</span>
             </button>
           )}
 
-          <button onClick={onClose} className={`relative ${qrImage && status === 'PENDING' ? 'flex-1' : 'w-full'} py-3 px-4 rounded-xl backdrop-blur-xl text-white hover:scale-[1.02] transition-all duration-300 font-semibold shadow-lg border border-white/30 overflow-hidden group ${status === 'PAID' || status === 'SUCCESS' ? 'bg-gradient-to-r from-green-600 to-emerald-600' : 'bg-gradient-to-r from-gray-600 to-gray-700'
-            }`}>
+          <button
+            onClick={onClose}
+            className={`relative ${
+              qrImage && status === "PENDING" ? "flex-1" : "w-full"
+            } py-3 px-4 rounded-xl backdrop-blur-xl text-white hover:scale-[1.02] transition-all duration-300 font-semibold shadow-lg border border-white/30 overflow-hidden group ${
+              status === "PAID" || status === "SUCCESS"
+                ? "bg-gradient-to-r from-green-600 to-emerald-600"
+                : "bg-gradient-to-r from-gray-600 to-gray-700"
+            }`}
+          >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
             <span className="relative z-10">
-              {status === 'PAID' || status === 'SUCCESS' ? 'Complete' : 'Cancel'}
+              {status === "PAID" || status === "SUCCESS" ? "Complete" : "Cancel"}
             </span>
           </button>
         </div>
