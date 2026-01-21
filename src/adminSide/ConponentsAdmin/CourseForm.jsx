@@ -15,14 +15,15 @@ import {
 } from "../../api/department_api.jsx";
 import { fetchMajorSubjects } from "../../api/major_subject_api.jsx";
 import { fetchTeachers } from "../../api/teacher_api.jsx";
+import { fetchAllClassGroups } from "../../api/class_group_api.jsx";
 
 const empty = {
   department_id: "",
   major_id: "",
   major_subject_id: "",
   teacher_id: "",
-  semester: "",       // number-like string
-  academic_year: "",  // "YYYY-YYYY"
+  semester: "", // number-like string
+  academic_year: "", // "YYYY-YYYY"
 };
 
 const normalizeArray = (res) => {
@@ -52,7 +53,7 @@ const fieldWithIconPadding = "pl-14";
  * Format: "YYYY-YYYY"
  */
 const buildAcademicYears = (past = 5, future = 5) => {
-  const currentYear = new Date().getFullYear(); // 2026 now
+  const currentYear = new Date().getFullYear();
   const start = currentYear - past;
   const end = currentYear + future;
 
@@ -78,6 +79,20 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
   const [loadingMS, setLoadingMS] = useState(false);
   const [loadingTeacher, setLoadingTeacher] = useState(false);
 
+  const [classGroups, setClassGroups] = useState([]);
+  const [loadingCG, setLoadingCG] = useState(false);
+
+  const classGroupsFiltered = useMemo(() => {
+    if (!form.major_id) return [];
+    return classGroups.filter((cg) => {
+      const sameMajor = String(cg.major_id) === String(form.major_id);
+      const sameYear = form.academic_year ? String(cg.academic_year) === String(form.academic_year) : true;
+      const sameSem = form.semester ? String(cg.semester) === String(form.semester) : true;
+      return sameMajor && sameYear && sameSem;
+    });
+  }, [classGroups, form.major_id, form.academic_year, form.semester]);
+
+
   const academicYearOptions = useMemo(() => {
     const now = new Date().getFullYear();
     return Array.from({ length: 11 }, (_, i) => {
@@ -88,7 +103,6 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
       };
     });
   }, []);
-
 
   const handleChange = (key, value) => {
     setError("");
@@ -105,7 +119,6 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
       const deptId =
         ms?.major?.department_id ?? editingCourse?.department_id ?? "";
 
-      // ✅ ensure academic_year is in dropdown list (if backend has older/newer)
       const ay = editingCourse.academic_year
         ? String(editingCourse.academic_year)
         : "";
@@ -183,6 +196,23 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
     })();
   }, [form.department_id]);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoadingCG(true);
+        const res = await fetchAllClassGroups();
+        const data = res?.data?.data ?? res?.data ?? [];
+        setClassGroups(Array.isArray(data) ? data : []);
+      } catch (e) {
+        console.error("fetchAllClassGroups error:", e);
+        setClassGroups([]);
+      } finally {
+        setLoadingCG(false);
+      }
+    })();
+  }, []);
+
+
   // Load major-subjects once
   useEffect(() => {
     (async () => {
@@ -215,6 +245,18 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
     });
   }, [majorSubjects, form.major_id]);
 
+  // ✅ EASY: auto-fill semester from major_subjects when selecting subject
+  useEffect(() => {
+    if (!form.major_subject_id) return;
+    const ms = majorSubjectsFiltered.find(
+      (x) => String(x.id) === String(form.major_subject_id)
+    );
+    const sem = ms?.semester ?? "";
+    if (sem && !form.semester) {
+      setForm((p) => ({ ...p, semester: String(sem) }));
+    }
+  }, [form.major_subject_id, majorSubjectsFiltered]);
+
   const majorLabel = useMemo(() => {
     const m = majors.find((x) => String(x.id) === String(form.major_id));
     return m?.major_name ?? m?.name ?? "";
@@ -224,7 +266,12 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
     const ms = majorSubjectsFiltered.find(
       (x) => String(x.id) === String(form.major_subject_id)
     );
-    return ms?.subject?.subject_name ?? ms?.subject_name ?? ms?.subject?.name ?? "";
+    return (
+      ms?.subject?.subject_name ??
+      ms?.subject_name ??
+      ms?.subject?.name ??
+      ""
+    );
   }, [majorSubjectsFiltered, form.major_subject_id]);
 
   const handleSubmit = async (e) => {
@@ -238,18 +285,17 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
     if (!form.semester) return setError("Semester is required.");
     if (!form.academic_year) return setError("Academic year is required.");
 
-    const semesterStr = String(form.semester).trim();
-    if (!semesterStr) return setError("Semester is required.");
-
     try {
       setSaving(true);
 
       const payload = {
         major_subject_id: Number(form.major_subject_id),
         teacher_id: Number(form.teacher_id),
-        semester: semesterStr,
-        academic_year: String(form.academic_year).trim(), // "YYYY-YYYY"
+        semester: Number(form.semester),
+        academic_year: String(form.academic_year).trim(),
+        class_group_id: form.class_group_id ? Number(form.class_group_id) : null,
       };
+
 
       if (editingCourse?.id) {
         await onUpdate(editingCourse.id, payload);
@@ -275,9 +321,9 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
   const academicYearSelectOptions = useMemo(() => {
     const ay = String(form.academic_year || "");
     if (!ay) return academicYearOptions;
-    if (academicYearOptions.includes(ay)) return academicYearOptions;
-    // add it on top if not in list (rare)
-    return [ay, ...academicYearOptions];
+    const values = academicYearOptions.map((x) => x.value);
+    if (values.includes(ay)) return academicYearOptions;
+    return [{ value: ay, label: ay }, ...academicYearOptions];
   }, [academicYearOptions, form.academic_year]);
 
   return (
@@ -303,7 +349,9 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/70 border border-white/60 hover:bg-white transition shadow-sm"
           >
             <X size={16} className="text-gray-700" />
-            <span className="text-sm font-semibold text-gray-800">Cancel edit</span>
+            <span className="text-sm font-semibold text-gray-800">
+              Cancel edit
+            </span>
           </button>
         )}
       </div>
@@ -314,7 +362,10 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="relative grid grid-cols-1 md:grid-cols-4 gap-4">
+      <form
+        onSubmit={handleSubmit}
+        className="relative grid grid-cols-1 md:grid-cols-4 gap-4"
+      >
         {/* Department */}
         <div className="md:col-span-1">
           <label className={labelCls}>Department *</label>
@@ -328,7 +379,9 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
               className={`${baseField} ${fieldWithIconPadding}`}
               disabled={loadingDept}
             >
-              <option value="">{loadingDept ? "Loading..." : "Select department"}</option>
+              <option value="">
+                {loadingDept ? "Loading..." : "Select department"}
+              </option>
               {departments.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.department_name ?? d.name ?? `Department #${d.id}`}
@@ -400,6 +453,7 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
           </div>
         </div>
 
+
         {/* Teacher */}
         <div className="md:col-span-1">
           <label className={labelCls}>Teacher *</label>
@@ -413,7 +467,9 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
               className={`${baseField} ${fieldWithIconPadding}`}
               disabled={loadingTeacher}
             >
-              <option value="">{loadingTeacher ? "Loading..." : "Select teacher"}</option>
+              <option value="">
+                {loadingTeacher ? "Loading..." : "Select teacher"}
+              </option>
               {teachers.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name ?? t.full_name ?? t.teacher_name ?? `Teacher #${t.id}`}
@@ -443,7 +499,7 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
           </div>
         </div>
 
-        {/* Academic Year (DROPDOWN: 5 past + current + 5 future) */}
+        {/* Academic Year */}
         <div className="md:col-span-1">
           <label className={labelCls}>Academic Year *</label>
           <div className="relative">
@@ -456,15 +512,41 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
               className={`${baseField} ${fieldWithIconPadding}`}
             >
               <option value="">Select academic year</option>
-              {academicYearOptions.map((y) => (
+              {academicYearSelectOptions.map((y) => (
                 <option key={y.value} value={y.value}>
                   {y.label}
                 </option>
               ))}
             </select>
-
           </div>
         </div>
+
+        {/* Class Group (optional) */}
+        <div className="md:col-span-1">
+          <label className={labelCls}>Class Group (optional)</label>
+          <div className="relative">
+            <div className={iconWrap}>
+              <BookOpen className="w-4.5 h-4.5 text-gray-600" />
+            </div>
+            <select
+              value={form.class_group_id}
+              onChange={(e) => handleChange("class_group_id", e.target.value)}
+              className={`${baseField} ${fieldWithIconPadding}`}
+              disabled={!form.major_id || loadingCG}
+            >
+              <option value="">
+                {!form.major_id ? "Select major first" : loadingCG ? "Loading..." : "No class group / General"}
+              </option>
+
+              {classGroupsFiltered.map((cg) => (
+                <option key={cg.id} value={cg.id}>
+                  {cg.class_name} • {cg.shift ?? "-"} • Sem {cg.semester} • {cg.academic_year}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
 
         {/* Preview */}
         <div className="md:col-span-2">

@@ -13,7 +13,8 @@ export const createMajorSubject = (payload) => {
 };
 
 export const createMajorSubjectsBulk = (payload) => {
-  return API.post("major-subjects/bulk", payload);
+  // ✅ must start with /
+  return API.post("/major-subjects/bulk", payload);
 };
 
 export const deleteMajorSubject = (id) => API.delete(`/major-subjects/${id}`);

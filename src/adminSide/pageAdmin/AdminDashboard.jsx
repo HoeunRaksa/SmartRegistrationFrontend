@@ -17,6 +17,7 @@ import SchedulesPage from "../pageAdmin/SchedulesPage.jsx";
 import CoursesPage from "../pageAdmin/CoursesPage.jsx";
 import MajorSubjectsPage from "../pageAdmin/MajorSubjectsPage.jsx";
 import TeacherPage from '../pageAdmin/TeacherPage.jsx';
+import ClassGroupsPage from '../pageAdmin/ClassGroupsPage.jsx';
 import { logoutApi } from "../../api/auth.jsx";
 import {
   LayoutDashboard,
@@ -81,6 +82,7 @@ const AdminDashboard = () => {
     { id: "majors", label: "Majors", icon: GraduationCap, gradient: "from-orange-500 to-red-500" },
     { id: "subjects", label: "Subjects", icon: BookOpen, gradient: "from-green-500 to-emerald-500" },
     { id: "major-subjects", label: "Major Subjects", icon: Link2, gradient: "from-cyan-500 to-blue-500" },
+    { id: "class-groups", label: "Class Groups", icon: Building2, gradient: "from-purple-500 to-pink-500" },
 
     // Course flow
     { id: "courses", label: "Courses", icon: BookOpen, gradient: "from-blue-500 to-cyan-500" },
@@ -196,6 +198,9 @@ const AdminDashboard = () => {
         </div>
          <div style={{ display: activeSection === "teachers" ? "block" : "none" }}>
           <TeacherPage />
+        </div>
+           <div style={{ display: activeSection === "class-groups" ? "block" : "none" }}>
+          <ClassGroupsPage />
         </div>
       </>
     );
