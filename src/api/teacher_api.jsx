@@ -14,6 +14,21 @@ const extractData = (response) => {
 };
 
 // ==============================
+// TEACHERS LIST API (for admin/staff use)
+// ==============================
+
+// GET: Fetch all teachers (for course assignment, etc.)
+export const fetchTeachers = async (params = {}) => {
+  try {
+    const response = await API.get("/teachers", { params });
+    return response;
+  } catch (error) {
+    console.error("fetchTeachers error:", error);
+    throw error;
+  }
+};
+
+// ==============================
 // TEACHER COURSES API
 // ==============================
 
