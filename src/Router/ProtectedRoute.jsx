@@ -54,6 +54,9 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     } else if (user.role === "student") {
       console.log("🔄 Redirecting student to /student/dashboard");
       return <Navigate to="/student/dashboard" replace />;
+    } else if (user.role === "teacher") {
+      console.log("🔄 Redirecting teacher to /teacher/dashboard");
+      return <Navigate to="/teacher/dashboard" replace />;
     } else {
       console.log("🔄 Unknown role - redirecting to home");
       return <Navigate to="/" replace />;
