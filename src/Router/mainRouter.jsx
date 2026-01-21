@@ -14,6 +14,9 @@ import PaymentForm from "../../src/Components/payment/PaymentForm";
 // Admin Pages
 import AdminDashboard from "../adminSide/pageAdmin/AdminDashboard";
 
+// Teacher Pages
+import TeacherDashboard from "../teacherSide/pageTeacher/TeacherDashboard";
+
 // Student Pages
 import StudentDashboard from "../studentSide/StudentPage/studentDashbord";
 
@@ -68,6 +71,28 @@ const MainRouter = () => {
         element={
           <ProtectedRoute allowedRoles={["admin", "staff"]}>
             <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* ================= TEACHER ROUTES (PROTECTED) ================= */}
+
+      {/* Teacher Base Route - Redirect to Dashboard */}
+      <Route
+        path="/teacher"
+        element={
+          <ProtectedRoute allowedRoles={["teacher"]}>
+            <Navigate to="/teacher/dashboard" replace />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Teacher Dashboard with Nested Sections */}
+      <Route
+        path="/teacher/:section?"
+        element={
+          <ProtectedRoute allowedRoles={["teacher"]}>
+            <TeacherDashboard />
           </ProtectedRoute>
         }
       />
