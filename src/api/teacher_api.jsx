@@ -1,3 +1,4 @@
+// src/api/teacher_api.jsx
 import API from "./index";
 
 /**
@@ -24,6 +25,86 @@ export const fetchTeachers = async (params = {}) => {
     return response;
   } catch (error) {
     console.error("fetchTeachers error:", error);
+    throw error;
+  }
+};
+
+// GET: Fetch teacher by ID
+export const fetchTeacherById = async (id) => {
+  try {
+    const response = await API.get(`/teachers/${id}`);
+    return response;
+  } catch (error) {
+    console.error("fetchTeacherById error:", error);
+    throw error;
+  }
+};
+
+// POST: Create new teacher
+export const createTeacher = async (teacherData) => {
+  try {
+    const formData = new FormData();
+
+    // Add all fields to FormData
+    Object.keys(teacherData).forEach(key => {
+      if (teacherData[key] !== null && teacherData[key] !== undefined) {
+        if (key === 'profile_image' && teacherData[key] instanceof File) {
+          formData.append(key, teacherData[key]);
+        } else {
+          formData.append(key, teacherData[key]);
+        }
+      }
+    });
+
+    const response = await API.post('/teachers', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      }
+    });
+    return response;
+  } catch (error) {
+    console.error("createTeacher error:", error);
+    throw error;
+  }
+};
+
+// PUT: Update teacher
+export const updateTeacher = async (id, teacherData) => {
+  try {
+    const formData = new FormData();
+
+    Object.keys(teacherData).forEach(key => {
+      if (teacherData[key] !== null && teacherData[key] !== undefined) {
+        if (key === 'profile_image' && teacherData[key] instanceof File) {
+          formData.append(key, teacherData[key]);
+        } else {
+          formData.append(key, teacherData[key]);
+        }
+      }
+    });
+
+    // Laravel doesn't handle PUT with FormData well, so we use POST with _method
+    formData.append('_method', 'PUT');
+
+    const response = await API.post(`/teachers/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      }
+    });
+    return response;
+  } catch (error) {
+    console.error("updateTeacher error:", error);
+    throw error;
+  }
+};
+
+// DELETE: Delete teacher
+export const deleteTeacher = async (id) => {
+  try {
+    const response = await API.delete(`/teachers/${id}`);
+    return response;
+  } catch (error) {
+    console.error("deleteTeacher error:", error);
     throw error;
   }
 };

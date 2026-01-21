@@ -11,11 +11,13 @@ import {
   FileText,
   GraduationCap,
   Building2,
+  Hash, // ✅ NEW (icon for subject code)
 } from "lucide-react";
 
 /* ================== CONSTANTS ================== */
 
 const INITIAL_FORM_STATE = {
+  subject_code: "", // ✅ NEW
   subject_name: "",
   description: "",
   credit: "",
@@ -23,6 +25,9 @@ const INITIAL_FORM_STATE = {
 };
 
 const INPUT_FIELDS = [
+  // ✅ NEW Subject Code field (keeps same style)
+  { key: "subject_code", icon: Hash, placeholder: "Subject Code (e.g. CS101)", col: "md:col-span-2" },
+
   { key: "subject_name", icon: BookOpen, placeholder: "Subject Name", col: "md:col-span-2" },
 
   // ✅ Department dropdown (special render)
@@ -86,6 +91,7 @@ const SubjectsForm = ({ onUpdate, onSuccess, editingSubject, onCancel, onCancelE
   useEffect(() => {
     if (editingSubject) {
       setForm({
+        subject_code: editingSubject.code ?? editingSubject.subject_code ?? "", // ✅ NEW (supports both)
         subject_name: editingSubject.subject_name || "",
         description: editingSubject.description || "",
         credit: editingSubject.credit ?? "",
@@ -112,6 +118,12 @@ const SubjectsForm = ({ onUpdate, onSuccess, editingSubject, onCancel, onCancelE
 
     try {
       // ✅ validation client-side
+      if (!form.subject_code?.trim()) {
+        setError("Subject Code is required");
+        setLoading(false);
+        return;
+      }
+
       if (!form.department_id) {
         setError("Department is required");
         setLoading(false);
@@ -120,6 +132,7 @@ const SubjectsForm = ({ onUpdate, onSuccess, editingSubject, onCancel, onCancelE
 
       // Prepare form data
       const submitData = {
+        code: form.subject_code.trim(), // ✅ NEW (backend field recommended)
         subject_name: form.subject_name.trim(),
         description: form.description?.trim() || null,
         credit: parseInt(form.credit, 10),
@@ -358,7 +371,11 @@ const InputField = ({ field, form, setForm, departments }) => {
           placeholder={field.placeholder}
           min={field.type === "number" ? "1" : undefined}
           step={field.type === "number" ? "1" : undefined}
-          required={field.key === "subject_name" || field.key === "credit"}
+          required={
+            field.key === "subject_code" || // ✅ NEW required
+            field.key === "subject_name" ||
+            field.key === "credit"
+          }
           className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
         />
       )}
