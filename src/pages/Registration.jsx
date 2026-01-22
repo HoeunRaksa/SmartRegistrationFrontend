@@ -1,6 +1,20 @@
-// Registration.jsx (FULL NO CUT) - Payment plan is chosen ONLY at payment time
-// ✅ Same endpoints / same APIs / same payload mapping logic
-import React, { useEffect, useMemo, useRef, useState, createContext, memo } from "react";
+// Registration.jsx (FULL NO CUT) ✅
+// ✅ New flow supported:
+// 1) Pre-check major quota + open/close BEFORE submit (no waste time)
+// 2) Fast: cache major fee + quota result, debounce quota check
+// 3) Same submit endpoint: POST /register/save (multipart/form-data)
+// 4) Payment plan chosen ONLY at payment modal time (YEAR / SEMESTER)
+// 5) Works with your MajorCapacityController: GET /majors/{id}/capacity?academic_year=2026-2027
+
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  createContext,
+  memo,
+  useCallback,
+} from "react";
 import {
   X,
   Loader,
@@ -19,12 +33,15 @@ import {
   DollarSign,
   Smartphone,
   CheckCircle,
+  Info,
+  Lock,
 } from "lucide-react";
 
 import PaymentForm from "../Components/payment/PaymentForm.jsx";
 import { submitRegistration, payLater as payLaterApi } from "../api/registration_api.jsx";
 import { fetchDepartments, fetchMajorsByDepartment } from "../api/department_api.jsx";
 import { fetchMajor } from "../api/major_api.jsx";
+import API from "../api/index"; // ✅ used for major capacity endpoint
 
 export const ToastContext = createContext();
 
@@ -44,7 +61,7 @@ const DEFAULT_FORM = {
   phoneNumber: "",
   personalEmail: "",
 
-  highSchoolName: "", // ✅ required (fix 500)
+  highSchoolName: "",
   graduationYear: "",
   grade12Result: "",
 
@@ -85,9 +102,10 @@ const REQUIRED_KEYS = [
   "majorId",
   "highSchoolName",
   "dateOfBirth",
+  "academicYear",
 ];
 
-// ✅ Cast select values to correct type (avoid strings for numbers)
+// ✅ Cast select values to correct type
 const NUMBER_FIELDS = new Set(["departmentId", "majorId"]);
 
 const inputClassBase =
@@ -184,8 +202,6 @@ const Section = memo(function Section({ title, icon: Icon, gradientBar, iconGrad
 
 /**
  * ✅ Payment Plan (NOT registration semester)
- * - YEAR: pay 100% yearly fee (no semester selection required)
- * - SEMESTER: pay 50% yearly fee + choose semester 1 or 2
  */
 const DEFAULT_PAY_PLAN = { type: "YEAR", semester: 1 }; // type: "YEAR" | "SEMESTER"
 
@@ -194,7 +210,21 @@ const Registration = () => {
 
   const [majors, setMajors] = useState([]);
   const [departments, setDepartments] = useState([]);
+
+  // fee
   const [selectedMajorFee, setSelectedMajorFee] = useState(null);
+
+  // ✅ major quota state (from /majors/{id}/capacity?academic_year=...)
+  const [quotaInfo, setQuotaInfo] = useState({
+    loading: false,
+    checked: false,
+    available: true,
+    limited: false,
+    limit: null,
+    used: 0,
+    remaining: null,
+    message: null,
+  });
 
   const [showQr, setShowQr] = useState(false);
   const [showPaymentChoice, setShowPaymentChoice] = useState(false);
@@ -210,10 +240,23 @@ const Registration = () => {
 
   // avoid state updates after unmount
   const aliveRef = useRef(true);
+
+  // cache for speed (fee + quota)
+  const feeCacheRef = useRef(new Map()); // key: majorId -> number
+  const quotaCacheRef = useRef(new Map()); // key: `${majorId}|${academicYear}` -> quotaInfo object
+
+  // debounce timer
+  const quotaTimerRef = useRef(null);
+
+  // remember last object URL to revoke
+  const lastPreviewUrlRef = useRef(null);
+
   useEffect(() => {
     aliveRef.current = true;
     return () => {
       aliveRef.current = false;
+      if (quotaTimerRef.current) clearTimeout(quotaTimerRef.current);
+      if (lastPreviewUrlRef.current) URL.revokeObjectURL(lastPreviewUrlRef.current);
     };
   }, []);
 
@@ -237,6 +280,7 @@ const Registration = () => {
     if (!form.departmentId) {
       setMajors([]);
       setSelectedMajorFee(null);
+      setQuotaInfo((p) => ({ ...p, checked: false, message: null }));
       setForm((p) => ({ ...p, majorId: "", faculty: "" }));
       return;
     }
@@ -264,26 +308,6 @@ const Registration = () => {
     }
   }, [form.departmentId, departments]);
 
-  // Load major fee when major changes
-  useEffect(() => {
-    if (!form.majorId) {
-      setSelectedMajorFee(null);
-      return;
-    }
-
-    (async () => {
-      try {
-        const response = await fetchMajor(form.majorId);
-        if (!aliveRef.current) return;
-        const fee = Number(response?.data?.registration_fee ?? 0);
-        setSelectedMajorFee(Number.isFinite(fee) ? fee : 0);
-      } catch (err) {
-        console.error("Error loading major fee:", err);
-        if (aliveRef.current) setSelectedMajorFee(0);
-      }
-    })();
-  }, [form.majorId]);
-
   const departmentOptions = useMemo(() => {
     return [{ value: "", label: "Select Department" }, ...departments.map((d) => ({ value: String(d.id), label: d.name }))];
   }, [departments]);
@@ -292,44 +316,180 @@ const Registration = () => {
     return [{ value: "", label: "Select Major" }, ...majors.map((m) => ({ value: String(m.id), label: m.major_name }))];
   }, [majors]);
 
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
+  const validateEmail = (email) => {
+    if (!email) return false;
+    // simple + fast
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim());
+  };
 
-    // file handling (profilePicture)
-    if (files && files[0]) {
-      const file = files[0];
-      const validTypes = ["image/jpeg", "image/jpg", "image/png"];
+  const normalizeAcademicYear = (ay) => String(ay || "").trim();
 
-      if (!validTypes.includes(file.type)) {
-        setError("Please upload a valid image file (JPG, JPEG, or PNG)");
-        e.target.value = "";
-        return;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        setError("Image size must be less than 5MB");
-        e.target.value = "";
-        return;
-      }
+  // ✅ fetch major fee (cached)
+  const loadMajorFee = useCallback(async (majorId) => {
+    const id = Number(majorId);
+    if (!id) return 0;
 
-      setForm((prev) => ({ ...prev, [name]: file }));
-      setProfilePreview(URL.createObjectURL(file));
-      if (error) setError(null);
+    if (feeCacheRef.current.has(id)) return feeCacheRef.current.get(id);
+
+    try {
+      const res = await fetchMajor(id);
+      const fee = Number(res?.data?.registration_fee ?? 0);
+      const safeFee = Number.isFinite(fee) ? fee : 0;
+      feeCacheRef.current.set(id, safeFee);
+      return safeFee;
+    } catch (e) {
+      feeCacheRef.current.set(id, 0);
+      return 0;
+    }
+  }, []);
+
+  // ✅ fetch major quota (cached) using your controller endpoint
+  const loadMajorQuota = useCallback(async (majorId, academicYear) => {
+    const id = Number(majorId);
+    const ay = normalizeAcademicYear(academicYear);
+    if (!id || !ay) {
+      return {
+        loading: false,
+        checked: false,
+        available: true,
+        limited: false,
+        limit: null,
+        used: 0,
+        remaining: null,
+        message: null,
+      };
+    }
+
+    const key = `${id}|${ay}`;
+    if (quotaCacheRef.current.has(key)) return quotaCacheRef.current.get(key);
+
+    const infoBase = {
+      loading: false,
+      checked: true,
+      available: true,
+      limited: false,
+      limit: null,
+      used: 0,
+      remaining: null,
+      message: null,
+    };
+
+    try {
+      const res = await API.get(`/majors/${id}/capacity`, { params: { academic_year: ay } });
+      const data = res?.data;
+
+      // expected:
+      // { success, major_id, academic_year, limited, limit, used, available, remaining }
+      const info = {
+        ...infoBase,
+        available: !!data?.available,
+        limited: !!data?.limited,
+        limit: data?.limit ?? null,
+        used: Number(data?.used ?? 0) || 0,
+        remaining: data?.remaining ?? null,
+        message: data?.available ? null : "This major is full/closed for this academic year.",
+      };
+
+      quotaCacheRef.current.set(key, info);
+      return info;
+    } catch (e) {
+      // if endpoint missing / error => don't block user, but show warning
+      const info = {
+        ...infoBase,
+        checked: false,
+        message: "Capacity check unavailable right now (server). You can still submit.",
+      };
+      quotaCacheRef.current.set(key, info);
+      return info;
+    }
+  }, []);
+
+  // ✅ when majorId OR academicYear changes: load fee + quota (debounced)
+  useEffect(() => {
+    const majorId = form.majorId;
+    const academicYear = form.academicYear;
+
+    if (!majorId) {
+      setSelectedMajorFee(null);
+      setQuotaInfo((p) => ({ ...p, checked: false, message: null }));
       return;
     }
 
-    const nextVal = NUMBER_FIELDS.has(name) ? (value === "" ? "" : Number(value)) : value;
+    // debounce quota check (typing academic year, quick major switching)
+    if (quotaTimerRef.current) clearTimeout(quotaTimerRef.current);
 
-    setForm((prev) => {
-      if (name === "departmentId") {
-        return { ...prev, departmentId: nextVal, majorId: "", faculty: "" };
+    quotaTimerRef.current = setTimeout(async () => {
+      if (!aliveRef.current) return;
+
+      setQuotaInfo((p) => ({
+        ...p,
+        loading: true,
+        message: null,
+      }));
+
+      const [fee, quota] = await Promise.all([
+        loadMajorFee(majorId),
+        loadMajorQuota(majorId, academicYear),
+      ]);
+
+      if (!aliveRef.current) return;
+
+      setSelectedMajorFee(fee);
+      setQuotaInfo({
+        ...quota,
+        loading: false,
+      });
+    }, 250);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.majorId, form.academicYear, loadMajorFee, loadMajorQuota]);
+
+  const handleChange = useCallback(
+    (e) => {
+      const { name, value, files } = e.target;
+
+      // file handling (profilePicture)
+      if (files && files[0]) {
+        const file = files[0];
+        const validTypes = ["image/jpeg", "image/jpg", "image/png"];
+
+        if (!validTypes.includes(file.type)) {
+          setError("Please upload a valid image file (JPG, JPEG, or PNG)");
+          e.target.value = "";
+          return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          setError("Image size must be less than 5MB");
+          e.target.value = "";
+          return;
+        }
+
+        setForm((prev) => ({ ...prev, [name]: file }));
+
+        if (lastPreviewUrlRef.current) URL.revokeObjectURL(lastPreviewUrlRef.current);
+        const url = URL.createObjectURL(file);
+        lastPreviewUrlRef.current = url;
+        setProfilePreview(url);
+
+        if (error) setError(null);
+        return;
       }
-      return { ...prev, [name]: nextVal };
-    });
 
-    if (error) setError(null);
-  };
+      const nextVal = NUMBER_FIELDS.has(name) ? (value === "" ? "" : Number(value)) : value;
 
-  // ✅ map FE keys -> API keys (same as before)
+      setForm((prev) => {
+        if (name === "departmentId") {
+          return { ...prev, departmentId: nextVal, majorId: "", faculty: "" };
+        }
+        return { ...prev, [name]: nextVal };
+      });
+
+      if (error) setError(null);
+    },
+    [error]
+  );
+
+  // ✅ map FE keys -> API keys
   const keyMap = useMemo(
     () => ({
       firstName: "first_name",
@@ -374,7 +534,39 @@ const Registration = () => {
     []
   );
 
-  const formSubmit = async () => {
+  const validateRequired = useCallback(() => {
+    for (const k of REQUIRED_KEYS) {
+      if (!form[k]) return false;
+    }
+    if (!validateEmail(form.personalEmail)) return false;
+    return true;
+  }, [form]);
+
+  // ✅ Pre-check quota before opening payment modal (no waste time)
+  const ensureMajorAvailableBeforeSubmit = useCallback(async () => {
+    const majorId = form.majorId;
+    const academicYear = form.academicYear;
+
+    if (!majorId || !academicYear) return true;
+
+    // if already checked and available -> ok
+    if (quotaInfo?.checked && quotaInfo?.available) return true;
+
+    // force re-check (and update UI)
+    setQuotaInfo((p) => ({ ...p, loading: true, message: null }));
+    const quota = await loadMajorQuota(majorId, academicYear);
+    if (!aliveRef.current) return false;
+
+    setQuotaInfo({ ...quota, loading: false });
+
+    if (quota.checked && !quota.available) {
+      setError("This major is full or registration is closed for the selected academic year. Please choose another major/year.");
+      return false;
+    }
+    return true;
+  }, [form.majorId, form.academicYear, quotaInfo, loadMajorQuota]);
+
+  const formSubmit = useCallback(async () => {
     const formData = new FormData();
 
     for (const [key, val] of Object.entries(form)) {
@@ -410,92 +602,107 @@ const Registration = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [form, keyMap]);
 
-  const validateRequired = () => {
-    for (const k of REQUIRED_KEYS) {
-      if (!form[k]) return false;
-    }
-    return true;
-  };
-
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setForm(DEFAULT_FORM);
     setPayPlan(DEFAULT_PAY_PLAN);
-    setProfilePreview(null);
     setSelectedMajorFee(null);
-  };
+    setQuotaInfo({
+      loading: false,
+      checked: false,
+      available: true,
+      limited: false,
+      limit: null,
+      used: 0,
+      remaining: null,
+      message: null,
+    });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateRequired()) {
-      setError("Please fill in all required fields");
-      return;
+    if (lastPreviewUrlRef.current) {
+      URL.revokeObjectURL(lastPreviewUrlRef.current);
+      lastPreviewUrlRef.current = null;
     }
-    // ✅ user chooses payment plan in modal
-    setShowPaymentChoice(true);
-  };
+    setProfilePreview(null);
+  }, []);
 
-  const ensureRegistration = async () => {
+  const ensureRegistration = useCallback(async () => {
     if (registrationData?.data?.registration_id) return registrationData;
     const regData = await formSubmit();
     setRegistrationData(regData);
     return regData;
-  };
+  }, [registrationData, formSubmit]);
 
-  // ✅ compute payment amount based on payPlan
-  const computePayAmount = (yearFee, plan) => {
+  const computePayAmount = useCallback((yearFee, plan) => {
     const fee = Number(yearFee || 0);
     if (!Number.isFinite(fee)) return 0;
-
     if (plan?.type === "SEMESTER") return fee * 0.5;
-    return fee; // YEAR
-  };
+    return fee;
+  }, []);
 
-  const payAmount = useMemo(() => computePayAmount(selectedMajorFee, payPlan), [selectedMajorFee, payPlan]);
+  const payAmount = useMemo(() => computePayAmount(selectedMajorFee, payPlan), [selectedMajorFee, payPlan, computePayAmount]);
 
-  const handlePaymentMethodSelect = async (method) => {
-    setShowPaymentChoice(false);
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
 
-    try {
-      const regData = await ensureRegistration();
-      const registrationId = regData?.data?.registration_id;
-
-      if (method === "qr") {
-        setShowQr(true);
+      if (!validateRequired()) {
+        setError("Please fill in all required fields (and use a valid email).");
         return;
       }
 
-      if (method === "later") {
-        if (registrationId) {
-          // ✅ pay later should still record which plan/semester they intend to pay
-          // same endpoint, extra params
-          const payload = {
-            pay_plan: payPlan.type, // "YEAR" or "SEMESTER"
-            semester: payPlan.type === "SEMESTER" ? payPlan.semester : 1,
-            amount: payAmount,
-          };
-          await payLaterApi(registrationId, payload);
+      // ✅ prevent wasting time: check major quota before payment modal
+      const ok = await ensureMajorAvailableBeforeSubmit();
+      if (!ok) return;
+
+      setShowPaymentChoice(true);
+    },
+    [validateRequired, ensureMajorAvailableBeforeSubmit]
+  );
+
+  const handlePaymentMethodSelect = useCallback(
+    async (method) => {
+      setShowPaymentChoice(false);
+
+      try {
+        const regData = await ensureRegistration();
+        const registrationId = regData?.data?.registration_id;
+
+        if (method === "qr") {
+          setShowQr(true);
+          return;
         }
 
-        setSuccess({
-          title: "Registration Submitted Successfully!",
-          message: "Your registration has been created. Please complete payment within 7 days at the university finance office.",
-          data: regData,
-        });
+        if (method === "later") {
+          if (registrationId) {
+            const payload = {
+              pay_plan: payPlan.type, // "YEAR" or "SEMESTER"
+              semester: payPlan.type === "SEMESTER" ? payPlan.semester : 1,
+              amount: payAmount,
+            };
+            await payLaterApi(registrationId, payload);
+          }
 
-        setTimeout(() => {
-          resetForm();
-          setSuccess(null);
-          setRegistrationData(null);
-        }, 8000);
+          setSuccess({
+            title: "Registration Submitted Successfully!",
+            message: "Your registration has been created. Please complete payment within 7 days at the university finance office.",
+            data: regData,
+          });
+
+          setTimeout(() => {
+            resetForm();
+            setSuccess(null);
+            setRegistrationData(null);
+          }, 8000);
+        }
+      } catch (e) {
+        // formSubmit already sets error
       }
-    } catch (e) {
-      // formSubmit already sets error
-    }
-  };
+    },
+    [ensureRegistration, payPlan.type, payPlan.semester, payAmount, resetForm]
+  );
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = useCallback(() => {
     setShowQr(false);
 
     setSuccess({
@@ -509,9 +716,9 @@ const Registration = () => {
       setSuccess(null);
       setRegistrationData(null);
     }, 8000);
-  };
+  }, [registrationData, resetForm]);
 
-  // ✅ Field configs (flexible in future)
+  // ✅ Field configs
   const personalFields = useMemo(
     () => [
       { name: "firstName", label: "First Name (English)", required: true, icon: User2, placeholder: "First Name" },
@@ -571,7 +778,7 @@ const Registration = () => {
 
   const schoolFields = useMemo(
     () => [
-      { name: "highSchoolName", label: "High School", required: true, placeholder: "High School" }, // ✅ required
+      { name: "highSchoolName", label: "High School", required: true, placeholder: "High School" },
       { name: "graduationYear", label: "Graduation Year", placeholder: "YYYY" },
       { name: "grade12Result", label: "Grade 12 Result", placeholder: "Grade A-F" },
     ],
@@ -580,6 +787,7 @@ const Registration = () => {
 
   const academicFields = useMemo(
     () => [
+      { name: "academicYear", label: "Academic Year", required: true, placeholder: "2026-2027" },
       { name: "departmentId", label: "Department", type: "select", required: true, options: departmentOptions },
       { name: "majorId", label: "Major", type: "select", required: true, options: majorOptions, disabled: !form.departmentId },
       {
@@ -600,9 +808,81 @@ const Registration = () => {
           { value: "Weekend", label: "Weekend" },
         ],
       },
+      {
+        name: "batch",
+        label: "Batch / Generation",
+        placeholder: `${currentYear}`,
+      },
     ],
     [departmentOptions, majorOptions, form.departmentId]
   );
+
+  // ✅ quota status UI helper
+  const quotaBadge = useMemo(() => {
+    if (!form.majorId || !form.academicYear) return null;
+
+    if (quotaInfo.loading) {
+      return (
+        <div className="mt-4 backdrop-blur-xl bg-white/60 border border-white/60 rounded-xl p-3 flex items-center gap-2">
+          <Loader size={18} className="animate-spin text-blue-600" />
+          <p className="text-sm text-gray-700 font-medium">Checking major availability...</p>
+        </div>
+      );
+    }
+
+    if (quotaInfo.checked && quotaInfo.available === false) {
+      return (
+        <div className="mt-4 backdrop-blur-xl bg-red-50/70 border border-red-200/60 rounded-xl p-4 flex items-start gap-3">
+          <Lock size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-bold text-red-700">Registration not available</p>
+            <p className="text-xs text-gray-700 mt-1">
+              This major is full or registration is closed for <span className="font-semibold">{form.academicYear}</span>. Please choose another.
+            </p>
+            {quotaInfo.limited && quotaInfo.limit != null ? (
+              <p className="text-xs text-gray-600 mt-2">
+                Limit: <span className="font-semibold">{quotaInfo.limit}</span> • Used:{" "}
+                <span className="font-semibold">{quotaInfo.used}</span>
+              </p>
+            ) : null}
+          </div>
+        </div>
+      );
+    }
+
+    if (quotaInfo.checked && quotaInfo.available === true) {
+      return (
+        <div className="mt-4 backdrop-blur-xl bg-green-50/70 border border-green-200/60 rounded-xl p-4 flex items-start gap-3">
+          <Info size={18} className="text-green-700 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-bold text-green-800">Major available</p>
+            {quotaInfo.limited ? (
+              <p className="text-xs text-gray-700 mt-1">
+                Remaining seats:{" "}
+                <span className="font-semibold">
+                  {quotaInfo.remaining != null ? quotaInfo.remaining : Math.max(0, (quotaInfo.limit || 0) - (quotaInfo.used || 0))}
+                </span>{" "}
+                (Used {quotaInfo.used} / {quotaInfo.limit})
+              </p>
+            ) : (
+              <p className="text-xs text-gray-700 mt-1">No limit set for this major/year (unlimited).</p>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (quotaInfo.message) {
+      return (
+        <div className="mt-4 backdrop-blur-xl bg-yellow-50/70 border border-yellow-200/60 rounded-xl p-4 flex items-start gap-3">
+          <AlertTriangle size={18} className="text-yellow-700 flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-gray-700">{quotaInfo.message}</p>
+        </div>
+      );
+    }
+
+    return null;
+  }, [form.majorId, form.academicYear, quotaInfo]);
 
   return (
     <section className="min-h-screen -mt-9 relative overflow-hidden font-sans rounded-lg bg-gradient-to-br">
@@ -635,18 +915,31 @@ const Registration = () => {
               <p className="text-gray-700 text-base mb-4">{success.message}</p>
             </div>
 
+            {/* ✅ FIX: show student_code from response.data.data (not inside student_account) */}
+            <div className="backdrop-blur-xl bg-blue-50/60 border border-blue-200/40 rounded-xl p-4 mb-4">
+              <h4 className="font-semibold text-gray-800 mb-2">Registration Details:</h4>
+              <div className="space-y-1 text-sm">
+                <p>
+                  <span className="font-medium">Registration ID:</span> {success?.data?.data?.registration_id ?? "-"}
+                </p>
+                <p>
+                  <span className="font-medium">Student Code:</span> {success?.data?.data?.student_code ?? "-"}
+                </p>
+                <p>
+                  <span className="font-medium">Academic Year:</span> {success?.data?.data?.academic_year ?? "-"}
+                </p>
+              </div>
+            </div>
+
             {success.data?.student_account && (
-              <div className="backdrop-blur-xl bg-blue-50/60 border border-blue-200/40 rounded-xl p-4 mb-4">
+              <div className="backdrop-blur-xl bg-green-50/60 border border-green-200/40 rounded-xl p-4 mb-4">
                 <h4 className="font-semibold text-gray-800 mb-2">Your Account Details:</h4>
                 <div className="space-y-1 text-sm">
-                  <p>
-                    <span className="font-medium">Student Code:</span> {success.data.student_account.student_code}
-                  </p>
                   <p>
                     <span className="font-medium">Email:</span> {success.data.student_account.email}
                   </p>
                   <p>
-                    <span className="font-medium">Password:</span> {success.data.student_account.password}
+                    <span className="font-medium">Password:</span> {success.data.student_account.password ?? "Already existing account"}
                   </p>
                 </div>
                 <p className="text-xs text-gray-600 mt-2">⚠️ Please save these credentials!</p>
@@ -718,9 +1011,7 @@ const Registration = () => {
                     <p className="font-semibold text-gray-800">Pay Full Year</p>
                     <p className="text-xs text-gray-600">Pay 100% now</p>
                   </div>
-                  <span className="text-sm font-bold text-gray-800">
-                    ${Number(selectedMajorFee || 0).toFixed(2)}
-                  </span>
+                  <span className="text-sm font-bold text-gray-800">${Number(selectedMajorFee || 0).toFixed(2)}</span>
                 </label>
 
                 <label className="flex items-center gap-3 cursor-pointer">
@@ -734,9 +1025,7 @@ const Registration = () => {
                     <p className="font-semibold text-gray-800">Pay One Semester</p>
                     <p className="text-xs text-gray-600">Pay 50% now + choose semester</p>
                   </div>
-                  <span className="text-sm font-bold text-gray-800">
-                    ${(Number(selectedMajorFee || 0) * 0.5).toFixed(2)}
-                  </span>
+                  <span className="text-sm font-bold text-gray-800">${(Number(selectedMajorFee || 0) * 0.5).toFixed(2)}</span>
                 </label>
 
                 {payPlan.type === "SEMESTER" && (
@@ -997,6 +1286,9 @@ const Registration = () => {
                 />
               ))}
 
+              {/* ✅ quota info shown right after academic selection */}
+              <div className="md:col-span-3">{quotaBadge}</div>
+
               {/* Profile Picture */}
               <div className="md:col-span-3 mt-4">
                 <label className={labelClassBase}>Profile Picture</label>
@@ -1035,7 +1327,7 @@ const Registration = () => {
           <div className="flex justify-center pt-6 pb-20">
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || (quotaInfo.checked && quotaInfo.available === false)}
               className="group relative backdrop-blur-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white py-5 px-16 rounded-3xl font-bold text-lg shadow-[0_20px_60px_rgba(99,102,241,0.4)] hover:shadow-[0_30px_80px_rgba(99,102,241,0.6)] hover:scale-105 transition-all duration-500 overflow-hidden border-2 border-white/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>

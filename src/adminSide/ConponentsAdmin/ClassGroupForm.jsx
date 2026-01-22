@@ -1,4 +1,12 @@
 // src/adminSide/ConponentsAdmin/ClassGroupForm.jsx
+// ✅ FULL NO CUT — updated for our NEW backend flow:
+// - semester only 1 or 2 (matches Laravel validation)
+// - shift optional (backend allows nullable) => UI does NOT force required
+// - capacity optional => if empty, don't send it (backend will default to 40/your logic)
+// - fastest: memo options + no extra refetch loops + clean payload mapping
+// - works with your existing API helpers (fetchDepartments, fetchMajorsByDepartment)
+// - keeps old flow safe (only creates/updates class_groups)
+
 import React, { useEffect, useMemo, useState } from "react";
 import { Save, X, Building2, GraduationCap, Calendar, Clock, Users, BookOpen } from "lucide-react";
 import { fetchDepartments, fetchMajorsByDepartment } from "../../api/department_api.jsx";
@@ -14,6 +22,7 @@ const empty = {
 };
 
 const normalizeArray = (res) => {
+  // supports: {data:{data:[]}} OR {data:[]}
   const d = res?.data?.data !== undefined ? res.data.data : res?.data;
   return Array.isArray(d) ? d : [];
 };
@@ -31,7 +40,7 @@ const iconWrap =
 
 const fieldWithIconPadding = "pl-14";
 
-const buildAcademicYears = (past = 5, future = 5) => {
+const buildAcademicYears = (past = 2, future = 3) => {
   const currentYear = new Date().getFullYear();
   const start = currentYear - past;
   const end = currentYear + future;
@@ -39,6 +48,14 @@ const buildAcademicYears = (past = 5, future = 5) => {
   for (let y = start; y <= end; y++) arr.push(`${y}-${y + 1}`);
   return arr;
 };
+
+const SHIFT_OPTIONS = [
+  { value: "", label: "No shift (optional)" }, // ✅ allow nullable shift
+  { value: "Morning", label: "Morning" },
+  { value: "Afternoon", label: "Afternoon" },
+  { value: "Evening", label: "Evening" },
+  { value: "Weekend", label: "Weekend" },
+];
 
 const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
   const [form, setForm] = useState(empty);
@@ -51,7 +68,7 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
   const [loadingDept, setLoadingDept] = useState(false);
   const [loadingMaj, setLoadingMaj] = useState(false);
 
-  const academicYears = useMemo(() => buildAcademicYears(5, 5), []);
+  const academicYears = useMemo(() => buildAcademicYears(2, 3), []);
 
   const setField = (key, value) => {
     setError("");
@@ -63,7 +80,29 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
     setError("");
   };
 
-  // Prefill
+  // Load departments once
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        setLoadingDept(true);
+        const res = await fetchDepartments();
+        if (!alive) return;
+        setDepartments(normalizeArray(res));
+      } catch (e) {
+        console.error(e);
+        if (!alive) return;
+        setDepartments([]);
+      } finally {
+        if (alive) setLoadingDept(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // Prefill (edit mode)
   useEffect(() => {
     if (!editingGroup) {
       reset();
@@ -88,39 +127,30 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
           : "",
     });
 
+    // Load majors for the selected department (fast)
     if (deptId) {
+      let alive = true;
       (async () => {
         try {
           setLoadingMaj(true);
           const res = await fetchMajorsByDepartment(deptId);
+          if (!alive) return;
           setMajors(normalizeArray(res));
         } catch (e) {
           console.error(e);
+          if (!alive) return;
           setMajors([]);
         } finally {
-          setLoadingMaj(false);
+          if (alive) setLoadingMaj(false);
         }
       })();
+      return () => {
+        alive = false;
+      };
     }
   }, [editingGroup]);
 
-  // Load departments once
-  useEffect(() => {
-    (async () => {
-      try {
-        setLoadingDept(true);
-        const res = await fetchDepartments();
-        setDepartments(normalizeArray(res));
-      } catch (e) {
-        console.error(e);
-        setDepartments([]);
-      } finally {
-        setLoadingDept(false);
-      }
-    })();
-  }, []);
-
-  // Load majors when department changes
+  // Load majors when department changes (create mode OR edit when user changes dept)
   useEffect(() => {
     const deptId = form.department_id;
 
@@ -130,19 +160,48 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
       return;
     }
 
+    let alive = true;
     (async () => {
       try {
         setLoadingMaj(true);
         const res = await fetchMajorsByDepartment(deptId);
-        setMajors(normalizeArray(res));
+        if (!alive) return;
+
+        const arr = normalizeArray(res);
+        setMajors(arr);
+
+        // If current selected major not in this department, clear it
+        const exists = arr.some((m) => String(m.id) === String(form.major_id));
+        if (!exists) setForm((p) => ({ ...p, major_id: "" }));
       } catch (e) {
         console.error(e);
+        if (!alive) return;
         setMajors([]);
+        setForm((p) => ({ ...p, major_id: "" }));
       } finally {
-        setLoadingMaj(false);
+        if (alive) setLoadingMaj(false);
       }
     })();
+
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.department_id]);
+
+  const departmentOptions = useMemo(() => {
+    return departments.map((d) => ({
+      value: String(d.id),
+      label: d.department_name ?? d.name ?? `Department #${d.id}`,
+    }));
+  }, [departments]);
+
+  const majorOptions = useMemo(() => {
+    return majors.map((m) => ({
+      value: String(m.id),
+      label: m.major_name ?? m.name ?? `Major #${m.id}`,
+    }));
+  }, [majors]);
 
   const majorLabel = useMemo(() => {
     const m = majors.find((x) => String(x.id) === String(form.major_id));
@@ -153,43 +212,63 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
     e.preventDefault();
     setError("");
 
+    // ✅ match backend rules
     if (!form.department_id) return setError("Department is required.");
     if (!form.major_id) return setError("Major is required.");
     if (!String(form.class_name || "").trim()) return setError("Class name is required.");
     if (!form.academic_year) return setError("Academic year is required.");
     if (!form.semester) return setError("Semester is required.");
-    if (!String(form.shift || "").trim()) return setError("Shift is required.");
 
+    // semester must be 1 or 2 (your backend: in:1,2)
+    const sem = Number(form.semester);
+    if (![1, 2].includes(sem)) return setError("Semester must be 1 or 2.");
+
+    // shift optional (nullable)
+    const shift = String(form.shift || "").trim();
+    const shiftPayload = shift === "" ? null : shift;
+
+    // capacity optional (nullable)
     const cap = form.capacity === "" ? null : Number(form.capacity);
     if (cap !== null && (Number.isNaN(cap) || cap < 1)) {
       return setError("Capacity must be a number (>= 1) or empty.");
     }
 
+    // ✅ fastest payload: send only what backend needs
     const payload = {
       class_name: String(form.class_name).trim(),
       major_id: Number(form.major_id),
       academic_year: String(form.academic_year).trim(),
-      semester: Number(form.semester),
-      shift: String(form.shift).trim(),
-      capacity: cap,
+      semester: sem,
+      shift: shiftPayload,
+      capacity: cap, // can be null
     };
+
+    // ✅ If capacity is null, remove it so backend default can apply (optional)
+    if (payload.capacity === null) delete payload.capacity;
+
+    // ✅ If shift is null, remove it (backend allows nullable; removing avoids duplicate checks mismatch)
+    if (payload.shift === null) delete payload.shift;
 
     try {
       setSaving(true);
+
       if (editingGroup?.id) {
         await onUpdate(editingGroup.id, payload);
         onCancel?.();
       } else {
         await onCreate(payload);
       }
+
       reset();
     } catch (err) {
       console.error("Save class group error:", err);
+
       const msg =
         err?.response?.data?.message ||
         (err?.response?.data?.errors
           ? Object.values(err.response.data.errors).flat().join(", ")
           : "Failed to save class group. Check backend logs.");
+
       setError(msg);
     } finally {
       setSaving(false);
@@ -203,9 +282,7 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
           <h3 className="text-lg font-extrabold text-gray-900">
             {editingGroup ? "Edit Class Group" : "Create Class Group"}
           </h3>
-          <p className="text-xs text-gray-600 mt-0.5">
-            Flow: Department → Major → Class Group
-          </p>
+          <p className="text-xs text-gray-600 mt-0.5">Flow: Department → Major → Class Group</p>
         </div>
 
         {editingGroup ? (
@@ -253,9 +330,9 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
               disabled={loadingDept}
             >
               <option value="">{loadingDept ? "Loading..." : "Select department"}</option>
-              {departments.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.department_name ?? d.name ?? `Department #${d.id}`}
+              {departmentOptions.map((d) => (
+                <option key={d.value} value={d.value}>
+                  {d.label}
                 </option>
               ))}
             </select>
@@ -276,15 +353,11 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
               disabled={!form.department_id || loadingMaj}
             >
               <option value="">
-                {!form.department_id
-                  ? "Select department first"
-                  : loadingMaj
-                    ? "Loading..."
-                    : "Select major"}
+                {!form.department_id ? "Select department first" : loadingMaj ? "Loading..." : "Select major"}
               </option>
-              {majors.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.major_name ?? m.name ?? `Major #${m.id}`}
+              {majorOptions.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
                 </option>
               ))}
             </select>
@@ -329,7 +402,7 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
           </div>
         </div>
 
-        {/* Semester */}
+        {/* Semester (✅ only 1/2) */}
         <div className="md:col-span-2">
           <label className={labelCls}>Semester *</label>
           <div className="relative">
@@ -344,14 +417,13 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
               <option value="">Select semester</option>
               <option value="1">Semester 1</option>
               <option value="2">Semester 2</option>
-              <option value="3">Semester 3</option>
             </select>
           </div>
         </div>
 
-        {/* Shift */}
+        {/* Shift (✅ optional) */}
         <div className="md:col-span-1">
-          <label className={labelCls}>Shift *</label>
+          <label className={labelCls}>Shift (optional)</label>
           <div className="relative">
             <div className={iconWrap}>
               <Clock className="w-4.5 h-4.5 text-gray-600" />
@@ -361,17 +433,18 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
               onChange={(e) => setField("shift", e.target.value)}
               className={`${baseField} ${fieldWithIconPadding}`}
             >
-              <option value="">Select shift</option>
-              <option value="Morning">Morning</option>
-              <option value="Afternoon">Afternoon</option>
-              <option value="Evening">Evening</option>
+              {SHIFT_OPTIONS.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
             </select>
           </div>
         </div>
 
-        {/* Capacity */}
+        {/* Capacity (✅ optional) */}
         <div className="md:col-span-1">
-          <label className={labelCls}>Capacity</label>
+          <label className={labelCls}>Capacity (optional)</label>
           <div className="relative">
             <div className={iconWrap}>
               <Users className="w-4.5 h-4.5 text-gray-600" />
@@ -382,7 +455,7 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
               value={form.capacity}
               onChange={(e) => setField("capacity", e.target.value)}
               className={`${baseField} ${fieldWithIconPadding}`}
-              placeholder="e.g. 30"
+              placeholder="e.g. 40"
             />
           </div>
         </div>
@@ -407,7 +480,16 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
               <span className="ml-2 text-gray-600">
                 • <b>{form.shift}</b>
               </span>
-            ) : null}
+            ) : (
+              <span className="ml-2 text-gray-500">• No shift</span>
+            )}
+            {form.capacity ? (
+              <span className="ml-2 text-gray-600">
+                • Capacity <b>{form.capacity}</b>
+              </span>
+            ) : (
+              <span className="ml-2 text-gray-500">• Default capacity</span>
+            )}
           </div>
         </div>
 

@@ -1,20 +1,30 @@
-// src/adminSide/ConponentsAdmin/ClassGroupsList.jsx
-import React, { useMemo, useState } from "react";
+import React, { memo, useMemo, useState } from "react";
 import { Edit3, Trash2, RefreshCw, Search } from "lucide-react";
 
-const ClassGroupsList = ({ loading, classGroups, onEdit, onDelete, onRefresh }) => {
+const rowCls = "border-t border-white/50 hover:bg-white/40 transition";
+
+const safeLower = (v) => String(v ?? "").trim().toLowerCase();
+
+const ClassGroupsList = memo(function ClassGroupsList({
+  loading,
+  classGroups = [],
+  onEdit,
+  onDelete,
+  onRefresh,
+}) {
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
-    const q = String(query || "").trim().toLowerCase();
-    if (!q) return classGroups;
+    const q = safeLower(query);
+    if (!q) return Array.isArray(classGroups) ? classGroups : [];
 
-    return classGroups.filter((cg) => {
-      const className = String(cg?.class_name ?? "").toLowerCase();
-      const ay = String(cg?.academic_year ?? "").toLowerCase();
-      const shift = String(cg?.shift ?? "").toLowerCase();
-      const sem = String(cg?.semester ?? "").toLowerCase();
-      const majorName = String(cg?.major?.major_name ?? cg?.major_name ?? "").toLowerCase();
+    const arr = Array.isArray(classGroups) ? classGroups : [];
+    return arr.filter((cg) => {
+      const className = safeLower(cg?.class_name);
+      const ay = safeLower(cg?.academic_year);
+      const shift = safeLower(cg?.shift);
+      const sem = safeLower(cg?.semester);
+      const majorName = safeLower(cg?.major?.major_name ?? cg?.major_name);
 
       return (
         className.includes(q) ||
@@ -35,7 +45,7 @@ const ClassGroupsList = ({ loading, classGroups, onEdit, onDelete, onRefresh }) 
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="relative w-full md:w-72">
+          <div className="relative w-full md:w-80">
             <div className="absolute left-3 top-1/2 -translate-y-1/2">
               <Search className="w-4 h-4 text-gray-500" />
             </div>
@@ -66,64 +76,80 @@ const ClassGroupsList = ({ loading, classGroups, onEdit, onDelete, onRefresh }) 
       ) : filtered.length === 0 ? (
         <div className="text-sm text-gray-600">No class groups found.</div>
       ) : (
-        <div className="overflow-auto">
+        <div className="overflow-auto rounded-2xl border border-white/60 bg-white/50">
           <table className="min-w-full text-sm">
-            <thead>
+            <thead className="bg-white/60">
               <tr className="text-left text-gray-600">
-                <th className="py-2 pr-3">Class</th>
-                <th className="py-2 pr-3">Major</th>
-                <th className="py-2 pr-3">Academic Year</th>
-                <th className="py-2 pr-3">Semester</th>
-                <th className="py-2 pr-3">Shift</th>
-                <th className="py-2 pr-3">Capacity</th>
-                <th className="py-2 pr-3 text-right">Actions</th>
+                <th className="py-3 px-4">Class</th>
+                <th className="py-3 px-4">Major</th>
+                <th className="py-3 px-4">Academic Year</th>
+                <th className="py-3 px-4">Semester</th>
+                <th className="py-3 px-4">Shift</th>
+                <th className="py-3 px-4">Capacity</th>
+                <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
+
             <tbody>
-              {filtered.map((cg) => (
-                <tr key={cg.id} className="border-t border-white/50">
-                  <td className="py-3 pr-3 font-semibold text-gray-900">{cg.class_name}</td>
-                  <td className="py-3 pr-3 text-gray-700">
-                    {cg?.major?.major_name ?? cg?.major_name ?? `Major #${cg.major_id}`}
-                  </td>
-                  <td className="py-3 pr-3 text-gray-700">{cg.academic_year ?? "-"}</td>
-                  <td className="py-3 pr-3 text-gray-700">{cg.semester ?? "-"}</td>
-                  <td className="py-3 pr-3 text-gray-700">{cg.shift ?? "-"}</td>
-                  <td className="py-3 pr-3 text-gray-700">{cg.capacity ?? "-"}</td>
+              {filtered.map((cg) => {
+                const majorText =
+                  cg?.major?.major_name ??
+                  cg?.major_name ??
+                  (cg?.major_id ? `Major #${cg.major_id}` : "-");
 
-                  <td className="py-3 pl-3">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => onEdit?.(cg)}
-                        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white/70 border border-white/60 hover:bg-white transition shadow-sm"
-                      >
-                        <Edit3 size={16} className="text-gray-700" />
-                        <span className="text-xs font-semibold text-gray-800">Edit</span>
-                      </button>
+                const semesterText =
+                  cg?.semester === 1 || cg?.semester === "1"
+                    ? "1"
+                    : cg?.semester === 2 || cg?.semester === "2"
+                      ? "2"
+                      : (cg?.semester ?? "-");
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const ok = window.confirm(`Delete class group "${cg.class_name}"?`);
-                          if (!ok) return;
-                          onDelete?.(cg.id);
-                        }}
-                        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-red-50/80 border border-red-200 hover:bg-red-50 transition shadow-sm"
-                      >
-                        <Trash2 size={16} className="text-red-600" />
-                        <span className="text-xs font-semibold text-red-700">Delete</span>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                return (
+                  <tr key={cg.id} className={rowCls}>
+                    <td className="py-3 px-4 font-semibold text-gray-900">
+                      {cg.class_name ?? "-"}
+                    </td>
+
+                    <td className="py-3 px-4 text-gray-700">{majorText}</td>
+                    <td className="py-3 px-4 text-gray-700">{cg.academic_year ?? "-"}</td>
+                    <td className="py-3 px-4 text-gray-700">{semesterText}</td>
+                    <td className="py-3 px-4 text-gray-700">{cg.shift ?? "-"}</td>
+                    <td className="py-3 px-4 text-gray-700">{cg.capacity ?? "-"}</td>
+
+                    <td className="py-3 px-4">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => onEdit?.(cg)}
+                          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white/70 border border-white/60 hover:bg-white transition shadow-sm"
+                        >
+                          <Edit3 size={16} className="text-gray-700" />
+                          <span className="text-xs font-semibold text-gray-800">Edit</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const ok = window.confirm(`Delete class group "${cg.class_name}"?`);
+                            if (!ok) return;
+                            onDelete?.(cg.id);
+                          }}
+                          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-red-50/80 border border-red-200 hover:bg-red-50 transition shadow-sm"
+                        >
+                          <Trash2 size={16} className="text-red-600" />
+                          <span className="text-xs font-semibold text-red-700">Delete</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       )}
     </div>
   );
-};
+});
 
 export default ClassGroupsList;

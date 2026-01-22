@@ -58,8 +58,13 @@ export const adminGenerateQr = (id, payload = {}) => generatePaymentQR(id, paylo
 // backend route example: POST /admin/registrations/{id}/mark-paid-cash
 // payload supports: { pay_plan, semester, amount }
 // ==============================
-export const markPaidCash = (id, payload = {}) =>
-  API.post(`/admin/registrations/${id}/mark-paid-cash`, payload);
+export const markPaidCash = (registrationId, payload = {}) => {
+  return API.post(`/admin/registrations/${registrationId}/mark-paid-cash`, {
+    ...payload,
+    semester: Number(payload.semester || 1),
+  });
+};
+
 
 // ==============================
 // PAYMENT STATUS
@@ -95,6 +100,11 @@ export const getRegistrationSummary = (academicYear = null) => {
   const params = academicYear ? { academic_year: academicYear } : {};
   return API.get("/reports/registrations/summary", { params });
 };
+
+export const checkMajorCapacity = (majorId, academicYear) =>
+  API.get(`/majors/${majorId}/capacity`, {
+    params: { academic_year: academicYear },
+  });
 
 // ==============================
 // HELPERS

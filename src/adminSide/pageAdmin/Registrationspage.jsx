@@ -1,4 +1,4 @@
-// RegistrationPage.jsx (FULL NO CUT) ✅ NEW DATA + NEW STYLE + FIX PAID/PENDING
+// RegistrationPage.jsx (FULL NO CUT) ✅ + ADD CASH PAY OPTIONS (SEM1 / SEM2 / YEAR) WITHOUT CHANGING ENDPOINTS
 import React, {
   useEffect,
   useState,
@@ -38,6 +38,8 @@ import {
   RefreshCw,
   QrCode,
   Eye,
+  CalendarDays,
+  Layers,
 } from "lucide-react";
 
 /* ================== SAFE HELPERS (NEW DATA + OLD DATA SUPPORT) ================== */
@@ -51,7 +53,7 @@ const normalizeStatus = (raw) => String(raw || "PENDING").trim().toUpperCase();
 
 const isPaidStatus = (raw) => {
   const s = normalizeStatus(raw);
-  return ["PAID", "COMPLETED", "SUCCESS", "APPROVED"].includes(s);
+  return ["PAID", "COMPLETED", "SUCCESS", "APPROVED", "DONE"].includes(s);
 };
 
 const isPendingStatus = (raw) => {
@@ -113,6 +115,80 @@ const getProfileImage = (reg) =>
   reg?.profile_picture_path ||
   reg?.profile_picture ||
   null;
+
+// ✅ SHOW REAL AXIOS ERROR (IMPORTANT)
+const extractAxiosError = (e) => {
+  // No response => network / CORS / DNS / wrong baseURL
+  if (!e?.response) {
+    return {
+      status: null,
+      msg: e?.message || "No response (Network/CORS/baseURL issue)",
+      details: e?.code || "",
+      raw: {
+        message: e?.message,
+        code: e?.code,
+        config_url: e?.config?.url,
+        config_baseURL: e?.config?.baseURL,
+        method: e?.config?.method,
+      },
+    };
+  }
+
+  const status = e.response.status;
+  const data = e.response.data;
+
+  let msg =
+    data?.message ||
+    data?.error ||
+    (typeof data === "string" ? data : null) ||
+    e.message ||
+    "Request failed";
+
+  let details = "";
+  if (data?.errors && typeof data.errors === "object") {
+    const flat = Object.values(data.errors).flat().filter(Boolean).join(" | ");
+    if (flat) details = flat;
+  }
+
+  return { status, msg, details, raw: data };
+};
+
+/* ================== CASH PAYMENT OPTIONS HELPERS ================== */
+
+const CASH_OPTIONS = {
+  SEM1: { label: "Pay Semester 1", semesters: [1] },
+  SEM2: { label: "Pay Semester 2", semesters: [2] },
+  YEAR: { label: "Pay Full Year (Sem 1 + Sem 2)", semesters: [1, 2] },
+};
+
+// Mark paid cash for chosen option WITHOUT changing endpoints.
+// If backend returns 409 "already paid", we treat as OK and continue.
+const markPaidCashByOption = async ({ registrationId, optionKey }) => {
+  const opt = CASH_OPTIONS[optionKey] || CASH_OPTIONS.SEM1;
+  const semesters = opt.semesters;
+
+  const results = [];
+  for (const sem of semesters) {
+    try {
+      const res = await markPaidCash(registrationId, sem);
+      results.push({ sem, ok: true, res });
+    } catch (e) {
+      const err = extractAxiosError(e);
+
+      // if already paid, treat as ok
+      if (err.status === 409) {
+        results.push({ sem, ok: true, already: true, err });
+        continue;
+      }
+
+      // real failure stops (so admin sees error)
+      results.push({ sem, ok: false, err });
+      throw { optionKey, sem, err, results };
+    }
+  }
+
+  return results;
+};
 
 /* ================== COMPONENT ================== */
 
@@ -332,10 +408,30 @@ const RegistrationPage = () => {
 
   const quickStats = useMemo(() => {
     return [
-      { label: "Total", value: summary.total, color: "from-blue-500 to-cyan-500", icon: Users },
-      { label: "Paid", value: summary.paid, color: "from-green-500 to-emerald-500", icon: CheckCircle },
-      { label: "Pending", value: summary.pending, color: "from-orange-500 to-red-500", icon: Clock },
-      { label: "Revenue", value: `$${summary.revenue.toFixed(2)}`, color: "from-purple-500 to-pink-500", icon: DollarSign },
+      {
+        label: "Total",
+        value: summary.total,
+        color: "from-blue-500 to-cyan-500",
+        icon: Users,
+      },
+      {
+        label: "Paid",
+        value: summary.paid,
+        color: "from-green-500 to-emerald-500",
+        icon: CheckCircle,
+      },
+      {
+        label: "Pending",
+        value: summary.pending,
+        color: "from-orange-500 to-red-500",
+        icon: Clock,
+      },
+      {
+        label: "Revenue",
+        value: `$${summary.revenue.toFixed(2)}`,
+        color: "from-purple-500 to-pink-500",
+        icon: DollarSign,
+      },
     ];
   }, [summary]);
 
@@ -358,7 +454,9 @@ const RegistrationPage = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Registrations</h1>
           <p className="text-sm text-gray-500">
-            View payment status by semester (uses new <span className="font-semibold">student_academic_periods</span> first).
+            View payment status by semester (uses new{" "}
+            <span className="font-semibold">student_academic_periods</span>{" "}
+            first).
           </p>
         </div>
 
@@ -391,11 +489,15 @@ const RegistrationPage = () => {
               className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/40 shadow-sm hover:shadow-md transition-all"
             >
               <div className="flex items-center gap-3">
-                <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.color}`}>
+                <div
+                  className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.color}`}
+                >
                   <Icon className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {stat.value}
+                  </p>
                   <p className="text-xs text-gray-600">{stat.label}</p>
                 </div>
               </div>
@@ -551,7 +653,12 @@ const RegistrationPage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <PaymentForm
             registrationId={adminQrReg.id}
-            yearFee={safeNum(adminQrReg?.registration_fee ?? adminQrReg?.period_tuition_amount ?? 0, 0)}
+            yearFee={safeNum(
+              adminQrReg?.registration_fee ??
+                adminQrReg?.period_tuition_amount ??
+                0,
+              0
+            )}
             amount={safeNum(getAmount(adminQrReg), 0)}
             payPlan={{ type: "SEMESTER", semester: selectedSemesterInt }}
             registrationData={{
@@ -591,6 +698,7 @@ const RegistrationPage = () => {
           selectedSemester={selectedSemesterInt}
           getPaidAt={getPaidAt}
           getAmount={getAmount}
+          getPaymentLabel={getPaymentLabel} // ✅ FIX: PASS THIS
         />
       )}
 
@@ -665,7 +773,8 @@ const RegistrationsList = React.memo(function RegistrationsList({
             </h3>
           </div>
           <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1.5 rounded-full font-semibold">
-            {registrations.length} {registrations.length === 1 ? "Result" : "Results"}
+            {registrations.length}{" "}
+            {registrations.length === 1 ? "Result" : "Results"}
           </span>
         </div>
       </div>
@@ -889,6 +998,7 @@ const RegistrationModal = ({
   selectedSemester,
   getPaidAt,
   getAmount,
+  getPaymentLabel, // ✅ FIX
 }) => {
   // IMPORTANT: for modal, use SAME logic (period first)
   const statusUpper = normalizeStatus(getPaymentStatus(registration));
@@ -898,7 +1008,21 @@ const RegistrationModal = ({
 
   const label = getPaymentLabel(registration);
   const year = getAcademicYear(registration);
-  const sem = getSemester(registration) ?? selectedSemester;
+  const sem = selectedSemester; // show admin selected semester (list context)
+
+  // ✅ prevent 429 / double submit
+  const [generatingQr, setGeneratingQr] = useState(false);
+  const [payingCash, setPayingCash] = useState(false);
+
+  // ✅ cash option modal
+  const [showCashOption, setShowCashOption] = useState(false);
+  const [cashOption, setCashOption] = useState(
+    selectedSemester === 2 ? "SEM2" : "SEM1"
+  );
+
+  // hard lock (instant, even before state update)
+  const cashLockRef = useRef(false);
+  const qrLockRef = useRef(false);
 
   return (
     <AnimatePresence>
@@ -958,7 +1082,9 @@ const RegistrationModal = ({
                   Registration Details
                 </h2>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm text-white/80">ID: {registration.id}</span>
+                  <span className="text-sm text-white/80">
+                    ID: {registration.id}
+                  </span>
 
                   {registration.student_code && (
                     <span className="text-sm text-white/80">
@@ -982,8 +1108,9 @@ const RegistrationModal = ({
                 </div>
 
                 <p className="text-xs text-white/80 mt-2">
-                  Showing status for: <span className="font-semibold">{year || "N/A"}</span>{" "}
-                  • <span className="font-semibold">Sem {sem}</span>
+                  Showing status for:{" "}
+                  <span className="font-semibold">{year || "N/A"}</span> •{" "}
+                  <span className="font-semibold">Sem {sem}</span>
                 </p>
               </div>
             </div>
@@ -993,39 +1120,89 @@ const RegistrationModal = ({
           <div className="p-6 space-y-6">
             <Section title="Personal Information">
               <InfoGrid>
-                <InfoField label="Full Name (EN)" value={registration.full_name_en} />
-                <InfoField label="Full Name (KH)" value={registration.full_name_kh} />
+                <InfoField
+                  label="Full Name (EN)"
+                  value={registration.full_name_en}
+                />
+                <InfoField
+                  label="Full Name (KH)"
+                  value={registration.full_name_kh}
+                />
                 <InfoField label="Gender" value={registration.gender} />
-                <InfoField label="Date of Birth" value={registration.date_of_birth} />
+                <InfoField
+                  label="Date of Birth"
+                  value={registration.date_of_birth}
+                />
                 <InfoField label="Email" value={registration.personal_email} />
                 <InfoField label="Phone" value={registration.phone_number} />
-                <InfoField label="Address" value={registration.address} fullWidth />
-                <InfoField label="Current Address" value={registration.current_address} fullWidth />
+                <InfoField
+                  label="Address"
+                  value={registration.address}
+                  fullWidth
+                />
+                <InfoField
+                  label="Current Address"
+                  value={registration.current_address}
+                  fullWidth
+                />
               </InfoGrid>
             </Section>
 
             <Section title="Education Information">
               <InfoGrid>
-                <InfoField label="High School" value={registration.high_school_name} />
-                <InfoField label="Graduation Year" value={registration.graduation_year} />
-                <InfoField label="Grade 12 Result" value={registration.grade12_result} />
-                <InfoField label="Department" value={registration.department_name} />
+                <InfoField
+                  label="High School"
+                  value={registration.high_school_name}
+                />
+                <InfoField
+                  label="Graduation Year"
+                  value={registration.graduation_year}
+                />
+                <InfoField
+                  label="Grade 12 Result"
+                  value={registration.grade12_result}
+                />
+                <InfoField
+                  label="Department"
+                  value={registration.department_name}
+                />
                 <InfoField label="Major" value={registration.major_name} />
                 <InfoField label="Faculty" value={registration.faculty} />
                 <InfoField label="Shift" value={registration.shift} />
                 <InfoField label="Batch" value={registration.batch} />
-                <InfoField label="Academic Year" value={registration.academic_year} />
+                <InfoField
+                  label="Academic Year"
+                  value={registration.academic_year}
+                />
               </InfoGrid>
             </Section>
 
             <Section title="Parent/Guardian Information">
               <InfoGrid>
-                <InfoField label="Father's Name" value={registration.father_name} />
-                <InfoField label="Father's Phone" value={registration.fathers_phone_number} />
-                <InfoField label="Mother's Name" value={registration.mother_name} />
-                <InfoField label="Mother's Phone" value={registration.mother_phone_number} />
-                <InfoField label="Guardian Name" value={registration.guardian_name} />
-                <InfoField label="Guardian Phone" value={registration.guardian_phone_number} />
+                <InfoField
+                  label="Father's Name"
+                  value={registration.father_name}
+                />
+                <InfoField
+                  label="Father's Phone"
+                  value={registration.fathers_phone_number}
+                />
+                <InfoField
+                  label="Mother's Name"
+                  value={registration.mother_name}
+                />
+                <InfoField
+                  label="Mother's Phone"
+                  value={registration.mother_phone_number}
+                />
+                <InfoField
+                  label="Guardian Name"
+                  value={registration.guardian_name}
+                />
+                <InfoField
+                  label="Guardian Phone"
+                  value={registration.guardian_phone_number}
+                />
               </InfoGrid>
             </Section>
 
@@ -1052,7 +1229,11 @@ const RegistrationModal = ({
                     </div>
 
                     <div>
-                      <p className={`font-semibold ${isPaid ? "text-green-700" : "text-orange-700"}`}>
+                      <p
+                        className={`font-semibold ${
+                          isPaid ? "text-green-700" : "text-orange-700"
+                        }`}
+                      >
                         {isPaid ? "Payment Completed" : "Payment Pending"}
                       </p>
 
@@ -1064,7 +1245,9 @@ const RegistrationModal = ({
                       </p>
 
                       <p className="text-xs text-gray-500 mt-1">
-                        Academic Year: <span className="font-semibold">{year || "N/A"}</span> • Semester:{" "}
+                        Academic Year:{" "}
+                        <span className="font-semibold">{year || "N/A"}</span> •
+                        Semester:{" "}
                         <span className="font-semibold">{sem || "N/A"}</span>
                       </p>
                     </div>
@@ -1083,44 +1266,62 @@ const RegistrationModal = ({
                 {!isPaid && (
                   <div className="mt-4 flex flex-wrap gap-3">
                     <button
+                      disabled={generatingQr}
                       onClick={async () => {
+                        if (qrLockRef.current) return;
+                        qrLockRef.current = true;
+
+                        if (generatingQr) return;
+                        setGeneratingQr(true);
                         try {
-                          await adminGenerateQr(registration.id, selectedSemester);
+                          await adminGenerateQr(
+                            registration.id,
+                            Number(selectedSemester) || 1
+                          );
                           toast?.success?.("QR generated successfully");
                           onOpenQr(registration);
                         } catch (e) {
-                          const msg =
-                            e.response?.data?.message ||
-                            e.response?.data?.error ||
-                            "Failed to generate QR";
-                          toast?.error?.(msg);
+                          const err = extractAxiosError(e);
+                          console.log("GenerateQR FULL:", err);
+                          toast?.error?.(
+                            `${err.status ?? "NO-HTTP"} ${err.msg}${
+                              err.details ? " • " + err.details : ""
+                            }`.trim()
+                          );
 
                           // if already paid, refresh so it becomes PAID
-                          if (e.response?.status === 409) {
+                          if (err.status === 409) {
                             await onRefresh();
                             onClose();
                           }
+                        } finally {
+                          setGeneratingQr(false);
+                          qrLockRef.current = false;
                         }
                       }}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white transition-colors ${
+                        generatingQr
+                          ? "bg-blue-400 cursor-not-allowed"
+                          : "bg-blue-600 hover:bg-blue-700"
+                      }`}
                     >
                       <QrCode className="w-4 h-4" />
-                      Generate QR
+                      {generatingQr ? "Generating..." : "Generate QR"}
                     </button>
 
+                    {/* ✅ NEW: OPEN FORM WITH 3 OPTIONS (SEM1 / SEM2 / YEAR) */}
                     <button
-                      onClick={async () => {
-                        if (!confirm("Mark this registration as PAID (Cash)?")) return;
-                        try {
-                          await markPaidCash(registration.id, selectedSemester);
-                          toast?.success?.("Marked as PAID (Cash)");
-                          await onRefresh();
-                          onClose();
-                        } catch (e) {
-                          toast?.error?.(e.response?.data?.message || "Failed to mark paid");
-                        }
+                      disabled={payingCash}
+                      onClick={() => {
+                        // open option form; no confirm popup
+                        setCashOption(selectedSemester === 2 ? "SEM2" : "SEM1");
+                        setShowCashOption(true);
                       }}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 transition-colors"
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white transition-colors ${
+                        payingCash
+                          ? "bg-green-400 cursor-not-allowed"
+                          : "bg-green-600 hover:bg-green-700"
+                      }`}
                     >
                       <CheckCircle className="w-4 h-4" />
                       Mark Paid (Cash)
@@ -1138,9 +1339,180 @@ const RegistrationModal = ({
               </div>
             </Section>
           </div>
+
+          {/* ================= CASH OPTION MODAL ================= */}
+          {showCashOption && (
+            <CashPayOptionModal
+              registration={registration}
+              defaultOption={cashOption}
+              onClose={() => setShowCashOption(false)}
+              onSubmit={async (optionKey) => {
+                if (cashLockRef.current) return;
+                cashLockRef.current = true;
+
+                if (payingCash) return;
+                setPayingCash(true);
+
+                try {
+                  await markPaidCashByOption({
+                    registrationId: registration.id,
+                    optionKey,
+                  });
+
+                  // keep your toast behavior (same success)
+                  toast?.success?.("Marked as PAID (Cash)");
+
+                  // refresh data after success
+                  await onRefresh();
+                  setShowCashOption(false);
+                  onClose();
+                } catch (payload) {
+                  const err = payload?.err || payload;
+                  const e = err?.status ? err : extractAxiosError(err);
+
+                  console.error("Mark paid cash error:", e.status, e.raw);
+                  toast?.error?.(
+                    `${e.status || ""} ${e.msg}${
+                      e.details ? " • " + e.details : ""
+                    }`.trim()
+                  );
+                } finally {
+                  setPayingCash(false);
+                  cashLockRef.current = false;
+                }
+              }}
+              busy={payingCash}
+            />
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>
+  );
+};
+
+/* ================== CASH OPTION MODAL UI ================== */
+
+const CashPayOptionModal = ({
+  registration,
+  defaultOption = "SEM1",
+  onClose,
+  onSubmit,
+  busy,
+}) => {
+  const [choice, setChoice] = useState(defaultOption);
+
+  const year = getAcademicYear(registration);
+  const amount = safeNum(getAmount(registration), 0);
+
+  const items = [
+    { key: "SEM1", icon: CalendarDays, title: "Semester 1", desc: "Mark PAID for semester 1 only." },
+    { key: "SEM2", icon: CalendarDays, title: "Semester 2", desc: "Mark PAID for semester 2 only." },
+    { key: "YEAR", icon: Layers, title: "Full Year (Sem 1 + Sem 2)", desc: "Mark PAID for both semesters (calls endpoint twice)." },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div
+        className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-5 border-b border-gray-100 bg-white">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">
+                Mark Paid (Cash)
+              </h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Choose payment type for{" "}
+                <span className="font-semibold">{year || "N/A"}</span>. <br />
+                (No endpoint change — Year option will call Semester 1 and 2.)
+              </p>
+              <p className="text-xs text-gray-500 mt-2">
+                Current displayed amount:{" "}
+                <span className="font-semibold">${amount.toFixed(2)}</span>
+              </p>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+              disabled={busy}
+              title="Close"
+            >
+              <X className="w-5 h-5 text-gray-700" />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-5 space-y-3">
+          {items.map((it) => {
+            const Icon = it.icon;
+            const active = choice === it.key;
+            return (
+              <button
+                key={it.key}
+                type="button"
+                onClick={() => setChoice(it.key)}
+                className={`w-full text-left p-4 rounded-2xl border transition-all ${
+                  active
+                    ? "border-blue-500 bg-blue-50 shadow-sm"
+                    : "border-gray-200 bg-white hover:bg-gray-50"
+                }`}
+                disabled={busy}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`p-2.5 rounded-xl ${
+                      active ? "bg-blue-600" : "bg-gray-200"
+                    }`}
+                  >
+                    <Icon className={`w-5 h-5 ${active ? "text-white" : "text-gray-700"}`} />
+                  </div>
+
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-semibold text-gray-900">
+                        {it.title}
+                      </p>
+                      <span
+                        className={`text-xs px-2.5 py-1 rounded-full border ${
+                          active
+                            ? "bg-blue-100 text-blue-700 border-blue-200"
+                            : "bg-gray-100 text-gray-600 border-gray-200"
+                        }`}
+                      >
+                        {active ? "Selected" : "Select"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">{it.desc}</p>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="p-5 border-t border-gray-100 bg-white flex items-center justify-end gap-2">
+          <button
+            onClick={onClose}
+            disabled={busy}
+            className="px-4 py-2 rounded-xl bg-white border border-gray-200 text-gray-800 hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={() => onSubmit(choice)}
+            disabled={busy}
+            className={`px-4 py-2 rounded-xl text-white transition-colors ${
+              busy ? "bg-green-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+            }`}
+          >
+            {busy ? "Processing..." : "Confirm Mark Paid"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 

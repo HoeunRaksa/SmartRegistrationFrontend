@@ -1,5 +1,4 @@
-// src/adminSide/pageAdmin/ClassGroupsPage.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import ClassGroupForm from "../ConponentsAdmin/ClassGroupForm.jsx";
 import ClassGroupsList from "../ConponentsAdmin/ClassGroupsList.jsx";
 import {
@@ -15,10 +14,12 @@ const ClassGroupsPage = () => {
   const [editingGroup, setEditingGroup] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const loadGroups = async () => {
+  const loadGroups = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetchAllClassGroups();
+
+      // your api returns: { data: { data: [] } }
       const data = res?.data?.data ?? res?.data ?? [];
       setClassGroups(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -27,11 +28,11 @@ const ClassGroupsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadGroups();
-  }, []);
+  }, [loadGroups]);
 
   const handleCreate = async (payload) => {
     await createClassGroup(payload);
@@ -45,6 +46,8 @@ const ClassGroupsPage = () => {
 
   const handleDelete = async (id) => {
     await deleteClassGroup(id);
+    // if deleting the item being edited, clear edit state
+    if (editingGroup?.id === id) setEditingGroup(null);
     await loadGroups();
   };
 
@@ -71,9 +74,7 @@ const ClassGroupsPage = () => {
                   <Icon className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {loading ? "…" : s.value}
-                  </p>
+                  <p className="text-2xl font-bold text-gray-900">{loading ? "…" : s.value}</p>
                   <p className="text-xs text-gray-600">{s.label}</p>
                 </div>
               </div>
