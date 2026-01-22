@@ -53,10 +53,128 @@ const Dashboard = () => {
     loadAllData();
   }, []);
 
-  // ✅ IMPORTANT FIX:
-  // New backend flow stores payment per academic year/semester in student_academic_periods,
-  // so API may return period_payment_status / academic_payment_status instead of registrations.payment_status.
+  const pickFirst = (...vals) => {
+  for (const v of vals) {
+    if (v !== undefined && v !== null && String(v).trim() !== "") return v;
+  }
+  return null;
+};
+
+const parseSemesterValue = (v) => {
+  if (v === undefined || v === null) return null;
+
+  const s = String(v).trim();
+  if (!s) return null;
+
+  // if already "1" or "2"
+  if (s === "1" || s === "2") return s;
+
+  // "Sem 1", "Semester 1", "semester-2", etc
+  const m = s.match(/(?:sem|semester|term)\s*[-:]?\s*(\d+)/i);
+  if (m?.[1]) return m[1];
+
+  return s; // fallback (maybe "First", "Second", etc)
+};
+
+
+  // ✅ IMPORTANT FIX: read per-semester payment from periods array if backend returns it
+  const getPeriods = (reg) =>
+    reg?.student_academic_periods ||
+    reg?.academic_periods ||
+    reg?.periods ||
+    reg?.payment_periods ||
+    [];
+
+  const normalizeStatus = (s) => String(s || "").trim().toUpperCase();
+
+const getMatchedPeriod = (reg) => {
+  const periods = Array.isArray(getPeriods(reg)) ? getPeriods(reg) : [];
+  if (!periods.length) return null;
+
+  const unpaid = periods
+    .filter((p) => {
+      const st = normalizeStatus(p?.payment_status ?? p?.status);
+      return st !== "PAID" && st !== "COMPLETED";
+    })
+    .sort((a, b) => {
+      const da = new Date(a?.updated_at || a?.created_at || 0).getTime();
+      const db = new Date(b?.updated_at || b?.created_at || 0).getTime();
+      return db - da;
+    });
+
+  if (unpaid.length) return unpaid[0];
+
+  // else return latest paid
+  const sorted = [...periods].sort((a, b) => {
+    const da = new Date(a?.updated_at || a?.created_at || 0).getTime();
+    const db = new Date(b?.updated_at || b?.created_at || 0).getTime();
+    return db - da;
+  });
+
+  return sorted[0] || null;
+};
+
+
+
+const getSemester = (reg) => {
+  const p = getMatchedPeriod(reg);
+
+  console.log("DEBUG REG:", {
+    id: reg.id,
+    reg_semester: reg?.semester,
+    reg_current_semester: reg?.current_semester,
+    reg_term: reg?.term,
+    periods: getPeriods(reg),
+    matchedPeriod: p,
+  });
+
+  const raw = pickFirst(
+    p?.semester,
+    p?.period_semester,
+    p?.academic_semester,
+    p?.term,
+    p?.term_no,
+    p?.term_number,
+    p?.semester_no,
+    p?.semester_number,
+    p?.semester_id,
+    p?.semester_name,
+    p?.semesterLabel,
+    reg?.semester,
+    reg?.current_semester,
+    reg?.academic_semester,
+    reg?.term,
+    reg?.term_no,
+    reg?.semester_no,
+    reg?.semester_number
+  );
+  return parseSemesterValue(raw);
+};
+
+
+
+ const getAcademicYear = (reg) => {
+  const p = getMatchedPeriod(reg);
+  return (
+    p?.academic_year ??
+    p?.period_academic_year ??
+    reg?.academic_year ??
+    reg?.current_academic_year ??
+    reg?.period_academic_year ??
+    reg?.academicYear ??
+    null
+  );
+};
+
   const getPaymentStatus = (reg) => {
+    const period = getMatchedPeriod(reg);
+
+    if (period) {
+      const st = normalizeStatus(period?.payment_status ?? period?.status);
+      return st || "PENDING";
+    }
+
+    // fallback (old backend fields)
     const raw =
       reg?.payment_status ??
       reg?.period_payment_status ??
@@ -64,10 +182,26 @@ const Dashboard = () => {
       reg?.payment?.status ??
       "PENDING";
 
-    return String(raw || "PENDING").toUpperCase();
+    return normalizeStatus(raw) || "PENDING";
   };
 
   const isPaidStatus = (status) => status === "PAID" || status === "COMPLETED";
+
+
+  // ✅ clear label: Pending/Paid + Academic Year + Semester
+  const getPaymentLabel = (reg) => {
+    const status = (getPaymentStatus(reg) || "PENDING").toUpperCase();
+    const sem = getSemester(reg);
+    const year = getAcademicYear(reg);
+
+    const semText = sem ? `Sem ${sem}` : null;
+    const yearText = year ? `${year}` : null;
+    const suffix = [yearText, semText].filter(Boolean).join(" • ");
+
+    if (status === "PAID" || status === "COMPLETED") return suffix ? `Paid (${suffix})` : "Paid";
+    if (status === "FAILED") return suffix ? `Failed (${suffix})` : "Failed";
+    return suffix ? `Pending (${suffix})` : "Pending";
+  };
 
   const loadAllData = async () => {
     try {
@@ -115,6 +249,18 @@ const Dashboard = () => {
     return registrations.filter(r => !isPaidStatus(getPaymentStatus(r)));
   }, [registrations]);
 
+  // ✅ pending counts by semester (so dashboard is clear)
+  const pendingBySemester = useMemo(() => {
+    const acc = { sem1: 0, sem2: 0, unknown: 0 };
+    pendingRegistrations.forEach((r) => {
+      const sem = String(getSemester(r) ?? "").trim();
+      if (sem === "1") acc.sem1 += 1;
+      else if (sem === "2") acc.sem2 += 1;
+      else acc.unknown += 1;
+    });
+    return acc;
+  }, [pendingRegistrations]);
+
   const recentRegistrationsCount = useMemo(() => {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
@@ -151,7 +297,11 @@ const Dashboard = () => {
     {
       label: "Pending Registrations",
       value: pendingRegistrations.length,
-      change: recentRegistrationsCount > 0 ? `+${recentRegistrationsCount} this week` : "No recent",
+      // ✅ make it clear pending for which semester
+      change:
+        pendingRegistrations.length > 0
+          ? `Sem 1: ${pendingBySemester.sem1} • Sem 2: ${pendingBySemester.sem2}${pendingBySemester.unknown > 0 ? ` • Unknown: ${pendingBySemester.unknown}` : ""}`
+          : (recentRegistrationsCount > 0 ? `+${recentRegistrationsCount} this week` : "No pending"),
       gradient: "from-green-500 to-emerald-500",
       icon: UserCheck
     },
@@ -209,6 +359,11 @@ const Dashboard = () => {
       .map(reg => {
         const dept = departments.find(d => d.id === reg.department_id);
         const major = majors.find(m => m.id === reg.major_id);
+
+
+
+        const sem = getSemester(reg) || "";
+        const year = getAcademicYear(reg) || "";
         const status = getPaymentStatus(reg);
 
         return {
@@ -217,8 +372,13 @@ const Dashboard = () => {
           department: dept?.name || "Unknown",
           major: major?.major_name || "Unknown",
           date: reg.created_at ? new Date(reg.created_at).toLocaleDateString() : "N/A",
-          status: status || "PENDING"
+          status: status,                 // keep raw status if you want
+          semester: sem,
+          academic_year: year,
+          statusLabel: getPaymentLabel(reg), // ✅ use this for display
         };
+
+
       });
   }, [pendingRegistrations, departments, majors]);
 
@@ -546,18 +706,35 @@ const Dashboard = () => {
                     <div className="flex-1">
                       <p className="text-sm font-semibold text-gray-800">{reg.name}</p>
                       <p className="text-xs text-gray-600 mt-1">{reg.major} - {reg.department}</p>
-                      <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1.5">
+
+                      {/* ✅ show semester/year clearly */}
+                      <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1.5 flex-wrap">
                         <Calendar className="w-3 h-3" />
                         {reg.date}
+
                         <span className="mx-1">•</span>
+
+                        <span className="text-xs font-medium text-gray-600">
+                          {reg.academic_year ? reg.academic_year : "Year N/A"}
+                        </span>
+
+                        <span className="mx-1">•</span>
+
+                        <span className="text-xs font-medium text-gray-600">
+                          {reg.semester ? `Sem ${reg.semester}` : "Sem N/A"}
+                        </span>
+
+                        <span className="mx-1">•</span>
+
                         <span
-                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            isPaidStatus(reg.status)
-                              ? 'bg-green-100 text-green-700'
+                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${isPaidStatus(reg.status)
+                            ? 'bg-green-100 text-green-700'
+                            : reg.status === "FAILED"
+                              ? 'bg-red-100 text-red-700'
                               : 'bg-yellow-100 text-yellow-700'
-                          }`}
+                            }`}
                         >
-                          {reg.status}
+                          {reg.statusLabel}
                         </span>
                       </p>
                     </div>
