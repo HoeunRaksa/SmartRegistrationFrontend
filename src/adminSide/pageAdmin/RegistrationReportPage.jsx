@@ -9,6 +9,11 @@ import {
   TrendingUp,
   PieChart,
   RefreshCw,
+  Calendar,
+  Building2,
+  GraduationCap,
+  Clock,
+  XCircle
 } from "lucide-react";
 import {
   generateRegistrationReport,
@@ -20,7 +25,10 @@ import { fetchMajors } from "../../api/major_api";
 
 const RegistrationReportPage = () => {
   const [loading, setLoading] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const [reportData, setReportData] = useState(null);
+  const [summaryData, setSummaryData] = useState(null);
+
   const [departments, setDepartments] = useState([]);
   const [majors, setMajors] = useState([]);
 
@@ -33,6 +41,7 @@ const RegistrationReportPage = () => {
     gender: "",
     date_from: "",
     date_to: "",
+    semester: "" // ✅ added for semester-aware report (backend can ignore if not supported)
   });
 
   const buildAcademicYears = (pastYears = 8, futureYears = 6) => {
@@ -41,9 +50,7 @@ const RegistrationReportPage = () => {
     const end = now + futureYears;
 
     const years = [];
-    for (let y = start; y <= end; y++) {
-      years.push(`${y}-${y + 1}`);
-    }
+    for (let y = start; y <= end; y++) years.push(`${y}-${y + 1}`);
     return years;
   };
 
@@ -52,6 +59,8 @@ const RegistrationReportPage = () => {
   useEffect(() => {
     loadDepartments();
     loadMajors();
+    loadSummary(); // ✅ load summary on start (optional)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadDepartments = async () => {
@@ -69,6 +78,19 @@ const RegistrationReportPage = () => {
       setMajors(res.data?.data || res.data || []);
     } catch (err) {
       console.error("Failed to load majors:", err);
+    }
+  };
+
+  const loadSummary = async () => {
+    setSummaryLoading(true);
+    try {
+      const res = await getRegistrationSummary({ academic_year: filters.academic_year || "" });
+      setSummaryData(res.data?.data || null);
+    } catch (err) {
+      console.error("Failed to load summary:", err);
+      setSummaryData(null);
+    } finally {
+      setSummaryLoading(false);
     }
   };
 
@@ -109,16 +131,56 @@ const RegistrationReportPage = () => {
       gender: "",
       date_from: "",
       date_to: "",
+      semester: ""
     });
     setReportData(null);
+    setSummaryData(null);
   };
 
-  const stats = reportData?.statistics || {
-    total_registrations: 0,
-    total_male: 0,
-    total_female: 0,
-    total_amount: 0,
-    paid_amount: 0,
+  const getSafe = (v, fallback = "N/A") => (v === null || v === undefined || v === "" ? fallback : v);
+
+  // ✅ detect semester/year fields safely (support old/new backend)
+  const getSemester = (reg) =>
+    reg?.semester ??
+    reg?.current_semester ??
+    reg?.period_semester ??
+    reg?.academic_semester ??
+    null;
+
+  const getAcademicYear = (reg) =>
+    reg?.academic_year ??
+    reg?.current_academic_year ??
+    reg?.period_academic_year ??
+    reg?.academicYear ??
+    null;
+
+  const getPaymentStatus = (reg) =>
+    reg?.period_payment_status ??
+    reg?.academic_payment_status ??
+    reg?.payment_status ??
+    "PENDING";
+
+  const getAmount = (reg) =>
+    reg?.period_tuition_amount ??
+    reg?.tuition_amount ??
+    reg?.payment_amount ??
+    reg?.registration_fee ??
+    reg?.amount ??
+    0;
+
+  const getPaymentLabel = (reg) => {
+    const status = (getPaymentStatus(reg) || "PENDING").toUpperCase();
+    const sem = getSemester(reg);
+    const year = getAcademicYear(reg);
+
+    const semText = sem ? `Sem ${sem}` : null;
+    const yearText = year ? `${year}` : null;
+
+    const suffix = [yearText, semText].filter(Boolean).join(" • ");
+
+    if (status === "PAID" || status === "COMPLETED") return suffix ? `Paid (${suffix})` : "Paid";
+    if (status === "FAILED") return suffix ? `Failed (${suffix})` : "Failed";
+    return suffix ? `Pending (${suffix})` : "Pending";
   };
 
   return (
@@ -133,11 +195,63 @@ const RegistrationReportPage = () => {
           <div>
             <h1 className="text-2xl font-bold mb-2">Registration Reports</h1>
             <p className="text-blue-100">
-              Generate comprehensive reports on student registrations
+              Generate comprehensive reports on student registrations (semester-aware).
             </p>
           </div>
           <FileText className="w-12 h-12 text-white/30" />
         </div>
+      </motion.div>
+
+      {/* Summary (optional) */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/40 shadow-lg"
+      >
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-blue-600" />
+            <h2 className="text-lg font-semibold text-gray-900">Quick Summary</h2>
+          </div>
+
+          <button
+            onClick={loadSummary}
+            disabled={summaryLoading}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/70 border border-gray-200 text-sm font-medium text-gray-800 hover:bg-white transition-all disabled:opacity-60"
+          >
+            <RefreshCw className={`w-4 h-4 ${summaryLoading ? "animate-spin" : ""}`} />
+            Refresh Summary
+          </button>
+        </div>
+
+        {summaryLoading ? (
+          <div className="mt-4 text-sm text-gray-600">Loading summary...</div>
+        ) : summaryData ? (
+          <div className="mt-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <MiniCard icon={Users} label="Total" value={summaryData.total_registrations} />
+            <MiniCard
+              icon={Users}
+              label="Male / Female"
+              value={`${summaryData.by_gender?.male ?? 0} / ${summaryData.by_gender?.female ?? 0}`}
+            />
+            <MiniCard
+              icon={Clock}
+              label="Pending / Completed"
+              value={`${summaryData.by_payment_status?.pending ?? 0} / ${summaryData.by_payment_status?.completed ?? 0}`}
+            />
+            <MiniCard
+              icon={DollarSign}
+              label="Paid / Pending Amount"
+              value={`$${Number(summaryData.financial?.paid_amount ?? 0).toFixed(2)} / $${Number(
+                summaryData.financial?.pending_amount ?? 0
+              ).toFixed(2)}`}
+            />
+          </div>
+        ) : (
+          <div className="mt-4 text-sm text-gray-600">
+            No summary data yet. Click “Refresh Summary”.
+          </div>
+        )}
       </motion.div>
 
       {/* Filters */}
@@ -157,19 +271,22 @@ const RegistrationReportPage = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Department
             </label>
-            <select
-              name="department_id"
-              value={filters.department_id}
-              onChange={handleFilterChange}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All Departments</option>
-              {departments.map((dept) => (
-                <option key={dept.id} value={dept.id}>
-                  {dept.name}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <Building2 className="absolute left-3 top-2.5 w-4 h-4 text-blue-500" />
+              <select
+                name="department_id"
+                value={filters.department_id}
+                onChange={handleFilterChange}
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Departments</option>
+                {departments.map((dept) => (
+                  <option key={dept.id} value={dept.id}>
+                    {dept.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Major */}
@@ -177,19 +294,22 @@ const RegistrationReportPage = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Major
             </label>
-            <select
-              name="major_id"
-              value={filters.major_id}
-              onChange={handleFilterChange}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All Majors</option>
-              {majors.map((major) => (
-                <option key={major.id} value={major.id}>
-                  {major.major_name}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <GraduationCap className="absolute left-3 top-2.5 w-4 h-4 text-orange-500" />
+              <select
+                name="major_id"
+                value={filters.major_id}
+                onChange={handleFilterChange}
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Majors</option>
+                {majors.map((major) => (
+                  <option key={major.id} value={major.id}>
+                    {major.major_name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Payment Status */}
@@ -248,6 +368,26 @@ const RegistrationReportPage = () => {
             </select>
           </div>
 
+          {/* Semester */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Semester
+            </label>
+            <div className="relative">
+              <Clock className="absolute left-3 top-2.5 w-4 h-4 text-indigo-500" />
+              <select
+                name="semester"
+                value={filters.semester}
+                onChange={handleFilterChange}
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Semesters</option>
+                <option value="1">Semester 1</option>
+                <option value="2">Semester 2</option>
+              </select>
+            </div>
+          </div>
+
           {/* Shift */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -271,13 +411,16 @@ const RegistrationReportPage = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Date From
             </label>
-            <input
-              type="date"
-              name="date_from"
-              value={filters.date_from}
-              onChange={handleFilterChange}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="relative">
+              <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+              <input
+                type="date"
+                name="date_from"
+                value={filters.date_from}
+                onChange={handleFilterChange}
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
           </div>
 
           {/* Date To */}
@@ -285,18 +428,21 @@ const RegistrationReportPage = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Date To
             </label>
-            <input
-              type="date"
-              name="date_to"
-              value={filters.date_to}
-              onChange={handleFilterChange}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="relative">
+              <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+              <input
+                type="date"
+                name="date_to"
+                value={filters.date_to}
+                onChange={handleFilterChange}
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3 mt-6">
+        <div className="flex flex-wrap gap-3 mt-6">
           <button
             onClick={generateReport}
             disabled={loading}
@@ -320,13 +466,13 @@ const RegistrationReportPage = () => {
             onClick={resetFilters}
             className="flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-all"
           >
-            <RefreshCw className="w-4 h-4" />
+            <XCircle className="w-4 h-4" />
             Reset
           </button>
         </div>
       </motion.div>
 
-      {/* Statistics */}
+      {/* Statistics + Table */}
       {reportData && (
         <>
           <motion.div
@@ -337,36 +483,57 @@ const RegistrationReportPage = () => {
             <StatCard
               icon={Users}
               label="Total Registrations"
-              value={stats.total_registrations}
+              value={reportData.statistics?.total_registrations ?? 0}
               color="from-blue-500 to-blue-600"
             />
             <StatCard
               icon={Users}
               label="Male / Female"
-              value={`${stats.total_male} / ${stats.total_female}`}
+              value={`${reportData.statistics?.total_male ?? 0} / ${reportData.statistics?.total_female ?? 0}`}
               color="from-purple-500 to-purple-600"
             />
             <StatCard
               icon={DollarSign}
               label="Total Amount"
-              value={`$${Number(stats.total_amount || 0).toFixed(2)}`}
+              value={`$${Number(reportData.statistics?.total_amount ?? 0).toFixed(2)}`}
               color="from-green-500 to-green-600"
             />
             <StatCard
               icon={TrendingUp}
               label="Paid Amount"
-              value={`$${Number(stats.paid_amount || 0).toFixed(2)}`}
+              value={`$${Number(reportData.statistics?.paid_amount ?? 0).toFixed(2)}`}
               color="from-orange-500 to-orange-600"
             />
           </motion.div>
 
-          {/* Registrations Table */}
-          <ReportTable registrations={reportData.registrations || []} />
+          <ReportTable
+            registrations={reportData.registrations || []}
+            getPaymentStatus={getPaymentStatus}
+            getPaymentLabel={getPaymentLabel}
+            getSemester={getSemester}
+            getAcademicYear={getAcademicYear}
+            getAmount={getAmount}
+            getSafe={getSafe}
+          />
         </>
       )}
     </div>
   );
 };
+
+const MiniCard = ({ icon: Icon, label, value }) => (
+  <div className="bg-white/70 rounded-xl p-4 border border-white/40 shadow-sm">
+    <div className="flex items-center gap-3">
+      <div className="p-2.5 rounded-lg bg-blue-100">
+        <Icon className="w-5 h-5 text-blue-700" />
+      </div>
+      <div>
+        <p className="text-lg font-bold text-gray-900">{value}</p>
+        <p className="text-xs text-gray-600">{label}</p>
+      </div>
+    </div>
+  </div>
+);
 
 const StatCard = ({ icon: Icon, label, value, color }) => (
   <div className="bg-white/60 backdrop-blur-sm rounded-xl p-5 border border-white/40 shadow-md">
@@ -382,14 +549,25 @@ const StatCard = ({ icon: Icon, label, value, color }) => (
   </div>
 );
 
-const ReportTable = ({ registrations }) => (
+const ReportTable = ({
+  registrations,
+  getPaymentStatus,
+  getPaymentLabel,
+  getSemester,
+  getAcademicYear,
+  getAmount,
+  getSafe
+}) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     className="bg-white/60 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg overflow-hidden"
   >
-    <div className="p-5 border-b border-gray-200">
+    <div className="p-5 border-b border-gray-200 flex items-center justify-between">
       <h3 className="text-lg font-semibold text-gray-900">Registration Details</h3>
+      <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full font-semibold">
+        {registrations.length} {registrations.length === 1 ? "Row" : "Rows"}
+      </span>
     </div>
 
     <div className="overflow-x-auto">
@@ -402,48 +580,70 @@ const ReportTable = ({ registrations }) => (
             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Gender</th>
             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Department</th>
             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Major</th>
+            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Academic Year</th>
+            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Semester</th>
             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Payment</th>
             <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Amount</th>
           </tr>
         </thead>
+
         <tbody className="divide-y divide-gray-200">
           {registrations.map((reg, index) => {
-            const status = String(reg.payment_status || "PENDING").toUpperCase();
-            const amount = Number(reg.payment_amount || 0);
+            const rawStatus = (getPaymentStatus(reg) || "PENDING").toUpperCase();
+            const isPaid = rawStatus === "PAID" || rawStatus === "COMPLETED";
+            const isPending = rawStatus === "PENDING";
 
-            const badgeClass =
-              status === "COMPLETED" || status === "PAID"
-                ? "bg-green-100 text-green-600"
-                : status === "PENDING"
-                  ? "bg-yellow-100 text-yellow-700"
-                  : "bg-red-100 text-red-600";
+            const year = getAcademicYear(reg);
+            const sem = getSemester(reg);
 
             return (
-              <tr key={reg.id} className="hover:bg-blue-50/30 transition-colors">
+              <tr key={reg.id || index} className="hover:bg-blue-50/30 transition-colors">
                 <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
+
                 <td className="px-6 py-4 text-sm font-medium text-gray-900">
                   {reg.student?.student_code || "N/A"}
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-900">{reg.full_name_en || "N/A"}</td>
+
+                <td className="px-6 py-4 text-sm text-gray-900">{getSafe(reg.full_name_en)}</td>
+
                 <td className="px-6 py-4">
                   <span
-                    className={`text-xs px-2 py-1 rounded-full ${reg.gender === "Male"
-                      ? "bg-blue-100 text-blue-600"
-                      : "bg-pink-100 text-pink-600"
-                      }`}
+                    className={`text-xs px-2 py-1 rounded-full ${
+                      reg.gender === "Male"
+                        ? "bg-blue-100 text-blue-600"
+                        : reg.gender === "Female"
+                        ? "bg-pink-100 text-pink-600"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
                   >
-                    {reg.gender || "N/A"}
+                    {getSafe(reg.gender)}
                   </span>
                 </td>
+
                 <td className="px-6 py-4 text-sm text-gray-600">{reg.department?.name || "N/A"}</td>
+
                 <td className="px-6 py-4 text-sm text-gray-600">{reg.major?.major_name || "N/A"}</td>
+
+                <td className="px-6 py-4 text-sm text-gray-700">{getSafe(year)}</td>
+
+                <td className="px-6 py-4 text-sm text-gray-700">{sem ? `Sem ${sem}` : "N/A"}</td>
+
                 <td className="px-6 py-4">
-                  <span className={`text-xs px-2 py-1 rounded-full ${badgeClass}`}>
-                    {status}
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full ${
+                      isPaid
+                        ? "bg-green-100 text-green-700"
+                        : isPending
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {getPaymentLabel(reg)}
                   </span>
                 </td>
+
                 <td className="px-6 py-4 text-sm text-right font-medium text-gray-900">
-                  ${amount.toFixed(2)}
+                  ${Number(getAmount(reg) || 0).toFixed(2)}
                 </td>
               </tr>
             );
