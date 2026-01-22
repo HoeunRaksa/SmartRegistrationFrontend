@@ -1,24 +1,35 @@
-import React, { useState, useEffect, useRef } from "react";
+// PaymentForm.jsx (FULL NO CUT)
+// ✅ Payment plan (YEAR or SEMESTER) + amount calculation already done in Registration.jsx
+// ✅ Same endpoints: generatePaymentQR, checkPaymentStatus
+
+import React, { useEffect, useRef, useState } from "react";
 import { CheckCircle, Loader, CloudOff, Info, Download, X } from "lucide-react";
 import { generatePaymentQR, checkPaymentStatus } from "../../api/registration_api";
 
 const PaymentForm = ({
   registrationId,
-  amount,
   registrationData,
   onClose,
   onSuccess,
-  semester = 1, // ✅ NEW (safe default)
+
+  // ✅ new props
+  yearFee = 0,
+  amount = 0, // amount to pay now
+  payPlan = { type: "YEAR", semester: 1 }, // {type:"YEAR"|"SEMESTER", semester:1|2}
 }) => {
   const [qrImage, setQrImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("PENDING");
   const [tranId, setTranId] = useState(null);
   const [error, setError] = useState(null);
+
   const fetchedRef = useRef(false);
   const pollingIntervalRef = useRef(null);
 
-  // Generate QR code when component mounts
+  const planType = payPlan?.type || "YEAR";
+  const planSemester = planType === "SEMESTER" ? Number(payPlan?.semester || 1) : 1;
+
+  // Generate QR code
   const fetchQR = async () => {
     if (!registrationId) {
       setError("Registration ID is required");
@@ -32,12 +43,18 @@ const PaymentForm = ({
     try {
       console.log("=== QR GENERATION DEBUG ===");
       console.log("Registration ID:", registrationId);
-      console.log("Amount:", amount);
-      console.log("Semester:", semester);
+      console.log("PayPlan:", payPlan);
+      console.log("Year Fee:", yearFee);
+      console.log("Pay Amount:", amount);
       console.log("==========================");
 
-      // ✅ NEW: pass semester
-      const response = await generatePaymentQR(registrationId, semester);
+      // ✅ Same endpoint call, send extra fields (backend should use `amount`)
+      const response = await generatePaymentQR(registrationId, {
+        pay_plan: planType, // "YEAR" or "SEMESTER"
+        semester: planSemester, // 1 or 2 (for YEAR still set 1 to be safe)
+        amount: Number(amount || 0),
+      });
+
       const data = response.data;
 
       console.log("PayWay API Response:", data);
@@ -66,12 +83,12 @@ const PaymentForm = ({
     }
   };
 
-  // Initial QR generation
   useEffect(() => {
     if (!fetchedRef.current && registrationId) {
       fetchedRef.current = true;
       fetchQR();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [registrationId]);
 
   // Poll payment status
@@ -105,8 +122,6 @@ const PaymentForm = ({
     };
 
     pollStatus();
-
-    // 🔁 Then poll every 3 seconds
     pollingIntervalRef.current = setInterval(pollStatus, 3000);
 
     return () => {
@@ -129,7 +144,16 @@ const PaymentForm = ({
   };
 
   const isFinalStatus =
-    status === "PAID" || status === "SUCCESS" || status === "FAILED" || status === "CANCELED";
+    status === "PAID" ||
+    status === "SUCCESS" ||
+    status === "FAILED" ||
+    status === "CANCELED";
+
+  const displayStudentName =
+    registrationData?.data?.full_name_en ||
+    `${registrationData?.data?.first_name || ""} ${registrationData?.data?.last_name || ""}`.trim();
+
+  const planLabel = planType === "SEMESTER" ? `Semester ${planSemester} (50%)` : "Full Year (100%)";
 
   return (
     <div className="relative z-50 w-full max-w-md backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/80 to-white/70 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.2)] border-2 border-white/60 overflow-hidden mx-4">
@@ -147,7 +171,7 @@ const PaymentForm = ({
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
         <h2 className="relative text-2xl font-bold text-white drop-shadow-lg">ABA PAY</h2>
         <p className="relative text-blue-100 text-sm mt-1 font-medium">
-          Scan to complete registration payment
+          Scan to complete payment
         </p>
       </div>
 
@@ -155,22 +179,30 @@ const PaymentForm = ({
         {registrationData && (
           <>
             <p className="text-xs text-gray-600">
-              <span className="font-medium">Student:</span>{" "}
-              {registrationData.data?.full_name_en ||
-                `${registrationData.data?.first_name} ${registrationData.data?.last_name}`}
+              <span className="font-medium">Student:</span> {displayStudentName || "—"}
             </p>
             <p className="text-xs text-gray-600">
               <span className="font-medium">Student Code:</span>{" "}
-              {registrationData.student_account?.student_code || "Pending"}
+              {registrationData.student_account?.student_code || registrationData.data?.student_code || "Pending"}
             </p>
           </>
         )}
+
         <p className="text-xs text-gray-600">
-          <span className="font-medium">Amount:</span>
+          <span className="font-medium">Plan:</span> {planLabel}
+        </p>
+
+        <p className="text-xs text-gray-600">
+          <span className="font-medium">Pay Now:</span>
           <span className="text-lg font-bold text-green-600 ml-2">
-            ${amount ? parseFloat(amount).toFixed(2) : "0.00"}
+            ${Number(amount || 0).toFixed(2)}
           </span>
         </p>
+
+        <p className="text-[11px] text-gray-500">
+          Year Fee: ${Number(yearFee || 0).toFixed(2)}
+        </p>
+
         {tranId && <p className="text-xs text-gray-500 font-mono">Transaction: {tranId}</p>}
       </div>
 

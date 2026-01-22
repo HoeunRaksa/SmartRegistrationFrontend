@@ -1,4 +1,6 @@
-import React, { useState, useEffect, createContext } from "react";
+// Registration.jsx (FULL NO CUT) - Payment plan is chosen ONLY at payment time
+// ✅ Same endpoints / same APIs / same payload mapping logic
+import React, { useEffect, useMemo, useRef, useState, createContext, memo } from "react";
 import {
   X,
   Loader,
@@ -18,137 +20,282 @@ import {
   Smartphone,
   CheckCircle,
 } from "lucide-react";
+
 import PaymentForm from "../Components/payment/PaymentForm.jsx";
-import {
-  submitRegistration,
-  payLater as payLaterApi,
-} from "../api/registration_api.jsx";
+import { submitRegistration, payLater as payLaterApi } from "../api/registration_api.jsx";
 import { fetchDepartments, fetchMajorsByDepartment } from "../api/department_api.jsx";
 import { fetchMajor } from "../api/major_api.jsx";
 
 export const ToastContext = createContext();
 
+const currentYear = new Date().getFullYear();
+
+/**
+ * ✅ Registration is for academic year (NOT for semester payment).
+ * Semester selection moved to payment plan only.
+ */
+const DEFAULT_FORM = {
+  firstName: "",
+  lastName: "",
+  fullNameKh: "",
+  fullNameEn: "",
+  gender: "Male",
+  dateOfBirth: "",
+  phoneNumber: "",
+  personalEmail: "",
+
+  highSchoolName: "", // ✅ required (fix 500)
+  graduationYear: "",
+  grade12Result: "",
+
+  departmentId: "",
+  majorId: "",
+  faculty: "",
+  shift: "Morning",
+  batch: `${currentYear}`,
+  academicYear: `${currentYear}-${currentYear + 1}`,
+
+  profilePicture: null,
+  address: "",
+  currentAddress: "",
+
+  fatherName: "",
+  fathersDateOfBirth: "",
+  fathersNationality: "",
+  fathersJob: "",
+  fathersPhoneNumber: "",
+
+  motherName: "",
+  motherDateOfBirth: "",
+  motherNationality: "",
+  mothersJob: "",
+  motherPhoneNumber: "",
+
+  guardianName: "",
+  guardianPhoneNumber: "",
+  emergencyContactName: "",
+  emergencyContactPhoneNumber: "",
+};
+
+const REQUIRED_KEYS = [
+  "firstName",
+  "lastName",
+  "personalEmail",
+  "departmentId",
+  "majorId",
+  "highSchoolName",
+  "dateOfBirth",
+];
+
+// ✅ Cast select values to correct type (avoid strings for numbers)
+const NUMBER_FIELDS = new Set(["departmentId", "majorId"]);
+
+const inputClassBase =
+  "w-full backdrop-blur-xl bg-white/60 border-2 border-white/40 focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 rounded-xl px-4 py-3 outline-none transition-all duration-300 text-gray-800 placeholder-gray-400 font-medium shadow-lg";
+const labelClassBase = "block text-sm font-semibold text-gray-700 mb-2 ml-1";
+
+const Field = memo(function Field({
+  type = "text",
+  name,
+  label,
+  value,
+  onChange,
+  placeholder,
+  required,
+  icon: Icon,
+  options,
+  disabled,
+  readOnly,
+  className = "",
+}) {
+  const isSelect = type === "select";
+  const isTextarea = type === "textarea";
+
+  return (
+    <div className="relative">
+      <label className={labelClassBase}>
+        {label} {required ? <span className="text-red-500">*</span> : null}
+      </label>
+
+      {Icon && !isSelect && !isTextarea ? (
+        <Icon className="absolute left-3 top-[55%] text-gray-500" size={18} />
+      ) : null}
+
+      {isSelect ? (
+        <select
+          name={name}
+          value={value}
+          onChange={onChange}
+          className={`${inputClassBase} ${className}`}
+          required={required}
+          disabled={disabled}
+        >
+          {options?.map((opt) => (
+            <option key={String(opt.value)} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      ) : isTextarea ? (
+        <textarea
+          name={name}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          className={`${inputClassBase} ${className}`}
+          required={required}
+          disabled={disabled}
+          readOnly={readOnly}
+          rows={4}
+        />
+      ) : (
+        <input
+          type={type}
+          name={name}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          className={`${inputClassBase} ${Icon ? "!pl-10" : ""} ${className}`}
+          required={required}
+          disabled={disabled}
+          readOnly={readOnly}
+        />
+      )}
+    </div>
+  );
+});
+
+const Section = memo(function Section({ title, icon: Icon, gradientBar, iconGradient, children }) {
+  return (
+    <div className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border-2 border-white/60 relative">
+      <div className={`absolute inset-x-0 top-0 h-1.5 ${gradientBar} rounded-t-3xl`} />
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-white/40">
+        <div className={`p-3 backdrop-blur-xl ${iconGradient} rounded-2xl text-white shadow-lg`}>
+          <Icon size={24} />
+        </div>
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          {title}
+        </h2>
+      </div>
+      {children}
+    </div>
+  );
+});
+
+/**
+ * ✅ Payment Plan (NOT registration semester)
+ * - YEAR: pay 100% yearly fee (no semester selection required)
+ * - SEMESTER: pay 50% yearly fee + choose semester 1 or 2
+ */
+const DEFAULT_PAY_PLAN = { type: "YEAR", semester: 1 }; // type: "YEAR" | "SEMESTER"
+
 const Registration = () => {
+  const [form, setForm] = useState(DEFAULT_FORM);
+
   const [majors, setMajors] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [selectedMajorFee, setSelectedMajorFee] = useState(null);
+
   const [showQr, setShowQr] = useState(false);
   const [showPaymentChoice, setShowPaymentChoice] = useState(false);
   const [registrationData, setRegistrationData] = useState(null);
+
+  const [payPlan, setPayPlan] = useState(DEFAULT_PAY_PLAN);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+
   const [profilePreview, setProfilePreview] = useState(null);
-  const currentYear = new Date().getFullYear();
 
-  const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    fullNameKh: "",
-    fullNameEn: "",
-    gender: "Male",
-    dateOfBirth: "",
-    phoneNumber: "",
-    personalEmail: "",
-    highSchoolName: "",
-    graduationYear: "",
-    grade12Result: "",
-    departmentId: "",
-    majorId: "",
-    faculty: "",
-    shift: "Morning",
-    batch: `${currentYear}`,
-    academicYear: `${currentYear}-${currentYear + 1}`,
-    // ✅ NEW (fits new controller; does not remove any existing fields)
-    semester: 1,
-    profilePicture: null,
-    address: "",
-    currentAddress: "",
-
-    fatherName: "",
-    fathersDateOfBirth: "",
-    fathersNationality: "",
-    fathersJob: "",
-    fathersPhoneNumber: "",
-
-    motherName: "",
-    motherDateOfBirth: "",
-    motherNationality: "",
-    mothersJob: "",
-    motherPhoneNumber: "",
-
-    guardianName: "",
-    guardianPhoneNumber: "",
-    emergencyContactName: "",
-    emergencyContactPhoneNumber: "",
-  });
-
+  // avoid state updates after unmount
+  const aliveRef = useRef(true);
   useEffect(() => {
-    const loadDepartments = async () => {
-      try {
-        const response = await fetchDepartments();
-        if (response.data.success) setDepartments(response.data.data);
-      } catch (err) {
-        console.error("Error loading departments:", err);
-        setError("Failed to load departments. Please refresh the page.");
-      }
+    aliveRef.current = true;
+    return () => {
+      aliveRef.current = false;
     };
-    loadDepartments();
   }, []);
 
+  // Load departments (once)
+  useEffect(() => {
+    (async () => {
+      try {
+        const response = await fetchDepartments();
+        if (response?.data?.success && aliveRef.current) {
+          setDepartments(response.data.data || []);
+        }
+      } catch (err) {
+        console.error("Error loading departments:", err);
+        if (aliveRef.current) setError("Failed to load departments. Please refresh the page.");
+      }
+    })();
+  }, []);
+
+  // Load majors when department changes
   useEffect(() => {
     if (!form.departmentId) {
       setMajors([]);
       setSelectedMajorFee(null);
+      setForm((p) => ({ ...p, majorId: "", faculty: "" }));
       return;
     }
 
-    const loadMajors = async () => {
+    (async () => {
       try {
         const response = await fetchMajorsByDepartment(form.departmentId);
-        if (response.data.success) setMajors(response.data.data);
+        if (response?.data?.success && aliveRef.current) {
+          setMajors(response.data.data || []);
+        }
       } catch (err) {
         console.error("Error loading majors:", err);
-        setError("Failed to load majors for selected department.");
+        if (aliveRef.current) setError("Failed to load majors for selected department.");
       }
-    };
-
-    loadMajors();
+    })();
   }, [form.departmentId]);
 
+  // Fill faculty from department (derived)
   useEffect(() => {
-    if (form.departmentId) {
-      const selectedDept = departments.find(
-        (d) => d.id === parseInt(form.departmentId)
-      );
-      if (selectedDept?.faculty)
-        setForm((prev) => ({ ...prev, faculty: selectedDept.faculty }));
+    if (!form.departmentId) return;
+    const deptId = Number(form.departmentId);
+    const selectedDept = departments.find((d) => Number(d.id) === deptId);
+    if (selectedDept?.faculty) {
+      setForm((prev) => (prev.faculty === selectedDept.faculty ? prev : { ...prev, faculty: selectedDept.faculty }));
     }
   }, [form.departmentId, departments]);
 
+  // Load major fee when major changes
   useEffect(() => {
     if (!form.majorId) {
       setSelectedMajorFee(null);
       return;
     }
 
-    const loadMajorFee = async () => {
+    (async () => {
       try {
         const response = await fetchMajor(form.majorId);
-        if (response.data)
-          setSelectedMajorFee(Number(response.data.registration_fee ?? 100));
+        if (!aliveRef.current) return;
+        const fee = Number(response?.data?.registration_fee ?? 0);
+        setSelectedMajorFee(Number.isFinite(fee) ? fee : 0);
       } catch (err) {
         console.error("Error loading major fee:", err);
-        setSelectedMajorFee(100);
+        if (aliveRef.current) setSelectedMajorFee(0);
       }
-    };
-
-    loadMajorFee();
+    })();
   }, [form.majorId]);
+
+  const departmentOptions = useMemo(() => {
+    return [{ value: "", label: "Select Department" }, ...departments.map((d) => ({ value: String(d.id), label: d.name }))];
+  }, [departments]);
+
+  const majorOptions = useMemo(() => {
+    return [{ value: "", label: "Select Major" }, ...majors.map((m) => ({ value: String(m.id), label: m.major_name }))];
+  }, [majors]);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
 
+    // file handling (profilePicture)
     if (files && files[0]) {
       const file = files[0];
       const validTypes = ["image/jpeg", "image/jpg", "image/png"];
@@ -158,7 +305,6 @@ const Registration = () => {
         e.target.value = "";
         return;
       }
-
       if (file.size > 5 * 1024 * 1024) {
         setError("Image size must be less than 5MB");
         e.target.value = "";
@@ -167,17 +313,25 @@ const Registration = () => {
 
       setForm((prev) => ({ ...prev, [name]: file }));
       setProfilePreview(URL.createObjectURL(file));
-    } else {
-      setForm((prev) => ({ ...prev, [name]: value }));
+      if (error) setError(null);
+      return;
     }
+
+    const nextVal = NUMBER_FIELDS.has(name) ? (value === "" ? "" : Number(value)) : value;
+
+    setForm((prev) => {
+      if (name === "departmentId") {
+        return { ...prev, departmentId: nextVal, majorId: "", faculty: "" };
+      }
+      return { ...prev, [name]: nextVal };
+    });
 
     if (error) setError(null);
   };
 
-  const formSubmit = async () => {
-    const formData = new FormData();
-
-    const keyMap = {
+  // ✅ map FE keys -> API keys (same as before)
+  const keyMap = useMemo(
+    () => ({
       firstName: "first_name",
       lastName: "last_name",
       fullNameKh: "full_name_kh",
@@ -186,17 +340,17 @@ const Registration = () => {
       dateOfBirth: "date_of_birth",
       phoneNumber: "phone_number",
       personalEmail: "personal_email",
+
       highSchoolName: "high_school_name",
       graduationYear: "graduation_year",
       grade12Result: "grade12_result",
+
       departmentId: "department_id",
       majorId: "major_id",
       faculty: "faculty",
       shift: "shift",
       batch: "batch",
       academicYear: "academic_year",
-      // ✅ NEW controller supports semester (optional)
-      semester: "semester",
       address: "address",
       currentAddress: "current_address",
 
@@ -216,12 +370,21 @@ const Registration = () => {
       guardianPhoneNumber: "guardian_phone_number",
       emergencyContactName: "emergency_contact_name",
       emergencyContactPhoneNumber: "emergency_contact_phone_number",
-    };
+    }),
+    []
+  );
 
-    for (const [key, value] of Object.entries(form)) {
-      if (value !== null && value !== "" && key !== "profilePicture") {
-        formData.append(keyMap[key], value);
-      }
+  const formSubmit = async () => {
+    const formData = new FormData();
+
+    for (const [key, val] of Object.entries(form)) {
+      if (key === "profilePicture") continue;
+      if (val === null || val === "") continue;
+
+      const apiKey = keyMap[key];
+      if (!apiKey) continue;
+
+      formData.append(apiKey, val);
     }
 
     if (form.profilePicture && form.profilePicture instanceof File) {
@@ -240,9 +403,7 @@ const Registration = () => {
         const errorMessages = Object.values(errors).flat().join("\n");
         setError(errorMessages);
       } else {
-        setError(
-          err.response?.data?.message || "Registration failed. Please try again."
-        );
+        setError(err.response?.data?.message || "Registration failed. Please try again.");
       }
 
       throw err;
@@ -251,37 +412,53 @@ const Registration = () => {
     }
   };
 
+  const validateRequired = () => {
+    for (const k of REQUIRED_KEYS) {
+      if (!form[k]) return false;
+    }
+    return true;
+  };
+
+  const resetForm = () => {
+    setForm(DEFAULT_FORM);
+    setPayPlan(DEFAULT_PAY_PLAN);
+    setProfilePreview(null);
+    setSelectedMajorFee(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (
-      !form.firstName ||
-      !form.lastName ||
-      !form.personalEmail ||
-      !form.departmentId ||
-      !form.majorId ||
-      !form.highSchoolName
-    ) {
+    if (!validateRequired()) {
       setError("Please fill in all required fields");
       return;
     }
-
+    // ✅ user chooses payment plan in modal
     setShowPaymentChoice(true);
   };
 
   const ensureRegistration = async () => {
     if (registrationData?.data?.registration_id) return registrationData;
-
     const regData = await formSubmit();
     setRegistrationData(regData);
     return regData;
   };
 
+  // ✅ compute payment amount based on payPlan
+  const computePayAmount = (yearFee, plan) => {
+    const fee = Number(yearFee || 0);
+    if (!Number.isFinite(fee)) return 0;
+
+    if (plan?.type === "SEMESTER") return fee * 0.5;
+    return fee; // YEAR
+  };
+
+  const payAmount = useMemo(() => computePayAmount(selectedMajorFee, payPlan), [selectedMajorFee, payPlan]);
+
   const handlePaymentMethodSelect = async (method) => {
     setShowPaymentChoice(false);
 
     try {
-      const regData = await ensureRegistration(); // ✅ create only once
+      const regData = await ensureRegistration();
       const registrationId = regData?.data?.registration_id;
 
       if (method === "qr") {
@@ -291,14 +468,19 @@ const Registration = () => {
 
       if (method === "later") {
         if (registrationId) {
-          // ✅ send semester too (does not change endpoint)
-          await payLaterApi(registrationId, form.semester);
+          // ✅ pay later should still record which plan/semester they intend to pay
+          // same endpoint, extra params
+          const payload = {
+            pay_plan: payPlan.type, // "YEAR" or "SEMESTER"
+            semester: payPlan.type === "SEMESTER" ? payPlan.semester : 1,
+            amount: payAmount,
+          };
+          await payLaterApi(registrationId, payload);
         }
 
         setSuccess({
           title: "Registration Submitted Successfully!",
-          message:
-            "Your registration has been created. Please complete payment within 7 days at the university finance office.",
+          message: "Your registration has been created. Please complete payment within 7 days at the university finance office.",
           data: regData,
         });
 
@@ -310,34 +492,6 @@ const Registration = () => {
       }
     } catch (e) {
       // formSubmit already sets error
-    }
-  };
-
-  // ✅ UPDATED: call payLater API so admin sees it as "pending pay later"
-  const handlePayLater = async () => {
-    try {
-      const regData = await formSubmit();
-
-      const registrationId = regData?.data?.registration_id;
-      if (registrationId) {
-        // ✅ send semester too (does not change endpoint)
-        await payLaterApi(registrationId, form.semester);
-      }
-
-      setSuccess({
-        title: "Registration Submitted Successfully!",
-        message:
-          "Your registration has been created. Please complete payment within 7 days at the university finance office.",
-        data: regData,
-      });
-
-      setTimeout(() => {
-        resetForm();
-        setSuccess(null);
-        setRegistrationData(null);
-      }, 8000);
-    } catch {
-      // error already handled
     }
   };
 
@@ -357,59 +511,101 @@ const Registration = () => {
     }, 8000);
   };
 
-  const resetForm = () => {
-    setForm({
-      firstName: "",
-      lastName: "",
-      fullNameKh: "",
-      fullNameEn: "",
-      gender: "Male",
-      dateOfBirth: "",
-      phoneNumber: "",
-      personalEmail: "",
-      highSchoolName: "",
-      graduationYear: "",
-      grade12Result: "",
-      departmentId: "",
-      majorId: "",
-      faculty: "",
-      shift: "Morning",
-      batch: `${currentYear}`,
-      academicYear: `${currentYear}-${currentYear + 1}`,
-      // ✅ keep semester default
-      semester: 1,
-      profilePicture: null,
-      address: "",
-      currentAddress: "",
+  // ✅ Field configs (flexible in future)
+  const personalFields = useMemo(
+    () => [
+      { name: "firstName", label: "First Name (English)", required: true, icon: User2, placeholder: "First Name" },
+      { name: "lastName", label: "Last Name (English)", required: true, placeholder: "Last Name" },
+      { name: "fullNameKh", label: "Full Name (Khmer)", placeholder: "ឈ្មោះ នាមត្រកូល" },
+      {
+        name: "gender",
+        label: "Gender",
+        type: "select",
+        required: true,
+        options: [
+          { value: "Male", label: "Male" },
+          { value: "Female", label: "Female" },
+          { value: "Other", label: "Other" },
+        ],
+      },
+      { name: "dateOfBirth", label: "Date of Birth", type: "date", required: true },
+      { name: "phoneNumber", label: "Phone Number", icon: Phone, placeholder: "012 345 678" },
+      { name: "personalEmail", label: "Email Address", type: "email", required: true, icon: Mail, placeholder: "student@example.com" },
+      { name: "address", label: "Permanent Address", icon: MapPin, placeholder: "#123, Street ABC" },
+      { name: "currentAddress", label: "Current Address", icon: MapPin, placeholder: "Same as permanent" },
+    ],
+    []
+  );
 
-      fatherName: "",
-      fathersDateOfBirth: "",
-      fathersNationality: "",
-      fathersJob: "",
-      fathersPhoneNumber: "",
+  const familyFieldsFather = useMemo(
+    () => [
+      { name: "fatherName", label: "Father Name", placeholder: "Father Name" },
+      { name: "fathersDateOfBirth", label: "Father Date of Birth", type: "date" },
+      { name: "fathersNationality", label: "Father Nationality", placeholder: "Cambodian" },
+      { name: "fathersJob", label: "Father Job", placeholder: "Father's Job" },
+      { name: "fathersPhoneNumber", label: "Father Phone Number", type: "tel", placeholder: "012 345 678" },
+    ],
+    []
+  );
 
-      motherName: "",
-      motherDateOfBirth: "",
-      motherNationality: "",
-      mothersJob: "",
-      motherPhoneNumber: "",
+  const familyFieldsMother = useMemo(
+    () => [
+      { name: "motherName", label: "Mother Name", placeholder: "Mother Name" },
+      { name: "motherDateOfBirth", label: "Mother Date of Birth", type: "date" },
+      { name: "motherNationality", label: "Mother Nationality", placeholder: "Cambodian" },
+      { name: "mothersJob", label: "Mother Job", placeholder: "Mother's Job" },
+      { name: "motherPhoneNumber", label: "Mother Phone Number", type: "tel", placeholder: "012 345 678" },
+    ],
+    []
+  );
 
-      guardianName: "",
-      guardianPhoneNumber: "",
-      emergencyContactName: "",
-      emergencyContactPhoneNumber: "",
-    });
+  const guardianFields = useMemo(
+    () => [
+      { name: "guardianName", label: "Guardian Name", placeholder: "Guardian Name" },
+      { name: "guardianPhoneNumber", label: "Guardian Phone Number", type: "tel", placeholder: "012 345 678" },
+      { name: "emergencyContactName", label: "Emergency Contact Name", placeholder: "Emergency Contact" },
+      { name: "emergencyContactPhoneNumber", label: "Emergency Contact Phone", type: "tel", placeholder: "012 345 678" },
+    ],
+    []
+  );
 
-    setProfilePreview(null);
-    setSelectedMajorFee(null);
-  };
+  const schoolFields = useMemo(
+    () => [
+      { name: "highSchoolName", label: "High School", required: true, placeholder: "High School" }, // ✅ required
+      { name: "graduationYear", label: "Graduation Year", placeholder: "YYYY" },
+      { name: "grade12Result", label: "Grade 12 Result", placeholder: "Grade A-F" },
+    ],
+    []
+  );
 
-  const inputClass =
-    "w-full backdrop-blur-xl bg-white/60 border-2 border-white/40 focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 rounded-xl px-4 py-3 outline-none transition-all duration-300 text-gray-800 placeholder-gray-400 font-medium shadow-lg";
-  const labelClass = "block text-sm font-semibold text-gray-700 mb-2 ml-1";
+  const academicFields = useMemo(
+    () => [
+      { name: "departmentId", label: "Department", type: "select", required: true, options: departmentOptions },
+      { name: "majorId", label: "Major", type: "select", required: true, options: majorOptions, disabled: !form.departmentId },
+      {
+        name: "faculty",
+        label: "Faculty",
+        placeholder: "Select department first",
+        readOnly: true,
+        className: form.departmentId ? "bg-white/40" : "bg-gray-100/60",
+      },
+      {
+        name: "shift",
+        label: "Shift",
+        type: "select",
+        options: [
+          { value: "Morning", label: "Morning" },
+          { value: "Afternoon", label: "Afternoon" },
+          { value: "Evening", label: "Evening" },
+          { value: "Weekend", label: "Weekend" },
+        ],
+      },
+    ],
+    [departmentOptions, majorOptions, form.departmentId]
+  );
 
   return (
-    <section className="min-h-screen -mt-9 relative overflow-hidden font-sans rounded-lg bg-gradient-to-br ">
+    <section className="min-h-screen -mt-9 relative overflow-hidden font-sans rounded-lg bg-gradient-to-br">
       {/* Animated background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-blue-400 to-cyan-400 opacity-20 rounded-full blur-3xl animate-pulse" />
@@ -441,26 +637,19 @@ const Registration = () => {
 
             {success.data?.student_account && (
               <div className="backdrop-blur-xl bg-blue-50/60 border border-blue-200/40 rounded-xl p-4 mb-4">
-                <h4 className="font-semibold text-gray-800 mb-2">
-                  Your Account Details:
-                </h4>
+                <h4 className="font-semibold text-gray-800 mb-2">Your Account Details:</h4>
                 <div className="space-y-1 text-sm">
                   <p>
-                    <span className="font-medium">Student Code:</span>{" "}
-                    {success.data.student_account.student_code}
+                    <span className="font-medium">Student Code:</span> {success.data.student_account.student_code}
                   </p>
                   <p>
-                    <span className="font-medium">Email:</span>{" "}
-                    {success.data.student_account.email}
+                    <span className="font-medium">Email:</span> {success.data.student_account.email}
                   </p>
                   <p>
-                    <span className="font-medium">Password:</span>{" "}
-                    {success.data.student_account.password}
+                    <span className="font-medium">Password:</span> {success.data.student_account.password}
                   </p>
                 </div>
-                <p className="text-xs text-gray-600 mt-2">
-                  ⚠️ Please save these credentials!
-                </p>
+                <p className="text-xs text-gray-600 mt-2">⚠️ Please save these credentials!</p>
               </div>
             )}
 
@@ -478,7 +667,7 @@ const Registration = () => {
         </div>
       )}
 
-      {/* Payment Method Choice Modal */}
+      {/* Payment Method Choice Modal (includes Pay Plan) */}
       {showPaymentChoice && (
         <div className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 px-4">
           <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/80 to-white/70 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] border-2 border-white/60 p-8 max-w-md w-full">
@@ -491,30 +680,87 @@ const Registration = () => {
               <X size={20} className="text-gray-600" />
             </button>
 
-            <div className="text-center mb-8">
+            <div className="text-center mb-6">
               <div className="inline-flex items-center justify-center p-4 backdrop-blur-xl bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-xl">
                 <CreditCard size={32} className="text-white" />
               </div>
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                Choose Payment Method
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-1">
+                Choose Payment
               </h3>
-              <p className="text-gray-600 text-sm">
-                Select how you'd like to complete your registration
-              </p>
+              <p className="text-gray-600 text-sm">Select plan first, then method</p>
 
-              {/* Display Registration Fee */}
-              {selectedMajorFee && (
+              {selectedMajorFee != null && (
                 <div className="mt-4 backdrop-blur-xl bg-green-50/60 border border-green-200/40 rounded-xl p-3">
                   <p className="text-sm text-gray-700">
-                    <span className="font-semibold">Registration Fee:</span>
-                    <span className="text-2xl font-bold text-green-600 ml-2">
-                      ${Number(selectedMajorFee).toFixed(2)}
-                    </span>
+                    <span className="font-semibold">Year Fee:</span>
+                    <span className="text-xl font-bold text-green-600 ml-2">${Number(selectedMajorFee).toFixed(2)}</span>
+                  </p>
+                  <p className="text-xs text-gray-600 mt-1">
+                    Semester payment = <span className="font-semibold">50%</span> of year fee
                   </p>
                 </div>
               )}
             </div>
 
+            {/* ✅ Pay plan selector */}
+            <div className="backdrop-blur-xl bg-white/60 border-2 border-white/60 rounded-2xl p-4 mb-4">
+              <p className="text-sm font-semibold text-gray-800 mb-3">Pay Plan</p>
+
+              <div className="space-y-3">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="payPlan"
+                    checked={payPlan.type === "YEAR"}
+                    onChange={() => setPayPlan((p) => ({ ...p, type: "YEAR" }))}
+                  />
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-800">Pay Full Year</p>
+                    <p className="text-xs text-gray-600">Pay 100% now</p>
+                  </div>
+                  <span className="text-sm font-bold text-gray-800">
+                    ${Number(selectedMajorFee || 0).toFixed(2)}
+                  </span>
+                </label>
+
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="payPlan"
+                    checked={payPlan.type === "SEMESTER"}
+                    onChange={() => setPayPlan((p) => ({ ...p, type: "SEMESTER" }))}
+                  />
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-800">Pay One Semester</p>
+                    <p className="text-xs text-gray-600">Pay 50% now + choose semester</p>
+                  </div>
+                  <span className="text-sm font-bold text-gray-800">
+                    ${(Number(selectedMajorFee || 0) * 0.5).toFixed(2)}
+                  </span>
+                </label>
+
+                {payPlan.type === "SEMESTER" && (
+                  <div className="pl-7">
+                    <label className="text-xs font-semibold text-gray-700">Which semester?</label>
+                    <select
+                      className={`${inputClassBase} mt-2`}
+                      value={payPlan.semester}
+                      onChange={(e) => setPayPlan((p) => ({ ...p, semester: Number(e.target.value) }))}
+                    >
+                      <option value={1}>Semester 1</option>
+                      <option value={2}>Semester 2</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-4 text-sm text-gray-800">
+                <span className="font-semibold">Amount to pay now:</span>{" "}
+                <span className="font-bold text-green-700">${Number(payAmount || 0).toFixed(2)}</span>
+              </div>
+            </div>
+
+            {/* Payment methods */}
             <div className="space-y-4">
               <button
                 onClick={() => handlePaymentMethodSelect("qr")}
@@ -524,19 +770,11 @@ const Registration = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                 <div className="relative z-10 flex items-center gap-4">
                   <div className="backdrop-blur-xl bg-white/20 p-3 rounded-xl">
-                    {loading ? (
-                      <Loader className="animate-spin" size={28} />
-                    ) : (
-                      <Smartphone size={28} />
-                    )}
+                    {loading ? <Loader className="animate-spin" size={28} /> : <Smartphone size={28} />}
                   </div>
                   <div className="text-left flex-1">
-                    <h4 className="font-bold text-lg">
-                      {loading ? "Processing..." : "Pay with QR Code"}
-                    </h4>
-                    <p className="text-sm text-white/80 mt-1">
-                      Scan and pay using ABA Mobile
-                    </p>
+                    <h4 className="font-bold text-lg">{loading ? "Processing..." : "Pay with QR Code"}</h4>
+                    <p className="text-sm text-white/80 mt-1">Scan and pay using ABA Mobile</p>
                   </div>
                   {!loading && <div className="text-2xl">→</div>}
                 </div>
@@ -554,9 +792,7 @@ const Registration = () => {
                   </div>
                   <div className="text-left flex-1">
                     <h4 className="font-bold text-lg">Pay Later</h4>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Submit registration and pay at campus
-                    </p>
+                    <p className="text-sm text-gray-600 mt-1">Submit and pay at campus</p>
                   </div>
                   <div className="text-2xl text-gray-400">→</div>
                 </div>
@@ -566,7 +802,7 @@ const Registration = () => {
             <div className="mt-6 backdrop-blur-xl bg-blue-50/60 border border-blue-200/40 rounded-xl p-4 flex items-start gap-3">
               <AlertTriangle size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
               <p className="text-xs text-gray-700">
-                <span className="font-semibold">Note:</span> If you choose "Pay Later", please complete payment within 7 days at the university finance office.
+                <span className="font-semibold">Note:</span> If you choose "Pay Later", please complete payment within 7 days.
               </p>
             </div>
           </div>
@@ -578,13 +814,13 @@ const Registration = () => {
         <div className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 px-4">
           <PaymentForm
             registrationId={registrationData.data?.registration_id}
-            amount={registrationData.data?.payment_amount || selectedMajorFee}
+            yearFee={selectedMajorFee}
+            payPlan={payPlan}
+            amount={payAmount}
             registrationData={registrationData}
-            // ✅ pass semester (fits new controller; does not change existing data usage)
-            semester={form.semester}
             onClose={() => {
               setShowQr(false);
-              setShowPaymentChoice(true); // ✅ show option again
+              setShowPaymentChoice(true);
             }}
             onSuccess={handlePaymentSuccess}
           />
@@ -621,484 +857,149 @@ const Registration = () => {
             NovaTech University
           </h1>
           <div className="backdrop-blur-xl bg-white/50 inline-block px-6 py-3 rounded-full border-2 border-white/60 shadow-lg">
-            <p className="text-gray-800 text-lg font-semibold">
-              Student Registration Portal
-            </p>
+            <p className="text-gray-800 text-lg font-semibold">Student Registration Portal</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Personal Information */}
-          <div className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border-2 border-white/60 relative">
-            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-t-3xl" />
-
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-white/40">
-              <div className="p-3 backdrop-blur-xl bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl text-white shadow-lg">
-                <User size={24} />
-              </div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Personal Information
-              </h2>
-            </div>
-
+          <Section
+            title="Personal Information"
+            icon={User}
+            gradientBar="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
+            iconGradient="bg-gradient-to-br from-blue-500 to-purple-600"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="relative">
-                <label className={labelClass}>First Name (English) *</label>
-                <User2 className="absolute left-3 top-[55%] text-gray-500" size={18} />
-                <input
-                  type="text"
-                  name="firstName"
-                  value={form.firstName}
-                  onChange={handleChange}
-                  placeholder="First Name"
-                  className={`${inputClass} !pl-10`}
-                  required
-                />
-              </div>
-
-              <div className="relative">
-                <label className={labelClass}>Last Name (English) *</label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={form.lastName}
-                  onChange={handleChange}
-                  placeholder="Last Name"
-                  className={inputClass}
-                  required
-                />
-              </div>
-
-              <div className="relative">
-                <label className={labelClass}>Full Name (Khmer)</label>
-                <input
-                  type="text"
-                  name="fullNameKh"
-                  value={form.fullNameKh}
-                  onChange={handleChange}
-                  placeholder="ឈ្មោះ នាមត្រកូល"
-                  className={inputClass}
-                />
-              </div>
-
-              <div className="relative">
-                <label className={labelClass}>Gender *</label>
-                <select
-                  name="gender"
-                  value={form.gender}
-                  onChange={handleChange}
-                  className={inputClass}
-                >
-                  <option>Male</option>
-                  <option>Female</option>
-                  <option>Other</option>
-                </select>
-              </div>
-
-              <div className="relative">
-                <label className={labelClass}>Date of Birth *</label>
-                <input
-                  type="date"
-                  name="dateOfBirth"
-                  value={form.dateOfBirth}
-                  onChange={handleChange}
-                  className={inputClass}
-                  required
-                />
-              </div>
-
-              <div className="relative">
-                <label className={labelClass}>Phone Number</label>
-                <Phone className="absolute left-3 top-[55%] text-gray-500" size={18} />
-                <input
-                  type="tel"
-                  name="phoneNumber"
-                  value={form.phoneNumber}
-                  onChange={handleChange}
-                  placeholder="012 345 678"
-                  className={`${inputClass} !pl-10`}
-                />
-              </div>
-
-              <div className="relative md:col-span-2">
-                <label className={labelClass}>Email Address *</label>
-                <Mail className="absolute left-3 top-[55%] text-gray-500" size={18} />
-                <input
-                  type="email"
-                  name="personalEmail"
-                  value={form.personalEmail}
-                  onChange={handleChange}
-                  placeholder="student@example.com"
-                  className={`${inputClass} !pl-10`}
-                  required
-                />
-              </div>
-
-              <div className="relative">
-                <label className={labelClass}>Permanent Address</label>
-                <MapPin className="absolute left-3 top-[55%] text-gray-500" size={18} />
-                <input
-                  type="text"
-                  name="address"
-                  value={form.address}
-                  onChange={handleChange}
-                  placeholder="#123, Street ABC"
-                  className={`${inputClass} !pl-10`}
-                />
-              </div>
-
-              <div className="relative md:col-span-2">
-                <label className={labelClass}>Current Address</label>
-                <MapPin className="absolute left-3 top-[55%] text-gray-500" size={18} />
-                <input
-                  type="text"
-                  name="currentAddress"
-                  value={form.currentAddress}
-                  onChange={handleChange}
-                  placeholder="Same as permanent"
-                  className={`${inputClass} !pl-10`}
-                />
-              </div>
+              {personalFields.map((f) => (
+                <div key={f.name} className={f.name === "personalEmail" ? "md:col-span-2" : ""}>
+                  <Field
+                    type={f.type || "text"}
+                    name={f.name}
+                    label={f.label}
+                    value={form[f.name]}
+                    onChange={handleChange}
+                    placeholder={f.placeholder}
+                    required={!!f.required}
+                    icon={f.icon}
+                    options={f.options}
+                    disabled={f.disabled}
+                    readOnly={f.readOnly}
+                    className={f.className}
+                  />
+                </div>
+              ))}
             </div>
-          </div>
+          </Section>
 
           {/* Family Information */}
-          <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border-2 border-white/60">
-            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 rounded-t-3xl" />
-
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-white/40">
-              <div className="p-3 backdrop-blur-xl bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl text-white shadow-lg">
-                <User size={24} />
-              </div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Family Information
-              </h2>
-            </div>
-
+          <Section
+            title="Family Information"
+            icon={User}
+            gradientBar="bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500"
+            iconGradient="bg-gradient-to-br from-purple-500 to-pink-600"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div>
-                <label className={labelClass}>Father Name</label>
-                <input
-                  type="text"
-                  name="fatherName"
-                  value={form.fatherName}
+              {familyFieldsFather.map((f) => (
+                <Field
+                  key={f.name}
+                  type={f.type || "text"}
+                  name={f.name}
+                  label={f.label}
+                  value={form[f.name]}
                   onChange={handleChange}
-                  placeholder="Father Name"
-                  className={inputClass}
+                  placeholder={f.placeholder}
                 />
-              </div>
-              <div>
-                <label className={labelClass}>Father Date of Birth</label>
-                <input
-                  type="date"
-                  name="fathersDateOfBirth"
-                  value={form.fathersDateOfBirth}
-                  onChange={handleChange}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Father Nationality</label>
-                <input
-                  type="text"
-                  name="fathersNationality"
-                  value={form.fathersNationality}
-                  onChange={handleChange}
-                  placeholder="Cambodian"
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Father Job</label>
-                <input
-                  type="text"
-                  name="fathersJob"
-                  value={form.fathersJob}
-                  onChange={handleChange}
-                  placeholder="Father's Job"
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Father Phone Number</label>
-                <input
-                  type="tel"
-                  name="fathersPhoneNumber"
-                  value={form.fathersPhoneNumber}
-                  onChange={handleChange}
-                  placeholder="012 345 678"
-                  className={inputClass}
-                />
-              </div>
+              ))}
 
-              <div className="md:col-span-3 border-t-2 border-white/40 pt-6 mt-2"></div>
+              <div className="md:col-span-3 border-t-2 border-white/40 pt-6 mt-2" />
 
-              <div>
-                <label className={labelClass}>Mother Name</label>
-                <input
-                  type="text"
-                  name="motherName"
-                  value={form.motherName}
+              {familyFieldsMother.map((f) => (
+                <Field
+                  key={f.name}
+                  type={f.type || "text"}
+                  name={f.name}
+                  label={f.label}
+                  value={form[f.name]}
                   onChange={handleChange}
-                  placeholder="Mother Name"
-                  className={inputClass}
+                  placeholder={f.placeholder}
                 />
-              </div>
-              <div>
-                <label className={labelClass}>Mother Date of Birth</label>
-                <input
-                  type="date"
-                  name="motherDateOfBirth"
-                  value={form.motherDateOfBirth}
-                  onChange={handleChange}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Mother Nationality</label>
-                <input
-                  type="text"
-                  name="motherNationality"
-                  value={form.motherNationality}
-                  onChange={handleChange}
-                  placeholder="Cambodian"
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Mother Job</label>
-                <input
-                  type="text"
-                  name="mothersJob"
-                  value={form.mothersJob}
-                  onChange={handleChange}
-                  placeholder="Mother's Job"
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Mother Phone Number</label>
-                <input
-                  type="tel"
-                  name="motherPhoneNumber"
-                  value={form.motherPhoneNumber}
-                  onChange={handleChange}
-                  placeholder="012 345 678"
-                  className={inputClass}
-                />
-              </div>
+              ))}
             </div>
-          </div>
+          </Section>
 
           {/* Guardian & Emergency Contact */}
-          <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border-2 border-white/60">
-            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-green-500 via-teal-500 to-cyan-500 rounded-t-3xl" />
-
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-white/40">
-              <div className="p-3 backdrop-blur-xl bg-gradient-to-br from-green-500 to-teal-600 rounded-2xl text-white shadow-lg">
-                <Shield size={24} />
-              </div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
-                Guardian & Emergency Contact
-              </h2>
-            </div>
-
+          <Section
+            title="Guardian & Emergency Contact"
+            icon={Shield}
+            gradientBar="bg-gradient-to-r from-green-500 via-teal-500 to-cyan-500"
+            iconGradient="bg-gradient-to-br from-green-500 to-teal-600"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className={labelClass}>Guardian Name</label>
-                <input
-                  type="text"
-                  name="guardianName"
-                  value={form.guardianName}
+              {guardianFields.map((f) => (
+                <Field
+                  key={f.name}
+                  type={f.type || "text"}
+                  name={f.name}
+                  label={f.label}
+                  value={form[f.name]}
                   onChange={handleChange}
-                  placeholder="Guardian Name"
-                  className={inputClass}
+                  placeholder={f.placeholder}
                 />
-              </div>
-              <div>
-                <label className={labelClass}>Guardian Phone Number</label>
-                <input
-                  type="tel"
-                  name="guardianPhoneNumber"
-                  value={form.guardianPhoneNumber}
-                  onChange={handleChange}
-                  placeholder="012 345 678"
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Emergency Contact Name</label>
-                <input
-                  type="text"
-                  name="emergencyContactName"
-                  value={form.emergencyContactName}
-                  onChange={handleChange}
-                  placeholder="Emergency Contact"
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Emergency Contact Phone</label>
-                <input
-                  type="tel"
-                  name="emergencyContactPhoneNumber"
-                  value={form.emergencyContactPhoneNumber}
-                  onChange={handleChange}
-                  placeholder="012 345 678"
-                  className={inputClass}
-                />
-              </div>
+              ))}
             </div>
-          </div>
+          </Section>
 
           {/* High School Information */}
-          <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border-2 border-white/60">
-            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-orange-500 via-pink-500 to-rose-500 rounded-t-3xl" />
-
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-white/40">
-              <div className="p-3 backdrop-blur-xl bg-gradient-to-br from-orange-500 to-pink-600 rounded-2xl text-white shadow-lg">
-                <University size={24} />
-              </div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
-                High School Information
-              </h2>
-            </div>
-
+          <Section
+            title="High School Information"
+            icon={University}
+            gradientBar="bg-gradient-to-r from-orange-500 via-pink-500 to-rose-500"
+            iconGradient="bg-gradient-to-br from-orange-500 to-pink-600"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div>
-                <label className={labelClass}>High School *</label>
-                <input
-                  type="text"
-                  name="highSchoolName"
-                  value={form.highSchoolName}
+              {schoolFields.map((f) => (
+                <Field
+                  key={f.name}
+                  type={f.type || "text"}
+                  name={f.name}
+                  label={f.label}
+                  value={form[f.name]}
                   onChange={handleChange}
-                  placeholder="High School"
-                  className={inputClass}
-                  required
+                  placeholder={f.placeholder}
+                  required={!!f.required}
                 />
-              </div>
-              <div>
-                <label className={labelClass}>Graduation Year</label>
-                <input
-                  type="text"
-                  name="graduationYear"
-                  value={form.graduationYear}
-                  onChange={handleChange}
-                  placeholder="YYYY"
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Grade 12 Result</label>
-                <input
-                  type="text"
-                  name="grade12Result"
-                  value={form.grade12Result}
-                  onChange={handleChange}
-                  placeholder="Grade A-F"
-                  className={inputClass}
-                />
-              </div>
+              ))}
             </div>
-          </div>
+          </Section>
 
           {/* Academic Information */}
-          <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border-2 border-white/60">
-            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 rounded-t-3xl" />
-
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-white/40">
-              <div className="p-3 backdrop-blur-xl bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl text-white shadow-lg">
-                <School size={24} />
-              </div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                Academic Information
-              </h2>
-            </div>
-
+          <Section
+            title="Academic Information"
+            icon={School}
+            gradientBar="bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500"
+            iconGradient="bg-gradient-to-br from-blue-500 to-cyan-600"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div>
-                <label className={labelClass}>Department *</label>
-                <select
-                  name="departmentId"
-                  value={form.departmentId}
+              {academicFields.map((f) => (
+                <Field
+                  key={f.name}
+                  type={f.type || "text"}
+                  name={f.name}
+                  label={f.label}
+                  value={form[f.name]}
                   onChange={handleChange}
-                  className={inputClass}
-                  required
-                >
-                  <option value="">Select Department</option>
-                  {departments.map((dep) => (
-                    <option key={dep.id} value={dep.id}>
-                      {dep.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className={labelClass}>Major *</label>
-                <select
-                  name="majorId"
-                  value={form.majorId}
-                  onChange={handleChange}
-                  className={inputClass}
-                  required
-                  disabled={!form.departmentId}
-                >
-                  <option value="">Select Major</option>
-                  {majors.map((major) => (
-                    <option key={major.id} value={major.id}>
-                      {major.major_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className={labelClass}>Faculty</label>
-                <input
-                  type="text"
-                  name="faculty"
-                  value={form.faculty}
-                  onChange={handleChange}
-                  placeholder="Select department first"
-                  className={`${inputClass} ${
-                    form.departmentId ? "bg-white/40" : "bg-gray-100/60"
-                  }`}
-                  readOnly
+                  placeholder={f.placeholder}
+                  required={!!f.required}
+                  options={f.options}
+                  disabled={f.disabled}
+                  readOnly={f.readOnly}
+                  className={f.className}
                 />
-              </div>
+              ))}
 
-              <div>
-                <label className={labelClass}>Shift</label>
-                <select
-                  name="shift"
-                  value={form.shift}
-                  onChange={handleChange}
-                  className={inputClass}
-                >
-                  <option>Morning</option>
-                  <option>Afternoon</option>
-                  <option>Evening</option>
-                  <option>Weekend</option>
-                </select>
-              </div>
-
-              {/* ✅ NEW (fits controller, does not remove/rename anything) */}
-              <div>
-                <label className={labelClass}>Semester</label>
-                <select
-                  name="semester"
-                  value={form.semester}
-                  onChange={handleChange}
-                  className={inputClass}
-                >
-                  <option value={1}>1</option>
-                  <option value={2}>2</option>
-                </select>
-              </div>
-
+              {/* Profile Picture */}
               <div className="md:col-span-3 mt-4">
-                <label className={labelClass}>Profile Picture</label>
+                <label className={labelClassBase}>Profile Picture</label>
                 <div className="backdrop-blur-2xl bg-white/50 border-2 border-dashed border-white/60 rounded-3xl p-8 flex flex-col items-center justify-center text-center hover:border-blue-400 hover:bg-blue-50/40 transition-all duration-300 cursor-pointer shadow-lg group">
                   <input
                     type="file"
@@ -1108,10 +1009,7 @@ const Registration = () => {
                     id="file-upload"
                     accept="image/png,image/jpeg,image/jpg"
                   />
-                  <label
-                    htmlFor="file-upload"
-                    className="cursor-pointer flex flex-col items-center w-full"
-                  >
+                  <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center w-full">
                     {profilePreview ? (
                       <img
                         src={profilePreview}
@@ -1124,17 +1022,14 @@ const Registration = () => {
                       </div>
                     )}
                     <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-bold flex items-center gap-2 text-lg">
-                      <Upload size={18} />{" "}
-                      {form.profilePicture ? "Change Photo" : "Upload Photo"}
+                      <Upload size={18} /> {form.profilePicture ? "Change Photo" : "Upload Photo"}
                     </span>
-                    <span className="text-xs text-gray-500 mt-2 font-medium">
-                      PNG, JPG up to 5MB
-                    </span>
+                    <span className="text-xs text-gray-500 mt-2 font-medium">PNG, JPG up to 5MB</span>
                   </label>
                 </div>
               </div>
             </div>
-          </div>
+          </Section>
 
           {/* Submit Button */}
           <div className="flex justify-center pt-6 pb-20">

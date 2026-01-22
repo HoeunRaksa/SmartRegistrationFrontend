@@ -1,5 +1,5 @@
 // ==============================
-// registration_api.jsx (FULL, CLEAN, NO REDUNDANCY) ✅ FIXED
+// registration_api.jsx (FULL, CLEAN, CONSISTENT) ✅ FIXED
 // ==============================
 import API from "./index";
 import PaymentAPI from "./paymentClient";
@@ -32,36 +32,45 @@ export const updateRegistration = (id, formData) =>
 export const deleteRegistration = (id) => API.delete(`/registers/${id}`);
 
 // ==============================
-// PAY LATER (NEW OPTION)
-// backend route: POST /registrations/{id}/pay-later
+// PAY LATER
+// ⚠️ keep your real backend route here
 // ==============================
-export const payLater = (id, semester = 1) =>
-  API.post(`/registrations/${id}/pay-later`, { semester });
+export const payLater = (id, payload = {}) =>
+  API.post(`/registrations/${id}/pay-later`, payload);
 
 // ==============================
-// ✅ ADMIN GENERATE QR (FIXED)
+// ✅ GENERATE QR (ONE TRUE FUNCTION)
 // backend route: POST /payment/generate-qr
+// supports: semester, pay_plan, amount
 // ==============================
-// IMPORTANT: use PaymentAPI (has baseURL /api + correct headers)
-// NOTE: semester is optional; backend defaults to 1
-export const adminGenerateQr = (id, semester = 1) =>
-  PaymentAPI.post(`/payment/generate-qr`, {
-    registration_id: id,
-    semester: parseInt(semester, 10) || 1,
+export const generatePaymentQR = (registrationId, payload = {}) =>
+  PaymentAPI.post("/payment/generate-qr", {
+    registration_id: registrationId,
+    ...payload, // { semester, pay_plan, amount }
   });
 
-// ==============================
-// ✅ ADMIN CASH PAYMENT (FIXED)
-// backend route: PUT /admin/registrations/{id}/mark-paid-cash
-// ==============================
-export const markPaidCash = (id, semester = 1) =>
-  API.post(`/admin/registrations/${id}/mark-paid-cash`, {
-    semester: parseInt(semester, 10) || 1,
-  });
-
+// ✅ Admin Generate QR (use same generatePaymentQR)
+export const adminGenerateQr = (id, payload = {}) =>
+  generatePaymentQR(id, payload);
 
 // ==============================
-// REGISTRATION REPORTS
+// ✅ ADMIN CASH PAYMENT
+// backend route example: POST /admin/registrations/{id}/mark-paid-cash
+// ==============================
+export const markPaidCash = (id, payload = {}) =>
+  API.post(`/admin/registrations/${id}/mark-paid-cash`, payload);
+
+// ==============================
+// PAYMENT STATUS
+// ==============================
+export const checkPaymentStatus = (tranId) =>
+  PaymentAPI.get(`/payment/check-status/${tranId}`);
+
+export const getRegistrationPayment = (registrationId) =>
+  PaymentAPI.get(`/payment/registration/${registrationId}`);
+
+// ==============================
+// REPORTS
 // ==============================
 export const generateRegistrationReport = (filters = {}) => {
   const params = new URLSearchParams();
@@ -105,18 +114,3 @@ export const generateAndDownloadReport = async (filters = {}, filename = null) =
   downloadPDFBlob(response.data, filename);
   return { success: true };
 };
-
-// ==============================
-// PAYMENT (QR) ✅ UPDATED to support semester
-// ==============================
-export const generatePaymentQR = (registrationId, semester = 1) =>
-  PaymentAPI.post("/payment/generate-qr", {
-    registration_id: registrationId,
-    semester: parseInt(semester, 10) || 1,
-  });
-
-export const checkPaymentStatus = (tranId) =>
-  PaymentAPI.get(`/payment/check-status/${tranId}`);
-
-export const getRegistrationPayment = (registrationId) =>
-  PaymentAPI.get(`/payment/registration/${registrationId}`);

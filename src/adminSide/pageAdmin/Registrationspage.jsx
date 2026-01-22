@@ -1,4 +1,12 @@
-import React, { useEffect, useState, useMemo, useContext } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useContext,
+  useRef,
+  useCallback,
+  useDeferredValue,
+} from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   fetchRegistrations,
@@ -29,7 +37,20 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-/* ================== SAFE HELPERS (work everywhere) ================== */
+
+// ================== SAFE HELPERS (UPDATED) ==================
+
+const normalizeStatus = (raw) => String(raw || "PENDING").trim().toUpperCase();
+
+const isPaidStatus = (raw) => {
+  const s = normalizeStatus(raw);
+  return ["PAID", "COMPLETED", "SUCCESS", "APPROVED"].includes(s);
+};
+
+const isPendingStatus = (raw) => {
+  const s = normalizeStatus(raw);
+  return ["PENDING", "UNPAID", "NEW", "INIT", "PROCESSING"].includes(s);
+};
 
 // ✅ detect semester/year fields safely (support old/new backend)
 const getSemester = (reg) =>
@@ -46,6 +67,8 @@ const getAcademicYear = (reg) =>
   reg?.academicYear ??
   null;
 
+// ✅ MOST IMPORTANT: prefer period_payment_status first (new table)
+// then fallback old table
 const getPaymentStatus = (reg) =>
   reg?.period_payment_status ??
   reg?.academic_payment_status ??
@@ -63,24 +86,19 @@ const getAmount = (reg) =>
   reg?.amount ??
   0;
 
-// ✅ label to show in UI (clear pending for which year/semester)
 const getPaymentLabel = (reg) => {
-  const raw = getPaymentStatus(reg);
-  const status = String(raw || "PENDING").toUpperCase();
-
+  const status = normalizeStatus(getPaymentStatus(reg));
   const sem = getSemester(reg);
   const year = getAcademicYear(reg);
 
   const semText = sem ? `Sem ${sem}` : null;
   const yearText = year ? `${year}` : null;
-
   const suffix = [yearText, semText].filter(Boolean).join(" • ");
 
-  if (status === "PAID" || status === "COMPLETED") {
-    return suffix ? `Paid (${suffix})` : "Paid";
-  }
+  if (isPaidStatus(status)) return suffix ? `Paid (${suffix})` : "Paid";
   return suffix ? `Pending (${suffix})` : "Pending";
 };
+
 
 const RegistrationPage = () => {
   const [registrations, setRegistrations] = useState([]);
@@ -107,41 +125,84 @@ const RegistrationPage = () => {
 
   const toast = useContext(ToastContext);
 
-  useEffect(() => {
-    loadAllData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  /* ================== SPEED CORE (no UI change) ================== */
 
-  // ✅ reload registrations when semester changes (important!)
-  useEffect(() => {
-    loadRegistrationsOnly();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // ✅ cache registrations by semester so switching is instant
+  const semesterCacheRef = useRef(new Map()); // key: "1" | "2" => array
+  const latestReqIdRef = useRef(0);
+
+  // ✅ make typing fast (defer heavy filtering while user types)
+  const deferredSearch = useDeferredValue(searchTerm);
+
+  // ✅ pre-parse ints once (avoid parseInt in every row/filter)
+  const selectedDeptId = useMemo(() => {
+    const v = parseInt(selectedDepartment, 10);
+    return Number.isFinite(v) ? v : null;
+  }, [selectedDepartment]);
+
+  const selectedMajorId = useMemo(() => {
+    const v = parseInt(selectedMajor, 10);
+    return Number.isFinite(v) ? v : null;
+  }, [selectedMajor]);
+
+  const selectedSemesterInt = useMemo(() => {
+    const v = parseInt(selectedSemester, 10);
+    return Number.isFinite(v) ? v : 1;
   }, [selectedSemester]);
 
-  const loadRegistrationsOnly = async () => {
+  const loadRegistrationsOnly = useCallback(
+    async (opts = { preferCache: true }) => {
+      const semKey = String(selectedSemesterInt);
+
+      // ✅ Instant paint from cache (zero wait)
+      if (opts?.preferCache && semesterCacheRef.current.has(semKey)) {
+        setRegistrations(semesterCacheRef.current.get(semKey) || []);
+        // keep loading false if we already have cached data
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
+
+      // ✅ Ignore outdated responses (super important when user clicks fast)
+      const reqId = ++latestReqIdRef.current;
+
+      try {
+        const regRes = await fetchRegistrations({
+          semester: selectedSemesterInt,
+        });
+
+        // if another request started after this one, ignore this response
+        if (reqId !== latestReqIdRef.current) return;
+
+        const regData = regRes.data?.data || regRes.data || [];
+        const arr = Array.isArray(regData) ? regData : [];
+
+        // cache + set
+        semesterCacheRef.current.set(semKey, arr);
+        setRegistrations(arr);
+      } catch (error) {
+        // ignore outdated error too
+        if (reqId !== latestReqIdRef.current) return;
+
+        console.error("Failed to load registrations:", error);
+        setRegistrations([]);
+        toast?.error?.("Failed to load registrations");
+      } finally {
+        // only end loading if still latest
+        if (reqId === latestReqIdRef.current) setLoading(false);
+      }
+    },
+    [selectedSemesterInt, toast]
+  );
+
+  const loadAllData = useCallback(async () => {
     try {
       setLoading(true);
-      const regRes = await fetchRegistrations({
-        semester: parseInt(selectedSemester, 10) || 1,
-      });
 
-      const regData = regRes.data?.data || regRes.data || [];
-      setRegistrations(Array.isArray(regData) ? regData : []);
-    } catch (error) {
-      console.error("Failed to load registrations:", error);
-      setRegistrations([]);
-      toast?.error?.("Failed to load registrations");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadAllData = async () => {
-    try {
-      setLoading(true);
+      const semKey = String(selectedSemesterInt);
 
       const [regRes, deptRes, majorRes] = await Promise.all([
-        fetchRegistrations({ semester: parseInt(selectedSemester, 10) || 1 }),
+        fetchRegistrations({ semester: selectedSemesterInt }),
         fetchDepartments(),
         fetchMajors(),
       ]);
@@ -150,7 +211,10 @@ const RegistrationPage = () => {
       const deptData = deptRes.data?.data || deptRes.data || [];
       const majorData = majorRes.data?.data || majorRes.data || [];
 
-      setRegistrations(Array.isArray(regData) ? regData : []);
+      const regArr = Array.isArray(regData) ? regData : [];
+      semesterCacheRef.current.set(semKey, regArr);
+
+      setRegistrations(regArr);
       setDepartments(Array.isArray(deptData) ? deptData : []);
       setMajors(Array.isArray(majorData) ? majorData : []);
     } catch (error) {
@@ -162,90 +226,146 @@ const RegistrationPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedSemesterInt, toast]);
 
-  // Filter registrations
+  useEffect(() => {
+    loadAllData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ✅ reload registrations when semester changes (fast path: cache first + debounce fetch)
+  useEffect(() => {
+    // instant from cache (if exists) + super short debounce to prevent rapid spam calls
+    const t = setTimeout(() => {
+      loadRegistrationsOnly({ preferCache: true });
+    }, 120); // tiny debounce = feels instant but avoids double/triple spam
+
+    return () => clearTimeout(t);
+  }, [selectedSemesterInt, loadRegistrationsOnly]);
+
+  // ✅ Build one searchable string per registration (dramatically faster search)
+  const normalizedRegistrations = useMemo(() => {
+    const list = Array.isArray(registrations) ? registrations : [];
+    return list.map((r) => {
+      const searchBlob = [
+        r?.full_name_en,
+        r?.full_name_kh,
+        r?.personal_email,
+        r?.phone_number,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return {
+        ...r,
+        _search: searchBlob,
+        _deptId: r?.department_id ?? null,
+        _majorId: r?.major_id ?? null,
+        _statusUpper: normalizeStatus(getPaymentStatus(r)),
+      };
+    });
+  }, [registrations]);
+
+  // Filter registrations (FAST)
   const filteredRegistrations = useMemo(() => {
-    return registrations.filter((reg) => {
-      const status = String(getPaymentStatus(reg) || "PENDING").toUpperCase();
+    const list = normalizedRegistrations;
+    const s = String(deferredSearch || "").trim().toLowerCase();
+
+    const wantPaid = filter === "paid";
+    const wantPending = filter === "pending";
+
+    return list.filter((reg) => {
+      const status = reg._statusUpper;
 
       // Payment status filter
       const statusMatch =
         filter === "all"
           ? true
           : filter === "paid"
-          ? status === "PAID" || status === "COMPLETED"
-          : filter === "pending"
-          ? status === "PENDING"
-          : true;
+            ? isPaidStatus(status)
+            : filter === "pending"
+              ? isPendingStatus(status)
+              : true;
 
-      // Search filter
-      const s = searchTerm.toLowerCase();
-      const searchMatch =
-        searchTerm === ""
-          ? true
-          : reg.full_name_en?.toLowerCase().includes(s) ||
-            reg.full_name_kh?.toLowerCase().includes(s) ||
-            reg.personal_email?.toLowerCase().includes(s) ||
-            reg.phone_number?.includes(searchTerm);
+
+      // Search filter (use precomputed _search)
+      const searchMatch = s ? reg._search.includes(s) : true;
 
       // Department filter
       const departmentMatch =
-        selectedDepartment === "all"
-          ? true
-          : reg.department_id === parseInt(selectedDepartment);
+        selectedDeptId == null ? true : reg._deptId === selectedDeptId;
 
       // Major filter
       const majorMatch =
-        selectedMajor === "all" ? true : reg.major_id === parseInt(selectedMajor);
+        selectedMajorId == null ? true : reg._majorId === selectedMajorId;
 
       return statusMatch && searchMatch && departmentMatch && majorMatch;
     });
-  }, [registrations, filter, searchTerm, selectedDepartment, selectedMajor]);
+  }, [
+    normalizedRegistrations,
+    deferredSearch,
+    filter,
+    selectedDeptId,
+    selectedMajorId,
+  ]);
 
-  const paidCount = filteredRegistrations.filter((r) => {
-    const s = String(getPaymentStatus(r) || "").toUpperCase();
-    return s === "PAID" || s === "COMPLETED";
-  }).length;
+  // ✅ One-pass summary (no extra filters/reduces)
+  const summary = useMemo(() => {
+    let total = 0;
+    let paid = 0;
+    let pending = 0;
+    let revenue = 0;
 
-  const pendingCount = filteredRegistrations.filter((r) => {
-    const s = String(getPaymentStatus(r) || "PENDING").toUpperCase();
-    return s === "PENDING";
-  }).length;
+    for (const r of filteredRegistrations) {
+      total++;
+      const st = r._statusUpper;
+      const isPaid = st === "PAID" || st === "COMPLETED";
+      if (isPaid) {
+        paid++;
+        revenue += parseFloat(getAmount(r)) || 0;
+      } else {
+        pending++;
+      }
+    }
 
-  const totalRevenue = filteredRegistrations
-    .filter((r) => {
-      const s = String(getPaymentStatus(r) || "").toUpperCase();
-      return s === "PAID" || s === "COMPLETED";
-    })
-    .reduce((sum, reg) => sum + (parseFloat(getAmount(reg)) || 0), 0);
+    return { total, paid, pending, revenue };
+  }, [filteredRegistrations]);
 
-  const quickStats = [
-    {
-      label: "Total",
-      value: filteredRegistrations.length,
-      color: "from-blue-500 to-cyan-500",
-      icon: Users,
-    },
-    {
-      label: "Paid",
-      value: paidCount,
-      color: "from-green-500 to-emerald-500",
-      icon: CheckCircle,
-    },
-    {
-      label: "Pending",
-      value: pendingCount,
-      color: "from-orange-500 to-red-500",
-      icon: Clock,
-    },
-    {
-      label: "Revenue",
-      value: `$${totalRevenue.toFixed(2)}`,
-      color: "from-purple-500 to-pink-500",
-      icon: DollarSign,
-    },
-  ];
+  const quickStats = useMemo(() => {
+    return [
+      {
+        label: "Total",
+        value: summary.total,
+        color: "from-blue-500 to-cyan-500",
+        icon: Users,
+      },
+      {
+        label: "Paid",
+        value: summary.paid,
+        color: "from-green-500 to-emerald-500",
+        icon: CheckCircle,
+      },
+      {
+        label: "Pending",
+        value: summary.pending,
+        color: "from-orange-500 to-red-500",
+        icon: Clock,
+      },
+      {
+        label: "Revenue",
+        value: `$${summary.revenue.toFixed(2)}`,
+        color: "from-purple-500 to-pink-500",
+        icon: DollarSign,
+      },
+    ];
+  }, [summary]);
+
+  // ✅ stable callbacks = less rerenders
+  const onView = useCallback((reg) => setSelectedRegistration(reg), []);
+  const onCloseDetail = useCallback(() => setSelectedRegistration(null), []);
+  const onCloseReport = useCallback(() => setShowReportModal(false), []);
+  const onOpenReport = useCallback(() => setShowReportModal(true), []);
 
   return (
     <div className="min-h-screen space-y-6">
@@ -322,7 +442,7 @@ const RegistrationPage = () => {
                   .filter(
                     (major) =>
                       selectedDepartment === "all" ||
-                      major.department_id === parseInt(selectedDepartment)
+                      major.department_id === parseInt(selectedDepartment, 10)
                   )
                   .map((major) => (
                     <option key={major.id} value={major.id}>
@@ -349,22 +469,20 @@ const RegistrationPage = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => setFilter("all")}
-                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
-                  filter === "all"
+                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${filter === "all"
                     ? "bg-blue-500 text-white shadow-lg"
                     : "bg-white/50 text-gray-700 hover:bg-white/70"
-                }`}
+                  }`}
               >
                 All ({registrations.length})
               </button>
 
               <button
                 onClick={() => setFilter("paid")}
-                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${
-                  filter === "paid"
+                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${filter === "paid"
                     ? "bg-green-500 text-white shadow-lg"
                     : "bg-white/50 text-gray-700 hover:bg-white/70"
-                }`}
+                  }`}
               >
                 <CheckCircle className="w-4 h-4" />
                 Paid
@@ -372,11 +490,10 @@ const RegistrationPage = () => {
 
               <button
                 onClick={() => setFilter("pending")}
-                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${
-                  filter === "pending"
+                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${filter === "pending"
                     ? "bg-orange-500 text-white shadow-lg"
                     : "bg-white/50 text-gray-700 hover:bg-white/70"
-                }`}
+                  }`}
               >
                 <Clock className="w-4 h-4" />
                 Pending
@@ -388,23 +505,23 @@ const RegistrationPage = () => {
               selectedDepartment !== "all" ||
               selectedMajor !== "all" ||
               filter !== "all") && (
-              <button
-                onClick={() => {
-                  setSearchTerm("");
-                  setSelectedDepartment("all");
-                  setSelectedMajor("all");
-                  setFilter("all");
-                }}
-                className="px-4 py-2 rounded-xl font-medium text-sm bg-gray-500 text-white hover:bg-gray-600 shadow-lg transition-all flex items-center gap-2"
-              >
-                <XCircle className="w-4 h-4" />
-                Clear Filters
-              </button>
-            )}
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setSelectedDepartment("all");
+                    setSelectedMajor("all");
+                    setFilter("all");
+                  }}
+                  className="px-4 py-2 rounded-xl font-medium text-sm bg-gray-500 text-white hover:bg-gray-600 shadow-lg transition-all flex items-center gap-2"
+                >
+                  <XCircle className="w-4 h-4" />
+                  Clear Filters
+                </button>
+              )}
 
             {/* Create Report Button */}
             <button
-              onClick={() => setShowReportModal(true)}
+              onClick={onOpenReport}
               className="ml-auto px-4 py-2 rounded-xl font-medium text-sm bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 shadow-lg transition-all flex items-center gap-2"
             >
               <FileText className="w-4 h-4" />
@@ -418,9 +535,9 @@ const RegistrationPage = () => {
       <RegistrationsList
         registrations={filteredRegistrations}
         loading={loading}
-        onView={setSelectedRegistration}
+        onView={onView}
         getPaymentStatus={getPaymentStatus}
-        getPaymentLabel={getPaymentLabel} // ✅ FIX: pass it
+        getPaymentLabel={getPaymentLabel}
         getAmount={getAmount}
       />
 
@@ -429,14 +546,15 @@ const RegistrationPage = () => {
         <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <PaymentForm
             registrationId={adminQrReg.id}
+            yearFee={adminQrReg?.registration_fee ?? adminQrReg?.period_tuition_amount ?? 0}
             amount={getAmount(adminQrReg)}
+            payPlan={{ type: "SEMESTER", semester: selectedSemesterInt }}
             registrationData={{
               data: {
                 registration_id: adminQrReg.id,
                 payment_amount: getAmount(adminQrReg),
               },
             }}
-            semester={parseInt(selectedSemester, 10) || 1}
             onClose={() => {
               setShowAdminQr(false);
               setAdminQrReg(null);
@@ -444,24 +562,28 @@ const RegistrationPage = () => {
             onSuccess={async () => {
               setShowAdminQr(false);
               setAdminQrReg(null);
-              await loadRegistrationsOnly();
+
+              // ✅ important: preferCache false AND clear cache for this semester
+              semesterCacheRef.current.delete(String(selectedSemesterInt));
+              await loadRegistrationsOnly({ preferCache: false });
             }}
           />
         </div>
       )}
 
+
       {/* ================= DETAIL MODAL ================= */}
       {selectedRegistration && (
         <RegistrationModal
           registration={selectedRegistration}
-          onClose={() => setSelectedRegistration(null)}
-          onRefresh={loadRegistrationsOnly}
+          onClose={onCloseDetail}
+          onRefresh={() => loadRegistrationsOnly({ preferCache: false })}
           onOpenQr={(reg) => {
             setAdminQrReg(reg);
             setShowAdminQr(true);
           }}
           toast={toast}
-          selectedSemester={parseInt(selectedSemester, 10) || 1}
+          selectedSemester={selectedSemesterInt}
           getPaymentStatus={getPaymentStatus}
           getPaidAt={getPaidAt}
           getAmount={getAmount}
@@ -469,7 +591,7 @@ const RegistrationPage = () => {
       )}
 
       {/* ================= REPORT MODAL ================= */}
-      {showReportModal && <ReportModal onClose={() => setShowReportModal(false)} />}
+      {showReportModal && <ReportModal onClose={onCloseReport} />}
     </div>
   );
 };
@@ -508,14 +630,14 @@ const ReportModal = ({ onClose }) => {
   );
 };
 
-const RegistrationsList = ({
+const RegistrationsList = React.memo(function RegistrationsList({
   registrations,
   loading,
   onView,
   getPaymentStatus,
   getPaymentLabel,
   getAmount,
-}) => {
+}) {
   if (loading) {
     return (
       <div className="rounded-2xl bg-white/40 border border-white/40 shadow-lg p-12 text-center">
@@ -582,7 +704,7 @@ const RegistrationsList = ({
                   registration={reg}
                   onView={onView}
                   getPaymentStatus={getPaymentStatus}
-                  getPaymentLabel={getPaymentLabel} // ✅ FIX
+                  getPaymentLabel={getPaymentLabel}
                   getAmount={getAmount}
                 />
               ))}
@@ -592,7 +714,7 @@ const RegistrationsList = ({
       )}
     </div>
   );
-};
+});
 
 const EmptyState = () => (
   <div className="text-center py-12">
@@ -604,13 +726,13 @@ const EmptyState = () => (
   </div>
 );
 
-const RegistrationRow = ({
+const RegistrationRow = React.memo(function RegistrationRow({
   registration,
   onView,
   getPaymentStatus,
   getPaymentLabel,
   getAmount,
-}) => {
+}) {
   const status = String(getPaymentStatus(registration) || "PENDING").toUpperCase();
   const isPaid = status === "PAID" || status === "COMPLETED";
   const statusLabel = getPaymentLabel(registration);
@@ -743,7 +865,7 @@ const RegistrationRow = ({
       </td>
     </motion.tr>
   );
-};
+});
 
 const RegistrationModal = ({
   registration,
@@ -781,11 +903,10 @@ const RegistrationModal = ({
           className="relative max-w-3xl w-full max-h-[75vh] overflow-y-auto bg-white rounded-3xl shadow-2xl"
         >
           <div
-            className={`sticky top-0 p-6 z-10 ${
-              isPaid
+            className={`sticky top-0 p-6 z-10 ${isPaid
                 ? "bg-gradient-to-br from-green-500 to-emerald-600"
                 : "bg-gradient-to-br from-orange-500 to-red-600"
-            }`}
+              }`}
           >
             <button
               onClick={onClose}
@@ -877,11 +998,10 @@ const RegistrationModal = ({
 
             <Section title="Payment Information">
               <div
-                className={`p-4 rounded-xl ${
-                  isPaid
+                className={`p-4 rounded-xl ${isPaid
                     ? "bg-green-50 border border-green-200"
                     : "bg-orange-50 border border-orange-200"
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">

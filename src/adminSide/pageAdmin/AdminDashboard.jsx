@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -16,8 +16,9 @@ import AttendancePage from "../pageAdmin/AttendancePage.jsx";
 import SchedulesPage from "../pageAdmin/SchedulesPage.jsx";
 import CoursesPage from "../pageAdmin/CoursesPage.jsx";
 import MajorSubjectsPage from "../pageAdmin/MajorSubjectsPage.jsx";
-import TeacherPage from '../pageAdmin/TeacherPage.jsx';
-import ClassGroupsPage from '../pageAdmin/ClassGroupsPage.jsx';
+import TeacherPage from "../pageAdmin/TeacherPage.jsx";
+import ClassGroupsPage from "../pageAdmin/ClassGroupsPage.jsx";
+
 import { logoutApi } from "../../api/auth.jsx";
 import {
   LayoutDashboard,
@@ -48,6 +49,193 @@ import Dashboard from "../../adminSide/ConponentsAdmin/dashboard.jsx";
 
 const profileFallback = "/assets/images/profile-fallback.png";
 
+/* =========================
+   PERMANENT FAST CONSTANTS
+   (no re-create every render)
+========================= */
+
+const MENU_ITEMS = [
+  // Dashboard
+  {
+    id: "dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    gradient: "from-blue-500 to-cyan-500",
+  },
+
+  // Academic setup (order: Department → Major → Subject → MajorSubject)
+  {
+    id: "departments",
+    label: "Departments",
+    icon: Building2,
+    gradient: "from-purple-500 to-pink-500",
+  },
+  {
+    id: "majors",
+    label: "Majors",
+    icon: GraduationCap,
+    gradient: "from-orange-500 to-red-500",
+  },
+  {
+    id: "subjects",
+    label: "Subjects",
+    icon: BookOpen,
+    gradient: "from-green-500 to-emerald-500",
+  },
+  {
+    id: "major-subjects",
+    label: "Major Subjects",
+    icon: Link2,
+    gradient: "from-cyan-500 to-blue-500",
+  },
+  {
+    id: "class-groups",
+    label: "Class Groups",
+    icon: Building2,
+    gradient: "from-purple-500 to-pink-500",
+  },
+
+  // Course flow
+  {
+    id: "courses",
+    label: "Courses",
+    icon: BookOpen,
+    gradient: "from-blue-500 to-cyan-500",
+  },
+  {
+    id: "schedules",
+    label: "Schedules",
+    icon: Calendar,
+    gradient: "from-cyan-500 to-blue-500",
+  },
+  {
+    id: "assignments",
+    label: "Assignments",
+    icon: ClipboardList,
+    gradient: "from-orange-500 to-amber-500",
+  },
+  {
+    id: "attendance",
+    label: "Attendance",
+    icon: CheckSquare,
+    gradient: "from-green-500 to-teal-500",
+  },
+  {
+    id: "grades",
+    label: "Grades",
+    icon: Award,
+    gradient: "from-purple-500 to-pink-500",
+  },
+
+  // Student management
+  {
+    id: "students",
+    label: "Students",
+    icon: Users,
+    gradient: "from-indigo-500 to-blue-500",
+  },
+  {
+    id: "registrations",
+    label: "Registrations",
+    icon: FileText,
+    gradient: "from-pink-500 to-rose-500",
+  },
+  {
+    id: "enrollments",
+    label: "Enrollments",
+    icon: BookOpen,
+    gradient: "from-blue-500 to-purple-500",
+  },
+
+  // Staff
+  {
+    id: "teachers",
+    label: "Teachers",
+    icon: User2Icon,
+    gradient: "from-indigo-500 to-blue-500",
+  },
+  {
+    id: "staff",
+    label: "Staff",
+    icon: User2Icon,
+    gradient: "from-indigo-500 to-blue-500",
+  },
+
+  // System
+  {
+    id: "settings",
+    label: "Settings",
+    icon: Settings,
+    gradient: "from-gray-500 to-slate-500",
+  },
+];
+
+const VALID_SECTIONS = new Set(MENU_ITEMS.map((i) => i.id));
+const MENU_BY_ID = (() => {
+  const m = new Map();
+  for (const it of MENU_ITEMS) m.set(it.id, it);
+  return m;
+})();
+
+/* Mount-all sections ONCE, then only toggle display.
+   This is faster than recreating the tree each render. */
+const SECTIONS = [
+  { id: "dashboard", el: <Dashboard /> },
+  { id: "departments", el: <DepartmentsPage /> },
+  { id: "majors", el: <MajorsPage /> },
+  { id: "subjects", el: <SubjectsPage /> },
+  { id: "major-subjects", el: <MajorSubjectsPage /> },
+  { id: "students", el: <StudentPage /> },
+  { id: "staff", el: <StaffPage /> },
+  { id: "registrations", el: <RegistrationsPage /> },
+  { id: "settings", el: <SettingPage /> },
+  { id: "enrollments", el: <EnrollmentsPage /> },
+  { id: "grades", el: <GradesPage /> },
+  { id: "assignments", el: <AssignmentsPage /> },
+  { id: "attendance", el: <AttendancePage /> },
+  { id: "schedules", el: <SchedulesPage /> },
+  { id: "courses", el: <CoursesPage /> },
+  { id: "teachers", el: <TeacherPage /> },
+  { id: "class-groups", el: <ClassGroupsPage /> },
+];
+
+/* =========================
+   PURE MEMO SIDEBAR BUTTON
+   (prevents re-render of ALL
+    sidebar buttons when only
+    active section changes)
+========================= */
+const SidebarItem = React.memo(function SidebarItem({
+  item,
+  isActive,
+  sidebarCollapsed,
+  onClick,
+}) {
+  const Icon = item.icon;
+
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
+        isActive
+          ? "backdrop-blur-xl bg-gradient-to-r " +
+            item.gradient +
+            " text-white shadow-lg"
+          : "backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40"
+      } border border-white/30`}
+      type="button"
+    >
+      <Icon size={18} className={isActive ? "drop-shadow-sm" : ""} />
+      {!sidebarCollapsed && (
+        <span className="font-medium text-[13px]">{item.label}</span>
+      )}
+      {isActive && !sidebarCollapsed && (
+        <div className="ml-auto w-2 h-2 rounded-full bg-white shadow-lg" />
+      )}
+    </button>
+  );
+});
+
 const AdminDashboard = () => {
   const { section } = useParams();
   const navigate = useNavigate();
@@ -60,7 +248,13 @@ const AdminDashboard = () => {
 
   const activeSection = section || "dashboard";
 
-  const handleLogout = async () => {
+  // avoid new function identity for each menu item
+  const onSectionClickRef = useRef((id) => {});
+  onSectionClickRef.current = (sectionId) => {
+    navigate(`/admin/${sectionId}`);
+  };
+
+  const handleLogout = useCallback(async () => {
     try {
       await logoutApi();
     } catch (err) {
@@ -70,42 +264,11 @@ const AdminDashboard = () => {
       localStorage.removeItem("user");
       window.location.href = "/login";
     }
-  };
+  }, []);
 
-  // ✅ No group / no logic change: just reorder items for easier finding
-  const menuItems = [
-    // Dashboard
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, gradient: "from-blue-500 to-cyan-500" },
-
-    // Academic setup (order: Department → Major → Subject → MajorSubject)
-    { id: "departments", label: "Departments", icon: Building2, gradient: "from-purple-500 to-pink-500" },
-    { id: "majors", label: "Majors", icon: GraduationCap, gradient: "from-orange-500 to-red-500" },
-    { id: "subjects", label: "Subjects", icon: BookOpen, gradient: "from-green-500 to-emerald-500" },
-    { id: "major-subjects", label: "Major Subjects", icon: Link2, gradient: "from-cyan-500 to-blue-500" },
-    { id: "class-groups", label: "Class Groups", icon: Building2, gradient: "from-purple-500 to-pink-500" },
-
-    // Course flow
-    { id: "courses", label: "Courses", icon: BookOpen, gradient: "from-blue-500 to-cyan-500" },
-    { id: "schedules", label: "Schedules", icon: Calendar, gradient: "from-cyan-500 to-blue-500" },
-    { id: "assignments", label: "Assignments", icon: ClipboardList, gradient: "from-orange-500 to-amber-500" },
-    { id: "attendance", label: "Attendance", icon: CheckSquare, gradient: "from-green-500 to-teal-500" },
-    { id: "grades", label: "Grades", icon: Award, gradient: "from-purple-500 to-pink-500" },
-
-    // Student management
-    { id: "students", label: "Students", icon: Users, gradient: "from-indigo-500 to-blue-500" },
-    { id: "registrations", label: "Registrations", icon: FileText, gradient: "from-pink-500 to-rose-500" },
-    { id: "enrollments", label: "Enrollments", icon: BookOpen, gradient: "from-blue-500 to-purple-500" },
-
-    // Staff
-    { id: "teachers", label: "Teachers", icon: User2Icon, gradient: "from-indigo-500 to-blue-500" },
-    { id: "staff", label: "Staff", icon: User2Icon, gradient: "from-indigo-500 to-blue-500" },
-
-    // System
-    { id: "settings", label: "Settings", icon: Settings, gradient: "from-gray-500 to-slate-500" },
-  ];
-
-  const activeMenuItem =
-    menuItems.find((item) => item.id === activeSection) || menuItems[0];
+  const activeMenuItem = useMemo(() => {
+    return MENU_BY_ID.get(activeSection) || MENU_ITEMS[0];
+  }, [activeSection]);
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -119,11 +282,10 @@ const AdminDashboard = () => {
   }, []);
 
   useEffect(() => {
-    const validSections = menuItems.map((item) => item.id);
-    if (section && !validSections.includes(section)) {
+    if (section && !VALID_SECTIONS.has(section)) {
       navigate("/admin/dashboard", { replace: true });
     }
-  }, [section, navigate]); // ✅ keep dependencies stable (no menuItems)
+  }, [section, navigate]);
 
   const handleSectionChange = useCallback(
     (sectionId) => {
@@ -148,63 +310,21 @@ const AdminDashboard = () => {
   }, []);
 
   // Render all sections but hide inactive ones - NO REMOUNTING!
-  const renderAllSections = () => {
+  // NOW memoized so it doesn't rebuild the whole tree each render.
+  const allSections = useMemo(() => {
     return (
       <>
-        <div style={{ display: activeSection === "dashboard" ? "block" : "none" }}>
-          <Dashboard />
-        </div>
-        <div style={{ display: activeSection === "departments" ? "block" : "none" }}>
-          <DepartmentsPage />
-        </div>
-        <div style={{ display: activeSection === "majors" ? "block" : "none" }}>
-          <MajorsPage />
-        </div>
-        <div style={{ display: activeSection === "subjects" ? "block" : "none" }}>
-          <SubjectsPage />
-        </div>
-        <div style={{ display: activeSection === "major-subjects" ? "block" : "none" }}>
-          <MajorSubjectsPage />
-        </div>
-        <div style={{ display: activeSection === "students" ? "block" : "none" }}>
-          <StudentPage />
-        </div>
-        <div style={{ display: activeSection === "staff" ? "block" : "none" }}>
-          <StaffPage />
-        </div>
-        <div style={{ display: activeSection === "registrations" ? "block" : "none" }}>
-          <RegistrationsPage />
-        </div>
-        <div style={{ display: activeSection === "settings" ? "block" : "none" }}>
-          <SettingPage />
-        </div>
-        <div style={{ display: activeSection === "enrollments" ? "block" : "none" }}>
-          <EnrollmentsPage />
-        </div>
-        <div style={{ display: activeSection === "grades" ? "block" : "none" }}>
-          <GradesPage />
-        </div>
-        <div style={{ display: activeSection === "assignments" ? "block" : "none" }}>
-          <AssignmentsPage />
-        </div>
-        <div style={{ display: activeSection === "attendance" ? "block" : "none" }}>
-          <AttendancePage />
-        </div>
-        <div style={{ display: activeSection === "schedules" ? "block" : "none" }}>
-          <SchedulesPage />
-        </div>
-        <div style={{ display: activeSection === "courses" ? "block" : "none" }}>
-          <CoursesPage />
-        </div>
-         <div style={{ display: activeSection === "teachers" ? "block" : "none" }}>
-          <TeacherPage />
-        </div>
-           <div style={{ display: activeSection === "class-groups" ? "block" : "none" }}>
-          <ClassGroupsPage />
-        </div>
+        {SECTIONS.map((s) => (
+          <div
+            key={s.id}
+            style={{ display: activeSection === s.id ? "block" : "none" }}
+          >
+            {s.el}
+          </div>
+        ))}
       </>
     );
-  };
+  }, [activeSection]);
 
   return (
     <div className="min-h-screen w-full relative overflow-hidden">
@@ -248,33 +368,15 @@ const AdminDashboard = () => {
 
           {/* ✅ smaller menu to reduce height: smaller padding + smaller icon */}
           <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-hide">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeSection === item.id;
-
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleSectionChange(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
-                    isActive
-                      ? "backdrop-blur-xl bg-gradient-to-r " +
-                        item.gradient +
-                        " text-white shadow-lg"
-                      : "backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40"
-                  } border border-white/30`}
-                  type="button"
-                >
-                  <Icon size={18} className={isActive ? "drop-shadow-sm" : ""} />
-                  {!sidebarCollapsed && (
-                    <span className="font-medium text-[13px]">{item.label}</span>
-                  )}
-                  {isActive && !sidebarCollapsed && (
-                    <div className="ml-auto w-2 h-2 rounded-full bg-white shadow-lg" />
-                  )}
-                </button>
-              );
-            })}
+            {MENU_ITEMS.map((item) => (
+              <SidebarItem
+                key={item.id}
+                item={item}
+                isActive={activeSection === item.id}
+                sidebarCollapsed={sidebarCollapsed}
+                onClick={() => handleSectionChange(item.id)}
+              />
+            ))}
           </nav>
 
           <button
@@ -283,7 +385,9 @@ const AdminDashboard = () => {
             type="button"
           >
             <LogOut size={18} />
-            {!sidebarCollapsed && <span className="font-medium text-[13px]">Logout</span>}
+            {!sidebarCollapsed && (
+              <span className="font-medium text-[13px]">Logout</span>
+            )}
           </button>
         </div>
       </motion.aside>
@@ -324,7 +428,7 @@ const AdminDashboard = () => {
 
                 {/* ✅ smaller menu for mobile too */}
                 <nav className="flex-1 space-y-1 overflow-y-auto">
-                  {menuItems.map((item) => {
+                  {MENU_ITEMS.map((item) => {
                     const Icon = item.icon;
                     const isActive = activeSection === item.id;
 
@@ -345,7 +449,9 @@ const AdminDashboard = () => {
                         type="button"
                       >
                         <Icon size={18} />
-                        <span className="font-medium text-[13px]">{item.label}</span>
+                        <span className="font-medium text-[13px]">
+                          {item.label}
+                        </span>
                       </button>
                     );
                   })}
@@ -395,7 +501,11 @@ const AdminDashboard = () => {
       </AnimatePresence>
 
       {/* ================= MAIN CONTENT ================= */}
-      <div className={`transition-all duration-200 ${sidebarCollapsed ? "md:ml-20" : "md:ml-72"}`}>
+      <div
+        className={`transition-all duration-200 ${
+          sidebarCollapsed ? "md:ml-20" : "md:ml-72"
+        }`}
+      >
         <header className="sticky top-0 z-30 backdrop-blur-2xl bg-white/40 border-b border-white/20 shadow-sm">
           <div className="flex items-center justify-between px-4 md:px-6 py-3">
             <div className="flex items-center gap-3">
@@ -454,9 +564,15 @@ const AdminDashboard = () => {
                 aria-label="Toggle fullscreen"
               >
                 {isFullscreen ? (
-                  <Minimize2 size={18} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
+                  <Minimize2
+                    size={18}
+                    className="text-gray-700 group-hover:text-blue-600 transition-colors"
+                  />
                 ) : (
-                  <Maximize2 size={18} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
+                  <Maximize2
+                    size={18}
+                    className="text-gray-700 group-hover:text-blue-600 transition-colors"
+                  />
                 )}
               </button>
 
@@ -465,7 +581,10 @@ const AdminDashboard = () => {
                 type="button"
                 aria-label="Notifications"
               >
-                <Bell size={18} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
+                <Bell
+                  size={18}
+                  className="text-gray-700 group-hover:text-blue-600 transition-colors"
+                />
                 {notifications > 0 && (
                   <>
                     <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-[10px] font-bold text-white shadow-lg border-2 border-white">
@@ -508,13 +627,17 @@ const AdminDashboard = () => {
           </div>
 
           <div className="hidden md:flex items-center gap-2 px-6 pb-3 text-xs text-gray-600">
-            <span className="hover:text-blue-600 cursor-pointer transition-colors">Home</span>
+            <span className="hover:text-blue-600 cursor-pointer transition-colors">
+              Home
+            </span>
             <ChevronRight size={12} className="text-gray-400" />
             <span className="font-medium text-blue-600">{activeMenuItem.label}</span>
           </div>
         </header>
 
-        <main className="min-h-screen pt-6 relative z-10 w-full">{renderAllSections()}</main>
+        <main className="min-h-screen pt-6 relative z-10 w-full">
+          {allSections}
+        </main>
       </div>
 
       <style>

@@ -1,4 +1,11 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+  useDeferredValue,
+} from "react";
 import DepartmentsForm from "../ConponentsAdmin/DepartmentsForm.jsx";
 import MajorsForm from "../ConponentsAdmin/MajorsForm.jsx";
 import SubjectsForm from "../ConponentsAdmin/SubjectsForm.jsx";
@@ -27,6 +34,158 @@ import { fetchSubjects } from "../../api/subject_api.jsx";
 import { fetchStudents } from "../../api/student_api.jsx";
 import { fetchRegistrations } from "../../api/registration_api.jsx";
 
+/* ================== ULTRA-FAST PURE HELPERS (OUTSIDE COMPONENT) ================== */
+
+const pickFirst = (...vals) => {
+  for (const v of vals) {
+    if (v !== undefined && v !== null && String(v).trim() !== "") return v;
+  }
+  return null;
+};
+
+const parseSemesterValue = (v) => {
+  if (v === undefined || v === null) return null;
+
+  const s = String(v).trim();
+  if (!s) return null;
+
+  // if already "1" or "2"
+  if (s === "1" || s === "2") return s;
+
+  // "Sem 1", "Semester 1", "semester-2", etc
+  const m = s.match(/(?:sem|semester|term)\s*[-:]?\s*(\d+)/i);
+  if (m?.[1]) return m[1];
+
+  // if "First" / "Second"
+  const lower = s.toLowerCase();
+  if (lower.includes("first")) return "1";
+  if (lower.includes("second")) return "2";
+
+  return s; // fallback
+};
+
+const getPeriods = (reg) =>
+  reg?.student_academic_periods ||
+  reg?.academic_periods ||
+  reg?.periods ||
+  reg?.payment_periods ||
+  [];
+
+const normalizeStatus = (s) => String(s || "").trim().toUpperCase();
+
+const isPaidStatus = (status) => status === "PAID" || status === "COMPLETED";
+
+const getMatchedPeriod = (reg) => {
+  const periods = Array.isArray(getPeriods(reg)) ? getPeriods(reg) : [];
+  if (!periods.length) return null;
+
+  const unpaid = periods
+    .filter((p) => {
+      const st = normalizeStatus(p?.payment_status ?? p?.status);
+      return st !== "PAID" && st !== "COMPLETED";
+    })
+    .sort((a, b) => {
+      const da = new Date(a?.updated_at || a?.created_at || 0).getTime();
+      const db = new Date(b?.updated_at || b?.created_at || 0).getTime();
+      return db - da;
+    });
+
+  if (unpaid.length) return unpaid[0];
+
+  const sorted = [...periods].sort((a, b) => {
+    const da = new Date(a?.updated_at || a?.created_at || 0).getTime();
+    const db = new Date(b?.updated_at || b?.created_at || 0).getTime();
+    return db - da;
+  });
+
+  return sorted[0] || null;
+};
+
+const getSemester = (reg) => {
+  const p = getMatchedPeriod(reg);
+
+  const raw = pickFirst(
+    // period object fields
+    p?.semester,
+    p?.period_semester,
+    p?.academic_semester,
+    p?.term,
+    p?.term_no,
+    p?.term_number,
+    p?.semester_no,
+    p?.semester_number,
+    p?.semester_id,
+    p?.semester_name,
+    p?.semesterLabel,
+
+    // backend flat fields
+    reg?.period_semester,
+
+    // registration-level fields
+    reg?.semester,
+    reg?.current_semester,
+    reg?.academic_semester,
+    reg?.term,
+    reg?.term_no,
+    reg?.semester_no,
+    reg?.semester_number
+  );
+
+  return parseSemesterValue(raw) || "1";
+};
+
+const getAcademicYear = (reg) => {
+  const p = getMatchedPeriod(reg);
+  return (
+    p?.academic_year ??
+    p?.period_academic_year ??
+    reg?.academic_year ??
+    reg?.current_academic_year ??
+    reg?.period_academic_year ??
+    reg?.academicYear ??
+    null
+  );
+};
+
+const getPaymentStatus = (reg) => {
+  const p = getMatchedPeriod(reg);
+
+  if (p) {
+    const st = normalizeStatus(p?.payment_status ?? p?.status);
+    return st || "PENDING";
+  }
+
+  const raw = pickFirst(
+    reg?.period_payment_status,
+    reg?.payment_status,
+    reg?.academic_payment_status,
+    reg?.payment?.status,
+    "PENDING"
+  );
+
+  return normalizeStatus(raw) || "PENDING";
+};
+
+const getPaymentLabel = (reg) => {
+  const status = (getPaymentStatus(reg) || "PENDING").toUpperCase();
+  const sem = getSemester(reg);
+  const year = getAcademicYear(reg);
+
+  const semText = sem ? `Sem ${sem}` : `Sem 1`;
+  const yearText = year ? `${year}` : null;
+  const suffix = [yearText, semText].filter(Boolean).join(" • ");
+
+  if (status === "PAID" || status === "COMPLETED")
+    return suffix ? `Paid (${suffix})` : "Paid";
+  if (status === "FAILED") return suffix ? `Failed (${suffix})` : "Failed";
+  return suffix ? `Pending (${suffix})` : "Pending";
+};
+
+const safeTime = (d) => {
+  const t = new Date(d || 0).getTime();
+  return Number.isFinite(t) ? t : 0;
+};
+
 const Dashboard = () => {
   const [activeView, setActiveView] = useState("admin/dashboard");
   const [user, setUser] = useState(null);
@@ -37,6 +196,12 @@ const Dashboard = () => {
   const [subjects, setSubjects] = useState([]);
   const [students, setStudents] = useState([]);
   const [registrations, setRegistrations] = useState([]);
+
+  // ultra-safe: ignore outdated loads if user clicks refresh quickly
+  const loadReqIdRef = useRef(0);
+
+  // (optional) defer some expensive UI reactions if needed later
+  const deferredRegs = useDeferredValue(registrations);
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -49,180 +214,22 @@ const Dashboard = () => {
     }
   }, []);
 
-  useEffect(() => {
-    loadAllData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const loadAllData = useCallback(async () => {
+    const reqId = ++loadReqIdRef.current;
 
-  const pickFirst = (...vals) => {
-    for (const v of vals) {
-      if (v !== undefined && v !== null && String(v).trim() !== "") return v;
-    }
-    return null;
-  };
-
-  const parseSemesterValue = (v) => {
-    if (v === undefined || v === null) return null;
-
-    const s = String(v).trim();
-    if (!s) return null;
-
-    // if already "1" or "2"
-    if (s === "1" || s === "2") return s;
-
-    // "Sem 1", "Semester 1", "semester-2", etc
-    const m = s.match(/(?:sem|semester|term)\s*[-:]?\s*(\d+)/i);
-    if (m?.[1]) return m[1];
-
-    // if "First" / "Second"
-    const lower = s.toLowerCase();
-    if (lower.includes("first")) return "1";
-    if (lower.includes("second")) return "2";
-
-    return s; // fallback
-  };
-
-  // ✅ IMPORTANT: if backend returns periods array we can read it, else fallback to flat fields
-  const getPeriods = (reg) =>
-    reg?.student_academic_periods ||
-    reg?.academic_periods ||
-    reg?.periods ||
-    reg?.payment_periods ||
-    [];
-
-  const normalizeStatus = (s) => String(s || "").trim().toUpperCase();
-
-  const getMatchedPeriod = (reg) => {
-    const periods = Array.isArray(getPeriods(reg)) ? getPeriods(reg) : [];
-    if (!periods.length) return null;
-
-    const unpaid = periods
-      .filter((p) => {
-        const st = normalizeStatus(p?.payment_status ?? p?.status);
-        return st !== "PAID" && st !== "COMPLETED";
-      })
-      .sort((a, b) => {
-        const da = new Date(a?.updated_at || a?.created_at || 0).getTime();
-        const db = new Date(b?.updated_at || b?.created_at || 0).getTime();
-        return db - da;
-      });
-
-    if (unpaid.length) return unpaid[0];
-
-    // else return latest paid
-    const sorted = [...periods].sort((a, b) => {
-      const da = new Date(a?.updated_at || a?.created_at || 0).getTime();
-      const db = new Date(b?.updated_at || b?.created_at || 0).getTime();
-      return db - da;
-    });
-
-    return sorted[0] || null;
-  };
-
-  // ✅ NO MORE N/A:
-  // - read from period object if exists
-  // - else read from backend flat field period_semester
-  // - else fallback to any other common semester fields
-  // - final fallback: "1" (so UI never shows Sem N/A)
-  const getSemester = (reg) => {
-    const p = getMatchedPeriod(reg);
-
-    const raw = pickFirst(
-      // period object fields
-      p?.semester,
-      p?.period_semester,
-      p?.academic_semester,
-      p?.term,
-      p?.term_no,
-      p?.term_number,
-      p?.semester_no,
-      p?.semester_number,
-      p?.semester_id,
-      p?.semester_name,
-      p?.semesterLabel,
-
-      // ✅ backend flat fields (your API returns these)
-      reg?.period_semester,
-
-      // registration-level fields (sometimes exists)
-      reg?.semester,
-      reg?.current_semester,
-      reg?.academic_semester,
-      reg?.term,
-      reg?.term_no,
-      reg?.semester_no,
-      reg?.semester_number
-    );
-
-    // parse + hard fallback to "1" so never blank in UI
-    return parseSemesterValue(raw) || "1";
-  };
-
-  const getAcademicYear = (reg) => {
-    const p = getMatchedPeriod(reg);
-
-    return (
-      p?.academic_year ??
-      p?.period_academic_year ??
-      reg?.academic_year ??
-      reg?.current_academic_year ??
-      reg?.period_academic_year ??
-      reg?.academicYear ??
-      null
-    );
-  };
-
-  const getPaymentStatus = (reg) => {
-    const p = getMatchedPeriod(reg);
-
-    // period object (if exists)
-    if (p) {
-      const st = normalizeStatus(p?.payment_status ?? p?.status);
-      return st || "PENDING";
-    }
-
-    // ✅ backend flat fields
-    const raw = pickFirst(
-      reg?.period_payment_status,
-      reg?.payment_status,
-      reg?.academic_payment_status,
-      reg?.payment?.status,
-      "PENDING"
-    );
-
-    return normalizeStatus(raw) || "PENDING";
-  };
-
-  const isPaidStatus = (status) => status === "PAID" || status === "COMPLETED";
-
-  const getPaymentLabel = (reg) => {
-    const status = (getPaymentStatus(reg) || "PENDING").toUpperCase();
-    const sem = getSemester(reg); // always returns "1" or "2" (fallback "1")
-    const year = getAcademicYear(reg);
-
-    const semText = sem ? `Sem ${sem}` : `Sem 1`;
-    const yearText = year ? `${year}` : null;
-    const suffix = [yearText, semText].filter(Boolean).join(" • ");
-
-    if (status === "PAID" || status === "COMPLETED")
-      return suffix ? `Paid (${suffix})` : "Paid";
-    if (status === "FAILED") return suffix ? `Failed (${suffix})` : "Failed";
-    return suffix ? `Pending (${suffix})` : "Pending";
-  };
-
-  const loadAllData = async () => {
     try {
       setLoading(true);
 
-      // ✅ keep your original calls (no changes)
       const [deptRes, majorRes, subjectRes, studentRes, regRes] =
         await Promise.all([
           fetchDepartments(),
           fetchMajors(),
           fetchSubjects(),
           fetchStudents(),
-          fetchRegistrations(), // backend may default semester=1; semester display still won't be N/A now
+          fetchRegistrations(),
         ]);
+
+      if (reqId !== loadReqIdRef.current) return;
 
       const deptsData = deptRes.data?.data || deptRes.data || [];
       const majorsData = majorRes.data?.data || majorRes.data || [];
@@ -230,176 +237,310 @@ const Dashboard = () => {
       const studentsData = studentRes.data?.data || studentRes.data || [];
       const regsData = regRes.data?.data || regRes.data || [];
 
-      setDepartments(Array.isArray(deptsData) ? deptsData : []);
-      setMajors(Array.isArray(majorsData) ? majorsData : []);
-      setSubjects(Array.isArray(subjectsData) ? subjectsData : []);
-      setStudents(Array.isArray(studentsData) ? studentsData : []);
-      setRegistrations(Array.isArray(regsData) ? regsData : []);
-
+      const deptsArr = Array.isArray(deptsData) ? deptsData : [];
+      const majorsArr = Array.isArray(majorsData) ? majorsData : [];
+      const subjectsArr = Array.isArray(subjectsData) ? subjectsData : [];
+      const studentsArr = Array.isArray(studentsData) ? studentsData : [];
       const regsArr = Array.isArray(regsData) ? regsData : [];
-      const pendingCount = regsArr.filter(
-        (r) => !isPaidStatus(getPaymentStatus(r))
-      ).length;
+
+      setDepartments(deptsArr);
+      setMajors(majorsArr);
+      setSubjects(subjectsArr);
+      setStudents(studentsArr);
+      setRegistrations(regsArr);
+
+      const pendingCount = regsArr.filter((r) => !isPaidStatus(getPaymentStatus(r)))
+        .length;
 
       console.log("Dashboard data loaded:", {
-        departments: deptsData.length,
-        majors: majorsData.length,
-        subjects: subjectsData.length,
-        students: studentsData.length,
+        departments: deptsArr.length,
+        majors: majorsArr.length,
+        subjects: subjectsArr.length,
+        students: studentsArr.length,
         totalRegistrations: regsArr.length,
         pendingRegistrations: pendingCount,
       });
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
     } finally {
-      setLoading(false);
+      if (reqId === loadReqIdRef.current) setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadAllData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* ================== BUILD FAST LOOKUP MAPS (O(1) instead of find in loops) ================== */
+
+  const deptNameById = useMemo(() => {
+    const m = new Map();
+    for (const d of departments) m.set(d.id, d?.name || "Unknown");
+    return m;
+  }, [departments]);
+
+  const majorNameById = useMemo(() => {
+    const m = new Map();
+    for (const mj of majors) m.set(mj.id, mj?.major_name || "Unknown");
+    return m;
+  }, [majors]);
+
+  const majorDeptNameById = useMemo(() => {
+    const m = new Map();
+    for (const mj of majors) {
+      const deptName = mj?.department?.name || deptNameById.get(mj?.department_id) || "N/A";
+      m.set(mj.id, deptName);
+    }
+    return m;
+  }, [majors, deptNameById]);
+
+  /* ================== ONE-TIME NORMALIZATION (HUGE SPEED WIN) ================== */
+  // We compute expensive semester/year/status/label ONCE per registration.
+  // Then every stat/widget uses those precomputed fields.
+
+  const normalizedRegistrations = useMemo(() => {
+    const list = Array.isArray(deferredRegs) ? deferredRegs : [];
+    return list.map((r) => {
+      const status = getPaymentStatus(r);
+      const sem = getSemester(r); // always "1" or "2" (fallback "1")
+      const year = getAcademicYear(r) || "";
+      const label = getPaymentLabel(r);
+      const createdAtTime = safeTime(r?.created_at);
+
+      return {
+        ...r,
+        _status: status,
+        _isPaid: isPaidStatus(status),
+        _semester: sem,
+        _academicYear: year,
+        _statusLabel: label,
+        _createdAtTime: createdAtTime,
+      };
+    });
+  }, [deferredRegs]);
+
+  const normalizedStudents = useMemo(() => {
+    const list = Array.isArray(students) ? students : [];
+    return list.map((s) => ({
+      ...s,
+      _createdAtTime: safeTime(s?.created_at),
+    }));
+  }, [students]);
+
+  /* ================== CORE COUNTS (NO MORE filters inside JSX render) ================== */
+
+  const registrationsCounts = useMemo(() => {
+    let paid = 0;
+    let pending = 0;
+    let total = normalizedRegistrations.length;
+
+    for (const r of normalizedRegistrations) {
+      if (r._isPaid) paid++;
+      else pending++;
+    }
+
+    return { total, paid, pending };
+  }, [normalizedRegistrations]);
 
   const pendingRegistrations = useMemo(() => {
-    return registrations.filter((r) => !isPaidStatus(getPaymentStatus(r)));
-  }, [registrations]);
+    return normalizedRegistrations.filter((r) => !r._isPaid);
+  }, [normalizedRegistrations]);
 
   const pendingBySemester = useMemo(() => {
     const acc = { sem1: 0, sem2: 0, unknown: 0 };
-    pendingRegistrations.forEach((r) => {
-      const sem = String(getSemester(r) ?? "").trim();
+    for (const r of pendingRegistrations) {
+      const sem = String(r._semester ?? "").trim();
       if (sem === "1") acc.sem1 += 1;
       else if (sem === "2") acc.sem2 += 1;
       else acc.unknown += 1;
-    });
+    }
     return acc;
   }, [pendingRegistrations]);
 
   const recentRegistrationsCount = useMemo(() => {
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-
-    return pendingRegistrations.filter((r) => {
-      if (!r.created_at) return false;
-      const created = new Date(r.created_at);
-      return created > weekAgo;
-    }).length;
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    let c = 0;
+    for (const r of pendingRegistrations) {
+      if (r._createdAtTime > weekAgo) c++;
+    }
+    return c;
   }, [pendingRegistrations]);
 
-  const stats = [
-    {
-      label: "Total Departments",
-      value: departments.length,
-      change: departments.length > 0 ? `${departments.length} active` : "0",
-      gradient: "from-blue-500 to-cyan-500",
-      icon: Building2,
-    },
-    {
-      label: "Active Majors",
-      value: majors.length,
-      change: majors.length > 0 ? `${majors.length} programs` : "0",
-      gradient: "from-purple-500 to-pink-500",
-      icon: GraduationCap,
-    },
-    {
-      label: "Total  Students enrolled",
-      value: students.length,
-      change: students.length > 0 ? `${students.length} enrolled` : "0",
-      gradient: "from-orange-500 to-red-500",
-      icon: Users,
-    },
-    {
-      label: "Pending Registrations",
-      value: pendingRegistrations.length,
-      change:
-        pendingRegistrations.length > 0
-          ? `Sem 1: ${pendingBySemester.sem1} • Sem 2: ${pendingBySemester.sem2}${
-              pendingBySemester.unknown > 0
-                ? ` • Unknown: ${pendingBySemester.unknown}`
-                : ""
-            }`
-          : recentRegistrationsCount > 0
-          ? `+${recentRegistrationsCount} this week`
-          : "No pending",
-      gradient: "from-green-500 to-emerald-500",
-      icon: UserCheck,
-    },
-  ];
+  const stats = useMemo(() => {
+    return [
+      {
+        label: "Total Departments",
+        value: departments.length,
+        change: departments.length > 0 ? `${departments.length} active` : "0",
+        gradient: "from-blue-500 to-cyan-500",
+        icon: Building2,
+      },
+      {
+        label: "Active Majors",
+        value: majors.length,
+        change: majors.length > 0 ? `${majors.length} programs` : "0",
+        gradient: "from-purple-500 to-pink-500",
+        icon: GraduationCap,
+      },
+      {
+        label: "Total  Students enrolled",
+        value: students.length,
+        change: students.length > 0 ? `${students.length} enrolled` : "0",
+        gradient: "from-orange-500 to-red-500",
+        icon: Users,
+      },
+      {
+        label: "Pending Registrations",
+        value: pendingRegistrations.length,
+        change:
+          pendingRegistrations.length > 0
+            ? `Sem 1: ${pendingBySemester.sem1} • Sem 2: ${pendingBySemester.sem2}${
+                pendingBySemester.unknown > 0
+                  ? ` • Unknown: ${pendingBySemester.unknown}`
+                  : ""
+              }`
+            : recentRegistrationsCount > 0
+            ? `+${recentRegistrationsCount} this week`
+            : "No pending",
+        gradient: "from-green-500 to-emerald-500",
+        icon: UserCheck,
+      },
+    ];
+  }, [
+    departments.length,
+    majors.length,
+    students.length,
+    pendingRegistrations.length,
+    pendingBySemester.sem1,
+    pendingBySemester.sem2,
+    pendingBySemester.unknown,
+    recentRegistrationsCount,
+  ]);
+
+  /* ================== SYSTEM OVERVIEW COUNTS (FAST) ================== */
+
+  const systemOverview = useMemo(() => {
+    return {
+      subjectsTotal: subjects.length,
+      registrationsTotal: registrationsCounts.total,
+      completedPayments: registrationsCounts.paid,
+    };
+  }, [subjects.length, registrationsCounts]);
+
+  /* ================== TODAY SNAPSHOT (FAST) ================== */
+
+  const todaySnapshot = useMemo(() => {
+    const now = new Date();
+    const todayKey = now.toDateString();
+
+    let newStudentsToday = 0;
+    for (const s of normalizedStudents) {
+      if (s?._createdAtTime && new Date(s._createdAtTime).toDateString() === todayKey)
+        newStudentsToday++;
+    }
+
+    let newRegistrationsToday = 0;
+    let pendingToday = 0;
+    for (const r of normalizedRegistrations) {
+      if (r?._createdAtTime && new Date(r._createdAtTime).toDateString() === todayKey) {
+        newRegistrationsToday++;
+        if (!r._isPaid) pendingToday++;
+      }
+    }
+
+    return { newStudentsToday, newRegistrationsToday, pendingToday };
+  }, [normalizedStudents, normalizedRegistrations]);
+
+  /* ================== TOP MAJORS / DEPT BREAKDOWN (FAST MAPS) ================== */
 
   const topPerformingMajors = useMemo(() => {
-    if (majors.length === 0 || registrations.length === 0) return [];
+    if (majors.length === 0 || normalizedRegistrations.length === 0) return [];
 
-    const majorCounts = {};
-    registrations.forEach((reg) => {
+    const majorCounts = new Map();
+    for (const reg of normalizedRegistrations) {
       const majorId = reg.major_id;
-      if (majorId) majorCounts[majorId] = (majorCounts[majorId] || 0) + 1;
-    });
+      if (!majorId) continue;
+      majorCounts.set(majorId, (majorCounts.get(majorId) || 0) + 1);
+    }
 
     return majors
       .map((major) => {
-        const count = majorCounts[major.id] || 0;
+        const count = majorCounts.get(major.id) || 0;
         return {
           id: major.id,
           name: major.major_name || "Unknown Major",
           students: count,
-          departmentName: major.department?.name || "N/A",
+          departmentName: majorDeptNameById.get(major.id) || "N/A",
         };
       })
       .filter((m) => m.students > 0)
       .sort((a, b) => b.students - a.students)
       .slice(0, 5);
-  }, [majors, registrations]);
+  }, [majors, normalizedRegistrations, majorDeptNameById]);
 
   const departmentBreakdown = useMemo(() => {
     if (departments.length === 0 || students.length === 0) return [];
 
-    const deptCounts = {};
-    students.forEach((student) => {
-      const deptId = student.department_id;
-      if (deptId) deptCounts[deptId] = (deptCounts[deptId] || 0) + 1;
-    });
+    const deptCounts = new Map();
+    for (const s of students) {
+      const deptId = s.department_id;
+      if (!deptId) continue;
+      deptCounts.set(deptId, (deptCounts.get(deptId) || 0) + 1);
+    }
 
     return departments
       .map((dept) => ({
         id: dept.id,
         name: dept.name,
         code: dept.code,
-        studentCount: deptCounts[dept.id] || 0,
+        studentCount: deptCounts.get(dept.id) || 0,
       }))
       .filter((d) => d.studentCount > 0)
       .sort((a, b) => b.studentCount - a.studentCount)
       .slice(0, 5);
   }, [departments, students]);
 
+  /* ================== RECENT PENDING REGISTRATIONS (NO .find in loop) ================== */
+
   const recentRegistrations = useMemo(() => {
     return [...pendingRegistrations]
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .sort((a, b) => b._createdAtTime - a._createdAtTime)
       .slice(0, 5)
       .map((reg) => {
-        const dept = departments.find((d) => d.id === reg.department_id);
-        const major = majors.find((m) => m.id === reg.major_id);
-
-        // ✅ always sem is "1" or "2" now
-        const sem = getSemester(reg);
-        const year = getAcademicYear(reg) || "";
-        const status = getPaymentStatus(reg);
+        const deptName = deptNameById.get(reg.department_id) || "Unknown";
+        const majorName = majorNameById.get(reg.major_id) || "Unknown";
 
         return {
           id: reg.id,
-          name: reg.full_name_en || `${reg.first_name} ${reg.last_name}`,
-          department: dept?.name || "Unknown",
-          major: major?.major_name || "Unknown",
+          name:
+            reg.full_name_en ||
+            `${reg.first_name || ""} ${reg.last_name || ""}`.trim() ||
+            "Student",
+          department: deptName,
+          major: majorName,
           date: reg.created_at
             ? new Date(reg.created_at).toLocaleDateString()
             : "N/A",
-          status: status,
-          semester: sem,
-          academic_year: year,
-          statusLabel: getPaymentLabel(reg),
+          status: reg._status,
+          semester: reg._semester,
+          academic_year: reg._academicYear || "",
+          statusLabel: reg._statusLabel,
         };
       });
-  }, [pendingRegistrations, departments, majors]);
+  }, [pendingRegistrations, deptNameById, majorNameById]);
+
+  /* ================== GENDER STATS (FAST) ================== */
 
   const genderStats = useMemo(() => {
-    const male = students.filter((s) => s.gender === "Male").length;
-    const female = students.filter((s) => s.gender === "Female").length;
+    let male = 0;
+    let female = 0;
     const total = students.length;
+
+    for (const s of students) {
+      if (s.gender === "Male") male++;
+      else if (s.gender === "Female") female++;
+    }
 
     return {
       male,
@@ -408,6 +549,8 @@ const Dashboard = () => {
       femalePercentage: total > 0 ? Math.round((female / total) * 100) : 0,
     };
   }, [students]);
+
+  /* ================== LOADING UI (UNCHANGED) ================== */
 
   if (loading) {
     return (
@@ -595,25 +738,21 @@ const Dashboard = () => {
             <div className="px-4 py-3 rounded-2xl bg-white/70 border border-white shadow-sm">
               <p className="text-xs text-gray-600">Total Subjects</p>
               <p className="text-2xl font-bold text-gray-900">
-                {subjects.length}
+                {systemOverview.subjectsTotal}
               </p>
             </div>
 
             <div className="px-4 py-3 rounded-2xl bg-white/70 border border-white shadow-sm">
               <p className="text-xs text-gray-600">Total Registrations</p>
               <p className="text-2xl font-bold text-gray-900">
-                {registrations.length}
+                {systemOverview.registrationsTotal}
               </p>
             </div>
 
             <div className="px-4 py-3 rounded-2xl bg-white/70 border border-white shadow-sm">
               <p className="text-xs text-gray-600">Completed Payments</p>
               <p className="text-2xl font-bold text-gray-900">
-                {
-                  registrations.filter((r) =>
-                    isPaidStatus(getPaymentStatus(r))
-                  ).length
-                }
+                {systemOverview.completedPayments}
               </p>
             </div>
           </div>
@@ -630,37 +769,21 @@ const Dashboard = () => {
         {[
           {
             title: "New Students Today",
-            value: students.filter((s) => {
-              if (!s.created_at) return false;
-              const d = new Date(s.created_at);
-              const now = new Date();
-              return d.toDateString() === now.toDateString();
-            }).length,
+            value: todaySnapshot.newStudentsToday,
             icon: Users,
             badge: "Live",
             gradient: "from-blue-500 to-cyan-500",
           },
           {
             title: "New Registrations Today",
-            value: registrations.filter((r) => {
-              if (!r.created_at) return false;
-              const d = new Date(r.created_at);
-              const now = new Date();
-              return d.toDateString() === now.toDateString();
-            }).length,
+            value: todaySnapshot.newRegistrationsToday,
             icon: UserCheck,
             badge: "Live",
             gradient: "from-purple-500 to-pink-500",
           },
           {
             title: "Pending Today",
-            value: registrations.filter((r) => {
-              if (!r.created_at) return false;
-              const isPending = !isPaidStatus(getPaymentStatus(r));
-              const d = new Date(r.created_at);
-              const now = new Date();
-              return isPending && d.toDateString() === now.toDateString();
-            }).length,
+            value: todaySnapshot.pendingToday,
             icon: TrendingUp,
             badge: "Today",
             gradient: "from-green-500 to-emerald-500",
@@ -686,20 +809,14 @@ const Dashboard = () => {
               />
               <div className="relative z-10 flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 font-medium">
-                    {card.title}
-                  </p>
-                  <p className="text-4xl font-bold text-gray-900 mt-1">
-                    {card.value}
-                  </p>
+                  <p className="text-sm text-gray-600 font-medium">{card.title}</p>
+                  <p className="text-4xl font-bold text-gray-900 mt-1">{card.value}</p>
                   <span className="inline-flex items-center gap-1 mt-3 text-xs font-semibold px-3 py-1 rounded-full border border-white bg-white/70 text-gray-700">
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                     {card.badge}
                   </span>
                 </div>
-                <div
-                  className={`p-3 rounded-2xl bg-gradient-to-br ${card.gradient} shadow-lg`}
-                >
+                <div className={`p-3 rounded-2xl bg-gradient-to-br ${card.gradient} shadow-lg`}>
                   <Icon className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -747,14 +864,11 @@ const Dashboard = () => {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <p className="text-sm font-semibold text-gray-800">
-                        {reg.name}
-                      </p>
+                      <p className="text-sm font-semibold text-gray-800">{reg.name}</p>
                       <p className="text-xs text-gray-600 mt-1">
                         {reg.major} - {reg.department}
                       </p>
 
-                      {/* ✅ show semester/year clearly (NO N/A now) */}
                       <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1.5 flex-wrap">
                         <Calendar className="w-3 h-3" />
                         {reg.date}
@@ -869,10 +983,7 @@ const Dashboard = () => {
                     />
                   )}
                   <div className="relative z-10">
-                    <Icon
-                      size={28}
-                      className="mb-3 mx-auto drop-shadow-lg"
-                    />
+                    <Icon size={28} className="mb-3 mx-auto drop-shadow-lg" />
                     <p className="text-sm font-semibold">{action.label}</p>
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
@@ -963,11 +1074,8 @@ const Dashboard = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {[...students]
-                .sort(
-                  (a, b) =>
-                    new Date(b.created_at || 0) - new Date(a.created_at || 0)
-                )
+              {[...normalizedStudents]
+                .sort((a, b) => b._createdAtTime - a._createdAtTime)
                 .slice(0, 5)
                 .map((s, i) => (
                   <motion.div
@@ -1025,9 +1133,7 @@ const Dashboard = () => {
               <p className="text-3xl font-bold text-gray-900 mt-1">
                 {subjects.length}
               </p>
-              <p className="text-xs text-gray-500 mt-2">
-                All subjects in system
-              </p>
+              <p className="text-xs text-gray-500 mt-2">All subjects in system</p>
             </div>
 
             <div className="p-5 rounded-2xl bg-white/70 border border-white shadow-sm">
@@ -1049,10 +1155,9 @@ const Dashboard = () => {
               <p className="text-xs text-gray-600 mb-2">Quick Insight</p>
               <p className="text-sm text-gray-700">
                 Your system has{" "}
-                <span className="font-bold">{subjects.length}</span> subjects
-                across <span className="font-bold">{departments.length}</span>{" "}
-                departments and <span className="font-bold">{majors.length}</span>{" "}
-                majors.
+                <span className="font-bold">{subjects.length}</span> subjects across{" "}
+                <span className="font-bold">{departments.length}</span> departments and{" "}
+                <span className="font-bold">{majors.length}</span> majors.
               </p>
             </div>
           </div>
@@ -1100,9 +1205,7 @@ const Dashboard = () => {
                     <div className="flex justify-between items-center mb-3">
                       <div className="flex-1">
                         <p className="font-semibold text-gray-800">{m.name}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">
-                          {m.departmentName}
-                        </p>
+                        <p className="text-xs text-gray-500 mt-0.5">{m.departmentName}</p>
                       </div>
                       <span className="flex items-center gap-1 text-sm font-bold text-green-600 backdrop-blur-sm px-2.5 py-1 rounded-full border border-green-200/50 bg-green-50">
                         {m.students} students
@@ -1231,9 +1334,7 @@ const Dashboard = () => {
             <div className="backdrop-blur-xl p-6 rounded-2xl border border-white/30 bg-white/40">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-medium text-gray-700">Male Students</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {genderStats.male}
-                </p>
+                <p className="text-2xl font-bold text-blue-600">{genderStats.male}</p>
               </div>
               <div className="relative h-3 bg-gray-200/50 rounded-full overflow-hidden">
                 <motion.div
@@ -1250,12 +1351,8 @@ const Dashboard = () => {
 
             <div className="backdrop-blur-xl p-6 rounded-2xl border border-white/30 bg-white/40">
               <div className="flex items-center justify-between mb-4">
-                <p className="text-sm font-medium text-gray-700">
-                  Female Students
-                </p>
-                <p className="text-2xl font-bold text-pink-600">
-                  {genderStats.female}
-                </p>
+                <p className="text-sm font-medium text-gray-700">Female Students</p>
+                <p className="text-2xl font-bold text-pink-600">{genderStats.female}</p>
               </div>
               <div className="relative h-3 bg-gray-200/50 rounded-full overflow-hidden">
                 <motion.div
