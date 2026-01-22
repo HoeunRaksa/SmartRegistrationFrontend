@@ -6,7 +6,6 @@ import {
   Filter,
   Users,
   DollarSign,
-  Calendar,
   TrendingUp,
   PieChart,
   RefreshCw,
@@ -35,20 +34,20 @@ const RegistrationReportPage = () => {
     date_from: "",
     date_to: "",
   });
-const buildAcademicYears = (pastYears = 8, futureYears = 6) => {
-  const now = new Date().getFullYear();
-  const start = now - pastYears;
-  const end = now + futureYears;
 
-  const years = [];
-  for (let y = start; y <= end; y++) {
-    years.push(`${y}-${y + 1}`);
-  }
-  return years;
-};
-const academicYearOptions = buildAcademicYears(5, 5); // ✅ 12 past, 8 future
+  const buildAcademicYears = (pastYears = 8, futureYears = 6) => {
+    const now = new Date().getFullYear();
+    const start = now - pastYears;
+    const end = now + futureYears;
 
+    const years = [];
+    for (let y = start; y <= end; y++) {
+      years.push(`${y}-${y + 1}`);
+    }
+    return years;
+  };
 
+  const academicYearOptions = buildAcademicYears(5, 5);
 
   useEffect(() => {
     loadDepartments();
@@ -82,7 +81,7 @@ const academicYearOptions = buildAcademicYears(5, 5); // ✅ 12 past, 8 future
     setLoading(true);
     try {
       const res = await generateRegistrationReport(filters);
-      setReportData(res.data.data);
+      setReportData(res.data?.data || null);
     } catch (err) {
       console.error("Failed to generate report:", err);
       alert("Failed to generate report");
@@ -112,6 +111,14 @@ const academicYearOptions = buildAcademicYears(5, 5); // ✅ 12 past, 8 future
       date_to: "",
     });
     setReportData(null);
+  };
+
+  const stats = reportData?.statistics || {
+    total_registrations: 0,
+    total_male: 0,
+    total_female: 0,
+    total_amount: 0,
+    paid_amount: 0,
   };
 
   return (
@@ -199,6 +206,7 @@ const academicYearOptions = buildAcademicYears(5, 5); // ✅ 12 past, 8 future
               <option value="">All Status</option>
               <option value="PENDING">Pending</option>
               <option value="COMPLETED">Completed</option>
+              <option value="PAID">Paid</option>
               <option value="FAILED">Failed</option>
             </select>
           </div>
@@ -221,7 +229,6 @@ const academicYearOptions = buildAcademicYears(5, 5); // ✅ 12 past, 8 future
           </div>
 
           {/* Academic Year */}
-          {/* Academic Year */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Academic Year
@@ -240,7 +247,6 @@ const academicYearOptions = buildAcademicYears(5, 5); // ✅ 12 past, 8 future
               ))}
             </select>
           </div>
-
 
           {/* Shift */}
           <div>
@@ -331,31 +337,31 @@ const academicYearOptions = buildAcademicYears(5, 5); // ✅ 12 past, 8 future
             <StatCard
               icon={Users}
               label="Total Registrations"
-              value={reportData.statistics.total_registrations}
+              value={stats.total_registrations}
               color="from-blue-500 to-blue-600"
             />
             <StatCard
               icon={Users}
               label="Male / Female"
-              value={`${reportData.statistics.total_male} / ${reportData.statistics.total_female}`}
+              value={`${stats.total_male} / ${stats.total_female}`}
               color="from-purple-500 to-purple-600"
             />
             <StatCard
               icon={DollarSign}
               label="Total Amount"
-              value={`$${reportData.statistics.total_amount.toFixed(2)}`}
+              value={`$${Number(stats.total_amount || 0).toFixed(2)}`}
               color="from-green-500 to-green-600"
             />
             <StatCard
               icon={TrendingUp}
               label="Paid Amount"
-              value={`$${reportData.statistics.paid_amount.toFixed(2)}`}
+              value={`$${Number(stats.paid_amount || 0).toFixed(2)}`}
               color="from-orange-500 to-orange-600"
             />
           </motion.div>
 
           {/* Registrations Table */}
-          <ReportTable registrations={reportData.registrations} />
+          <ReportTable registrations={reportData.registrations || []} />
         </>
       )}
     </div>
@@ -401,34 +407,47 @@ const ReportTable = ({ registrations }) => (
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {registrations.map((reg, index) => (
-            <tr key={reg.id} className="hover:bg-blue-50/30 transition-colors">
-              <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
-              <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                {reg.student?.student_code || 'N/A'}
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900">{reg.full_name_en}</td>
-              <td className="px-6 py-4">
-                <span className={`text-xs px-2 py-1 rounded-full ${reg.gender === 'Male' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'
-                  }`}>
-                  {reg.gender}
-                </span>
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-600">{reg.department?.name || 'N/A'}</td>
-              <td className="px-6 py-4 text-sm text-gray-600">{reg.major?.major_name || 'N/A'}</td>
-              <td className="px-6 py-4">
-                <span className={`text-xs px-2 py-1 rounded-full ${reg.payment_status === 'COMPLETED' ? 'bg-green-100 text-green-600' :
-                    reg.payment_status === 'PENDING' ? 'bg-yellow-100 text-yellow-600' :
-                      'bg-red-100 text-red-600'
-                  }`}>
-                  {reg.payment_status}
-                </span>
-              </td>
-              <td className="px-6 py-4 text-sm text-right font-medium text-gray-900">
-                ${parseFloat(reg.payment_amount).toFixed(2)}
-              </td>
-            </tr>
-          ))}
+          {registrations.map((reg, index) => {
+            const status = String(reg.payment_status || "PENDING").toUpperCase();
+            const amount = Number(reg.payment_amount || 0);
+
+            const badgeClass =
+              status === "COMPLETED" || status === "PAID"
+                ? "bg-green-100 text-green-600"
+                : status === "PENDING"
+                  ? "bg-yellow-100 text-yellow-700"
+                  : "bg-red-100 text-red-600";
+
+            return (
+              <tr key={reg.id} className="hover:bg-blue-50/30 transition-colors">
+                <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
+                <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                  {reg.student?.student_code || "N/A"}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-900">{reg.full_name_en || "N/A"}</td>
+                <td className="px-6 py-4">
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full ${reg.gender === "Male"
+                      ? "bg-blue-100 text-blue-600"
+                      : "bg-pink-100 text-pink-600"
+                      }`}
+                  >
+                    {reg.gender || "N/A"}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-600">{reg.department?.name || "N/A"}</td>
+                <td className="px-6 py-4 text-sm text-gray-600">{reg.major?.major_name || "N/A"}</td>
+                <td className="px-6 py-4">
+                  <span className={`text-xs px-2 py-1 rounded-full ${badgeClass}`}>
+                    {status}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-sm text-right font-medium text-gray-900">
+                  ${amount.toFixed(2)}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

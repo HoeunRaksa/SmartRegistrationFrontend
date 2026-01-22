@@ -1,6 +1,10 @@
 import React, { useEffect, useState, useMemo, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { fetchRegistrations, adminGenerateQr, markPaidCash } from "../../api/registration_api";
+import {
+  fetchRegistrations,
+  adminGenerateQr,
+  markPaidCash,
+} from "../../api/registration_api";
 import { fetchDepartments } from "../../api/department_api";
 import { fetchMajors } from "../../api/major_api";
 import RegistrationReportPage from "./RegistrationReportPage";
@@ -22,7 +26,61 @@ import {
   DollarSign,
   Search,
   FileText,
+  RefreshCw,
 } from "lucide-react";
+
+/* ================== SAFE HELPERS (work everywhere) ================== */
+
+// ✅ detect semester/year fields safely (support old/new backend)
+const getSemester = (reg) =>
+  reg?.semester ??
+  reg?.current_semester ??
+  reg?.period_semester ??
+  reg?.academic_semester ??
+  null;
+
+const getAcademicYear = (reg) =>
+  reg?.academic_year ??
+  reg?.current_academic_year ??
+  reg?.period_academic_year ??
+  reg?.academicYear ??
+  null;
+
+const getPaymentStatus = (reg) =>
+  reg?.period_payment_status ??
+  reg?.academic_payment_status ??
+  reg?.payment_status ??
+  "PENDING";
+
+const getPaidAt = (reg) =>
+  reg?.period_paid_at ?? reg?.paid_at ?? reg?.payment_date ?? null;
+
+const getAmount = (reg) =>
+  reg?.period_tuition_amount ??
+  reg?.tuition_amount ??
+  reg?.payment_amount ??
+  reg?.registration_fee ??
+  reg?.amount ??
+  0;
+
+// ✅ label to show in UI (clear pending for which year/semester)
+const getPaymentLabel = (reg) => {
+  const raw = getPaymentStatus(reg);
+  const status = String(raw || "PENDING").toUpperCase();
+
+  const sem = getSemester(reg);
+  const year = getAcademicYear(reg);
+
+  const semText = sem ? `Sem ${sem}` : null;
+  const yearText = year ? `${year}` : null;
+
+  const suffix = [yearText, semText].filter(Boolean).join(" • ");
+
+  if (status === "PAID" || status === "COMPLETED") {
+    return suffix ? `Paid (${suffix})` : "Paid";
+  }
+  return suffix ? `Pending (${suffix})` : "Pending";
+};
 
 const RegistrationPage = () => {
   const [registrations, setRegistrations] = useState([]);
@@ -63,7 +121,9 @@ const RegistrationPage = () => {
   const loadRegistrationsOnly = async () => {
     try {
       setLoading(true);
-      const regRes = await fetchRegistrations({ semester: parseInt(selectedSemester, 10) || 1 });
+      const regRes = await fetchRegistrations({
+        semester: parseInt(selectedSemester, 10) || 1,
+      });
 
       const regData = regRes.data?.data || regRes.data || [];
       setRegistrations(Array.isArray(regData) ? regData : []);
@@ -104,36 +164,17 @@ const RegistrationPage = () => {
     }
   };
 
-  // ✅ Helpers (normalize new/old backend fields)
-  // IMPORTANT: prefer PERIOD status (student_academic_periods) first
-  const getPaymentStatus = (reg) =>
-    reg?.period_payment_status ??
-    reg?.academic_payment_status ??
-    reg?.payment_status ??
-    "PENDING";
-
-  const getPaidAt = (reg) =>
-    reg?.period_paid_at ?? reg?.paid_at ?? reg?.payment_date ?? null;
-
-  const getAmount = (reg) =>
-    reg?.period_tuition_amount ??
-    reg?.tuition_amount ??
-    reg?.payment_amount ??
-    reg?.registration_fee ??
-    reg?.amount ??
-    0;
-
   // Filter registrations
   const filteredRegistrations = useMemo(() => {
     return registrations.filter((reg) => {
-      const status = (getPaymentStatus(reg) || "PENDING").toUpperCase();
+      const status = String(getPaymentStatus(reg) || "PENDING").toUpperCase();
 
       // Payment status filter
       const statusMatch =
         filter === "all"
           ? true
           : filter === "paid"
-          ? status === "PAID"
+          ? status === "PAID" || status === "COMPLETED"
           : filter === "pending"
           ? status === "PENDING"
           : true;
@@ -162,24 +203,48 @@ const RegistrationPage = () => {
     });
   }, [registrations, filter, searchTerm, selectedDepartment, selectedMajor]);
 
-  const paidCount = filteredRegistrations.filter(
-    (r) => (getPaymentStatus(r) || "").toUpperCase() === "PAID"
-  ).length;
+  const paidCount = filteredRegistrations.filter((r) => {
+    const s = String(getPaymentStatus(r) || "").toUpperCase();
+    return s === "PAID" || s === "COMPLETED";
+  }).length;
 
   const pendingCount = filteredRegistrations.filter((r) => {
-    const s = (getPaymentStatus(r) || "PENDING").toUpperCase();
+    const s = String(getPaymentStatus(r) || "PENDING").toUpperCase();
     return s === "PENDING";
   }).length;
 
   const totalRevenue = filteredRegistrations
-    .filter((r) => (getPaymentStatus(r) || "").toUpperCase() === "PAID")
+    .filter((r) => {
+      const s = String(getPaymentStatus(r) || "").toUpperCase();
+      return s === "PAID" || s === "COMPLETED";
+    })
     .reduce((sum, reg) => sum + (parseFloat(getAmount(reg)) || 0), 0);
 
   const quickStats = [
-    { label: "Total", value: filteredRegistrations.length, color: "from-blue-500 to-cyan-500", icon: Users },
-    { label: "Paid", value: paidCount, color: "from-green-500 to-emerald-500", icon: CheckCircle },
-    { label: "Pending", value: pendingCount, color: "from-orange-500 to-red-500", icon: Clock },
-    { label: "Revenue", value: `$${totalRevenue.toFixed(2)}`, color: "from-purple-500 to-pink-500", icon: DollarSign },
+    {
+      label: "Total",
+      value: filteredRegistrations.length,
+      color: "from-blue-500 to-cyan-500",
+      icon: Users,
+    },
+    {
+      label: "Paid",
+      value: paidCount,
+      color: "from-green-500 to-emerald-500",
+      icon: CheckCircle,
+    },
+    {
+      label: "Pending",
+      value: pendingCount,
+      color: "from-orange-500 to-red-500",
+      icon: Clock,
+    },
+    {
+      label: "Revenue",
+      value: `$${totalRevenue.toFixed(2)}`,
+      color: "from-purple-500 to-pink-500",
+      icon: DollarSign,
+    },
   ];
 
   return (
@@ -292,6 +357,7 @@ const RegistrationPage = () => {
               >
                 All ({registrations.length})
               </button>
+
               <button
                 onClick={() => setFilter("paid")}
                 className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${
@@ -303,6 +369,7 @@ const RegistrationPage = () => {
                 <CheckCircle className="w-4 h-4" />
                 Paid
               </button>
+
               <button
                 onClick={() => setFilter("pending")}
                 className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${
@@ -353,6 +420,7 @@ const RegistrationPage = () => {
         loading={loading}
         onView={setSelectedRegistration}
         getPaymentStatus={getPaymentStatus}
+        getPaymentLabel={getPaymentLabel} // ✅ FIX: pass it
         getAmount={getAmount}
       />
 
@@ -414,7 +482,7 @@ const ReportModal = ({ onClose }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+        className="fixed inset-0  flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 z-50"
         onClick={onClose}
       >
         <motion.div
@@ -422,7 +490,7 @@ const ReportModal = ({ onClose }) => {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-7xl max-h-[95vh] overflow-y-auto bg-white rounded-3xl shadow-2xl"
+          className="relative w-full max-w-7xl max-h-[80vh] overflow-y-auto bg-white rounded-3xl shadow-2xl"
         >
           <button
             onClick={onClose}
@@ -431,7 +499,7 @@ const ReportModal = ({ onClose }) => {
             <X className="w-5 h-5" />
           </button>
 
-          <div className="p-6">
+          <div className="p-6 z-999999">
             <RegistrationReportPage />
           </div>
         </motion.div>
@@ -440,7 +508,14 @@ const ReportModal = ({ onClose }) => {
   );
 };
 
-const RegistrationsList = ({ registrations, loading, onView, getPaymentStatus, getAmount }) => {
+const RegistrationsList = ({
+  registrations,
+  loading,
+  onView,
+  getPaymentStatus,
+  getPaymentLabel,
+  getAmount,
+}) => {
   if (loading) {
     return (
       <div className="rounded-2xl bg-white/40 border border-white/40 shadow-lg p-12 text-center">
@@ -473,16 +548,33 @@ const RegistrationsList = ({ registrations, loading, onView, getPaymentStatus, g
           <table className="w-full">
             <thead className="bg-gray-50/80 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Profile</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Contact</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Department</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Major</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Payment</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Profile
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Contact
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Department
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Major
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Payment
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
+
             <tbody className="divide-y divide-gray-200">
               {registrations.map((reg) => (
                 <RegistrationRow
@@ -490,6 +582,7 @@ const RegistrationsList = ({ registrations, loading, onView, getPaymentStatus, g
                   registration={reg}
                   onView={onView}
                   getPaymentStatus={getPaymentStatus}
+                  getPaymentLabel={getPaymentLabel} // ✅ FIX
                   getAmount={getAmount}
                 />
               ))}
@@ -511,11 +604,19 @@ const EmptyState = () => (
   </div>
 );
 
-const RegistrationRow = ({ registration, onView, getPaymentStatus, getAmount }) => {
-  const status = (getPaymentStatus(registration) || "PENDING").toUpperCase();
-  const isPaid = status === "PAID";
+const RegistrationRow = ({
+  registration,
+  onView,
+  getPaymentStatus,
+  getPaymentLabel,
+  getAmount,
+}) => {
+  const status = String(getPaymentStatus(registration) || "PENDING").toUpperCase();
+  const isPaid = status === "PAID" || status === "COMPLETED";
+  const statusLabel = getPaymentLabel(registration);
 
-  const profileImage = registration.profile_picture_url || registration.profile_picture_path;
+  const profileImage =
+    registration.profile_picture_url || registration.profile_picture_path;
 
   return (
     <motion.tr
@@ -548,8 +649,14 @@ const RegistrationRow = ({ registration, onView, getPaymentStatus, getAmount }) 
 
       <td className="px-6 py-4">
         <div>
-          <p className="text-sm font-semibold text-gray-900">{registration.full_name_en}</p>
-          {registration.full_name_kh && <p className="text-xs text-gray-500 mt-0.5">{registration.full_name_kh}</p>}
+          <p className="text-sm font-semibold text-gray-900">
+            {registration.full_name_en}
+          </p>
+          {registration.full_name_kh && (
+            <p className="text-xs text-gray-500 mt-0.5">
+              {registration.full_name_kh}
+            </p>
+          )}
           <p className="text-xs text-gray-400 mt-0.5">ID: {registration.id}</p>
         </div>
       </td>
@@ -559,7 +666,9 @@ const RegistrationRow = ({ registration, onView, getPaymentStatus, getAmount }) 
           {registration.personal_email && (
             <div className="flex items-center gap-1.5 text-xs text-gray-600">
               <Mail className="w-3.5 h-3.5 text-purple-500 flex-shrink-0" />
-              <span className="truncate max-w-[200px]">{registration.personal_email}</span>
+              <span className="truncate max-w-[200px]">
+                {registration.personal_email}
+              </span>
             </div>
           )}
           {registration.phone_number && (
@@ -575,7 +684,9 @@ const RegistrationRow = ({ registration, onView, getPaymentStatus, getAmount }) 
         {registration.department_name ? (
           <div className="flex items-center gap-1.5">
             <Building2 className="w-4 h-4 text-blue-500 flex-shrink-0" />
-            <span className="text-sm text-gray-700">{registration.department_name}</span>
+            <span className="text-sm text-gray-700">
+              {registration.department_name}
+            </span>
           </div>
         ) : (
           <span className="text-sm text-gray-400">N/A</span>
@@ -586,7 +697,9 @@ const RegistrationRow = ({ registration, onView, getPaymentStatus, getAmount }) 
         {registration.major_name ? (
           <div className="flex items-center gap-1.5">
             <GraduationCap className="w-4 h-4 text-orange-500 flex-shrink-0" />
-            <span className="text-sm text-gray-700">{registration.major_name}</span>
+            <span className="text-sm text-gray-700">
+              {registration.major_name}
+            </span>
           </div>
         ) : (
           <span className="text-sm text-gray-400">N/A</span>
@@ -606,12 +719,12 @@ const RegistrationRow = ({ registration, onView, getPaymentStatus, getAmount }) 
         {isPaid ? (
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
             <CheckCircle className="w-3.5 h-3.5" />
-            Paid
+            {statusLabel}
           </span>
         ) : (
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 border border-orange-200">
             <Clock className="w-3.5 h-3.5" />
-            Pending
+            {statusLabel}
           </span>
         )}
       </td>
@@ -643,10 +756,11 @@ const RegistrationModal = ({
   getPaidAt,
   getAmount,
 }) => {
-  const status = (getPaymentStatus(registration) || "PENDING").toUpperCase();
-  const isPaid = status === "PAID";
+  const status = String(getPaymentStatus(registration) || "PENDING").toUpperCase();
+  const isPaid = status === "PAID" || status === "COMPLETED";
 
-  const profileImage = registration.profile_picture_url || registration.profile_picture_path;
+  const profileImage =
+    registration.profile_picture_url || registration.profile_picture_path;
 
   return (
     <AnimatePresence>
@@ -668,7 +782,9 @@ const RegistrationModal = ({
         >
           <div
             className={`sticky top-0 p-6 z-10 ${
-              isPaid ? "bg-gradient-to-br from-green-500 to-emerald-600" : "bg-gradient-to-br from-orange-500 to-red-600"
+              isPaid
+                ? "bg-gradient-to-br from-green-500 to-emerald-600"
+                : "bg-gradient-to-br from-orange-500 to-red-600"
             }`}
           >
             <button
@@ -699,7 +815,9 @@ const RegistrationModal = ({
               </div>
 
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-white mb-2">Registration Details</h2>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  Registration Details
+                </h2>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm text-white/80">ID: {registration.id}</span>
                   {isPaid ? (
@@ -760,7 +878,9 @@ const RegistrationModal = ({
             <Section title="Payment Information">
               <div
                 className={`p-4 rounded-xl ${
-                  isPaid ? "bg-green-50 border border-green-200" : "bg-orange-50 border border-orange-200"
+                  isPaid
+                    ? "bg-green-50 border border-green-200"
+                    : "bg-orange-50 border border-orange-200"
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -860,12 +980,16 @@ const RegistrationModal = ({
 
 const Section = ({ title, children }) => (
   <div>
-    <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">{title}</h3>
+    <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
+      {title}
+    </h3>
     {children}
   </div>
 );
 
-const InfoGrid = ({ children }) => <div className="grid grid-cols-2 gap-4">{children}</div>;
+const InfoGrid = ({ children }) => (
+  <div className="grid grid-cols-2 gap-4">{children}</div>
+);
 
 const InfoField = ({ label, value, fullWidth = false }) => (
   <div className={fullWidth ? "col-span-2" : ""}>

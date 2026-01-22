@@ -53,6 +53,22 @@ const Dashboard = () => {
     loadAllData();
   }, []);
 
+  // ✅ IMPORTANT FIX:
+  // New backend flow stores payment per academic year/semester in student_academic_periods,
+  // so API may return period_payment_status / academic_payment_status instead of registrations.payment_status.
+  const getPaymentStatus = (reg) => {
+    const raw =
+      reg?.payment_status ??
+      reg?.period_payment_status ??
+      reg?.academic_payment_status ??
+      reg?.payment?.status ??
+      "PENDING";
+
+    return String(raw || "PENDING").toUpperCase();
+  };
+
+  const isPaidStatus = (status) => status === "PAID" || status === "COMPLETED";
+
   const loadAllData = async () => {
     try {
       setLoading(true);
@@ -77,15 +93,16 @@ const Dashboard = () => {
       setStudents(Array.isArray(studentsData) ? studentsData : []);
       setRegistrations(Array.isArray(regsData) ? regsData : []);
 
+      const regsArr = Array.isArray(regsData) ? regsData : [];
+      const pendingCount = regsArr.filter(r => !isPaidStatus(getPaymentStatus(r))).length;
+
       console.log("Dashboard data loaded:", {
         departments: deptsData.length,
         majors: majorsData.length,
         subjects: subjectsData.length,
         students: studentsData.length,
-        totalRegistrations: regsData.length,
-        pendingRegistrations: regsData.filter(r =>
-          r.payment_status === 'PENDING' || r.payment_status === null || r.payment_status === ''
-        ).length
+        totalRegistrations: regsArr.length,
+        pendingRegistrations: pendingCount
       });
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
@@ -95,13 +112,7 @@ const Dashboard = () => {
   };
 
   const pendingRegistrations = useMemo(() => {
-    return registrations.filter(r => {
-      const isPending =
-        r.payment_status === 'PENDING' ||
-        r.payment_status === null ||
-        r.payment_status === '';
-      return isPending;
-    });
+    return registrations.filter(r => !isPaidStatus(getPaymentStatus(r)));
   }, [registrations]);
 
   const recentRegistrationsCount = useMemo(() => {
@@ -198,13 +209,15 @@ const Dashboard = () => {
       .map(reg => {
         const dept = departments.find(d => d.id === reg.department_id);
         const major = majors.find(m => m.id === reg.major_id);
+        const status = getPaymentStatus(reg);
+
         return {
           id: reg.id,
           name: reg.full_name_en || `${reg.first_name} ${reg.last_name}`,
           department: dept?.name || "Unknown",
           major: major?.major_name || "Unknown",
-          date: new Date(reg.created_at).toLocaleDateString(),
-          status: reg.payment_status || "PENDING"
+          date: reg.created_at ? new Date(reg.created_at).toLocaleDateString() : "N/A",
+          status: status || "PENDING"
         };
       });
   }, [pendingRegistrations, departments, majors]);
@@ -307,7 +320,6 @@ const Dashboard = () => {
                 </div>
               </motion.div>
 
-              {/* Refresh button placed correctly */}
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
@@ -410,7 +422,7 @@ const Dashboard = () => {
             <div className="px-4 py-3 rounded-2xl bg-white/70 border border-white shadow-sm">
               <p className="text-xs text-gray-600">Completed Payments</p>
               <p className="text-2xl font-bold text-gray-900">
-                {registrations.filter(r => r.payment_status === "PAID" || r.payment_status === "COMPLETED").length}
+                {registrations.filter(r => isPaidStatus(getPaymentStatus(r))).length}
               </p>
             </div>
           </div>
@@ -453,7 +465,7 @@ const Dashboard = () => {
             title: "Pending Today",
             value: registrations.filter(r => {
               if (!r.created_at) return false;
-              const isPending = r.payment_status === "PENDING" || r.payment_status === null || r.payment_status === "";
+              const isPending = !isPaidStatus(getPaymentStatus(r));
               const d = new Date(r.created_at);
               const now = new Date();
               return isPending && d.toDateString() === now.toDateString();
@@ -495,7 +507,7 @@ const Dashboard = () => {
       {/* RECENT ACTIVITY + QUICK ACTIONS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* Recent Registrations */}
+        {/* Pending Registrations */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -538,10 +550,13 @@ const Dashboard = () => {
                         <Calendar className="w-3 h-3" />
                         {reg.date}
                         <span className="mx-1">•</span>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${reg.status === 'COMPLETED' || reg.status === 'PAID'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-yellow-100 text-yellow-700'
-                          }`}>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            isPaidStatus(reg.status)
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-yellow-100 text-yellow-700'
+                          }`}
+                        >
                           {reg.status}
                         </span>
                       </p>
