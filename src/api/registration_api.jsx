@@ -1,5 +1,5 @@
 // ==============================
-// registration_api.jsx (FULL, CLEAN, CONSISTENT) ✅ FIXED
+// registration_api.jsx (FULL, CLEAN, CONSISTENT) ✅ NO CUT
 // ==============================
 import API from "./index";
 import PaymentAPI from "./paymentClient";
@@ -33,7 +33,8 @@ export const deleteRegistration = (id) => API.delete(`/registers/${id}`);
 
 // ==============================
 // PAY LATER
-// ⚠️ keep your real backend route here
+// backend route: POST /registrations/{id}/pay-later
+// payload supports: { pay_plan, semester, amount }
 // ==============================
 export const payLater = (id, payload = {}) =>
   API.post(`/registrations/${id}/pay-later`, payload);
@@ -41,21 +42,21 @@ export const payLater = (id, payload = {}) =>
 // ==============================
 // ✅ GENERATE QR (ONE TRUE FUNCTION)
 // backend route: POST /payment/generate-qr
-// supports: semester, pay_plan, amount
+// payload supports: { pay_plan, semester, amount }
 // ==============================
 export const generatePaymentQR = (registrationId, payload = {}) =>
   PaymentAPI.post("/payment/generate-qr", {
     registration_id: registrationId,
-    ...payload, // { semester, pay_plan, amount }
+    ...payload,
   });
 
-// ✅ Admin Generate QR (use same generatePaymentQR)
-export const adminGenerateQr = (id, payload = {}) =>
-  generatePaymentQR(id, payload);
+// ✅ Admin Generate QR (use same function)
+export const adminGenerateQr = (id, payload = {}) => generatePaymentQR(id, payload);
 
 // ==============================
 // ✅ ADMIN CASH PAYMENT
 // backend route example: POST /admin/registrations/{id}/mark-paid-cash
+// payload supports: { pay_plan, semester, amount }
 // ==============================
 export const markPaidCash = (id, payload = {}) =>
   API.post(`/admin/registrations/${id}/mark-paid-cash`, payload);

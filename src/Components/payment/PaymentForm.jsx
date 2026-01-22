@@ -1,340 +1,407 @@
+// ==============================
 // PaymentForm.jsx (FULL NO CUT)
-// ✅ Payment plan (YEAR or SEMESTER) + amount calculation already done in Registration.jsx
-// ✅ Same endpoints: generatePaymentQR, checkPaymentStatus
+// ✅ Supports Pay Plan: SEMESTER (50%) or YEAR (100%)
+// ✅ Sends correct payload to backend
+// ✅ Polls payment status and calls onSuccess when PAID
+// ==============================
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Loader, CheckCircle, AlertTriangle, RefreshCw, Clock, DollarSign } from "lucide-react";
+import { generatePaymentQR, checkPaymentStatus } from "../../api/registration_api.jsx";
 
-import React, { useEffect, useRef, useState } from "react";
-import { CheckCircle, Loader, CloudOff, Info, Download, X } from "lucide-react";
-import { generatePaymentQR, checkPaymentStatus } from "../../api/registration_api";
+const normalizeStatus = (raw) => String(raw || "").trim().toUpperCase();
+const isPaidStatus = (raw) => ["PAID", "COMPLETED", "SUCCESS", "APPROVED"].includes(normalizeStatus(raw));
+
+const clampSemester = (s) => {
+  const n = parseInt(s, 10);
+  return n === 2 ? 2 : 1;
+};
+
+const calcAmount = ({ yearFee, payPlan }) => {
+  const fee = Number(yearFee) || 0;
+  if (!payPlan || payPlan.type === "YEAR") return fee;
+  // SEMESTER = 50% of year fee
+  return Math.round((fee * 0.5) * 100) / 100;
+};
+
+const pickQrFromResponse = (data) => {
+  // support many backend shapes
+  const d = data?.data || data || {};
+  const qrImage =
+    d.qr_image ||
+    d.qrImage ||
+    d.qr_url ||
+    d.qrUrl ||
+    d.qr_code_url ||
+    d.qrCodeUrl ||
+    null;
+
+  const qrString =
+    d.qr_string ||
+    d.qrString ||
+    d.qr ||
+    d.qr_code ||
+    d.qrCode ||
+    null;
+
+  const tranId =
+    d.tran_id ||
+    d.tranId ||
+    d.tranID ||
+    d.transaction_id ||
+    d.transactionId ||
+    d.payment_tran_id ||
+    null;
+
+  return { qrImage, qrString, tranId, raw: d };
+};
 
 const PaymentForm = ({
   registrationId,
+  yearFee = 0,
+  payPlan: payPlanProp, // optional { type:"SEMESTER"|"YEAR", semester?:1|2 }
+  amount: amountProp, // optional override
   registrationData,
   onClose,
   onSuccess,
-
-  // ✅ new props
-  yearFee = 0,
-  amount = 0, // amount to pay now
-  payPlan = { type: "YEAR", semester: 1 }, // {type:"YEAR"|"SEMESTER", semester:1|2}
 }) => {
-  const [qrImage, setQrImage] = useState(null);
+  const [payPlan, setPayPlan] = useState(() => {
+    if (payPlanProp?.type) {
+      return {
+        type: payPlanProp.type === "SEMESTER" ? "SEMESTER" : "YEAR",
+        semester: clampSemester(payPlanProp.semester ?? 1),
+      };
+    }
+    return { type: "SEMESTER", semester: 1 };
+  });
+
+  const computedAmount = useMemo(() => {
+    if (amountProp != null && Number(amountProp) > 0) return Number(amountProp);
+    return calcAmount({ yearFee, payPlan });
+  }, [amountProp, yearFee, payPlan]);
+
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState("PENDING");
-  const [tranId, setTranId] = useState(null);
+  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchedRef = useRef(false);
-  const pollingIntervalRef = useRef(null);
+  const [qrImage, setQrImage] = useState(null);
+  const [qrString, setQrString] = useState(null);
+  const [tranId, setTranId] = useState(null);
 
-  const planType = payPlan?.type || "YEAR";
-  const planSemester = planType === "SEMESTER" ? Number(payPlan?.semester || 1) : 1;
+  const [status, setStatus] = useState("PENDING");
+  const [statusMsg, setStatusMsg] = useState("");
+  const [polling, setPolling] = useState(false);
 
-  // Generate QR code
-  const fetchQR = async () => {
+  const aliveRef = useRef(true);
+  const pollTimerRef = useRef(null);
+
+  useEffect(() => {
+    aliveRef.current = true;
+    return () => {
+      aliveRef.current = false;
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    };
+  }, []);
+
+  const buildPayload = () => {
+    const payload = {
+      pay_plan: payPlan.type, // "SEMESTER" | "YEAR"
+      amount: computedAmount,
+    };
+    // backend still needs semester for joins / student_academic_periods
+    if (payPlan.type === "SEMESTER") payload.semester = clampSemester(payPlan.semester);
+    else payload.semester = 1; // safe default for YEAR (or keep 1)
+    return payload;
+  };
+
+  const startPolling = (tranIdValue) => {
+    if (!tranIdValue) return;
+    if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+
+    setPolling(true);
+    pollTimerRef.current = setInterval(async () => {
+      try {
+        const res = await checkPaymentStatus(tranIdValue);
+        const d = res?.data?.data || res?.data || {};
+        const st =
+          d.payment_status ||
+          d.status ||
+          d.tran_status ||
+          d.tranStatus ||
+          d.ack ||
+          "PENDING";
+
+        const msg =
+          d.message ||
+          d.description ||
+          "";
+
+        if (!aliveRef.current) return;
+        setStatus(normalizeStatus(st) || "PENDING");
+        setStatusMsg(String(msg || ""));
+
+        if (isPaidStatus(st)) {
+          clearInterval(pollTimerRef.current);
+          pollTimerRef.current = null;
+          setPolling(false);
+
+          // ✅ success callback (parent will refresh list)
+          onSuccess?.({
+            registrationId,
+            tranId: tranIdValue,
+            status: st,
+            payPlan,
+            amount: computedAmount,
+            registrationData,
+          });
+        }
+      } catch (e) {
+        // do not stop polling on one error
+      }
+    }, 2500);
+  };
+
+  const generateQrNow = async () => {
     if (!registrationId) {
-      setError("Registration ID is required");
-      console.error("No registration ID provided");
+      setError("Missing registration id");
       return;
     }
 
-    setLoading(true);
     setError(null);
+    setGenerating(true);
+    setLoading(true);
 
     try {
-      console.log("=== QR GENERATION DEBUG ===");
-      console.log("Registration ID:", registrationId);
-      console.log("PayPlan:", payPlan);
-      console.log("Year Fee:", yearFee);
-      console.log("Pay Amount:", amount);
-      console.log("==========================");
+      const payload = buildPayload();
+      const res = await generatePaymentQR(registrationId, payload);
 
-      // ✅ Same endpoint call, send extra fields (backend should use `amount`)
-      const response = await generatePaymentQR(registrationId, {
-        pay_plan: planType, // "YEAR" or "SEMESTER"
-        semester: planSemester, // 1 or 2 (for YEAR still set 1 to be safe)
-        amount: Number(amount || 0),
-      });
+      const { qrImage, qrString, tranId } = pickQrFromResponse(res?.data);
+      if (!aliveRef.current) return;
 
-      const data = response.data;
+      setQrImage(qrImage);
+      setQrString(qrString);
+      setTranId(tranId);
 
-      console.log("PayWay API Response:", data);
+      // reset status view
+      setStatus("PENDING");
+      setStatusMsg("");
 
-      const { tran_id, qr } = data;
-
-      if (!qr || qr.status?.code !== "0" || !qr.qrImage || !tran_id) {
-        console.error("Invalid PayWay response shape:", data);
-        throw new Error("Invalid PayWay response");
-      }
-
-      setQrImage(qr.qrImage);
-      setTranId(tran_id);
-
-      console.log("✅ QR Code loaded successfully");
-    } catch (err) {
-      console.error("Error generating QR:", err);
-      const errorMessage =
-        err.response?.data?.error ||
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to generate QR code";
-      setError(errorMessage);
+      if (tranId) startPolling(tranId);
+    } catch (e) {
+      const msg =
+        e.response?.data?.message ||
+        e.response?.data?.error ||
+        e.message ||
+        "Failed to generate QR";
+      if (!aliveRef.current) return;
+      setError(msg);
     } finally {
+      if (!aliveRef.current) return;
+      setGenerating(false);
       setLoading(false);
     }
   };
 
+  // auto-generate QR once when modal opens
   useEffect(() => {
-    if (!fetchedRef.current && registrationId) {
-      fetchedRef.current = true;
-      fetchQR();
-    }
+    generateQrNow();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [registrationId]);
+  }, []);
 
-  // Poll payment status
-  useEffect(() => {
-    if (!tranId) return;
-
-    console.log("Starting payment status polling for:", tranId);
-
-    const pollStatus = async () => {
-      try {
-        const response = await checkPaymentStatus(tranId);
-        const data = response.data;
-
-        const statusMsg = (data.status?.message || "PENDING").toUpperCase();
-        setStatus(statusMsg);
-
-        if (statusMsg === "PAID") {
-          console.log("✅ Payment completed successfully!");
-          clearInterval(pollingIntervalRef.current);
-
-          setTimeout(() => {
-            onSuccess?.();
-          }, 1000);
-        } else if (statusMsg === "FAILED" || statusMsg === "CANCELED") {
-          console.log("❌ Payment failed or canceled");
-          clearInterval(pollingIntervalRef.current);
-        }
-      } catch (err) {
-        console.error("Error polling status:", err);
-      }
+  const statusUI = useMemo(() => {
+    const s = normalizeStatus(status);
+    if (isPaidStatus(s)) {
+      return {
+        label: "PAID",
+        cls: "bg-green-100 text-green-700 border-green-200",
+        icon: CheckCircle,
+      };
+    }
+    return {
+      label: "PENDING",
+      cls: "bg-orange-100 text-orange-700 border-orange-200",
+      icon: Clock,
     };
+  }, [status]);
 
-    pollStatus();
-    pollingIntervalRef.current = setInterval(pollStatus, 3000);
-
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-    };
-  }, [tranId, onSuccess]);
-
-  const handleDownloadQR = () => {
-    if (!qrImage) return;
-
-    const link = document.createElement("a");
-    link.href = qrImage;
-    link.download = `ABA_Payment_QR_${tranId}.png`;
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const isFinalStatus =
-    status === "PAID" ||
-    status === "SUCCESS" ||
-    status === "FAILED" ||
-    status === "CANCELED";
-
-  const displayStudentName =
-    registrationData?.data?.full_name_en ||
-    `${registrationData?.data?.first_name || ""} ${registrationData?.data?.last_name || ""}`.trim();
-
-  const planLabel = planType === "SEMESTER" ? `Semester ${planSemester} (50%)` : "Full Year (100%)";
+  const StatusIcon = statusUI.icon;
 
   return (
-    <div className="relative z-50 w-full max-w-md backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/80 to-white/70 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.2)] border-2 border-white/60 overflow-hidden mx-4">
-      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
-
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 z-10 backdrop-blur-xl bg-white/60 p-2 rounded-full hover:bg-white/80 transition-all duration-300 border border-white/40"
-        disabled={status === "PAID" || status === "SUCCESS"}
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="relative w-full max-w-lg"
       >
-        <X size={20} className="text-gray-600" />
-      </button>
+        <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/80 to-white/70 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] border-2 border-white/60 overflow-hidden">
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
 
-      <div className="relative backdrop-blur-xl bg-gradient-to-r from-[#005788] to-[#0077b6] p-6 text-center border-b border-white/20">
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
-        <h2 className="relative text-2xl font-bold text-white drop-shadow-lg">ABA PAY</h2>
-        <p className="relative text-blue-100 text-sm mt-1 font-medium">
-          Scan to complete payment
-        </p>
-      </div>
+          <button
+            onClick={() => {
+              if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+              pollTimerRef.current = null;
+              onClose?.();
+            }}
+            className="absolute top-4 right-4 backdrop-blur-xl bg-white/60 p-2 rounded-full hover:bg-white/80 transition-all duration-300 border border-white/40"
+          >
+            <X size={20} className="text-gray-600" />
+          </button>
 
-      <div className="backdrop-blur-xl bg-white/40 border-b border-white/30 px-4 py-3 space-y-1">
-        {registrationData && (
-          <>
-            <p className="text-xs text-gray-600">
-              <span className="font-medium">Student:</span> {displayStudentName || "—"}
-            </p>
-            <p className="text-xs text-gray-600">
-              <span className="font-medium">Student Code:</span>{" "}
-              {registrationData.student_account?.student_code || registrationData.data?.student_code || "Pending"}
-            </p>
-          </>
-        )}
+          <div className="p-6">
+            <div className="text-center mb-5">
+              <div className="inline-flex items-center justify-center p-4 backdrop-blur-xl bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-3 shadow-xl">
+                {loading ? <Loader className="animate-spin text-white" size={28} /> : <DollarSign className="text-white" size={28} />}
+              </div>
 
-        <p className="text-xs text-gray-600">
-          <span className="font-medium">Plan:</span> {planLabel}
-        </p>
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Payment (QR)
+              </h3>
 
-        <p className="text-xs text-gray-600">
-          <span className="font-medium">Pay Now:</span>
-          <span className="text-lg font-bold text-green-600 ml-2">
-            ${Number(amount || 0).toFixed(2)}
-          </span>
-        </p>
-
-        <p className="text-[11px] text-gray-500">
-          Year Fee: ${Number(yearFee || 0).toFixed(2)}
-        </p>
-
-        {tranId && <p className="text-xs text-gray-500 font-mono">Transaction: {tranId}</p>}
-      </div>
-
-      <div className="p-8 flex flex-col items-center">
-        {error && (
-          <div className="backdrop-blur-xl bg-red-50/90 border-2 border-red-200/60 text-red-700 px-4 py-3 rounded-2xl relative w-full mb-6 flex items-center gap-3 shadow-lg">
-            <div className="backdrop-blur-xl bg-red-500/10 p-2 rounded-lg">
-              <CloudOff size={18} className="text-red-600" />
+              <p className="text-sm text-gray-600 mt-1">
+                Choose to pay <b>one semester (50%)</b> or <b>full year (100%)</b>.
+              </p>
             </div>
-            <div className="flex-1">
-              <span className="block text-sm font-medium">{error}</span>
-              <button onClick={fetchQR} className="text-xs text-red-600 hover:text-red-800 underline mt-1">
-                Retry
-              </button>
-            </div>
-          </div>
-        )}
 
-        <div className="backdrop-blur-2xl bg-gradient-to-br from-white/70 to-white/50 p-6 rounded-3xl border-2 border-white/60 shadow-xl mb-6">
-          {loading || !qrImage ? (
-            <div className="w-[240px] h-[240px] flex items-center justify-center backdrop-blur-xl bg-white/40 border-2 border-white/50 rounded-2xl">
-              {loading ? (
-                <div className="text-center">
-                  <Loader className="animate-spin text-blue-600 mb-3 mx-auto" size={48} />
-                  <p className="text-sm text-gray-600 font-medium">Generating QR Code...</p>
-                  <p className="text-xs text-gray-500 mt-1">Please wait</p>
+            {/* Pay Plan Selector */}
+            <div className="backdrop-blur-xl bg-white/60 border border-white/60 rounded-2xl p-4 shadow-sm mb-4">
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPayPlan((p) => ({ ...p, type: "SEMESTER" }))}
+                  className={`px-4 py-3 rounded-2xl font-semibold text-sm transition-all border ${
+                    payPlan.type === "SEMESTER"
+                      ? "bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white border-white/30 shadow-lg"
+                      : "bg-white/60 text-gray-800 border-white/60 hover:bg-white/80"
+                  }`}
+                  disabled={generating}
+                >
+                  Pay Semester (50%)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPayPlan((p) => ({ ...p, type: "YEAR" }))}
+                  className={`px-4 py-3 rounded-2xl font-semibold text-sm transition-all border ${
+                    payPlan.type === "YEAR"
+                      ? "bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 text-white border-white/30 shadow-lg"
+                      : "bg-white/60 text-gray-800 border-white/60 hover:bg-white/80"
+                  }`}
+                  disabled={generating}
+                >
+                  Pay Full Year (100%)
+                </button>
+              </div>
+
+              {payPlan.type === "SEMESTER" && (
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <div className="text-sm text-gray-700 font-medium">Select Semester</div>
+                  <select
+                    value={String(payPlan.semester)}
+                    onChange={(e) => setPayPlan((p) => ({ ...p, semester: clampSemester(e.target.value) }))}
+                    className="px-3 py-2 bg-white/70 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    disabled={generating}
+                  >
+                    <option value="1">Semester 1</option>
+                    <option value="2">Semester 2</option>
+                  </select>
+                </div>
+              )}
+
+              <div className="mt-3 flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  Year Fee: <span className="font-semibold text-gray-800">${Number(yearFee || 0).toFixed(2)}</span>
+                </div>
+                <div className="text-sm text-gray-600">
+                  Pay Now:{" "}
+                  <span className="text-xl font-extrabold text-green-600">
+                    ${Number(computedAmount || 0).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-3 flex justify-end">
+                <button
+                  type="button"
+                  onClick={generateQrNow}
+                  disabled={generating}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {generating ? <Loader className="animate-spin" size={16} /> : <RefreshCw size={16} />}
+                  Generate QR
+                </button>
+              </div>
+            </div>
+
+            {/* Error */}
+            {error && (
+              <div className="mb-4 backdrop-blur-xl bg-red-50/70 border border-red-200/60 rounded-2xl p-4 flex items-start gap-3">
+                <AlertTriangle className="text-red-600 mt-0.5" size={18} />
+                <div className="text-sm text-red-700 whitespace-pre-line">{error}</div>
+              </div>
+            )}
+
+            {/* Status */}
+            <div className={`mb-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border ${statusUI.cls}`}>
+              <StatusIcon size={14} />
+              {statusUI.label}
+              {polling ? <span className="opacity-70">• checking...</span> : null}
+            </div>
+
+            {statusMsg ? <div className="text-xs text-gray-500 mb-4">{statusMsg}</div> : null}
+
+            {/* QR Section */}
+            <div className="backdrop-blur-xl bg-white/60 border border-white/60 rounded-2xl p-4 shadow-sm">
+              {!qrImage && !qrString ? (
+                <div className="py-10 text-center text-gray-600">
+                  {loading ? (
+                    <div className="inline-flex items-center gap-2">
+                      <Loader className="animate-spin" size={18} />
+                      Generating QR...
+                    </div>
+                  ) : (
+                    "QR not available"
+                  )}
                 </div>
               ) : (
-                <div className="text-center">
-                  <Info className="text-gray-400 mb-2 mx-auto" size={48} />
-                  <p className="text-sm text-gray-600">No QR Code</p>
+                <div className="flex flex-col items-center">
+                  {qrImage ? (
+                    <img
+                      src={qrImage}
+                      alt="QR"
+                      className="w-64 h-64 object-contain rounded-2xl bg-white p-3 shadow"
+                      onError={() => setQrImage(null)}
+                    />
+                  ) : null}
+
+                  {qrString ? (
+                    <div className="w-full mt-3">
+                      <div className="text-xs text-gray-500 mb-1">QR String (copy if needed)</div>
+                      <textarea
+                        value={qrString}
+                        readOnly
+                        rows={4}
+                        className="w-full text-xs p-3 rounded-xl border border-gray-200 bg-white/70 outline-none"
+                      />
+                    </div>
+                  ) : null}
+
+                  {tranId ? (
+                    <div className="mt-3 text-xs text-gray-500">
+                      Tran ID: <span className="font-semibold text-gray-700">{tranId}</span>
+                    </div>
+                  ) : null}
                 </div>
               )}
             </div>
-          ) : (
-            <img
-              src={qrImage}
-              alt="ABA Payment QR Code"
-              className="w-[240px] h-[240px] object-contain rounded-2xl shadow-lg"
-              crossOrigin="anonymous"
-            />
-          )}
-        </div>
 
-        <div
-          className={`backdrop-blur-xl px-6 py-3 rounded-2xl border-2 shadow-lg w-full ${
-            status === "PAID" || status === "SUCCESS"
-              ? "bg-green-50/80 border-green-200/60"
-              : status === "FAILED" || status === "CANCELED"
-              ? "bg-red-50/80 border-red-200/60"
-              : "bg-blue-50/80 border-blue-200/60"
-          }`}
-        >
-          <div
-            className={`flex items-center justify-center gap-3 font-bold text-lg ${
-              status === "PAID" || status === "SUCCESS"
-                ? "text-green-600"
-                : status === "FAILED" || status === "CANCELED"
-                ? "text-red-600"
-                : "text-blue-600"
-            }`}
-          >
-            {status === "PAID" || status === "SUCCESS" ? (
-              <>
-                <div className="backdrop-blur-xl bg-green-500/10 p-2 rounded-lg">
-                  <CheckCircle size={24} />
-                </div>
-                <span>Payment Completed!</span>
-              </>
-            ) : isFinalStatus ? (
-              <>
-                <div className="backdrop-blur-xl bg-red-500/10 p-2 rounded-lg">
-                  <CloudOff size={24} />
-                </div>
-                <span>{status}</span>
-              </>
-            ) : (
-              <>
-                <div className="backdrop-blur-xl bg-blue-500/10 p-2 rounded-lg">
-                  <Loader className="animate-spin" size={24} />
-                </div>
-                <span className="animate-pulse">Waiting for payment...</span>
-              </>
-            )}
+            <div className="mt-5 text-xs text-gray-500">
+              Scan with ABA Mobile. After payment, status will update automatically.
+            </div>
           </div>
         </div>
-
-        {!isFinalStatus && qrImage && (
-          <div className="mt-6 backdrop-blur-xl bg-blue-50/60 border border-blue-200/40 rounded-xl p-4 w-full">
-            <h4 className="font-semibold text-sm text-gray-800 mb-2">How to Pay:</h4>
-            <ol className="text-xs text-gray-700 space-y-1 list-decimal list-inside">
-              <li>Open ABA Mobile app</li>
-              <li>Tap "Scan QR" on the home screen</li>
-              <li>Scan this QR code</li>
-              <li>Confirm the payment</li>
-            </ol>
-          </div>
-        )}
-
-        <div className="flex gap-3 mt-6 w-full">
-          {qrImage && status === "PENDING" && (
-            <button
-              onClick={handleDownloadQR}
-              className="relative flex-1 py-3 px-4 rounded-xl backdrop-blur-xl bg-white/60 border-2 border-white/60 text-gray-700 hover:bg-white/80 hover:scale-[1.02] transition-all duration-300 font-semibold shadow-lg overflow-hidden group flex items-center justify-center gap-2"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-              <Download size={18} />
-              <span className="relative z-10">Download</span>
-            </button>
-          )}
-
-          <button
-            onClick={onClose}
-            className={`relative ${
-              qrImage && status === "PENDING" ? "flex-1" : "w-full"
-            } py-3 px-4 rounded-xl backdrop-blur-xl text-white hover:scale-[1.02] transition-all duration-300 font-semibold shadow-lg border border-white/30 overflow-hidden group ${
-              status === "PAID" || status === "SUCCESS"
-                ? "bg-gradient-to-r from-green-600 to-emerald-600"
-                : "bg-gradient-to-r from-gray-600 to-gray-700"
-            }`}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-            <span className="relative z-10">
-              {status === "PAID" || status === "SUCCESS" ? "Complete" : "Cancel"}
-            </span>
-          </button>
-        </div>
-      </div>
-
-      <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -top-10 -left-10 w-32 h-32 bg-gradient-to-br from-pink-400/20 to-orange-400/20 rounded-full blur-3xl pointer-events-none" />
-    </div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 

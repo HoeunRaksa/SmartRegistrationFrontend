@@ -1,3 +1,4 @@
+// RegistrationPage.jsx (FULL NO CUT) ✅ NEW DATA + NEW STYLE + FIX PAID/PENDING
 import React, {
   useEffect,
   useState,
@@ -35,10 +36,16 @@ import {
   Search,
   FileText,
   RefreshCw,
+  QrCode,
+  Eye,
 } from "lucide-react";
 
+/* ================== SAFE HELPERS (NEW DATA + OLD DATA SUPPORT) ================== */
 
-// ================== SAFE HELPERS (UPDATED) ==================
+const safeNum = (v, fallback = 0) => {
+  const n = typeof v === "string" ? parseFloat(v) : Number(v);
+  return Number.isFinite(n) ? n : fallback;
+};
 
 const normalizeStatus = (raw) => String(raw || "PENDING").trim().toUpperCase();
 
@@ -52,23 +59,22 @@ const isPendingStatus = (raw) => {
   return ["PENDING", "UNPAID", "NEW", "INIT", "PROCESSING"].includes(s);
 };
 
-// ✅ detect semester/year fields safely (support old/new backend)
+// ✅ Detect semester/year fields safely (support old/new backend)
 const getSemester = (reg) =>
+  reg?.period_semester ??
   reg?.semester ??
   reg?.current_semester ??
-  reg?.period_semester ??
   reg?.academic_semester ??
   null;
 
 const getAcademicYear = (reg) =>
   reg?.academic_year ??
-  reg?.current_academic_year ??
   reg?.period_academic_year ??
+  reg?.current_academic_year ??
   reg?.academicYear ??
   null;
 
-// ✅ MOST IMPORTANT: prefer period_payment_status first (new table)
-// then fallback old table
+// ✅ MOST IMPORTANT: prefer period_payment_status first (new table), fallback old table
 const getPaymentStatus = (reg) =>
   reg?.period_payment_status ??
   reg?.academic_payment_status ??
@@ -78,6 +84,7 @@ const getPaymentStatus = (reg) =>
 const getPaidAt = (reg) =>
   reg?.period_paid_at ?? reg?.paid_at ?? reg?.payment_date ?? null;
 
+// ✅ Amount should show period tuition first, fallback to major fee, etc.
 const getAmount = (reg) =>
   reg?.period_tuition_amount ??
   reg?.tuition_amount ??
@@ -86,6 +93,7 @@ const getAmount = (reg) =>
   reg?.amount ??
   0;
 
+// ✅ Pretty label: Paid (2026-2027 • Sem 1)
 const getPaymentLabel = (reg) => {
   const status = normalizeStatus(getPaymentStatus(reg));
   const sem = getSemester(reg);
@@ -99,20 +107,32 @@ const getPaymentLabel = (reg) => {
   return suffix ? `Pending (${suffix})` : "Pending";
 };
 
+// ✅ image helper
+const getProfileImage = (reg) =>
+  reg?.profile_picture_url ||
+  reg?.profile_picture_path ||
+  reg?.profile_picture ||
+  null;
+
+/* ================== COMPONENT ================== */
 
 const RegistrationPage = () => {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const [selectedRegistration, setSelectedRegistration] = useState(null);
   const [filter, setFilter] = useState("all");
+
   const [searchTerm, setSearchTerm] = useState("");
+  const deferredSearch = useDeferredValue(searchTerm);
+
   const [showReportModal, setShowReportModal] = useState(false);
 
-  // Filter states
+  // Filters
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedMajor, setSelectedMajor] = useState("all");
 
-  // For dropdown options
+  // dropdown data
   const [departments, setDepartments] = useState([]);
   const [majors, setMajors] = useState([]);
 
@@ -120,21 +140,17 @@ const RegistrationPage = () => {
   const [showAdminQr, setShowAdminQr] = useState(false);
   const [adminQrReg, setAdminQrReg] = useState(null);
 
-  // ✅ semester selector
+  // ✅ semester selector (admin list view)
   const [selectedSemester, setSelectedSemester] = useState("1");
 
   const toast = useContext(ToastContext);
 
-  /* ================== SPEED CORE (no UI change) ================== */
+  /* ================== PERFORMANCE CORE ================== */
 
-  // ✅ cache registrations by semester so switching is instant
+  // cache registrations by semester so switching is instant
   const semesterCacheRef = useRef(new Map()); // key: "1" | "2" => array
   const latestReqIdRef = useRef(0);
 
-  // ✅ make typing fast (defer heavy filtering while user types)
-  const deferredSearch = useDeferredValue(searchTerm);
-
-  // ✅ pre-parse ints once (avoid parseInt in every row/filter)
   const selectedDeptId = useMemo(() => {
     const v = parseInt(selectedDepartment, 10);
     return Number.isFinite(v) ? v : null;
@@ -154,41 +170,31 @@ const RegistrationPage = () => {
     async (opts = { preferCache: true }) => {
       const semKey = String(selectedSemesterInt);
 
-      // ✅ Instant paint from cache (zero wait)
+      // instant from cache
       if (opts?.preferCache && semesterCacheRef.current.has(semKey)) {
         setRegistrations(semesterCacheRef.current.get(semKey) || []);
-        // keep loading false if we already have cached data
         setLoading(false);
       } else {
         setLoading(true);
       }
 
-      // ✅ Ignore outdated responses (super important when user clicks fast)
       const reqId = ++latestReqIdRef.current;
 
       try {
-        const regRes = await fetchRegistrations({
-          semester: selectedSemesterInt,
-        });
-
-        // if another request started after this one, ignore this response
+        const regRes = await fetchRegistrations({ semester: selectedSemesterInt });
         if (reqId !== latestReqIdRef.current) return;
 
         const regData = regRes.data?.data || regRes.data || [];
         const arr = Array.isArray(regData) ? regData : [];
 
-        // cache + set
         semesterCacheRef.current.set(semKey, arr);
         setRegistrations(arr);
       } catch (error) {
-        // ignore outdated error too
         if (reqId !== latestReqIdRef.current) return;
-
         console.error("Failed to load registrations:", error);
         setRegistrations([]);
         toast?.error?.("Failed to load registrations");
       } finally {
-        // only end loading if still latest
         if (reqId === latestReqIdRef.current) setLoading(false);
       }
     },
@@ -233,17 +239,15 @@ const RegistrationPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ✅ reload registrations when semester changes (fast path: cache first + debounce fetch)
+  // reload when semester changes (cache first + small debounce)
   useEffect(() => {
-    // instant from cache (if exists) + super short debounce to prevent rapid spam calls
     const t = setTimeout(() => {
       loadRegistrationsOnly({ preferCache: true });
-    }, 120); // tiny debounce = feels instant but avoids double/triple spam
-
+    }, 120);
     return () => clearTimeout(t);
   }, [selectedSemesterInt, loadRegistrationsOnly]);
 
-  // ✅ Build one searchable string per registration (dramatically faster search)
+  // ✅ normalized list (fast search + fast filters)
   const normalizedRegistrations = useMemo(() => {
     const list = Array.isArray(registrations) ? registrations : [];
     return list.map((r) => {
@@ -252,6 +256,10 @@ const RegistrationPage = () => {
         r?.full_name_kh,
         r?.personal_email,
         r?.phone_number,
+        r?.student_code,
+        r?.department_name,
+        r?.major_name,
+        r?.academic_year,
       ]
         .filter(Boolean)
         .join(" ")
@@ -267,40 +275,32 @@ const RegistrationPage = () => {
     });
   }, [registrations]);
 
-  // Filter registrations (FAST)
+  // ✅ filtered list
   const filteredRegistrations = useMemo(() => {
-    const list = normalizedRegistrations;
     const s = String(deferredSearch || "").trim().toLowerCase();
-
-    const wantPaid = filter === "paid";
-    const wantPending = filter === "pending";
+    const list = normalizedRegistrations;
 
     return list.filter((reg) => {
       const status = reg._statusUpper;
 
-      // Payment status filter
       const statusMatch =
         filter === "all"
           ? true
           : filter === "paid"
-            ? isPaidStatus(status)
-            : filter === "pending"
-              ? isPendingStatus(status)
-              : true;
+          ? isPaidStatus(status)
+          : filter === "pending"
+          ? isPendingStatus(status) && !isPaidStatus(status)
+          : true;
 
-
-      // Search filter (use precomputed _search)
       const searchMatch = s ? reg._search.includes(s) : true;
 
-      // Department filter
-      const departmentMatch =
+      const deptMatch =
         selectedDeptId == null ? true : reg._deptId === selectedDeptId;
 
-      // Major filter
       const majorMatch =
         selectedMajorId == null ? true : reg._majorId === selectedMajorId;
 
-      return statusMatch && searchMatch && departmentMatch && majorMatch;
+      return statusMatch && searchMatch && deptMatch && majorMatch;
     });
   }, [
     normalizedRegistrations,
@@ -310,7 +310,7 @@ const RegistrationPage = () => {
     selectedMajorId,
   ]);
 
-  // ✅ One-pass summary (no extra filters/reduces)
+  // ✅ summary
   const summary = useMemo(() => {
     let total = 0;
     let paid = 0;
@@ -319,11 +319,9 @@ const RegistrationPage = () => {
 
     for (const r of filteredRegistrations) {
       total++;
-      const st = r._statusUpper;
-      const isPaid = st === "PAID" || st === "COMPLETED";
-      if (isPaid) {
+      if (isPaidStatus(r._statusUpper)) {
         paid++;
-        revenue += parseFloat(getAmount(r)) || 0;
+        revenue += safeNum(getAmount(r), 0);
       } else {
         pending++;
       }
@@ -334,41 +332,55 @@ const RegistrationPage = () => {
 
   const quickStats = useMemo(() => {
     return [
-      {
-        label: "Total",
-        value: summary.total,
-        color: "from-blue-500 to-cyan-500",
-        icon: Users,
-      },
-      {
-        label: "Paid",
-        value: summary.paid,
-        color: "from-green-500 to-emerald-500",
-        icon: CheckCircle,
-      },
-      {
-        label: "Pending",
-        value: summary.pending,
-        color: "from-orange-500 to-red-500",
-        icon: Clock,
-      },
-      {
-        label: "Revenue",
-        value: `$${summary.revenue.toFixed(2)}`,
-        color: "from-purple-500 to-pink-500",
-        icon: DollarSign,
-      },
+      { label: "Total", value: summary.total, color: "from-blue-500 to-cyan-500", icon: Users },
+      { label: "Paid", value: summary.paid, color: "from-green-500 to-emerald-500", icon: CheckCircle },
+      { label: "Pending", value: summary.pending, color: "from-orange-500 to-red-500", icon: Clock },
+      { label: "Revenue", value: `$${summary.revenue.toFixed(2)}`, color: "from-purple-500 to-pink-500", icon: DollarSign },
     ];
   }, [summary]);
 
-  // ✅ stable callbacks = less rerenders
   const onView = useCallback((reg) => setSelectedRegistration(reg), []);
   const onCloseDetail = useCallback(() => setSelectedRegistration(null), []);
-  const onCloseReport = useCallback(() => setShowReportModal(false), []);
   const onOpenReport = useCallback(() => setShowReportModal(true), []);
+  const onCloseReport = useCallback(() => setShowReportModal(false), []);
+
+  // ✅ manual refresh (and clear cache for the current semester)
+  const handleRefresh = useCallback(async () => {
+    semesterCacheRef.current.delete(String(selectedSemesterInt));
+    await loadRegistrationsOnly({ preferCache: false });
+    toast?.success?.("Refreshed");
+  }, [selectedSemesterInt, loadRegistrationsOnly, toast]);
 
   return (
     <div className="min-h-screen space-y-6">
+      {/* ================= TOP BAR ================= */}
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Registrations</h1>
+          <p className="text-sm text-gray-500">
+            View payment status by semester (uses new <span className="font-semibold">student_academic_periods</span> first).
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleRefresh}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/60 border border-white/60 shadow-sm hover:shadow-md transition-all"
+          >
+            <RefreshCw className="w-4 h-4 text-gray-700" />
+            <span className="text-sm font-medium text-gray-800">Refresh</span>
+          </button>
+
+          <button
+            onClick={onOpenReport}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md hover:shadow-lg transition-all"
+          >
+            <FileText className="w-4 h-4" />
+            <span className="text-sm font-semibold">Create Report</span>
+          </button>
+        </div>
+      </div>
+
       {/* ================= QUICK STATS ================= */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {quickStats.map((stat, i) => {
@@ -395,21 +407,21 @@ const RegistrationPage = () => {
       {/* ================= FILTERS & SEARCH ================= */}
       <div className="bg-white/40 rounded-2xl p-4 border border-white/40 shadow-md backdrop-blur-xl">
         <div className="flex flex-col gap-4">
-          {/* Row 1: Search */}
+          {/* Search */}
           <div className="flex-1 relative w-full">
             <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by name, email, or phone..."
+              placeholder="Search name, email, phone, student code..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              className="w-full pl-10 pr-4 py-2.5 bg-white/60 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
             />
           </div>
 
-          {/* Row 2: Filters */}
+          {/* Filters */}
           <div className="flex flex-wrap gap-3 items-center">
-            {/* Department Filter */}
+            {/* Department */}
             <div className="flex items-center gap-2">
               <Building2 className="w-4 h-4 text-blue-500" />
               <select
@@ -418,7 +430,7 @@ const RegistrationPage = () => {
                   setSelectedDepartment(e.target.value);
                   setSelectedMajor("all");
                 }}
-                className="px-3 py-2 bg-white/50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                className="px-3 py-2 bg-white/60 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
               >
                 <option value="all">All Departments</option>
                 {departments.map((dept) => (
@@ -429,13 +441,13 @@ const RegistrationPage = () => {
               </select>
             </div>
 
-            {/* Major Filter */}
+            {/* Major */}
             <div className="flex items-center gap-2">
               <GraduationCap className="w-4 h-4 text-orange-500" />
               <select
                 value={selectedMajor}
                 onChange={(e) => setSelectedMajor(e.target.value)}
-                className="px-3 py-2 bg-white/50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                className="px-3 py-2 bg-white/60 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
               >
                 <option value="all">All Majors</option>
                 {majors
@@ -452,37 +464,39 @@ const RegistrationPage = () => {
               </select>
             </div>
 
-            {/* Semester selector */}
+            {/* Semester */}
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-indigo-500" />
               <select
                 value={selectedSemester}
                 onChange={(e) => setSelectedSemester(e.target.value)}
-                className="px-3 py-2 bg-white/50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                className="px-3 py-2 bg-white/60 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
               >
                 <option value="1">Semester 1</option>
                 <option value="2">Semester 2</option>
               </select>
             </div>
 
-            {/* Status Filter Buttons */}
+            {/* Status buttons */}
             <div className="flex gap-2">
               <button
                 onClick={() => setFilter("all")}
-                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${filter === "all"
+                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+                  filter === "all"
                     ? "bg-blue-500 text-white shadow-lg"
-                    : "bg-white/50 text-gray-700 hover:bg-white/70"
-                  }`}
+                    : "bg-white/60 text-gray-700 hover:bg-white/80"
+                }`}
               >
                 All ({registrations.length})
               </button>
 
               <button
                 onClick={() => setFilter("paid")}
-                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${filter === "paid"
+                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${
+                  filter === "paid"
                     ? "bg-green-500 text-white shadow-lg"
-                    : "bg-white/50 text-gray-700 hover:bg-white/70"
-                  }`}
+                    : "bg-white/60 text-gray-700 hover:bg-white/80"
+                }`}
               >
                 <CheckCircle className="w-4 h-4" />
                 Paid
@@ -490,69 +504,60 @@ const RegistrationPage = () => {
 
               <button
                 onClick={() => setFilter("pending")}
-                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${filter === "pending"
+                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${
+                  filter === "pending"
                     ? "bg-orange-500 text-white shadow-lg"
-                    : "bg-white/50 text-gray-700 hover:bg-white/70"
-                  }`}
+                    : "bg-white/60 text-gray-700 hover:bg-white/80"
+                }`}
               >
                 <Clock className="w-4 h-4" />
                 Pending
               </button>
             </div>
 
-            {/* Clear Filters Button */}
+            {/* Clear */}
             {(searchTerm ||
               selectedDepartment !== "all" ||
               selectedMajor !== "all" ||
               filter !== "all") && (
-                <button
-                  onClick={() => {
-                    setSearchTerm("");
-                    setSelectedDepartment("all");
-                    setSelectedMajor("all");
-                    setFilter("all");
-                  }}
-                  className="px-4 py-2 rounded-xl font-medium text-sm bg-gray-500 text-white hover:bg-gray-600 shadow-lg transition-all flex items-center gap-2"
-                >
-                  <XCircle className="w-4 h-4" />
-                  Clear Filters
-                </button>
-              )}
-
-            {/* Create Report Button */}
-            <button
-              onClick={onOpenReport}
-              className="ml-auto px-4 py-2 rounded-xl font-medium text-sm bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 shadow-lg transition-all flex items-center gap-2"
-            >
-              <FileText className="w-4 h-4" />
-              Create Report
-            </button>
+              <button
+                onClick={() => {
+                  setSearchTerm("");
+                  setSelectedDepartment("all");
+                  setSelectedMajor("all");
+                  setFilter("all");
+                }}
+                className="px-4 py-2 rounded-xl font-medium text-sm bg-gray-500 text-white hover:bg-gray-600 shadow-lg transition-all flex items-center gap-2"
+              >
+                <XCircle className="w-4 h-4" />
+                Clear Filters
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* ================= REGISTRATIONS LIST ================= */}
+      {/* ================= LIST ================= */}
       <RegistrationsList
         registrations={filteredRegistrations}
         loading={loading}
         onView={onView}
-        getPaymentStatus={getPaymentStatus}
         getPaymentLabel={getPaymentLabel}
         getAmount={getAmount}
       />
 
       {/* ================= ADMIN QR MODAL ================= */}
       {showAdminQr && adminQrReg && (
-        <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <PaymentForm
             registrationId={adminQrReg.id}
-            yearFee={adminQrReg?.registration_fee ?? adminQrReg?.period_tuition_amount ?? 0}
-            amount={getAmount(adminQrReg)}
+            yearFee={safeNum(adminQrReg?.registration_fee ?? adminQrReg?.period_tuition_amount ?? 0, 0)}
+            amount={safeNum(getAmount(adminQrReg), 0)}
             payPlan={{ type: "SEMESTER", semester: selectedSemesterInt }}
             registrationData={{
               data: {
                 registration_id: adminQrReg.id,
-                payment_amount: getAmount(adminQrReg),
+                payment_amount: safeNum(getAmount(adminQrReg), 0),
               },
             }}
             onClose={() => {
@@ -562,8 +567,6 @@ const RegistrationPage = () => {
             onSuccess={async () => {
               setShowAdminQr(false);
               setAdminQrReg(null);
-
-              // ✅ important: preferCache false AND clear cache for this semester
               semesterCacheRef.current.delete(String(selectedSemesterInt));
               await loadRegistrationsOnly({ preferCache: false });
             }}
@@ -571,20 +574,21 @@ const RegistrationPage = () => {
         </div>
       )}
 
-
       {/* ================= DETAIL MODAL ================= */}
       {selectedRegistration && (
         <RegistrationModal
           registration={selectedRegistration}
           onClose={onCloseDetail}
-          onRefresh={() => loadRegistrationsOnly({ preferCache: false })}
+          onRefresh={async () => {
+            semesterCacheRef.current.delete(String(selectedSemesterInt));
+            await loadRegistrationsOnly({ preferCache: false });
+          }}
           onOpenQr={(reg) => {
             setAdminQrReg(reg);
             setShowAdminQr(true);
           }}
           toast={toast}
           selectedSemester={selectedSemesterInt}
-          getPaymentStatus={getPaymentStatus}
           getPaidAt={getPaidAt}
           getAmount={getAmount}
         />
@@ -604,7 +608,7 @@ const ReportModal = ({ onClose }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0  flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 z-50"
+        className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 z-50"
         onClick={onClose}
       >
         <motion.div
@@ -621,7 +625,7 @@ const ReportModal = ({ onClose }) => {
             <X className="w-5 h-5" />
           </button>
 
-          <div className="p-6 z-999999">
+          <div className="p-6">
             <RegistrationReportPage />
           </div>
         </motion.div>
@@ -630,11 +634,12 @@ const ReportModal = ({ onClose }) => {
   );
 };
 
+/* ================== LIST ================== */
+
 const RegistrationsList = React.memo(function RegistrationsList({
   registrations,
   loading,
   onView,
-  getPaymentStatus,
   getPaymentLabel,
   getAmount,
 }) {
@@ -655,7 +660,9 @@ const RegistrationsList = React.memo(function RegistrationsList({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Grid3x3 className="w-5 h-5 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">All Registrations</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              All Registrations
+            </h3>
           </div>
           <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1.5 rounded-full font-semibold">
             {registrations.length} {registrations.length === 1 ? "Result" : "Results"}
@@ -703,7 +710,6 @@ const RegistrationsList = React.memo(function RegistrationsList({
                   key={reg.id}
                   registration={reg}
                   onView={onView}
-                  getPaymentStatus={getPaymentStatus}
                   getPaymentLabel={getPaymentLabel}
                   getAmount={getAmount}
                 />
@@ -722,30 +728,30 @@ const EmptyState = () => (
       <Users className="w-12 h-12 text-gray-400" />
     </div>
     <p className="text-gray-500 font-medium">No registrations found</p>
-    <p className="text-sm text-gray-400 mt-1">Try adjusting your filters or search term</p>
+    <p className="text-sm text-gray-400 mt-1">
+      Try adjusting your filters or search term
+    </p>
   </div>
 );
 
 const RegistrationRow = React.memo(function RegistrationRow({
   registration,
   onView,
-  getPaymentStatus,
   getPaymentLabel,
   getAmount,
 }) {
-  const status = String(getPaymentStatus(registration) || "PENDING").toUpperCase();
-  const isPaid = status === "PAID" || status === "COMPLETED";
+  const statusUpper = normalizeStatus(getPaymentStatus(registration));
+  const paid = isPaidStatus(statusUpper);
   const statusLabel = getPaymentLabel(registration);
 
-  const profileImage =
-    registration.profile_picture_url || registration.profile_picture_path;
+  const profileImage = getProfileImage(registration);
 
   return (
     <motion.tr
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      whileHover={{ backgroundColor: "rgba(59, 130, 246, 0.05)" }}
-      className="bg-white/60 hover:bg-blue-50/50 transition-colors cursor-pointer"
+      whileHover={{ backgroundColor: "rgba(59, 130, 246, 0.06)" }}
+      className="bg-white/70 hover:bg-blue-50/60 transition-colors cursor-pointer"
       onClick={() => onView(registration)}
     >
       <td className="px-6 py-4 whitespace-nowrap">
@@ -780,6 +786,11 @@ const RegistrationRow = React.memo(function RegistrationRow({
             </p>
           )}
           <p className="text-xs text-gray-400 mt-0.5">ID: {registration.id}</p>
+          {registration.student_code && (
+            <p className="text-xs text-gray-400 mt-0.5">
+              Student: {registration.student_code}
+            </p>
+          )}
         </div>
       </td>
 
@@ -831,20 +842,20 @@ const RegistrationRow = React.memo(function RegistrationRow({
       <td className="px-6 py-4">
         <div className="flex items-center gap-1.5">
           <DollarSign className="w-4 h-4 text-purple-500 flex-shrink-0" />
-          <span className="text-sm font-medium text-gray-700">
-            ${parseFloat(getAmount(registration) || 0).toFixed(2)}
+          <span className="text-sm font-medium text-gray-800">
+            ${safeNum(getAmount(registration), 0).toFixed(2)}
           </span>
         </div>
       </td>
 
       <td className="px-6 py-4 whitespace-nowrap">
-        {isPaid ? (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
+        {paid ? (
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
             <CheckCircle className="w-3.5 h-3.5" />
             {statusLabel}
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 border border-orange-200">
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-200">
             <Clock className="w-3.5 h-3.5" />
             {statusLabel}
           </span>
@@ -857,15 +868,17 @@ const RegistrationRow = React.memo(function RegistrationRow({
             e.stopPropagation();
             onView(registration);
           }}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors shadow-sm"
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm"
         >
-          <User className="w-3.5 h-3.5" />
+          <Eye className="w-4 h-4" />
           View
         </button>
       </td>
     </motion.tr>
   );
 });
+
+/* ================== DETAIL MODAL ================== */
 
 const RegistrationModal = ({
   registration,
@@ -874,15 +887,18 @@ const RegistrationModal = ({
   onOpenQr,
   toast,
   selectedSemester,
-  getPaymentStatus,
   getPaidAt,
   getAmount,
 }) => {
-  const status = String(getPaymentStatus(registration) || "PENDING").toUpperCase();
-  const isPaid = status === "PAID" || status === "COMPLETED";
+  // IMPORTANT: for modal, use SAME logic (period first)
+  const statusUpper = normalizeStatus(getPaymentStatus(registration));
+  const isPaid = isPaidStatus(statusUpper);
 
-  const profileImage =
-    registration.profile_picture_url || registration.profile_picture_path;
+  const profileImage = getProfileImage(registration);
+
+  const label = getPaymentLabel(registration);
+  const year = getAcademicYear(registration);
+  const sem = getSemester(registration) ?? selectedSemester;
 
   return (
     <AnimatePresence>
@@ -895,18 +911,20 @@ const RegistrationModal = ({
         onClick={onClose}
       >
         <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
+          initial={{ scale: 0.96, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
+          exit={{ scale: 0.96, opacity: 0 }}
           transition={{ duration: 0.15 }}
           onClick={(e) => e.stopPropagation()}
-          className="relative max-w-3xl w-full max-h-[75vh] overflow-y-auto bg-white rounded-3xl shadow-2xl"
+          className="relative max-w-3xl w-full max-h-[78vh] overflow-y-auto bg-white rounded-3xl shadow-2xl border border-gray-100"
         >
+          {/* Header */}
           <div
-            className={`sticky top-0 p-6 z-10 ${isPaid
+            className={`sticky top-0 p-6 z-10 ${
+              isPaid
                 ? "bg-gradient-to-br from-green-500 to-emerald-600"
                 : "bg-gradient-to-br from-orange-500 to-red-600"
-              }`}
+            }`}
           >
             <button
               onClick={onClose}
@@ -941,22 +959,37 @@ const RegistrationModal = ({
                 </h2>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm text-white/80">ID: {registration.id}</span>
-                  {isPaid ? (
-                    <span className="flex items-center gap-1 text-xs bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full border border-white/30">
-                      <CheckCircle className="w-3 h-3" />
-                      Payment Completed
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-xs bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full border border-white/30">
-                      <XCircle className="w-3 h-3" />
-                      Payment Pending
+
+                  {registration.student_code && (
+                    <span className="text-sm text-white/80">
+                      • Student: {registration.student_code}
                     </span>
                   )}
+
+                  <span className="flex items-center gap-1 text-xs bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full border border-white/30">
+                    {isPaid ? (
+                      <>
+                        <CheckCircle className="w-3 h-3" />
+                        {label}
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-3 h-3" />
+                        {label}
+                      </>
+                    )}
+                  </span>
                 </div>
+
+                <p className="text-xs text-white/80 mt-2">
+                  Showing status for: <span className="font-semibold">{year || "N/A"}</span>{" "}
+                  • <span className="font-semibold">Sem {sem}</span>
+                </p>
               </div>
             </div>
           </div>
 
+          {/* Body */}
           <div className="p-6 space-y-6">
             <Section title="Personal Information">
               <InfoGrid>
@@ -998,37 +1031,49 @@ const RegistrationModal = ({
 
             <Section title="Payment Information">
               <div
-                className={`p-4 rounded-xl ${isPaid
-                    ? "bg-green-50 border border-green-200"
-                    : "bg-orange-50 border border-orange-200"
-                  }`}
+                className={`p-4 rounded-2xl border ${
+                  isPaid
+                    ? "bg-green-50 border-green-200"
+                    : "bg-orange-50 border-orange-200"
+                }`}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {isPaid ? (
-                      <div className="p-2 rounded-full bg-green-500">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={`p-2 rounded-full ${
+                        isPaid ? "bg-green-500" : "bg-orange-500"
+                      }`}
+                    >
+                      {isPaid ? (
                         <CheckCircle className="w-5 h-5 text-white" />
-                      </div>
-                    ) : (
-                      <div className="p-2 rounded-full bg-orange-500">
+                      ) : (
                         <Clock className="w-5 h-5 text-white" />
-                      </div>
-                    )}
+                      )}
+                    </div>
+
                     <div>
                       <p className={`font-semibold ${isPaid ? "text-green-700" : "text-orange-700"}`}>
                         {isPaid ? "Payment Completed" : "Payment Pending"}
                       </p>
-                      <p className="text-sm text-gray-600">
-                        Registration Fee: ${parseFloat(getAmount(registration) || 0).toFixed(2)}
+
+                      <p className="text-sm text-gray-700 mt-1">
+                        Amount:{" "}
+                        <span className="font-semibold">
+                          ${safeNum(getAmount(registration), 0).toFixed(2)}
+                        </span>
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">Semester: {selectedSemester}</p>
+
+                      <p className="text-xs text-gray-500 mt-1">
+                        Academic Year: <span className="font-semibold">{year || "N/A"}</span> • Semester:{" "}
+                        <span className="font-semibold">{sem || "N/A"}</span>
+                      </p>
                     </div>
                   </div>
 
                   {isPaid && (
                     <div className="text-right">
                       <p className="text-xs text-gray-500">Paid on</p>
-                      <p className="text-sm font-medium text-gray-700">
+                      <p className="text-sm font-semibold text-gray-800">
                         {getPaidAt(registration) || "Date unavailable"}
                       </p>
                     </div>
@@ -1044,48 +1089,49 @@ const RegistrationModal = ({
                           toast?.success?.("QR generated successfully");
                           onOpenQr(registration);
                         } catch (e) {
-                          console.log("=== GENERATE QR ERROR ===");
-                          console.log("status:", e.response?.status);
-                          console.log("data:", e.response?.data);
-                          console.log("headers:", e.response?.headers);
-                          console.log("========================");
-
                           const msg =
                             e.response?.data?.message ||
                             e.response?.data?.error ||
                             "Failed to generate QR";
-
                           toast?.error?.(msg);
 
-                          // ✅ if conflict (already paid) refresh list so status becomes PAID
+                          // if already paid, refresh so it becomes PAID
                           if (e.response?.status === 409) {
                             await onRefresh();
                             onClose();
                           }
                         }
                       }}
-                      className="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors"
                     >
-                      Generate QR Again
+                      <QrCode className="w-4 h-4" />
+                      Generate QR
                     </button>
 
                     <button
                       onClick={async () => {
                         if (!confirm("Mark this registration as PAID (Cash)?")) return;
-
                         try {
                           await markPaidCash(registration.id, selectedSemester);
                           toast?.success?.("Marked as PAID (Cash)");
                           await onRefresh();
                           onClose();
                         } catch (e) {
-                          console.error(e);
                           toast?.error?.(e.response?.data?.message || "Failed to mark paid");
                         }
                       }}
-                      className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 transition-colors"
                     >
+                      <CheckCircle className="w-4 h-4" />
                       Mark Paid (Cash)
+                    </button>
+
+                    <button
+                      onClick={onRefresh}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-gray-800 border border-gray-200 hover:bg-gray-50 transition-colors"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      Refresh Status
                     </button>
                   </div>
                 )}
@@ -1098,6 +1144,8 @@ const RegistrationModal = ({
   );
 };
 
+/* ================== SMALL UI ================== */
+
 const Section = ({ title, children }) => (
   <div>
     <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
@@ -1108,13 +1156,13 @@ const Section = ({ title, children }) => (
 );
 
 const InfoGrid = ({ children }) => (
-  <div className="grid grid-cols-2 gap-4">{children}</div>
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{children}</div>
 );
 
 const InfoField = ({ label, value, fullWidth = false }) => (
-  <div className={fullWidth ? "col-span-2" : ""}>
+  <div className={fullWidth ? "sm:col-span-2" : ""}>
     <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">{label}</p>
-    <p className="text-sm font-medium text-gray-800">{value || "N/A"}</p>
+    <p className="text-sm font-semibold text-gray-800">{value || "N/A"}</p>
   </div>
 );
 
