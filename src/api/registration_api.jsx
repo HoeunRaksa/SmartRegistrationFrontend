@@ -55,9 +55,10 @@ export const adminGenerateQr = (id, semester = 1) =>
 // backend route: PUT /admin/registrations/{id}/mark-paid-cash
 // ==============================
 export const markPaidCash = (id, semester = 1) =>
-  API.put(`/admin/registrations/${id}/mark-paid-cash`, {
+  API.post(`/admin/registrations/${id}/mark-paid-cash`, {
     semester: parseInt(semester, 10) || 1,
   });
+
 
 // ==============================
 // REGISTRATION REPORTS

@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo } from "react";
-import DepartmentsForm from '../ConponentsAdmin/DepartmentsForm.jsx';
-import MajorsForm from '../ConponentsAdmin/MajorsForm.jsx';
-import SubjectsForm from '../ConponentsAdmin/SubjectsForm.jsx';
-import StudentsForm from '../ConponentsAdmin/StudentsForm.jsx';
+import DepartmentsForm from "../ConponentsAdmin/DepartmentsForm.jsx";
+import MajorsForm from "../ConponentsAdmin/MajorsForm.jsx";
+import SubjectsForm from "../ConponentsAdmin/SubjectsForm.jsx";
+import StudentsForm from "../ConponentsAdmin/StudentsForm.jsx";
 import "../../App.css";
 import { motion, AnimatePresence } from "framer-motion";
 import Clock from "../ConponentsAdmin/Clock";
@@ -28,7 +28,7 @@ import { fetchStudents } from "../../api/student_api.jsx";
 import { fetchRegistrations } from "../../api/registration_api.jsx";
 
 const Dashboard = () => {
-  const [activeView, setActiveView] = useState('admin/dashboard');
+  const [activeView, setActiveView] = useState("admin/dashboard");
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -51,33 +51,38 @@ const Dashboard = () => {
 
   useEffect(() => {
     loadAllData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const pickFirst = (...vals) => {
-  for (const v of vals) {
-    if (v !== undefined && v !== null && String(v).trim() !== "") return v;
-  }
-  return null;
-};
+    for (const v of vals) {
+      if (v !== undefined && v !== null && String(v).trim() !== "") return v;
+    }
+    return null;
+  };
 
-const parseSemesterValue = (v) => {
-  if (v === undefined || v === null) return null;
+  const parseSemesterValue = (v) => {
+    if (v === undefined || v === null) return null;
 
-  const s = String(v).trim();
-  if (!s) return null;
+    const s = String(v).trim();
+    if (!s) return null;
 
-  // if already "1" or "2"
-  if (s === "1" || s === "2") return s;
+    // if already "1" or "2"
+    if (s === "1" || s === "2") return s;
 
-  // "Sem 1", "Semester 1", "semester-2", etc
-  const m = s.match(/(?:sem|semester|term)\s*[-:]?\s*(\d+)/i);
-  if (m?.[1]) return m[1];
+    // "Sem 1", "Semester 1", "semester-2", etc
+    const m = s.match(/(?:sem|semester|term)\s*[-:]?\s*(\d+)/i);
+    if (m?.[1]) return m[1];
 
-  return s; // fallback (maybe "First", "Second", etc)
-};
+    // if "First" / "Second"
+    const lower = s.toLowerCase();
+    if (lower.includes("first")) return "1";
+    if (lower.includes("second")) return "2";
 
+    return s; // fallback
+  };
 
-  // ✅ IMPORTANT FIX: read per-semester payment from periods array if backend returns it
+  // ✅ IMPORTANT: if backend returns periods array we can read it, else fallback to flat fields
   const getPeriods = (reg) =>
     reg?.student_academic_periods ||
     reg?.academic_periods ||
@@ -87,118 +92,120 @@ const parseSemesterValue = (v) => {
 
   const normalizeStatus = (s) => String(s || "").trim().toUpperCase();
 
-const getMatchedPeriod = (reg) => {
-  const periods = Array.isArray(getPeriods(reg)) ? getPeriods(reg) : [];
-  if (!periods.length) return null;
+  const getMatchedPeriod = (reg) => {
+    const periods = Array.isArray(getPeriods(reg)) ? getPeriods(reg) : [];
+    if (!periods.length) return null;
 
-  const unpaid = periods
-    .filter((p) => {
-      const st = normalizeStatus(p?.payment_status ?? p?.status);
-      return st !== "PAID" && st !== "COMPLETED";
-    })
-    .sort((a, b) => {
+    const unpaid = periods
+      .filter((p) => {
+        const st = normalizeStatus(p?.payment_status ?? p?.status);
+        return st !== "PAID" && st !== "COMPLETED";
+      })
+      .sort((a, b) => {
+        const da = new Date(a?.updated_at || a?.created_at || 0).getTime();
+        const db = new Date(b?.updated_at || b?.created_at || 0).getTime();
+        return db - da;
+      });
+
+    if (unpaid.length) return unpaid[0];
+
+    // else return latest paid
+    const sorted = [...periods].sort((a, b) => {
       const da = new Date(a?.updated_at || a?.created_at || 0).getTime();
       const db = new Date(b?.updated_at || b?.created_at || 0).getTime();
       return db - da;
     });
 
-  if (unpaid.length) return unpaid[0];
+    return sorted[0] || null;
+  };
 
-  // else return latest paid
-  const sorted = [...periods].sort((a, b) => {
-    const da = new Date(a?.updated_at || a?.created_at || 0).getTime();
-    const db = new Date(b?.updated_at || b?.created_at || 0).getTime();
-    return db - da;
-  });
+  // ✅ NO MORE N/A:
+  // - read from period object if exists
+  // - else read from backend flat field period_semester
+  // - else fallback to any other common semester fields
+  // - final fallback: "1" (so UI never shows Sem N/A)
+  const getSemester = (reg) => {
+    const p = getMatchedPeriod(reg);
 
-  return sorted[0] || null;
-};
+    const raw = pickFirst(
+      // period object fields
+      p?.semester,
+      p?.period_semester,
+      p?.academic_semester,
+      p?.term,
+      p?.term_no,
+      p?.term_number,
+      p?.semester_no,
+      p?.semester_number,
+      p?.semester_id,
+      p?.semester_name,
+      p?.semesterLabel,
 
+      // ✅ backend flat fields (your API returns these)
+      reg?.period_semester,
 
+      // registration-level fields (sometimes exists)
+      reg?.semester,
+      reg?.current_semester,
+      reg?.academic_semester,
+      reg?.term,
+      reg?.term_no,
+      reg?.semester_no,
+      reg?.semester_number
+    );
 
-const getSemester = (reg) => {
-  const p = getMatchedPeriod(reg);
+    // parse + hard fallback to "1" so never blank in UI
+    return parseSemesterValue(raw) || "1";
+  };
 
-  console.log("DEBUG REG:", {
-    id: reg.id,
-    reg_semester: reg?.semester,
-    reg_current_semester: reg?.current_semester,
-    reg_term: reg?.term,
-    periods: getPeriods(reg),
-    matchedPeriod: p,
-  });
+  const getAcademicYear = (reg) => {
+    const p = getMatchedPeriod(reg);
 
-  const raw = pickFirst(
-    p?.semester,
-    p?.period_semester,
-    p?.academic_semester,
-    p?.term,
-    p?.term_no,
-    p?.term_number,
-    p?.semester_no,
-    p?.semester_number,
-    p?.semester_id,
-    p?.semester_name,
-    p?.semesterLabel,
-    reg?.semester,
-    reg?.current_semester,
-    reg?.academic_semester,
-    reg?.term,
-    reg?.term_no,
-    reg?.semester_no,
-    reg?.semester_number
-  );
-  return parseSemesterValue(raw);
-};
-
-
-
- const getAcademicYear = (reg) => {
-  const p = getMatchedPeriod(reg);
-  return (
-    p?.academic_year ??
-    p?.period_academic_year ??
-    reg?.academic_year ??
-    reg?.current_academic_year ??
-    reg?.period_academic_year ??
-    reg?.academicYear ??
-    null
-  );
-};
+    return (
+      p?.academic_year ??
+      p?.period_academic_year ??
+      reg?.academic_year ??
+      reg?.current_academic_year ??
+      reg?.period_academic_year ??
+      reg?.academicYear ??
+      null
+    );
+  };
 
   const getPaymentStatus = (reg) => {
-    const period = getMatchedPeriod(reg);
+    const p = getMatchedPeriod(reg);
 
-    if (period) {
-      const st = normalizeStatus(period?.payment_status ?? period?.status);
+    // period object (if exists)
+    if (p) {
+      const st = normalizeStatus(p?.payment_status ?? p?.status);
       return st || "PENDING";
     }
 
-    // fallback (old backend fields)
-    const raw =
-      reg?.payment_status ??
-      reg?.period_payment_status ??
-      reg?.academic_payment_status ??
-      reg?.payment?.status ??
-      "PENDING";
+    // ✅ backend flat fields
+    const raw = pickFirst(
+      reg?.period_payment_status,
+      reg?.payment_status,
+      reg?.academic_payment_status,
+      reg?.payment?.status,
+      "PENDING"
+    );
 
     return normalizeStatus(raw) || "PENDING";
   };
 
   const isPaidStatus = (status) => status === "PAID" || status === "COMPLETED";
 
-
-  // ✅ clear label: Pending/Paid + Academic Year + Semester
   const getPaymentLabel = (reg) => {
     const status = (getPaymentStatus(reg) || "PENDING").toUpperCase();
-    const sem = getSemester(reg);
+    const sem = getSemester(reg); // always returns "1" or "2" (fallback "1")
     const year = getAcademicYear(reg);
 
-    const semText = sem ? `Sem ${sem}` : null;
+    const semText = sem ? `Sem ${sem}` : `Sem 1`;
     const yearText = year ? `${year}` : null;
     const suffix = [yearText, semText].filter(Boolean).join(" • ");
 
-    if (status === "PAID" || status === "COMPLETED") return suffix ? `Paid (${suffix})` : "Paid";
+    if (status === "PAID" || status === "COMPLETED")
+      return suffix ? `Paid (${suffix})` : "Paid";
     if (status === "FAILED") return suffix ? `Failed (${suffix})` : "Failed";
     return suffix ? `Pending (${suffix})` : "Pending";
   };
@@ -207,13 +214,15 @@ const getSemester = (reg) => {
     try {
       setLoading(true);
 
-      const [deptRes, majorRes, subjectRes, studentRes, regRes] = await Promise.all([
-        fetchDepartments(),
-        fetchMajors(),
-        fetchSubjects(),
-        fetchStudents(),
-        fetchRegistrations(),
-      ]);
+      // ✅ keep your original calls (no changes)
+      const [deptRes, majorRes, subjectRes, studentRes, regRes] =
+        await Promise.all([
+          fetchDepartments(),
+          fetchMajors(),
+          fetchSubjects(),
+          fetchStudents(),
+          fetchRegistrations(), // backend may default semester=1; semester display still won't be N/A now
+        ]);
 
       const deptsData = deptRes.data?.data || deptRes.data || [];
       const majorsData = majorRes.data?.data || majorRes.data || [];
@@ -228,7 +237,9 @@ const getSemester = (reg) => {
       setRegistrations(Array.isArray(regsData) ? regsData : []);
 
       const regsArr = Array.isArray(regsData) ? regsData : [];
-      const pendingCount = regsArr.filter(r => !isPaidStatus(getPaymentStatus(r))).length;
+      const pendingCount = regsArr.filter(
+        (r) => !isPaidStatus(getPaymentStatus(r))
+      ).length;
 
       console.log("Dashboard data loaded:", {
         departments: deptsData.length,
@@ -236,7 +247,7 @@ const getSemester = (reg) => {
         subjects: subjectsData.length,
         students: studentsData.length,
         totalRegistrations: regsArr.length,
-        pendingRegistrations: pendingCount
+        pendingRegistrations: pendingCount,
       });
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
@@ -246,10 +257,9 @@ const getSemester = (reg) => {
   };
 
   const pendingRegistrations = useMemo(() => {
-    return registrations.filter(r => !isPaidStatus(getPaymentStatus(r)));
+    return registrations.filter((r) => !isPaidStatus(getPaymentStatus(r)));
   }, [registrations]);
 
-  // ✅ pending counts by semester (so dashboard is clear)
   const pendingBySemester = useMemo(() => {
     const acc = { sem1: 0, sem2: 0, unknown: 0 };
     pendingRegistrations.forEach((r) => {
@@ -265,7 +275,7 @@ const getSemester = (reg) => {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
 
-    return pendingRegistrations.filter(r => {
+    return pendingRegistrations.filter((r) => {
       if (!r.created_at) return false;
       const created = new Date(r.created_at);
       return created > weekAgo;
@@ -278,32 +288,37 @@ const getSemester = (reg) => {
       value: departments.length,
       change: departments.length > 0 ? `${departments.length} active` : "0",
       gradient: "from-blue-500 to-cyan-500",
-      icon: Building2
+      icon: Building2,
     },
     {
       label: "Active Majors",
       value: majors.length,
       change: majors.length > 0 ? `${majors.length} programs` : "0",
       gradient: "from-purple-500 to-pink-500",
-      icon: GraduationCap
+      icon: GraduationCap,
     },
     {
       label: "Total  Students enrolled",
       value: students.length,
       change: students.length > 0 ? `${students.length} enrolled` : "0",
       gradient: "from-orange-500 to-red-500",
-      icon: Users
+      icon: Users,
     },
     {
       label: "Pending Registrations",
       value: pendingRegistrations.length,
-      // ✅ make it clear pending for which semester
       change:
         pendingRegistrations.length > 0
-          ? `Sem 1: ${pendingBySemester.sem1} • Sem 2: ${pendingBySemester.sem2}${pendingBySemester.unknown > 0 ? ` • Unknown: ${pendingBySemester.unknown}` : ""}`
-          : (recentRegistrationsCount > 0 ? `+${recentRegistrationsCount} this week` : "No pending"),
+          ? `Sem 1: ${pendingBySemester.sem1} • Sem 2: ${pendingBySemester.sem2}${
+              pendingBySemester.unknown > 0
+                ? ` • Unknown: ${pendingBySemester.unknown}`
+                : ""
+            }`
+          : recentRegistrationsCount > 0
+          ? `+${recentRegistrationsCount} this week`
+          : "No pending",
       gradient: "from-green-500 to-emerald-500",
-      icon: UserCheck
+      icon: UserCheck,
     },
   ];
 
@@ -311,22 +326,22 @@ const getSemester = (reg) => {
     if (majors.length === 0 || registrations.length === 0) return [];
 
     const majorCounts = {};
-    registrations.forEach(reg => {
+    registrations.forEach((reg) => {
       const majorId = reg.major_id;
       if (majorId) majorCounts[majorId] = (majorCounts[majorId] || 0) + 1;
     });
 
     return majors
-      .map(major => {
+      .map((major) => {
         const count = majorCounts[major.id] || 0;
         return {
           id: major.id,
           name: major.major_name || "Unknown Major",
           students: count,
-          departmentName: major.department?.name || "N/A"
+          departmentName: major.department?.name || "N/A",
         };
       })
-      .filter(m => m.students > 0)
+      .filter((m) => m.students > 0)
       .sort((a, b) => b.students - a.students)
       .slice(0, 5);
   }, [majors, registrations]);
@@ -335,19 +350,19 @@ const getSemester = (reg) => {
     if (departments.length === 0 || students.length === 0) return [];
 
     const deptCounts = {};
-    students.forEach(student => {
+    students.forEach((student) => {
       const deptId = student.department_id;
       if (deptId) deptCounts[deptId] = (deptCounts[deptId] || 0) + 1;
     });
 
     return departments
-      .map(dept => ({
+      .map((dept) => ({
         id: dept.id,
         name: dept.name,
         code: dept.code,
-        studentCount: deptCounts[dept.id] || 0
+        studentCount: deptCounts[dept.id] || 0,
       }))
-      .filter(d => d.studentCount > 0)
+      .filter((d) => d.studentCount > 0)
       .sort((a, b) => b.studentCount - a.studentCount)
       .slice(0, 5);
   }, [departments, students]);
@@ -356,13 +371,12 @@ const getSemester = (reg) => {
     return [...pendingRegistrations]
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, 5)
-      .map(reg => {
-        const dept = departments.find(d => d.id === reg.department_id);
-        const major = majors.find(m => m.id === reg.major_id);
+      .map((reg) => {
+        const dept = departments.find((d) => d.id === reg.department_id);
+        const major = majors.find((m) => m.id === reg.major_id);
 
-
-
-        const sem = getSemester(reg) || "";
+        // ✅ always sem is "1" or "2" now
+        const sem = getSemester(reg);
         const year = getAcademicYear(reg) || "";
         const status = getPaymentStatus(reg);
 
@@ -371,27 +385,27 @@ const getSemester = (reg) => {
           name: reg.full_name_en || `${reg.first_name} ${reg.last_name}`,
           department: dept?.name || "Unknown",
           major: major?.major_name || "Unknown",
-          date: reg.created_at ? new Date(reg.created_at).toLocaleDateString() : "N/A",
-          status: status,                 // keep raw status if you want
+          date: reg.created_at
+            ? new Date(reg.created_at).toLocaleDateString()
+            : "N/A",
+          status: status,
           semester: sem,
           academic_year: year,
-          statusLabel: getPaymentLabel(reg), // ✅ use this for display
+          statusLabel: getPaymentLabel(reg),
         };
-
-
       });
   }, [pendingRegistrations, departments, majors]);
 
   const genderStats = useMemo(() => {
-    const male = students.filter(s => s.gender === 'Male').length;
-    const female = students.filter(s => s.gender === 'Female').length;
+    const male = students.filter((s) => s.gender === "Male").length;
+    const female = students.filter((s) => s.gender === "Female").length;
     const total = students.length;
 
     return {
       male,
       female,
       malePercentage: total > 0 ? Math.round((male / total) * 100) : 0,
-      femalePercentage: total > 0 ? Math.round((female / total) * 100) : 0
+      femalePercentage: total > 0 ? Math.round((female / total) * 100) : 0,
     };
   }, [students]);
 
@@ -406,7 +420,9 @@ const getSemester = (reg) => {
           >
             <Loader className="w-12 h-12 text-blue-600" />
           </motion.div>
-          <p className="text-gray-600 mt-4 font-medium">Loading dashboard...</p>
+          <p className="text-gray-600 mt-4 font-medium">
+            Loading dashboard...
+          </p>
         </div>
       </div>
     );
@@ -414,7 +430,6 @@ const getSemester = (reg) => {
 
   return (
     <div className="min-h-screen space-y-6 pb-8">
-
       {/* USER HEADER */}
       {user && (
         <motion.div
@@ -476,7 +491,11 @@ const getSemester = (reg) => {
                 </div>
                 <div className="text-xs text-gray-600 mt-1 flex items-center justify-end gap-1">
                   <Calendar className="w-3 h-3" />
-                  {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                  {new Date().toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "short",
+                    day: "numeric",
+                  })}
                 </div>
               </motion.div>
 
@@ -507,16 +526,18 @@ const getSemester = (reg) => {
                 delay: i * 0.1,
                 type: "spring",
                 stiffness: 200,
-                damping: 15
+                damping: 15,
               }}
               whileHover={{
                 y: -8,
                 scale: 1.03,
-                transition: { type: "spring", stiffness: 400, damping: 10 }
+                transition: { type: "spring", stiffness: 400, damping: 10 },
               }}
               className="group relative overflow-hidden backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white cursor-pointer"
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`} />
+              <div
+                className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}
+              />
 
               <div className="relative z-10">
                 <div className="flex justify-between items-start mb-4">
@@ -542,7 +563,9 @@ const getSemester = (reg) => {
                 <p className="text-sm text-gray-600 font-medium">{stat.label}</p>
               </div>
 
-              <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.gradient} transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500`} />
+              <div
+                className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.gradient} transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500`}
+              />
             </motion.div>
           );
         })}
@@ -571,18 +594,26 @@ const getSemester = (reg) => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full md:w-auto">
             <div className="px-4 py-3 rounded-2xl bg-white/70 border border-white shadow-sm">
               <p className="text-xs text-gray-600">Total Subjects</p>
-              <p className="text-2xl font-bold text-gray-900">{subjects.length}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {subjects.length}
+              </p>
             </div>
 
             <div className="px-4 py-3 rounded-2xl bg-white/70 border border-white shadow-sm">
               <p className="text-xs text-gray-600">Total Registrations</p>
-              <p className="text-2xl font-bold text-gray-900">{registrations.length}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {registrations.length}
+              </p>
             </div>
 
             <div className="px-4 py-3 rounded-2xl bg-white/70 border border-white shadow-sm">
               <p className="text-xs text-gray-600">Completed Payments</p>
               <p className="text-2xl font-bold text-gray-900">
-                {registrations.filter(r => isPaidStatus(getPaymentStatus(r))).length}
+                {
+                  registrations.filter((r) =>
+                    isPaidStatus(getPaymentStatus(r))
+                  ).length
+                }
               </p>
             </div>
           </div>
@@ -599,7 +630,7 @@ const getSemester = (reg) => {
         {[
           {
             title: "New Students Today",
-            value: students.filter(s => {
+            value: students.filter((s) => {
               if (!s.created_at) return false;
               const d = new Date(s.created_at);
               const now = new Date();
@@ -607,11 +638,11 @@ const getSemester = (reg) => {
             }).length,
             icon: Users,
             badge: "Live",
-            gradient: "from-blue-500 to-cyan-500"
+            gradient: "from-blue-500 to-cyan-500",
           },
           {
             title: "New Registrations Today",
-            value: registrations.filter(r => {
+            value: registrations.filter((r) => {
               if (!r.created_at) return false;
               const d = new Date(r.created_at);
               const now = new Date();
@@ -619,11 +650,11 @@ const getSemester = (reg) => {
             }).length,
             icon: UserCheck,
             badge: "Live",
-            gradient: "from-purple-500 to-pink-500"
+            gradient: "from-purple-500 to-pink-500",
           },
           {
             title: "Pending Today",
-            value: registrations.filter(r => {
+            value: registrations.filter((r) => {
               if (!r.created_at) return false;
               const isPending = !isPaidStatus(getPaymentStatus(r));
               const d = new Date(r.created_at);
@@ -632,8 +663,8 @@ const getSemester = (reg) => {
             }).length,
             icon: TrendingUp,
             badge: "Today",
-            gradient: "from-green-500 to-emerald-500"
-          }
+            gradient: "from-green-500 to-emerald-500",
+          },
         ].map((card, i) => {
           const Icon = card.icon;
           return (
@@ -641,21 +672,34 @@ const getSemester = (reg) => {
               key={card.title}
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: 0.55 + i * 0.08, type: "spring", stiffness: 200, damping: 15 }}
+              transition={{
+                delay: 0.55 + i * 0.08,
+                type: "spring",
+                stiffness: 200,
+                damping: 15,
+              }}
               whileHover={{ y: -6, scale: 1.02 }}
               className="relative overflow-hidden backdrop-blur-2xl rounded-3xl p-6 border bg-white/60 shadow-lg border-white"
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-[0.06]`} />
+              <div
+                className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-[0.06]`}
+              />
               <div className="relative z-10 flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 font-medium">{card.title}</p>
-                  <p className="text-4xl font-bold text-gray-900 mt-1">{card.value}</p>
+                  <p className="text-sm text-gray-600 font-medium">
+                    {card.title}
+                  </p>
+                  <p className="text-4xl font-bold text-gray-900 mt-1">
+                    {card.value}
+                  </p>
                   <span className="inline-flex items-center gap-1 mt-3 text-xs font-semibold px-3 py-1 rounded-full border border-white bg-white/70 text-gray-700">
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                     {card.badge}
                   </span>
                 </div>
-                <div className={`p-3 rounded-2xl bg-gradient-to-br ${card.gradient} shadow-lg`}>
+                <div
+                  className={`p-3 rounded-2xl bg-gradient-to-br ${card.gradient} shadow-lg`}
+                >
                   <Icon className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -666,7 +710,6 @@ const getSemester = (reg) => {
 
       {/* RECENT ACTIVITY + QUICK ACTIONS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
         {/* Pending Registrations */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -704,10 +747,14 @@ const getSemester = (reg) => {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <p className="text-sm font-semibold text-gray-800">{reg.name}</p>
-                      <p className="text-xs text-gray-600 mt-1">{reg.major} - {reg.department}</p>
+                      <p className="text-sm font-semibold text-gray-800">
+                        {reg.name}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        {reg.major} - {reg.department}
+                      </p>
 
-                      {/* ✅ show semester/year clearly */}
+                      {/* ✅ show semester/year clearly (NO N/A now) */}
                       <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1.5 flex-wrap">
                         <Calendar className="w-3 h-3" />
                         {reg.date}
@@ -721,18 +768,19 @@ const getSemester = (reg) => {
                         <span className="mx-1">•</span>
 
                         <span className="text-xs font-medium text-gray-600">
-                          {reg.semester ? `Sem ${reg.semester}` : "Sem N/A"}
+                          {`Sem ${reg.semester || "1"}`}
                         </span>
 
                         <span className="mx-1">•</span>
 
                         <span
-                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${isPaidStatus(reg.status)
-                            ? 'bg-green-100 text-green-700'
-                            : reg.status === "FAILED"
-                              ? 'bg-red-100 text-red-700'
-                              : 'bg-yellow-100 text-yellow-700'
-                            }`}
+                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            isPaidStatus(reg.status)
+                              ? "bg-green-100 text-green-700"
+                              : reg.status === "FAILED"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
                         >
                           {reg.statusLabel}
                         </span>
@@ -762,10 +810,30 @@ const getSemester = (reg) => {
 
           <div className="grid grid-cols-2 gap-4">
             {[
-              { label: "Add Department", icon: Building2, gradient: "from-blue-500 to-cyan-500", view: "departments" },
-              { label: "Add Major", icon: GraduationCap, gradient: "from-purple-500 to-pink-500", view: "majors" },
-              { label: "Add Subject", icon: BookOpen, gradient: "from-green-500 to-emerald-500", view: "subjects" },
-              { label: "Add Student", icon: Users, gradient: "from-orange-500 to-red-500", view: "students" },
+              {
+                label: "Add Department",
+                icon: Building2,
+                gradient: "from-blue-500 to-cyan-500",
+                view: "departments",
+              },
+              {
+                label: "Add Major",
+                icon: GraduationCap,
+                gradient: "from-purple-500 to-pink-500",
+                view: "majors",
+              },
+              {
+                label: "Add Subject",
+                icon: BookOpen,
+                gradient: "from-green-500 to-emerald-500",
+                view: "subjects",
+              },
+              {
+                label: "Add Student",
+                icon: Users,
+                gradient: "from-orange-500 to-red-500",
+                view: "students",
+              },
             ].map((action, i) => {
               const Icon = action.icon;
               const isActive = activeView === action.view;
@@ -779,7 +847,7 @@ const getSemester = (reg) => {
                   whileHover={{
                     scale: 1.08,
                     y: -4,
-                    transition: { type: "spring", stiffness: 400, damping: 10 }
+                    transition: { type: "spring", stiffness: 400, damping: 10 },
                   }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setActiveView(action.view)}
@@ -793,11 +861,18 @@ const getSemester = (reg) => {
                     <motion.div
                       layoutId="activeIndicator"
                       className="absolute inset-0 bg-white/10 backdrop-blur-sm"
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 30,
+                      }}
                     />
                   )}
                   <div className="relative z-10">
-                    <Icon size={28} className="mb-3 mx-auto drop-shadow-lg" />
+                    <Icon
+                      size={28}
+                      className="mb-3 mx-auto drop-shadow-lg"
+                    />
                     <p className="text-sm font-semibold">{action.label}</p>
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
@@ -824,35 +899,37 @@ const getSemester = (reg) => {
               students: "border-indigo-200/50",
             };
 
-            return activeView === view && (
-              <motion.div
-                key={view}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/20 backdrop-blur-sm p-4"
-                onClick={() => setActiveView("admin/dashboard")}
-              >
+            return (
+              activeView === view && (
                 <motion.div
-                  initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                  animate={{ scale: 1, opacity: 1, y: 0 }}
-                  exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  onClick={(e) => e.stopPropagation()}
-                  className={`relative w-full max-w-7xl max-h-[90vh] overflow-y-auto rounded-3xl p-8 bg-white/95 backdrop-blur-3xl border ${borderColors[view]} shadow-2xl`}
+                  key={view}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/20 backdrop-blur-sm p-4"
+                  onClick={() => setActiveView("admin/dashboard")}
                 >
-                  <motion.button
-                    whileHover={{ scale: 1.1, rotate: 90 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => setActiveView("admin/dashboard")}
-                    className="sticky top-0 right-0 ml-auto mb-4 w-10 h-10 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-lg transition-colors duration-200 flex items-center justify-center font-bold z-10"
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    onClick={(e) => e.stopPropagation()}
+                    className={`relative w-full max-w-7xl max-h-[90vh] overflow-y-auto rounded-3xl p-8 bg-white/95 backdrop-blur-3xl border ${borderColors[view]} shadow-2xl`}
                   >
-                    ✕
-                  </motion.button>
-                  <FormComponent onUpdate={loadAllData} />
+                    <motion.button
+                      whileHover={{ scale: 1.1, rotate: 90 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => setActiveView("admin/dashboard")}
+                      className="sticky top-0 right-0 ml-auto mb-4 w-10 h-10 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-lg transition-colors duration-200 flex items-center justify-center font-bold z-10"
+                    >
+                      ✕
+                    </motion.button>
+                    <FormComponent onUpdate={loadAllData} />
+                  </motion.div>
                 </motion.div>
-              </motion.div>
+              )
             );
           })}
         </AnimatePresence>
@@ -887,7 +964,10 @@ const getSemester = (reg) => {
           ) : (
             <div className="space-y-3">
               {[...students]
-                .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+                .sort(
+                  (a, b) =>
+                    new Date(b.created_at || 0) - new Date(a.created_at || 0)
+                )
                 .slice(0, 5)
                 .map((s, i) => (
                   <motion.div
@@ -901,14 +981,20 @@ const getSemester = (reg) => {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <p className="text-sm font-semibold text-gray-800">
-                          {s.full_name_en || s.full_name || `${s.first_name || ""} ${s.last_name || ""}`.trim() || "Student"}
+                          {s.full_name_en ||
+                            s.full_name ||
+                            `${s.first_name || ""} ${s.last_name || ""}`.trim() ||
+                            "Student"}
                         </p>
                         <p className="text-xs text-gray-600 mt-1">
-                          ID: {s.student_code || s.student_id || "N/A"} • Gender: {s.gender || "N/A"}
+                          ID: {s.student_code || s.student_id || "N/A"} • Gender:{" "}
+                          {s.gender || "N/A"}
                         </p>
                         <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1.5">
                           <Calendar className="w-3 h-3" />
-                          {s.created_at ? new Date(s.created_at).toLocaleDateString() : "N/A"}
+                          {s.created_at
+                            ? new Date(s.created_at).toLocaleDateString()
+                            : "N/A"}
                         </p>
                       </div>
                       <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-orange-500 transition-colors" />
@@ -936,19 +1022,25 @@ const getSemester = (reg) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-5 rounded-2xl bg-white/70 border border-white shadow-sm">
               <p className="text-xs text-gray-600">Total Subjects</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{subjects.length}</p>
-              <p className="text-xs text-gray-500 mt-2">All subjects in system</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">
+                {subjects.length}
+              </p>
+              <p className="text-xs text-gray-500 mt-2">
+                All subjects in system
+              </p>
             </div>
 
             <div className="p-5 rounded-2xl bg-white/70 border border-white shadow-sm">
               <p className="text-xs text-gray-600">Departments with Subjects</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">
-                {new Set(
-                  majors
-                    .filter(m => m?.subjects?.length > 0)
-                    .map(m => m?.department_id || m?.department?.id)
-                    .filter(Boolean)
-                ).size}
+                {
+                  new Set(
+                    majors
+                      .filter((m) => m?.subjects?.length > 0)
+                      .map((m) => m?.department_id || m?.department?.id)
+                      .filter(Boolean)
+                  ).size
+                }
               </p>
               <p className="text-xs text-gray-500 mt-2">Coverage overview</p>
             </div>
@@ -956,19 +1048,19 @@ const getSemester = (reg) => {
             <div className="sm:col-span-2 p-5 rounded-2xl bg-white/70 border border-white shadow-sm">
               <p className="text-xs text-gray-600 mb-2">Quick Insight</p>
               <p className="text-sm text-gray-700">
-                Your system has <span className="font-bold">{subjects.length}</span> subjects across{" "}
-                <span className="font-bold">{departments.length}</span> departments and{" "}
-                <span className="font-bold">{majors.length}</span> majors.
+                Your system has{" "}
+                <span className="font-bold">{subjects.length}</span> subjects
+                across <span className="font-bold">{departments.length}</span>{" "}
+                departments and <span className="font-bold">{majors.length}</span>{" "}
+                majors.
               </p>
             </div>
           </div>
         </motion.div>
-
       </div>
 
       {/* TOP MAJORS + DEPARTMENTS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
         {/* Top Performing Majors */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -991,7 +1083,9 @@ const getSemester = (reg) => {
           ) : (
             <div className="space-y-4">
               {topPerformingMajors.map((m, i) => {
-                const maxStudents = Math.max(...topPerformingMajors.map(maj => maj.students));
+                const maxStudents = Math.max(
+                  ...topPerformingMajors.map((maj) => maj.students)
+                );
                 const percentage = (m.students / maxStudents) * 100;
 
                 return (
@@ -1006,7 +1100,9 @@ const getSemester = (reg) => {
                     <div className="flex justify-between items-center mb-3">
                       <div className="flex-1">
                         <p className="font-semibold text-gray-800">{m.name}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{m.departmentName}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {m.departmentName}
+                        </p>
                       </div>
                       <span className="flex items-center gap-1 text-sm font-bold text-green-600 backdrop-blur-sm px-2.5 py-1 rounded-full border border-green-200/50 bg-green-50">
                         {m.students} students
@@ -1017,7 +1113,11 @@ const getSemester = (reg) => {
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${percentage}%` }}
-                          transition={{ delay: 0.8 + i * 0.1, duration: 1, ease: "easeOut" }}
+                          transition={{
+                            delay: 0.8 + i * 0.1,
+                            duration: 1,
+                            ease: "easeOut",
+                          }}
                           className="h-full rounded-full bg-gradient-to-r from-green-500 to-emerald-500 shadow-sm"
                         />
                       </div>
@@ -1059,9 +1159,11 @@ const getSemester = (reg) => {
                   "from-purple-500 to-pink-500",
                   "from-orange-500 to-red-500",
                   "from-green-500 to-emerald-500",
-                  "from-indigo-500 to-purple-500"
+                  "from-indigo-500 to-purple-500",
                 ];
-                const maxCount = Math.max(...departmentBreakdown.map(d => d.studentCount));
+                const maxCount = Math.max(
+                  ...departmentBreakdown.map((d) => d.studentCount)
+                );
                 const percentage = (dept.studentCount / maxCount) * 100;
 
                 return (
@@ -1076,7 +1178,9 @@ const getSemester = (reg) => {
                     <div className="flex justify-between items-center mb-3">
                       <div className="flex-1">
                         <p className="font-semibold text-gray-800">{dept.name}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">Code: {dept.code}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Code: {dept.code}
+                        </p>
                       </div>
                       <span className="text-sm font-bold text-blue-600 backdrop-blur-sm px-2.5 py-1 rounded-full border border-blue-200/50 bg-blue-50">
                         {dept.studentCount}
@@ -1087,8 +1191,14 @@ const getSemester = (reg) => {
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${percentage}%` }}
-                          transition={{ delay: 0.8 + i * 0.1, duration: 1, ease: "easeOut" }}
-                          className={`h-full rounded-full bg-gradient-to-r ${colors[i % colors.length]} shadow-sm`}
+                          transition={{
+                            delay: 0.8 + i * 0.1,
+                            duration: 1,
+                            ease: "easeOut",
+                          }}
+                          className={`h-full rounded-full bg-gradient-to-r ${
+                            colors[i % colors.length]
+                          } shadow-sm`}
                         />
                       </div>
                       <span className="text-xs font-semibold text-gray-600 min-w-[45px] text-right">
@@ -1121,7 +1231,9 @@ const getSemester = (reg) => {
             <div className="backdrop-blur-xl p-6 rounded-2xl border border-white/30 bg-white/40">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-medium text-gray-700">Male Students</p>
-                <p className="text-2xl font-bold text-blue-600">{genderStats.male}</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {genderStats.male}
+                </p>
               </div>
               <div className="relative h-3 bg-gray-200/50 rounded-full overflow-hidden">
                 <motion.div
@@ -1131,13 +1243,19 @@ const getSemester = (reg) => {
                   className="absolute h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
                 />
               </div>
-              <p className="text-xs text-gray-600 mt-2">{genderStats.malePercentage}% of total students</p>
+              <p className="text-xs text-gray-600 mt-2">
+                {genderStats.malePercentage}% of total students
+              </p>
             </div>
 
             <div className="backdrop-blur-xl p-6 rounded-2xl border border-white/30 bg-white/40">
               <div className="flex items-center justify-between mb-4">
-                <p className="text-sm font-medium text-gray-700">Female Students</p>
-                <p className="text-2xl font-bold text-pink-600">{genderStats.female}</p>
+                <p className="text-sm font-medium text-gray-700">
+                  Female Students
+                </p>
+                <p className="text-2xl font-bold text-pink-600">
+                  {genderStats.female}
+                </p>
               </div>
               <div className="relative h-3 bg-gray-200/50 rounded-full overflow-hidden">
                 <motion.div
@@ -1147,12 +1265,13 @@ const getSemester = (reg) => {
                   className="absolute h-full bg-gradient-to-r from-pink-500 to-rose-500 rounded-full"
                 />
               </div>
-              <p className="text-xs text-gray-600 mt-2">{genderStats.femalePercentage}% of total students</p>
+              <p className="text-xs text-gray-600 mt-2">
+                {genderStats.femalePercentage}% of total students
+              </p>
             </div>
           </div>
         </motion.div>
       )}
-
     </div>
   );
 };
