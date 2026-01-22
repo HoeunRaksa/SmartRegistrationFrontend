@@ -123,17 +123,22 @@ const ClassGroupsList = memo(function ClassGroupsList({
                     <td className="py-3 px-4 text-gray-700">{cg.capacity ?? "-"}</td>
 
                     <td className="py-3 px-4">
-                      <div className="flex justify-end gap-2 flex-wrap">
+                      <div className="flex justify-end gap-2">
+
+                        {/* 👥 Students */}
                         {onViewStudents && (
                           <button
                             type="button"
                             onClick={() => onViewStudents(cg)}
                             className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50/80 border border-blue-200 hover:bg-blue-50 transition shadow-sm"
                           >
-                            <span className="text-xs font-semibold text-blue-700">Students</span>
+                            <span className="text-xs font-semibold text-blue-700">
+                              Students
+                            </span>
                           </button>
                         )}
 
+                        {/* ✏️ Edit */}
                         <button
                           type="button"
                           onClick={() => onEdit?.(cg)}
@@ -143,6 +148,7 @@ const ClassGroupsList = memo(function ClassGroupsList({
                           <span className="text-xs font-semibold text-gray-800">Edit</span>
                         </button>
 
+                        {/* 🗑 Delete */}
                         <button
                           type="button"
                           onClick={() => {
@@ -155,8 +161,10 @@ const ClassGroupsList = memo(function ClassGroupsList({
                           <Trash2 size={16} className="text-red-600" />
                           <span className="text-xs font-semibold text-red-700">Delete</span>
                         </button>
+
                       </div>
                     </td>
+
                   </tr>
                 );
               })}
