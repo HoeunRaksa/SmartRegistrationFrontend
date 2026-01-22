@@ -1,14 +1,20 @@
+// =====================================================
 // src/adminSide/ConponentsAdmin/ClassGroupForm.jsx
-// ✅ FULL NO CUT — updated for our NEW backend flow:
-// - semester only 1 or 2 (matches Laravel validation)
-// - shift optional (backend allows nullable) => UI does NOT force required
-// - capacity optional => if empty, don't send it (backend will default to 40/your logic)
-// - fastest: memo options + no extra refetch loops + clean payload mapping
-// - works with your existing API helpers (fetchDepartments, fetchMajorsByDepartment)
-// - keeps old flow safe (only creates/updates class_groups)
-
+// ✅ FULL CLEAN NO CUT — matches backend (semester 1/2)
+// - shift optional
+// - capacity optional (not sent if empty)
+// =====================================================
 import React, { useEffect, useMemo, useState } from "react";
-import { Save, X, Building2, GraduationCap, Calendar, Clock, Users, BookOpen } from "lucide-react";
+import {
+  Save,
+  X,
+  Building2,
+  GraduationCap,
+  Calendar,
+  Clock,
+  Users,
+  BookOpen,
+} from "lucide-react";
 import { fetchDepartments, fetchMajorsByDepartment } from "../../api/department_api.jsx";
 
 const empty = {
@@ -22,7 +28,6 @@ const empty = {
 };
 
 const normalizeArray = (res) => {
-  // supports: {data:{data:[]}} OR {data:[]}
   const d = res?.data?.data !== undefined ? res.data.data : res?.data;
   return Array.isArray(d) ? d : [];
 };
@@ -50,7 +55,7 @@ const buildAcademicYears = (past = 2, future = 3) => {
 };
 
 const SHIFT_OPTIONS = [
-  { value: "", label: "No shift (optional)" }, // ✅ allow nullable shift
+  { value: "", label: "No shift (optional)" },
   { value: "Morning", label: "Morning" },
   { value: "Afternoon", label: "Afternoon" },
   { value: "Evening", label: "Evening" },
@@ -127,7 +132,6 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
           : "",
     });
 
-    // Load majors for the selected department (fast)
     if (deptId) {
       let alive = true;
       (async () => {
@@ -150,7 +154,7 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
     }
   }, [editingGroup]);
 
-  // Load majors when department changes (create mode OR edit when user changes dept)
+  // Load majors when department changes
   useEffect(() => {
     const deptId = form.department_id;
 
@@ -170,7 +174,6 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
         const arr = normalizeArray(res);
         setMajors(arr);
 
-        // If current selected major not in this department, clear it
         const exists = arr.some((m) => String(m.id) === String(form.major_id));
         if (!exists) setForm((p) => ({ ...p, major_id: "" }));
       } catch (e) {
@@ -212,63 +215,47 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
     e.preventDefault();
     setError("");
 
-    // ✅ match backend rules
     if (!form.department_id) return setError("Department is required.");
     if (!form.major_id) return setError("Major is required.");
     if (!String(form.class_name || "").trim()) return setError("Class name is required.");
     if (!form.academic_year) return setError("Academic year is required.");
     if (!form.semester) return setError("Semester is required.");
 
-    // semester must be 1 or 2 (your backend: in:1,2)
     const sem = Number(form.semester);
     if (![1, 2].includes(sem)) return setError("Semester must be 1 or 2.");
 
-    // shift optional (nullable)
     const shift = String(form.shift || "").trim();
-    const shiftPayload = shift === "" ? null : shift;
-
-    // capacity optional (nullable)
     const cap = form.capacity === "" ? null : Number(form.capacity);
+
     if (cap !== null && (Number.isNaN(cap) || cap < 1)) {
       return setError("Capacity must be a number (>= 1) or empty.");
     }
 
-    // ✅ fastest payload: send only what backend needs
     const payload = {
       class_name: String(form.class_name).trim(),
       major_id: Number(form.major_id),
       academic_year: String(form.academic_year).trim(),
       semester: sem,
-      shift: shiftPayload,
-      capacity: cap, // can be null
+      ...(shift ? { shift } : {}),
+      ...(cap !== null ? { capacity: cap } : {}),
     };
-
-    // ✅ If capacity is null, remove it so backend default can apply (optional)
-    if (payload.capacity === null) delete payload.capacity;
-
-    // ✅ If shift is null, remove it (backend allows nullable; removing avoids duplicate checks mismatch)
-    if (payload.shift === null) delete payload.shift;
 
     try {
       setSaving(true);
-
       if (editingGroup?.id) {
         await onUpdate(editingGroup.id, payload);
         onCancel?.();
       } else {
         await onCreate(payload);
       }
-
       reset();
     } catch (err) {
       console.error("Save class group error:", err);
-
       const msg =
         err?.response?.data?.message ||
         (err?.response?.data?.errors
           ? Object.values(err.response.data.errors).flat().join(", ")
           : "Failed to save class group. Check backend logs.");
-
       setError(msg);
     } finally {
       setSaving(false);
@@ -402,7 +389,7 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
           </div>
         </div>
 
-        {/* Semester (✅ only 1/2) */}
+        {/* Semester */}
         <div className="md:col-span-2">
           <label className={labelCls}>Semester *</label>
           <div className="relative">
@@ -421,7 +408,7 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
           </div>
         </div>
 
-        {/* Shift (✅ optional) */}
+        {/* Shift */}
         <div className="md:col-span-1">
           <label className={labelCls}>Shift (optional)</label>
           <div className="relative">
@@ -442,7 +429,7 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
           </div>
         </div>
 
-        {/* Capacity (✅ optional) */}
+        {/* Capacity */}
         <div className="md:col-span-1">
           <label className={labelCls}>Capacity (optional)</label>
           <div className="relative">

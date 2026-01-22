@@ -1,8 +1,13 @@
+// =====================================================
+// src/adminSide/ConponentsAdmin/ClassGroupsList.jsx
+// ✅ FULL CLEAN NO CUT — no duplicate helpers
+// - safe filter
+// - better table wrapper
+// =====================================================
 import React, { memo, useMemo, useState } from "react";
 import { Edit3, Trash2, RefreshCw, Search } from "lucide-react";
 
 const rowCls = "border-t border-white/50 hover:bg-white/40 transition";
-
 const safeLower = (v) => String(v ?? "").trim().toLowerCase();
 
 const ClassGroupsList = memo(function ClassGroupsList({
@@ -11,14 +16,15 @@ const ClassGroupsList = memo(function ClassGroupsList({
   onEdit,
   onDelete,
   onRefresh,
+  onViewStudents, // ✅ optional: click class -> view students
 }) {
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
     const q = safeLower(query);
-    if (!q) return Array.isArray(classGroups) ? classGroups : [];
-
     const arr = Array.isArray(classGroups) ? classGroups : [];
+    if (!q) return arr;
+
     return arr.filter((cg) => {
       const className = safeLower(cg?.class_name);
       const ay = safeLower(cg?.academic_year);
@@ -117,7 +123,17 @@ const ClassGroupsList = memo(function ClassGroupsList({
                     <td className="py-3 px-4 text-gray-700">{cg.capacity ?? "-"}</td>
 
                     <td className="py-3 px-4">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-end gap-2 flex-wrap">
+                        {onViewStudents && (
+                          <button
+                            type="button"
+                            onClick={() => onViewStudents(cg)}
+                            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50/80 border border-blue-200 hover:bg-blue-50 transition shadow-sm"
+                          >
+                            <span className="text-xs font-semibold text-blue-700">Students</span>
+                          </button>
+                        )}
+
                         <button
                           type="button"
                           onClick={() => onEdit?.(cg)}

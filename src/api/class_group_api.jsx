@@ -1,188 +1,76 @@
+// =====================================================
+// src/api/class_group_api.jsx  ✅ FULL CLEAN NO DUPLICATE
+// =====================================================
 import API from "./index";
 
 /**
  * Helper: safely extract backend data
+ * Supports:
+ *  - { data: { data: [...] } }
+ *  - { data: [...] }
+ *  - { data: { ... } }
  */
-const extractData = (response) => {
-  if (response?.data?.data !== undefined) return response.data.data;
-  if (response?.data !== undefined) return response.data;
+const extractData = (res) => {
+  if (res?.data?.data !== undefined) return res.data.data;
+  if (res?.data !== undefined) return res.data;
   return null;
 };
 
 /* =====================================================
    CLASS GROUP CRUD (ADMIN)
+   Endpoints:
+   GET    /class-groups
+   POST   /class-groups
+   PUT    /class-groups/{id}
+   DELETE /class-groups/{id}
    ===================================================== */
 
-/* GET: all class groups (admin) */
-export const fetchAllClassGroups = async () => {
-  try {
-    const response = await API.get("/class-groups");
-    const data = extractData(response);
-    return {
-      data: {
-        data: Array.isArray(data) ? data : [],
-      },
-    };
-  } catch (error) {
-    console.error("fetchAllClassGroups error:", error);
-    throw error;
-  }
+export const fetchAllClassGroups = async (params = {}) => {
+  const res = await API.get("/class-groups", { params });
+  const data = extractData(res);
+  return {
+    data: { data: Array.isArray(data) ? data : [] },
+  };
 };
 
-/* GET: class groups by major (optional helper) */
-export const fetchClassGroupsByMajor = async (majorId) => {
-  try {
-    const response = await API.get(`/class-groups`, {
-      params: { major_id: majorId },
-    });
-    const data = extractData(response);
-    return {
-      data: {
-        data: Array.isArray(data) ? data : [],
-      },
-    };
-  } catch (error) {
-    console.error("fetchClassGroupsByMajor error:", error);
-    throw error;
-  }
-};
-
-/* POST: create class group */
-export const createClassGroup = async (payload) => {
-  try {
-    /**
-     * payload example:
-     * {
-     *   class_name: "A1",
-     *   major_id: 3,
-     *   academic_year: "2025-2026",
-     *   semester: 1,
-     *   shift: "Morning",
-     *   capacity: 40
-     * }
-     */
-    const response = await API.post("/class-groups", payload);
-    return response;
-  } catch (error) {
-    console.error("createClassGroup error:", error);
-    throw error;
-  }
-};
-
-/* PUT: update class group */
-export const updateClassGroup = async (id, payload) => {
-  try {
-    const response = await API.put(`/class-groups/${id}`, payload);
-    return response;
-  } catch (error) {
-    console.error("updateClassGroup error:", error);
-    throw error;
-  }
-};
-
-/* DELETE: delete class group */
-export const deleteClassGroup = async (id) => {
-  try {
-    const response = await API.delete(`/class-groups/${id}`);
-    return response;
-  } catch (error) {
-    console.error("deleteClassGroup error:", error);
-    throw error;
-  }
-};
-
-/* =====================================================
-   ✅ NEW: CAPACITY / AVAILABLE CLASS GROUP
-   (used by allocator UI or admin)
-   ===================================================== */
-
-/**
- * ✅ Get 1 available group (free seat) for major/year/semester/shift
- * backend (NEW, recommended):
- * GET /api/class-groups/available?major_id=1&academic_year=2026-2027&semester=1&shift=Morning
- *
- * Returns: { success, data: { class_group, used, capacity, remaining } }
- */
-export const fetchAvailableClassGroup = async (params) => {
-  try {
-    const response = await API.get("/class-groups/available", { params });
-    return response;
-  } catch (error) {
-    console.error("fetchAvailableClassGroup error:", error);
-    throw error;
-  }
-};
-
-/* =====================================================
-   ✅ NEW: STUDENT ↔ CLASS GROUP (MANUAL ASSIGN / CHANGE)
-   Works with pivot table: student_class_groups
-   (Long-life, per year custom)
-   ===================================================== */
-
-/**
- * ✅ Assign or update student class group for a specific academic year + semester
- * backend (NEW):
- * POST /api/students/{studentId}/class-group
- *
- * payload:
- * {
- *   class_group_id: 12,
- *   academic_year: "2026-2027",
- *   semester: 1
- * }
- */
-export const assignStudentClassGroup = async (studentId, payload) => {
-  try {
-    const response = await API.post(`/students/${studentId}/class-group`, payload);
-    return response;
-  } catch (error) {
-    console.error("assignStudentClassGroup error:", error);
-    throw error;
-  }
-};
-
-/**
- * ✅ Move student to another class group (same year/semester)
- * This is same endpoint, just different class_group_id.
- * (keeping separate helper name for clarity)
- */
-export const moveStudentClassGroup = async (
-  studentId,
-  { class_group_id, academic_year, semester }
-) => {
-  return assignStudentClassGroup(studentId, {
-    class_group_id,
-    academic_year,
-    semester,
+export const fetchClassGroupsByMajor = async (majorId, extraParams = {}) => {
+  const res = await API.get("/class-groups", {
+    params: { major_id: majorId, ...extraParams },
   });
+  const data = extractData(res);
+  return {
+    data: { data: Array.isArray(data) ? data : [] },
+  };
 };
 
-/**
- * ✅ Get student class group for a specific academic year + semester
- * backend (NEW):
- * GET /api/students/{studentId}/class-group?academic_year=2026-2027&semester=1
- */
-export const fetchStudentClassGroup = async (studentId, params) => {
-  try {
-    const response = await API.get(`/students/${studentId}/class-group`, { params });
-    return response;
-  } catch (error) {
-    console.error("fetchStudentClassGroup error:", error);
-    throw error;
-  }
-};
+export const createClassGroup = (payload) => API.post("/class-groups", payload);
 
-/**
- * ✅ Remove student class group assignment for a year/semester (optional)
- * backend (NEW):
- * DELETE /api/students/{studentId}/class-group?academic_year=2026-2027&semester=1
- */
-export const removeStudentClassGroup = async (studentId, params) => {
-  try {
-    const response = await API.delete(`/students/${studentId}/class-group`, { params });
-    return response;
-  } catch (error) {
-    console.error("removeStudentClassGroup error:", error);
-    throw error;
-  }
-};
+export const updateClassGroup = (id, payload) =>
+  API.put(`/class-groups/${id}`, payload);
+
+export const deleteClassGroup = (id) =>
+  API.delete(`/class-groups/${id}`);
+
+/* =====================================================
+   CLASS GROUP STUDENTS (NEW FLOW)
+   Endpoints:
+   GET  /class-groups/{classGroupId}/students?academic_year=YYYY-YYYY&semester=1|2
+   ===================================================== */
+export const fetchClassGroupStudents = (classGroupId, params = {}) =>
+  API.get(`/class-groups/${classGroupId}/students`, { params });
+
+/* =====================================================
+   STUDENT ↔ CLASS GROUP (your existing controller)
+   Endpoints:
+   GET  /students/{studentId}/class-group?academic_year=YYYY-YYYY&semester=1|2
+   POST /students/{studentId}/class-group/assign
+   POST /students/{studentId}/class-group/auto
+   ===================================================== */
+export const fetchStudentClassGroup = (studentId, params = {}) =>
+  API.get(`/students/${studentId}/class-group`, { params });
+
+export const assignStudentClassGroupManual = (studentId, payload) =>
+  API.post(`/students/${studentId}/class-group/assign`, payload);
+
+export const assignStudentClassGroupAuto = (studentId, payload) =>
+  API.post(`/students/${studentId}/class-group/auto`, payload);
