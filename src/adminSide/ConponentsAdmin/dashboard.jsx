@@ -49,19 +49,16 @@ const parseSemesterValue = (v) => {
   const s = String(v).trim();
   if (!s) return null;
 
-  // if already "1" or "2"
   if (s === "1" || s === "2") return s;
 
-  // "Sem 1", "Semester 1", "semester-2", etc
   const m = s.match(/(?:sem|semester|term)\s*[-:]?\s*(\d+)/i);
   if (m?.[1]) return m[1];
 
-  // if "First" / "Second"
   const lower = s.toLowerCase();
   if (lower.includes("first")) return "1";
   if (lower.includes("second")) return "2";
 
-  return s; // fallback
+  return s;
 };
 
 const getPeriods = (reg) =>
@@ -75,6 +72,11 @@ const normalizeStatus = (s) => String(s || "").trim().toUpperCase();
 
 const isPaidStatus = (status) => status === "PAID" || status === "COMPLETED";
 
+const safeTime = (d) => {
+  const t = new Date(d || 0).getTime();
+  return Number.isFinite(t) ? t : 0;
+};
+
 const getMatchedPeriod = (reg) => {
   const periods = Array.isArray(getPeriods(reg)) ? getPeriods(reg) : [];
   if (!periods.length) return null;
@@ -85,16 +87,16 @@ const getMatchedPeriod = (reg) => {
       return st !== "PAID" && st !== "COMPLETED";
     })
     .sort((a, b) => {
-      const da = new Date(a?.updated_at || a?.created_at || 0).getTime();
-      const db = new Date(b?.updated_at || b?.created_at || 0).getTime();
+      const da = safeTime(a?.updated_at || a?.created_at || 0);
+      const db = safeTime(b?.updated_at || b?.created_at || 0);
       return db - da;
     });
 
   if (unpaid.length) return unpaid[0];
 
   const sorted = [...periods].sort((a, b) => {
-    const da = new Date(a?.updated_at || a?.created_at || 0).getTime();
-    const db = new Date(b?.updated_at || b?.created_at || 0).getTime();
+    const da = safeTime(a?.updated_at || a?.created_at || 0);
+    const db = safeTime(b?.updated_at || b?.created_at || 0);
     return db - da;
   });
 
@@ -105,7 +107,6 @@ const getSemester = (reg) => {
   const p = getMatchedPeriod(reg);
 
   const raw = pickFirst(
-    // period object fields
     p?.semester,
     p?.period_semester,
     p?.academic_semester,
@@ -118,10 +119,8 @@ const getSemester = (reg) => {
     p?.semester_name,
     p?.semesterLabel,
 
-    // backend flat fields
     reg?.period_semester,
 
-    // registration-level fields
     reg?.semester,
     reg?.current_semester,
     reg?.academic_semester,
@@ -181,14 +180,63 @@ const getPaymentLabel = (reg) => {
   return suffix ? `Pending (${suffix})` : "Pending";
 };
 
-const safeTime = (d) => {
-  const t = new Date(d || 0).getTime();
-  return Number.isFinite(t) ? t : 0;
+/* ================== 429 / RATE-LIMIT SAFETY HELPERS ================== */
+
+// Works for axios errors (error.response) and fetch-style errors (if you adapt later)
+const getHttpStatus = (err) => err?.response?.status ?? err?.status ?? null;
+
+// Retry-After can be seconds ("5") or HTTP date.
+// We'll support seconds; if date, we fallback to computed delay.
+const getRetryAfterMs = (err) => {
+  const ra =
+    err?.response?.headers?.["retry-after"] ??
+    err?.response?.headers?.["Retry-After"];
+  if (!ra) return null;
+
+  const num = Number(ra);
+  if (Number.isFinite(num) && num >= 0) return num * 1000;
+
+  const dt = new Date(ra).getTime();
+  if (Number.isFinite(dt)) {
+    const ms = dt - Date.now();
+    return ms > 0 ? ms : null;
+  }
+
+  return null;
+};
+
+const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+
+const withRetry = async (fn, opts = {}) => {
+  const retries = Number.isFinite(opts.retries) ? opts.retries : 2;
+  const baseDelayMs = Number.isFinite(opts.baseDelayMs) ? opts.baseDelayMs : 800;
+
+  let attempt = 0;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    try {
+      return await fn();
+    } catch (err) {
+      const status = getHttpStatus(err);
+      const is429 = status === 429;
+
+      if (!is429 || attempt >= retries) throw err;
+
+      const retryAfter = getRetryAfterMs(err);
+      const backoff = baseDelayMs * Math.pow(2, attempt); // 800, 1600, 3200...
+      const waitMs = Math.min(retryAfter ?? backoff, 15000); // cap wait to 15s
+
+      await sleep(waitMs);
+      attempt += 1;
+    }
+  }
 };
 
 const Dashboard = () => {
   const [activeView, setActiveView] = useState("admin/dashboard");
   const [user, setUser] = useState(null);
+
+  // IMPORTANT: keep initial loading UX, but also prevent duplicate loads (StrictMode / spam-click)
   const [loading, setLoading] = useState(true);
 
   const [departments, setDepartments] = useState([]);
@@ -197,11 +245,31 @@ const Dashboard = () => {
   const [students, setStudents] = useState([]);
   const [registrations, setRegistrations] = useState([]);
 
-  // ultra-safe: ignore outdated loads if user clicks refresh quickly
+  // ignore outdated loads if user clicks refresh quickly
   const loadReqIdRef = useRef(0);
 
-  // (optional) defer some expensive UI reactions if needed later
+  // Prevent sending multiple request bursts (main reason for 429)
+  const inFlightRef = useRef(false);
+
+  // Throttle refresh (avoid spam clicking)
+  const lastLoadAtRef = useRef(0);
+  const MIN_LOAD_INTERVAL_MS = 1200;
+
+  // Handle StrictMode double-effect (dev): only do initial load once
+  const didInitialLoadRef = useRef(false);
+
+  // Prevent state update after unmount
+  const isMountedRef = useRef(true);
+
+  // defer expensive UI reactions if needed later
   const deferredRegs = useDeferredValue(registrations);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -215,20 +283,36 @@ const Dashboard = () => {
   }, []);
 
   const loadAllData = useCallback(async () => {
+    const now = Date.now();
+
+    // throttle
+    if (now - lastLoadAtRef.current < MIN_LOAD_INTERVAL_MS) {
+      return;
+    }
+    lastLoadAtRef.current = now;
+
+    // in-flight guard (prevents parallel bursts that trigger 429)
+    if (inFlightRef.current) {
+      return;
+    }
+
+    inFlightRef.current = true;
     const reqId = ++loadReqIdRef.current;
 
     try {
-      setLoading(true);
+      if (isMountedRef.current) setLoading(true);
 
+      // Retry each API call on 429 (small, safe retries)
       const [deptRes, majorRes, subjectRes, studentRes, regRes] =
         await Promise.all([
-          fetchDepartments(),
-          fetchMajors(),
-          fetchSubjects(),
-          fetchStudents(),
-          fetchRegistrations(),
+          withRetry(() => fetchDepartments(), { retries: 2, baseDelayMs: 800 }),
+          withRetry(() => fetchMajors(), { retries: 2, baseDelayMs: 800 }),
+          withRetry(() => fetchSubjects(), { retries: 2, baseDelayMs: 800 }),
+          withRetry(() => fetchStudents(), { retries: 2, baseDelayMs: 800 }),
+          withRetry(() => fetchRegistrations(), { retries: 2, baseDelayMs: 800 }),
         ]);
 
+      // ignore outdated responses
       if (reqId !== loadReqIdRef.current) return;
 
       const deptsData = deptRes.data?.data || deptRes.data || [];
@@ -243,14 +327,17 @@ const Dashboard = () => {
       const studentsArr = Array.isArray(studentsData) ? studentsData : [];
       const regsArr = Array.isArray(regsData) ? regsData : [];
 
+      if (!isMountedRef.current) return;
+
       setDepartments(deptsArr);
       setMajors(majorsArr);
       setSubjects(subjectsArr);
       setStudents(studentsArr);
       setRegistrations(regsArr);
 
-      const pendingCount = regsArr.filter((r) => !isPaidStatus(getPaymentStatus(r)))
-        .length;
+      const pendingCount = regsArr.filter(
+        (r) => !isPaidStatus(getPaymentStatus(r))
+      ).length;
 
       console.log("Dashboard data loaded:", {
         departments: deptsArr.length,
@@ -261,16 +348,31 @@ const Dashboard = () => {
         pendingRegistrations: pendingCount,
       });
     } catch (error) {
-      console.error("Failed to load dashboard data:", error);
+      // If 429 still happens, show clear logs
+      const status = getHttpStatus(error);
+      if (status === 429) {
+        console.error(
+          "Rate limited (429). Try again after a moment. Details:",
+          error
+        );
+      } else {
+        console.error("Failed to load dashboard data:", error);
+      }
     } finally {
-      if (reqId === loadReqIdRef.current) setLoading(false);
+      if (reqId === loadReqIdRef.current && isMountedRef.current) {
+        setLoading(false);
+      }
+      inFlightRef.current = false;
     }
   }, []);
 
   useEffect(() => {
+    // StrictMode in dev can run effects twice; this prevents duplicate load burst.
+    if (didInitialLoadRef.current) return;
+    didInitialLoadRef.current = true;
+
     loadAllData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadAllData]);
 
   /* ================== BUILD FAST LOOKUP MAPS (O(1) instead of find in loops) ================== */
 
@@ -289,21 +391,22 @@ const Dashboard = () => {
   const majorDeptNameById = useMemo(() => {
     const m = new Map();
     for (const mj of majors) {
-      const deptName = mj?.department?.name || deptNameById.get(mj?.department_id) || "N/A";
+      const deptName =
+        mj?.department?.name ||
+        deptNameById.get(mj?.department_id) ||
+        "N/A";
       m.set(mj.id, deptName);
     }
     return m;
   }, [majors, deptNameById]);
 
-  /* ================== ONE-TIME NORMALIZATION (HUGE SPEED WIN) ================== */
-  // We compute expensive semester/year/status/label ONCE per registration.
-  // Then every stat/widget uses those precomputed fields.
+  /* ================== ONE-TIME NORMALIZATION ================== */
 
   const normalizedRegistrations = useMemo(() => {
     const list = Array.isArray(deferredRegs) ? deferredRegs : [];
     return list.map((r) => {
       const status = getPaymentStatus(r);
-      const sem = getSemester(r); // always "1" or "2" (fallback "1")
+      const sem = getSemester(r);
       const year = getAcademicYear(r) || "";
       const label = getPaymentLabel(r);
       const createdAtTime = safeTime(r?.created_at);
@@ -328,12 +431,12 @@ const Dashboard = () => {
     }));
   }, [students]);
 
-  /* ================== CORE COUNTS (NO MORE filters inside JSX render) ================== */
+  /* ================== CORE COUNTS ================== */
 
   const registrationsCounts = useMemo(() => {
     let paid = 0;
     let pending = 0;
-    let total = normalizedRegistrations.length;
+    const total = normalizedRegistrations.length;
 
     for (const r of normalizedRegistrations) {
       if (r._isPaid) paid++;
@@ -418,7 +521,7 @@ const Dashboard = () => {
     recentRegistrationsCount,
   ]);
 
-  /* ================== SYSTEM OVERVIEW COUNTS (FAST) ================== */
+  /* ================== SYSTEM OVERVIEW ================== */
 
   const systemOverview = useMemo(() => {
     return {
@@ -428,22 +531,27 @@ const Dashboard = () => {
     };
   }, [subjects.length, registrationsCounts]);
 
-  /* ================== TODAY SNAPSHOT (FAST) ================== */
+  /* ================== TODAY SNAPSHOT ================== */
 
   const todaySnapshot = useMemo(() => {
-    const now = new Date();
-    const todayKey = now.toDateString();
+    const todayKey = new Date().toDateString();
 
     let newStudentsToday = 0;
     for (const s of normalizedStudents) {
-      if (s?._createdAtTime && new Date(s._createdAtTime).toDateString() === todayKey)
+      if (
+        s?._createdAtTime &&
+        new Date(s._createdAtTime).toDateString() === todayKey
+      )
         newStudentsToday++;
     }
 
     let newRegistrationsToday = 0;
     let pendingToday = 0;
     for (const r of normalizedRegistrations) {
-      if (r?._createdAtTime && new Date(r._createdAtTime).toDateString() === todayKey) {
+      if (
+        r?._createdAtTime &&
+        new Date(r._createdAtTime).toDateString() === todayKey
+      ) {
         newRegistrationsToday++;
         if (!r._isPaid) pendingToday++;
       }
@@ -452,7 +560,7 @@ const Dashboard = () => {
     return { newStudentsToday, newRegistrationsToday, pendingToday };
   }, [normalizedStudents, normalizedRegistrations]);
 
-  /* ================== TOP MAJORS / DEPT BREAKDOWN (FAST MAPS) ================== */
+  /* ================== TOP MAJORS / DEPT BREAKDOWN ================== */
 
   const topPerformingMajors = useMemo(() => {
     if (majors.length === 0 || normalizedRegistrations.length === 0) return [];
@@ -501,7 +609,7 @@ const Dashboard = () => {
       .slice(0, 5);
   }, [departments, students]);
 
-  /* ================== RECENT PENDING REGISTRATIONS (NO .find in loop) ================== */
+  /* ================== RECENT PENDING REGISTRATIONS ================== */
 
   const recentRegistrations = useMemo(() => {
     return [...pendingRegistrations]
@@ -530,7 +638,7 @@ const Dashboard = () => {
       });
   }, [pendingRegistrations, deptNameById, majorNameById]);
 
-  /* ================== GENDER STATS (FAST) ================== */
+  /* ================== GENDER STATS ================== */
 
   const genderStats = useMemo(() => {
     let male = 0;
@@ -550,7 +658,7 @@ const Dashboard = () => {
     };
   }, [students]);
 
-  /* ================== LOADING UI (UNCHANGED) ================== */
+  /* ================== LOADING UI ================== */
 
   if (loading) {
     return (
@@ -563,9 +671,7 @@ const Dashboard = () => {
           >
             <Loader className="w-12 h-12 text-blue-600" />
           </motion.div>
-          <p className="text-gray-600 mt-4 font-medium">
-            Loading dashboard...
-          </p>
+          <p className="text-gray-600 mt-4 font-medium">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -646,10 +752,14 @@ const Dashboard = () => {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={loadAllData}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/70 border border-white shadow-sm text-sm font-semibold text-gray-800 hover:bg-white transition"
+                disabled={inFlightRef.current}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/70 border border-white shadow-sm text-sm font-semibold text-gray-800 hover:bg-white transition ${
+                  inFlightRef.current ? "opacity-60 cursor-not-allowed" : ""
+                }`}
+                title={inFlightRef.current ? "Loading..." : "Refresh"}
               >
                 <ArrowUp className="w-4 h-4" />
-                Refresh
+                {inFlightRef.current ? "Refreshing..." : "Refresh"}
               </motion.button>
             </div>
           </div>
@@ -810,13 +920,17 @@ const Dashboard = () => {
               <div className="relative z-10 flex items-start justify-between">
                 <div>
                   <p className="text-sm text-gray-600 font-medium">{card.title}</p>
-                  <p className="text-4xl font-bold text-gray-900 mt-1">{card.value}</p>
+                  <p className="text-4xl font-bold text-gray-900 mt-1">
+                    {card.value}
+                  </p>
                   <span className="inline-flex items-center gap-1 mt-3 text-xs font-semibold px-3 py-1 rounded-full border border-white bg-white/70 text-gray-700">
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                     {card.badge}
                   </span>
                 </div>
-                <div className={`p-3 rounded-2xl bg-gradient-to-br ${card.gradient} shadow-lg`}>
+                <div
+                  className={`p-3 rounded-2xl bg-gradient-to-br ${card.gradient} shadow-lg`}
+                >
                   <Icon className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -864,7 +978,9 @@ const Dashboard = () => {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <p className="text-sm font-semibold text-gray-800">{reg.name}</p>
+                      <p className="text-sm font-semibold text-gray-800">
+                        {reg.name}
+                      </p>
                       <p className="text-xs text-gray-600 mt-1">
                         {reg.major} - {reg.department}
                       </p>
@@ -961,7 +1077,11 @@ const Dashboard = () => {
                   whileHover={{
                     scale: 1.08,
                     y: -4,
-                    transition: { type: "spring", stiffness: 400, damping: 10 },
+                    transition: {
+                      type: "spring",
+                      stiffness: 400,
+                      damping: 10,
+                    },
                   }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setActiveView(action.view)}
@@ -1025,7 +1145,11 @@ const Dashboard = () => {
                     initial={{ scale: 0.9, opacity: 0, y: 20 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 30,
+                    }}
                     onClick={(e) => e.stopPropagation()}
                     className={`relative w-full max-w-7xl max-h-[90vh] overflow-y-auto rounded-3xl p-8 bg-white/95 backdrop-blur-3xl border ${borderColors[view]} shadow-2xl`}
                   >
@@ -1205,7 +1329,9 @@ const Dashboard = () => {
                     <div className="flex justify-between items-center mb-3">
                       <div className="flex-1">
                         <p className="font-semibold text-gray-800">{m.name}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{m.departmentName}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {m.departmentName}
+                        </p>
                       </div>
                       <span className="flex items-center gap-1 text-sm font-bold text-green-600 backdrop-blur-sm px-2.5 py-1 rounded-full border border-green-200/50 bg-green-50">
                         {m.students} students
@@ -1334,7 +1460,9 @@ const Dashboard = () => {
             <div className="backdrop-blur-xl p-6 rounded-2xl border border-white/30 bg-white/40">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-medium text-gray-700">Male Students</p>
-                <p className="text-2xl font-bold text-blue-600">{genderStats.male}</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {genderStats.male}
+                </p>
               </div>
               <div className="relative h-3 bg-gray-200/50 rounded-full overflow-hidden">
                 <motion.div
@@ -1351,8 +1479,12 @@ const Dashboard = () => {
 
             <div className="backdrop-blur-xl p-6 rounded-2xl border border-white/30 bg-white/40">
               <div className="flex items-center justify-between mb-4">
-                <p className="text-sm font-medium text-gray-700">Female Students</p>
-                <p className="text-2xl font-bold text-pink-600">{genderStats.female}</p>
+                <p className="text-sm font-medium text-gray-700">
+                  Female Students
+                </p>
+                <p className="text-2xl font-bold text-pink-600">
+                  {genderStats.female}
+                </p>
               </div>
               <div className="relative h-3 bg-gray-200/50 rounded-full overflow-hidden">
                 <motion.div
