@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import React, { useMemo, useRef, useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Send,
   Search,
@@ -7,6 +7,12 @@ import {
   Paperclip,
   MessageCircle,
   Loader,
+  ArrowLeft,
+  MoreVertical,
+  Phone,
+  Video,
+  Check,
+  CheckCheck,
 } from "lucide-react";
 import { fetchConversations, fetchMessages, sendMessage } from "../api/message_api";
 
@@ -18,7 +24,9 @@ const MessagesPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [showNewConversation, setShowNewConversation] = useState(false);
+
+  // Mobile-friendly: show list or chat
+  const [showChat, setShowChat] = useState(false);
 
   const messagesEndRef = useRef(null);
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -31,6 +39,7 @@ const MessagesPage = () => {
   useEffect(() => {
     if (selectedConversation?.id) {
       loadMessages(selectedConversation.id);
+      setShowChat(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConversation?.id]);
@@ -48,11 +57,15 @@ const MessagesPage = () => {
       sender_id: senderId,
       sender_name:
         m.sender_name ||
-        (senderId === currentUser.id ? currentUser.name : selectedConversation?.name || "User"),
+        (senderId === currentUser.id
+          ? currentUser.name
+          : selectedConversation?.name || "User"),
       message: content,
       created_at: m.created_at,
       is_mine: senderId === currentUser.id,
       attachments: m.attachments || [],
+      // Optional local flags for UI
+      _status: m._status, // "sending" | "sent" | "failed"
     };
   };
 
@@ -63,9 +76,9 @@ const MessagesPage = () => {
       const list = res?.data?.data || [];
       setConversations(list);
 
-      if (list.length > 0 && !selectedConversation) {
-        setSelectedConversation(list[0]);
-      }
+      // Do not auto-select on desktop if you want Telegram vibe.
+      // If you want auto-select, uncomment:
+      // if (list.length > 0 && !selectedConversation) setSelectedConversation(list[0]);
     } catch (error) {
       console.error("Failed to load conversations:", error);
       setConversations([]);
@@ -92,7 +105,7 @@ const MessagesPage = () => {
     const contentToSend = newMessage.trim();
     const tempId = `tmp-${Date.now()}`;
 
-    // optimistic UI (show message immediately)
+    // optimistic message
     const optimistic = {
       id: tempId,
       sender_id: currentUser.id,
@@ -101,50 +114,95 @@ const MessagesPage = () => {
       created_at: new Date().toISOString(),
       is_mine: true,
       attachments: [],
+      _status: "sending",
     };
 
     setMessages((prev) => [...prev, optimistic]);
 
-    // update sidebar last message immediately
-    setConversations((prev) =>
-      prev.map((c) =>
+    // update sidebar preview immediately
+    setConversations((prev) => {
+      const updated = prev.map((c) =>
         c.id === selectedConversation.id
-          ? { ...c, last_message: contentToSend, last_message_time: new Date().toISOString() }
+          ? {
+              ...c,
+              last_message: contentToSend,
+              last_message_time: new Date().toISOString(),
+              unread_count: 0,
+            }
           : c
-      )
-    );
+      );
+
+      // Telegram-like: move active chat to top
+      const idx = updated.findIndex((c) => c.id === selectedConversation.id);
+      if (idx > 0) {
+        const [item] = updated.splice(idx, 1);
+        updated.unshift(item);
+      }
+      return updated;
+    });
 
     setNewMessage("");
 
     try {
       setSending(true);
-
-      // ✅ Your backend expects POST /chat/{userId} with content
       const res = await sendMessage(selectedConversation.id, contentToSend);
 
-      // If backend returns created message, replace optimistic
       const serverMsg = res?.data;
       if (serverMsg?.id) {
         const mapped = mapServerMessageToUI(serverMsg);
-        setMessages((prev) => prev.map((m) => (m.id === tempId ? mapped : m)));
+        setMessages((prev) =>
+          prev.map((m) => (m.id === tempId ? { ...mapped, _status: "sent" } : m))
+        );
+      } else {
+        // no server payload, just mark as sent
+        setMessages((prev) =>
+          prev.map((m) => (m.id === tempId ? { ...m, _status: "sent" } : m))
+        );
       }
     } catch (error) {
       console.error("Failed to send message:", error);
 
-      // rollback optimistic message on failure
-      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      // mark failed (telegram-style retry indicator)
+      setMessages((prev) =>
+        prev.map((m) => (m.id === tempId ? { ...m, _status: "failed" } : m))
+      );
+
+      // keep input so user can resend
       setNewMessage(contentToSend);
     } finally {
       setSending(false);
     }
   };
 
-  const filteredConversations = conversations.filter((conv) => {
-    const name = (conv.name || "").toLowerCase();
-    const course = (conv.course || "").toLowerCase();
+  const filteredConversations = useMemo(() => {
     const q = searchQuery.toLowerCase();
-    return name.includes(q) || course.includes(q);
-  });
+    return conversations.filter((conv) => {
+      const name = (conv.name || "").toLowerCase();
+      const course = (conv.course || "").toLowerCase();
+      return name.includes(q) || course.includes(q);
+    });
+  }, [conversations, searchQuery]);
+
+  const formatTime = (iso) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const formatListTime = (iso) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    const now = new Date();
+    const sameDay = d.toDateString() === now.toDateString();
+    return sameDay ? formatTime(iso) : d.toLocaleDateString();
+  };
+
+  const initials = (name) => {
+    const n = (name || "").trim();
+    if (!n) return "U";
+    const parts = n.split(/\s+/).slice(0, 2);
+    return parts.map((p) => p[0]?.toUpperCase()).join("") || "U";
+  };
 
   if (loading) {
     return (
@@ -160,180 +218,268 @@ const MessagesPage = () => {
   }
 
   return (
-    <div className="p-6 h-[calc(100vh-120px)]">
-      <div className="backdrop-blur-xl bg-white/60 rounded-2xl border border-white/40 shadow-lg h-full overflow-hidden flex flex-col md:flex-row">
-        {/* Conversations List */}
-        <div className="w-full md:w-1/3 border-r border-white/40 flex flex-col">
-          {/* Search Header */}
-          <div className="p-4 border-b border-white/40">
-            <div className="flex items-center gap-2 mb-4">
-              <h2 className="text-xl font-bold text-gray-900 flex-1">Messages</h2>
+    <div className="h-[calc(100vh-120px)] p-4 md:p-6">
+      <div className="h-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm flex">
+        {/* LEFT: Telegram-style sidebar */}
+        <div
+          className={`w-full md:w-[360px] border-r border-slate-200 flex flex-col ${
+            showChat ? "hidden md:flex" : "flex"
+          }`}
+        >
+          {/* Top bar */}
+          <div className="px-4 pt-4 pb-3 border-b border-slate-200">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold">
+                {initials(currentUser?.name)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-slate-900 truncate">
+                  {currentUser?.name || "Messages"}
+                </div>
+                <div className="text-xs text-slate-500 truncate">
+                  Online
+                </div>
+              </div>
+
               <button
-                onClick={() => setShowNewConversation(true)}
-                className="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:shadow-lg transition-all"
+                className="h-10 w-10 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-center"
+                title="New chat"
+                onClick={() => {
+                  // Since you now show ALL users in conversations endpoint,
+                  // this can be used for future features (group/chat search).
+                  // For now it can just focus the search.
+                  const el = document.getElementById("chat-search");
+                  el?.focus();
+                }}
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-5 h-5 text-slate-700" />
               </button>
             </div>
 
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            {/* Search */}
+            <div className="mt-3 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
+                id="chat-search"
                 type="text"
-                placeholder="Search conversations..."
+                placeholder="Search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 rounded-xl bg-white/60 border border-white/40 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm"
               />
             </div>
           </div>
 
-          {/* Conversations */}
+          {/* Chat list */}
           <div className="flex-1 overflow-y-auto">
             {filteredConversations.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 px-4 text-gray-500">
-                <MessageCircle className="w-12 h-12 mb-3 opacity-50" />
-                <p className="font-semibold">No conversations</p>
-                <p className="text-sm text-center">Start a new conversation</p>
+              <div className="flex flex-col items-center justify-center py-14 px-6 text-slate-500">
+                <MessageCircle className="w-12 h-12 mb-3 opacity-40" />
+                <p className="font-semibold">No users</p>
+                <p className="text-sm text-center">
+                  Your users list is empty.
+                </p>
               </div>
             ) : (
-              filteredConversations.map((conversation, index) => (
-                <motion.button
-                  key={conversation.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  onClick={() => setSelectedConversation(conversation)}
-                  className={`w-full p-4 border-b border-white/20 hover:bg-white/60 transition-all text-left ${
-                    selectedConversation?.id === conversation.id ? "bg-white/80" : ""
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold flex-shrink-0">
-                      {conversation.name?.[0] || "U"}
+              filteredConversations.map((c) => {
+                const active = selectedConversation?.id === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => setSelectedConversation(c)}
+                    className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition flex items-center gap-3 border-b border-slate-100 ${
+                      active ? "bg-blue-50" : ""
+                    }`}
+                  >
+                    {/* Avatar */}
+                    <div className="h-11 w-11 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold flex-shrink-0">
+                      {initials(c.name)}
                     </div>
 
+                    {/* Text */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-semibold text-gray-900 truncate">
-                          {conversation.name}
-                        </h3>
-                        {conversation.unread_count > 0 && (
-                          <span className="ml-2 px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full font-semibold">
-                            {conversation.unread_count}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="font-semibold text-slate-900 truncate">
+                          {c.name}
+                        </div>
+                        <div className="text-xs text-slate-500 flex-shrink-0">
+                          {formatListTime(c.last_message_time)}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 mt-0.5">
+                        <div className="text-sm text-slate-600 truncate">
+                          {c.last_message || "Start a new message…"}
+                        </div>
+                        {c.unread_count > 0 && (
+                          <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-600 text-white flex-shrink-0">
+                            {c.unread_count}
                           </span>
                         )}
                       </div>
-
-                      <p className="text-xs text-gray-600 mb-1">
-                        {conversation.role} {conversation.course && `• ${conversation.course}`}
-                      </p>
-
-                      <p className="text-sm text-gray-700 truncate">
-                        {conversation.last_message}
-                      </p>
-
-                      {conversation.last_message_time && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          {new Date(conversation.last_message_time).toLocaleString()}
-                        </p>
-                      )}
                     </div>
-                  </div>
-                </motion.button>
-              ))
+                  </button>
+                );
+              })
             )}
           </div>
         </div>
 
-        {/* Messages Area */}
-        <div className="w-full md:w-2/3 flex flex-col">
+        {/* RIGHT: Telegram-style chat */}
+        <div className={`flex-1 flex flex-col ${showChat ? "flex" : "hidden md:flex"}`}>
           {selectedConversation ? (
             <>
-              {/* Chat Header */}
-              <div className="p-4 border-b border-white/40 bg-gradient-to-r from-blue-500 to-purple-500">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-white/30 flex items-center justify-center text-white font-bold">
-                    {selectedConversation.name?.[0] || "U"}
+              {/* Chat header */}
+              <div className="h-16 border-b border-slate-200 px-3 md:px-4 flex items-center gap-3">
+                {/* Mobile back */}
+                <button
+                  className="md:hidden h-10 w-10 rounded-xl hover:bg-slate-50 flex items-center justify-center"
+                  onClick={() => setShowChat(false)}
+                  title="Back"
+                >
+                  <ArrowLeft className="w-5 h-5 text-slate-700" />
+                </button>
+
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold">
+                  {initials(selectedConversation.name)}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-slate-900 truncate">
+                    {selectedConversation.name}
                   </div>
-                  <div className="text-white">
-                    <h3 className="font-bold">{selectedConversation.name}</h3>
-                    <p className="text-sm opacity-90">
-                      {selectedConversation.role}{" "}
-                      {selectedConversation.course && `• ${selectedConversation.course}`}
-                    </p>
+                  <div className="text-xs text-slate-500 truncate">
+                    {selectedConversation.role
+                      ? `${selectedConversation.role}${selectedConversation.course ? ` • ${selectedConversation.course}` : ""}`
+                      : "Tap to view profile"}
                   </div>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button className="h-10 w-10 rounded-xl hover:bg-slate-50 flex items-center justify-center" title="Call">
+                    <Phone className="w-5 h-5 text-slate-700" />
+                  </button>
+                  <button className="h-10 w-10 rounded-xl hover:bg-slate-50 flex items-center justify-center" title="Video">
+                    <Video className="w-5 h-5 text-slate-700" />
+                  </button>
+                  <button className="h-10 w-10 rounded-xl hover:bg-slate-50 flex items-center justify-center" title="More">
+                    <MoreVertical className="w-5 h-5 text-slate-700" />
+                  </button>
                 </div>
               </div>
 
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.map((message, index) => (
-                  <motion.div
-                    key={message.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.02 }}
-                    className={`flex ${message.is_mine ? "justify-end" : "justify-start"}`}
-                  >
-                    <div className={`max-w-[70%] ${message.is_mine ? "order-2" : "order-1"}`}>
-                      <div
-                        className={`rounded-2xl p-4 ${
-                          message.is_mine
-                            ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
-                            : "bg-white/80 text-gray-900"
-                        }`}
+              {/* Messages area (telegram feel: subtle bg) */}
+              <div className="flex-1 overflow-y-auto px-3 md:px-6 py-4 bg-slate-50">
+                <div className="space-y-2">
+                  {messages.map((m, idx) => {
+                    const prev = messages[idx - 1];
+                    const showName = !m.is_mine && (!prev || prev.sender_id !== m.sender_id);
+
+                    return (
+                      <motion.div
+                        key={m.id}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className={`flex ${m.is_mine ? "justify-end" : "justify-start"}`}
                       >
-                        {!message.is_mine && (
-                          <p className="text-xs font-semibold mb-1 opacity-70">
-                            {message.sender_name}
-                          </p>
-                        )}
-                        <p className="text-sm">{message.message}</p>
-                      </div>
-                      <p className={`text-xs text-gray-500 mt-1 ${message.is_mine ? "text-right" : "text-left"}`}>
-                        {new Date(message.created_at).toLocaleTimeString()}
-                      </p>
-                    </div>
-                  </motion.div>
-                ))}
+                        <div className="max-w-[78%] md:max-w-[70%]">
+                          {/* bubble */}
+                          <div
+                            className={`rounded-2xl px-4 py-2.5 shadow-sm border ${
+                              m.is_mine
+                                ? "bg-blue-600 text-white border-blue-600 rounded-br-md"
+                                : "bg-white text-slate-900 border-slate-200 rounded-bl-md"
+                            }`}
+                          >
+                            {showName && (
+                              <div className="text-[11px] font-semibold text-slate-500 mb-1">
+                                {m.sender_name}
+                              </div>
+                            )}
+
+                            <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                              {m.message}
+                            </div>
+
+                            <div
+                              className={`mt-1 flex items-center gap-1 justify-end text-[11px] ${
+                                m.is_mine ? "text-white/80" : "text-slate-500"
+                              }`}
+                            >
+                              <span>{formatTime(m.created_at)}</span>
+                              {m.is_mine && (
+                                <>
+                                  {m._status === "sending" && (
+                                    <Loader className="w-3.5 h-3.5 animate-spin" />
+                                  )}
+                                  {m._status === "failed" && (
+                                    <span className="text-[11px] font-semibold text-red-200">
+                                      Failed
+                                    </span>
+                                  )}
+                                  {(!m._status || m._status === "sent") && (
+                                    <CheckCheck className="w-4 h-4" />
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Message Input */}
-              <form onSubmit={handleSendMessage} className="p-4 border-t border-white/40">
+              {/* Input bar */}
+              <form onSubmit={handleSendMessage} className="border-t border-slate-200 bg-white px-3 md:px-4 py-3">
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    className="p-2 rounded-xl hover:bg-white/60 transition-all text-gray-600"
+                    className="h-10 w-10 rounded-xl hover:bg-slate-50 flex items-center justify-center text-slate-700"
+                    title="Attach"
                   >
                     <Paperclip className="w-5 h-5" />
                   </button>
 
-                  <input
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Type a message..."
-                    className="flex-1 px-4 py-2 rounded-xl bg-white/60 border border-white/40 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  />
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      placeholder="Message"
+                      className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm"
+                    />
+                  </div>
 
                   <button
                     type="submit"
                     disabled={sending || !newMessage.trim()}
-                    className="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="h-10 px-4 rounded-2xl bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    title="Send"
                   >
-                    {sending ? <Loader className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                    {sending ? <Loader className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    <span className="hidden sm:inline font-semibold">Send</span>
                   </button>
+                </div>
+
+                {/* Tiny hint */}
+                <div className="mt-2 text-[11px] text-slate-500 flex items-center gap-1">
+                  <span className="inline-flex items-center gap-1">
+                    <Check className="w-3.5 h-3.5" />
+                    Delivered instantly after save
+                  </span>
                 </div>
               </form>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-500">
-              <div className="text-center">
-                <MessageCircle className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-semibold">Select a conversation</p>
-                <p className="text-sm">Choose a conversation to start messaging</p>
+            <div className="flex-1 flex items-center justify-center bg-slate-50 text-slate-500">
+              <div className="text-center px-6">
+                <MessageCircle className="w-16 h-16 mx-auto mb-4 opacity-40" />
+                <p className="text-lg font-semibold text-slate-700">Select a chat</p>
+                <p className="text-sm">Choose a user on the left to start messaging.</p>
               </div>
             </div>
           )}
