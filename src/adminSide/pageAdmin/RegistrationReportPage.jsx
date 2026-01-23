@@ -1,5 +1,8 @@
-// RegistrationReportPage.jsx (FULL NO CUT) ✅ NEW FLOW (semester-aware) + NEW DATA (student_academic_periods first) + SAFE OLD SUPPORT
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+// src/adminSide/pageAdmin/RegistrationReportPage.jsx
+// ✅ FULL NO CUT — NEW FLOW (student_academic_periods first) + SAFE OLD SUPPORT
+// ✅ FAST: memo, stable callbacks, clean payload, small debounce, minimal rerenders
+
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   FileText,
@@ -16,11 +19,13 @@ import {
   Clock,
   XCircle,
 } from "lucide-react";
+
 import {
   generateRegistrationReport,
   generateAndDownloadReport,
   getRegistrationSummary,
 } from "../../api/registration_api";
+
 import { fetchDepartments } from "../../api/department_api";
 import { fetchMajors } from "../../api/major_api";
 
@@ -46,7 +51,7 @@ const isPendingStatus = (raw) => {
 const getSafe = (v, fallback = "N/A") =>
   v === null || v === undefined || v === "" ? fallback : v;
 
-// ✅ detect semester/year fields safely (support new + old backend)
+// ✅ new + old
 const getSemester = (reg) =>
   reg?.period_semester ??
   reg?.semester ??
@@ -61,7 +66,7 @@ const getAcademicYear = (reg) =>
   reg?.academicYear ??
   null;
 
-// ✅ MOST IMPORTANT: prefer period_payment_status first (new table), fallback old
+// ✅ MOST IMPORTANT: new table first
 const getPaymentStatus = (reg) =>
   reg?.period_payment_status ??
   reg?.academic_payment_status ??
@@ -90,12 +95,25 @@ const getPaymentLabel = (reg) => {
   return suffix ? `Pending (${suffix})` : "Pending";
 };
 
-// ✅ student code can be in many shapes depending on your joins
 const getStudentCode = (reg) =>
   reg?.student_code ??
   reg?.student?.student_code ??
   reg?.student?.code ??
   reg?.code ??
+  null;
+
+// ✅ safest dept/major name (your API sometimes uses department_name not name)
+const getDeptName = (reg) =>
+  reg?.department?.department_name ??
+  reg?.department?.name ??
+  reg?.department_name ??
+  reg?.dept_name ??
+  null;
+
+const getMajorName = (reg) =>
+  reg?.major?.major_name ??
+  reg?.major_name ??
+  reg?.majorName ??
   null;
 
 /* ================== MAIN ================== */
@@ -110,7 +128,6 @@ const RegistrationReportPage = () => {
   const [departments, setDepartments] = useState([]);
   const [majors, setMajors] = useState([]);
 
-  // ✅ default: empty filters (backend can ignore unsupported fields)
   const [filters, setFilters] = useState({
     department_id: "",
     major_id: "",
@@ -120,32 +137,33 @@ const RegistrationReportPage = () => {
     gender: "",
     date_from: "",
     date_to: "",
-    semester: "", // ✅ semester-aware report
+    semester: "", // ✅ semester-aware
   });
 
   /* ================== OPTIONS ================== */
 
-  const buildAcademicYears = (pastYears = 8, futureYears = 6) => {
+  const academicYearOptions = useMemo(() => {
     const now = new Date().getFullYear();
+    const pastYears = 5;
+    const futureYears = 5;
+
     const start = now - pastYears;
     const end = now + futureYears;
 
     const years = [];
     for (let y = start; y <= end; y++) years.push(`${y}-${y + 1}`);
     return years;
-  };
-
-  const academicYearOptions = useMemo(() => buildAcademicYears(5, 5), []);
+  }, []);
 
   const selectedDeptId = useMemo(() => {
     const v = parseInt(filters.department_id, 10);
     return Number.isFinite(v) ? v : null;
   }, [filters.department_id]);
 
-  // ✅ major dropdown auto filters by department if chosen
   const visibleMajors = useMemo(() => {
-    if (!selectedDeptId) return majors;
-    return majors.filter((m) => Number(m?.department_id) === Number(selectedDeptId));
+    const arr = Array.isArray(majors) ? majors : [];
+    if (!selectedDeptId) return arr;
+    return arr.filter((m) => Number(m?.department_id) === Number(selectedDeptId));
   }, [majors, selectedDeptId]);
 
   /* ================== LOADERS ================== */
@@ -153,7 +171,8 @@ const RegistrationReportPage = () => {
   const loadDepartments = useCallback(async () => {
     try {
       const res = await fetchDepartments();
-      setDepartments(res.data?.data || res.data || []);
+      const d = res?.data?.data ?? res?.data ?? [];
+      setDepartments(Array.isArray(d) ? d : []);
     } catch (err) {
       console.error("Failed to load departments:", err);
       setDepartments([]);
@@ -163,25 +182,34 @@ const RegistrationReportPage = () => {
   const loadMajors = useCallback(async () => {
     try {
       const res = await fetchMajors();
-      setMajors(res.data?.data || res.data || []);
+      const d = res?.data?.data ?? res?.data ?? [];
+      setMajors(Array.isArray(d) ? d : []);
     } catch (err) {
       console.error("Failed to load majors:", err);
       setMajors([]);
     }
   }, []);
 
-  // ✅ summary can be filtered by academic_year + semester (if backend supports)
+  const buildCleanPayload = useCallback((f) => {
+    const payload = {};
+    Object.entries(f || {}).forEach(([k, v]) => {
+      if (v !== "" && v !== null && v !== undefined) payload[k] = v;
+    });
+    return payload;
+  }, []);
+
   const loadSummary = useCallback(
     async (override = null) => {
       const payload = override || filters;
 
       setSummaryLoading(true);
       try {
+        // only send what summary endpoint needs (fast)
         const res = await getRegistrationSummary({
           academic_year: payload.academic_year || "",
           semester: payload.semester || "",
         });
-        setSummaryData(res.data?.data || null);
+        setSummaryData(res?.data?.data ?? res?.data ?? null);
       } catch (err) {
         console.error("Failed to load summary:", err);
         setSummaryData(null);
@@ -195,47 +223,35 @@ const RegistrationReportPage = () => {
   useEffect(() => {
     loadDepartments();
     loadMajors();
-    loadSummary(); // optional on first load
+    loadSummary();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ✅ if user changes year/semester -> refresh summary automatically (small debounce)
+  // ✅ small debounce: refresh summary when year/semester changes
   useEffect(() => {
-    const t = setTimeout(() => {
-      loadSummary();
-    }, 250);
+    const t = setTimeout(() => loadSummary(), 250);
     return () => clearTimeout(t);
   }, [filters.academic_year, filters.semester, loadSummary]);
 
   /* ================== HANDLERS ================== */
 
-  const handleFilterChange = (e) => {
+  const handleFilterChange = useCallback((e) => {
     const { name, value } = e.target;
 
     setFilters((prev) => {
-      // ✅ if department changes, reset major (so invalid major won't stay selected)
       if (name === "department_id") {
         return { ...prev, department_id: value, major_id: "" };
       }
       return { ...prev, [name]: value };
     });
-  };
+  }, []);
 
-  const buildCleanPayload = (f) => {
-    // ✅ Remove empty keys so backend won't get noisy payload
-    const payload = {};
-    Object.entries(f || {}).forEach(([k, v]) => {
-      if (v !== "" && v !== null && v !== undefined) payload[k] = v;
-    });
-    return payload;
-  };
-
-  const generateReport = async () => {
+  const generateReport = useCallback(async () => {
     setLoading(true);
     try {
       const payload = buildCleanPayload(filters);
       const res = await generateRegistrationReport(payload);
-      setReportData(res.data?.data || null);
+      setReportData(res?.data?.data ?? res?.data ?? null);
     } catch (err) {
       console.error("Failed to generate report:", err);
       alert(err?.response?.data?.message || "Failed to generate report");
@@ -243,9 +259,9 @@ const RegistrationReportPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [buildCleanPayload, filters]);
 
-  const downloadPDF = async () => {
+  const downloadPDF = useCallback(async () => {
     try {
       const payload = buildCleanPayload(filters);
       await generateAndDownloadReport(payload, `registration_report_${Date.now()}.pdf`);
@@ -253,10 +269,10 @@ const RegistrationReportPage = () => {
       console.error("Failed to download PDF:", err);
       alert(err?.response?.data?.message || "Failed to download PDF report");
     }
-  };
+  }, [buildCleanPayload, filters]);
 
-  const resetFilters = () => {
-    const clean = {
+  const resetFilters = useCallback(() => {
+    setFilters({
       department_id: "",
       major_id: "",
       payment_status: "",
@@ -266,11 +282,10 @@ const RegistrationReportPage = () => {
       date_from: "",
       date_to: "",
       semester: "",
-    };
-    setFilters(clean);
+    });
     setReportData(null);
     setSummaryData(null);
-  };
+  }, []);
 
   /* ================== RENDER ================== */
 
@@ -278,16 +293,14 @@ const RegistrationReportPage = () => {
     <div className="min-h-screen space-y-6">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 text-white"
       >
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold mb-2">Registration Reports</h1>
-            <p className="text-blue-100">
-              Generate comprehensive reports on student registrations (semester-aware).
-            </p>
+            <p className="text-blue-100">Semester-aware reports (new payment flow + safe fallback).</p>
           </div>
           <FileText className="w-12 h-12 text-white/30" />
         </div>
@@ -295,7 +308,7 @@ const RegistrationReportPage = () => {
 
       {/* Summary */}
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/40 shadow-lg"
       >
@@ -346,7 +359,7 @@ const RegistrationReportPage = () => {
 
       {/* Filters */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/40 shadow-lg"
       >
@@ -357,163 +370,112 @@ const RegistrationReportPage = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Department */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
-            <div className="relative">
-              <Building2 className="absolute left-3 top-2.5 w-4 h-4 text-blue-500" />
-              <select
-                name="department_id"
-                value={filters.department_id}
-                onChange={handleFilterChange}
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All Departments</option>
-                {departments.map((dept) => (
-                  <option key={dept.id} value={dept.id}>
-                    {dept.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <FilterSelect
+            label="Department"
+            icon={<Building2 className="absolute left-3 top-2.5 w-4 h-4 text-blue-500" />}
+            name="department_id"
+            value={filters.department_id}
+            onChange={handleFilterChange}
+            options={[
+              { value: "", label: "All Departments" },
+              ...departments.map((d) => ({
+                value: d.id,
+                label: d.department_name ?? d.name ?? `Department #${d.id}`,
+              })),
+            ]}
+          />
 
           {/* Major */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Major</label>
-            <div className="relative">
-              <GraduationCap className="absolute left-3 top-2.5 w-4 h-4 text-orange-500" />
-              <select
-                name="major_id"
-                value={filters.major_id}
-                onChange={handleFilterChange}
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All Majors</option>
-                {visibleMajors.map((major) => (
-                  <option key={major.id} value={major.id}>
-                    {major.major_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <FilterSelect
+            label="Major"
+            icon={<GraduationCap className="absolute left-3 top-2.5 w-4 h-4 text-orange-500" />}
+            name="major_id"
+            value={filters.major_id}
+            onChange={handleFilterChange}
+            options={[
+              { value: "", label: "All Majors" },
+              ...visibleMajors.map((m) => ({
+                value: m.id,
+                label: m.major_name ?? m.name ?? `Major #${m.id}`,
+              })),
+            ]}
+          />
 
           {/* Payment Status */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Payment Status</label>
-            <select
-              name="payment_status"
-              value={filters.payment_status}
-              onChange={handleFilterChange}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All Status</option>
-              <option value="PENDING">Pending</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="PAID">Paid</option>
-              <option value="FAILED">Failed</option>
-            </select>
-          </div>
+          <FilterSelect
+            label="Payment Status"
+            name="payment_status"
+            value={filters.payment_status}
+            onChange={handleFilterChange}
+            options={[
+              { value: "", label: "All Status" },
+              { value: "PENDING", label: "Pending" },
+              { value: "COMPLETED", label: "Completed" },
+              { value: "PAID", label: "Paid" },
+              { value: "FAILED", label: "Failed" },
+            ]}
+          />
 
           {/* Gender */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
-            <select
-              name="gender"
-              value={filters.gender}
-              onChange={handleFilterChange}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All Genders</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
-          </div>
+          <FilterSelect
+            label="Gender"
+            name="gender"
+            value={filters.gender}
+            onChange={handleFilterChange}
+            options={[
+              { value: "", label: "All Genders" },
+              { value: "Male", label: "Male" },
+              { value: "Female", label: "Female" },
+            ]}
+          />
 
           {/* Academic Year */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Academic Year</label>
-            <select
-              name="academic_year"
-              value={filters.academic_year}
-              onChange={handleFilterChange}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All Academic Years</option>
-              {academicYearOptions.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-          </div>
+          <FilterSelect
+            label="Academic Year"
+            name="academic_year"
+            value={filters.academic_year}
+            onChange={handleFilterChange}
+            options={[
+              { value: "", label: "All Academic Years" },
+              ...academicYearOptions.map((y) => ({ value: y, label: y })),
+            ]}
+          />
 
           {/* Semester */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Semester</label>
-            <div className="relative">
-              <Clock className="absolute left-3 top-2.5 w-4 h-4 text-indigo-500" />
-              <select
-                name="semester"
-                value={filters.semester}
-                onChange={handleFilterChange}
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All Semesters</option>
-                <option value="1">Semester 1</option>
-                <option value="2">Semester 2</option>
-              </select>
-            </div>
-          </div>
+          <FilterSelect
+            label="Semester"
+            icon={<Clock className="absolute left-3 top-2.5 w-4 h-4 text-indigo-500" />}
+            name="semester"
+            value={filters.semester}
+            onChange={handleFilterChange}
+            options={[
+              { value: "", label: "All Semesters" },
+              { value: "1", label: "Semester 1" },
+              { value: "2", label: "Semester 2" },
+            ]}
+          />
 
           {/* Shift */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Shift</label>
-            <select
-              name="shift"
-              value={filters.shift}
-              onChange={handleFilterChange}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All Shifts</option>
-              <option value="Morning">Morning</option>
-              <option value="Afternoon">Afternoon</option>
-              <option value="Evening">Evening</option>
-            </select>
-          </div>
+          <FilterSelect
+            label="Shift"
+            name="shift"
+            value={filters.shift}
+            onChange={handleFilterChange}
+            options={[
+              { value: "", label: "All Shifts" },
+              { value: "Morning", label: "Morning" },
+              { value: "Afternoon", label: "Afternoon" },
+              { value: "Evening", label: "Evening" },
+            ]}
+          />
 
           {/* Date From */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Date From</label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
-              <input
-                type="date"
-                name="date_from"
-                value={filters.date_from}
-                onChange={handleFilterChange}
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
+          <FilterDate label="Date From" name="date_from" value={filters.date_from} onChange={handleFilterChange} />
 
           {/* Date To */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Date To</label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
-              <input
-                type="date"
-                name="date_to"
-                value={filters.date_to}
-                onChange={handleFilterChange}
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
+          <FilterDate label="Date To" name="date_to" value={filters.date_to} onChange={handleFilterChange} />
         </div>
 
-        {/* Action Buttons */}
         <div className="flex flex-wrap gap-3 mt-6">
           <button
             onClick={generateReport}
@@ -544,11 +506,11 @@ const RegistrationReportPage = () => {
         </div>
       </motion.div>
 
-      {/* Statistics + Table */}
+      {/* Stats + Table */}
       {reportData && (
         <>
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
           >
@@ -585,7 +547,7 @@ const RegistrationReportPage = () => {
   );
 };
 
-/* ================== UI SMALL COMPONENTS ================== */
+/* ================== SMALL UI ================== */
 
 const MiniCard = ({ icon: Icon, label, value }) => (
   <div className="bg-white/70 rounded-xl p-4 border border-white/40 shadow-sm">
@@ -615,15 +577,51 @@ const StatCard = ({ icon: Icon, label, value, color }) => (
   </div>
 );
 
+const FilterSelect = ({ label, icon, name, value, onChange, options }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+    <div className="relative">
+      {icon}
+      <select
+        name={name}
+        value={value}
+        onChange={onChange}
+        className={`w-full ${icon ? "pl-10" : "pl-4"} pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500`}
+      >
+        {options.map((o) => (
+          <option key={`${name}-${o.value}`} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  </div>
+);
+
+const FilterDate = ({ label, name, value, onChange }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+    <div className="relative">
+      <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+      <input
+        type="date"
+        name={name}
+        value={value}
+        onChange={onChange}
+        className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+  </div>
+);
+
 /* ================== TABLE ================== */
 
-const ReportTable = ({ registrations }) => {
-  // ✅ normalize rows (works for old nested models OR new join flat rows)
+const ReportTable = React.memo(function ReportTable({ registrations }) {
   const rows = Array.isArray(registrations) ? registrations : [];
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-white/60 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg overflow-hidden"
     >
@@ -660,40 +658,44 @@ const ReportTable = ({ registrations }) => {
               const year = getAcademicYear(reg);
               const sem = getSemester(reg);
 
-              // department/major can be nested OR flat join
-              const deptName = reg?.department?.name ?? reg?.department_name ?? null;
-              const majorName = reg?.major?.major_name ?? reg?.major_name ?? null;
+              const deptName = getDeptName(reg);
+              const majorName = getMajorName(reg);
+
+              const genderRaw = String(reg?.gender ?? "").trim();
+              const gender =
+                genderRaw.toLowerCase() === "male"
+                  ? "Male"
+                  : genderRaw.toLowerCase() === "female"
+                  ? "Female"
+                  : genderRaw || "N/A";
 
               return (
-                <tr key={reg?.id || index} className="hover:bg-blue-50/30 transition-colors">
+                <tr key={reg?.id ?? `${index}`} className="hover:bg-blue-50/30 transition-colors">
                   <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
 
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">
                     {getSafe(getStudentCode(reg))}
                   </td>
 
-                  <td className="px-6 py-4 text-sm text-gray-900">{getSafe(reg?.full_name_en)}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{getSafe(reg?.full_name_en ?? reg?.full_name)}</td>
 
                   <td className="px-6 py-4">
                     <span
                       className={`text-xs px-2 py-1 rounded-full ${
-                        reg?.gender === "Male"
+                        gender === "Male"
                           ? "bg-blue-100 text-blue-600"
-                          : reg?.gender === "Female"
+                          : gender === "Female"
                           ? "bg-pink-100 text-pink-600"
                           : "bg-gray-100 text-gray-600"
                       }`}
                     >
-                      {getSafe(reg?.gender)}
+                      {gender}
                     </span>
                   </td>
 
                   <td className="px-6 py-4 text-sm text-gray-600">{getSafe(deptName)}</td>
-
                   <td className="px-6 py-4 text-sm text-gray-600">{getSafe(majorName)}</td>
-
                   <td className="px-6 py-4 text-sm text-gray-700">{getSafe(year)}</td>
-
                   <td className="px-6 py-4 text-sm text-gray-700">{sem ? `Sem ${sem}` : "N/A"}</td>
 
                   <td className="px-6 py-4">
@@ -721,6 +723,6 @@ const ReportTable = ({ registrations }) => {
       </div>
     </motion.div>
   );
-};
+});
 
 export default RegistrationReportPage;
