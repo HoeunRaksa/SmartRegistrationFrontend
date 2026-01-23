@@ -23,6 +23,8 @@ export const fetchConversations = async () => {
   try {
     const response = await API.get("/conversations");
     const data = extractData(response);
+
+    console.log(data);
     return {
       data: {
         data: Array.isArray(data) ? data : []
