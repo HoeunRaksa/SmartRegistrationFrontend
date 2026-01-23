@@ -4,6 +4,7 @@ import GradesList from "../ConponentsAdmin/GradesList.jsx";
 import { fetchAllGrades } from "../../api/admin_course_api.jsx";
 import { fetchStudents } from "../../api/student_api.jsx";
 import { fetchCourses } from "../../api/course_api.jsx";
+import { getCachedStudents, getCachedCourses } from "../../utils/dataCache";
 import {
   Award,
   Users,
@@ -18,10 +19,11 @@ const GradesPage = () => {
   const [editingGrade, setEditingGrade] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // ✅ FIXED: Staggered loading to prevent 429 errors
   useEffect(() => {
     loadGrades();
-    loadStudents();
-    loadCourses();
+    setTimeout(() => loadStudents(), 150); // 150ms delay
+    setTimeout(() => loadCourses(), 300);  // 300ms delay
   }, []);
 
   // ================= LOAD GRADES =================
@@ -39,11 +41,11 @@ const GradesPage = () => {
     }
   };
 
-  // ================= LOAD STUDENTS =================
+  // ================= LOAD STUDENTS (WITH CACHING) =================
   const loadStudents = async () => {
     try {
-      const res = await fetchStudents();
-      const data = res.data?.data || [];
+      const res = await getCachedStudents(fetchStudents);
+      const data = res.data?.data || res.data || [];
       setStudents(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Failed to load students:", error);
@@ -51,11 +53,11 @@ const GradesPage = () => {
     }
   };
 
-  // ================= LOAD COURSES =================
+  // ================= LOAD COURSES (WITH CACHING) =================
   const loadCourses = async () => {
     try {
-      const res = await fetchCourses();
-      const data = res.data?.data || [];
+      const res = await getCachedCourses(fetchCourses);
+      const data = res.data?.data || res.data || [];
       setCourses(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Failed to load courses:", error);
