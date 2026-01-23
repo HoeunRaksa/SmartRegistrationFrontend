@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 
 import Dashboard from "../../adminSide/ConponentsAdmin/dashboard.jsx";
+import MajorQuotasPage from "./MajorQuotasPage.jsx";
 
 const profileFallback = "/assets/images/profile-fallback.png";
 
@@ -134,6 +135,12 @@ const MENU_ITEMS = [
     icon: Users,
     gradient: "from-indigo-500 to-blue-500",
   },
+    {
+    id: "majors-quotas",
+    label: "majors-quotas",
+    icon: FileText,
+    gradient: "from-purple-500 to-pink-500",
+  },
   {
     id: "registrations",
     label: "Registrations",
@@ -187,6 +194,7 @@ const SECTIONS = [
   { id: "major-subjects", el: <MajorSubjectsPage /> },
   { id: "students", el: <StudentPage /> },
   { id: "staff", el: <StaffPage /> },
+  { id: "majors-quotas", el: <MajorQuotasPage /> },
   { id: "registrations", el: <RegistrationsPage /> },
   { id: "settings", el: <SettingPage /> },
   { id: "enrollments", el: <EnrollmentsPage /> },

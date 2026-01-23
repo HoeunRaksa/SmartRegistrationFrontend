@@ -1,8 +1,9 @@
 // ==============================
 // PaymentForm.jsx (FULL NO CUT)
 // ✅ Supports Pay Plan: SEMESTER (50%) or YEAR (100%)
-// ✅ Sends correct payload to backend
+// ✅ Sends correct payload to backend (pay_plan as OBJECT + registration_id)
 // ✅ Polls payment status and calls onSuccess when PAID
+// ✅ Prevents duplicate polling timers
 // ==============================
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,13 +21,12 @@ const clampSemester = (s) => {
 const calcAmount = ({ yearFee, payPlan }) => {
   const fee = Number(yearFee) || 0;
   if (!payPlan || payPlan.type === "YEAR") return fee;
-  // SEMESTER = 50% of year fee
-  return Math.round((fee * 0.5) * 100) / 100;
+  return Math.round(fee * 0.5 * 100) / 100;
 };
 
 const pickQrFromResponse = (data) => {
-  // support many backend shapes
   const d = data?.data || data || {};
+
   const qrImage =
     d.qr_image ||
     d.qrImage ||
@@ -34,6 +34,7 @@ const pickQrFromResponse = (data) => {
     d.qrUrl ||
     d.qr_code_url ||
     d.qrCodeUrl ||
+    (d.qr && (d.qr.qr_image || d.qr.qrImage || d.qr.qr_url || d.qr.qrUrl)) ||
     null;
 
   const qrString =
@@ -42,6 +43,7 @@ const pickQrFromResponse = (data) => {
     d.qr ||
     d.qr_code ||
     d.qrCode ||
+    (d.qr && (d.qr.qr_string || d.qr.qrString || d.qr.qr_code || d.qr.qrCode)) ||
     null;
 
   const tranId =
@@ -51,6 +53,7 @@ const pickQrFromResponse = (data) => {
     d.transaction_id ||
     d.transactionId ||
     d.payment_tran_id ||
+    (d.qr && (d.qr.tran_id || d.qr.tranId || d.qr.transaction_id)) ||
     null;
 
   return { qrImage, qrString, tranId, raw: d };
@@ -59,8 +62,8 @@ const pickQrFromResponse = (data) => {
 const PaymentForm = ({
   registrationId,
   yearFee = 0,
-  payPlan: payPlanProp, // optional { type:"SEMESTER"|"YEAR", semester?:1|2 }
-  amount: amountProp, // optional override
+  payPlan: payPlanProp,
+  amount: amountProp,
   registrationData,
   onClose,
   onSuccess,
@@ -95,34 +98,50 @@ const PaymentForm = ({
   const aliveRef = useRef(true);
   const pollTimerRef = useRef(null);
 
+  const stopPolling = () => {
+    if (pollTimerRef.current) {
+      clearInterval(pollTimerRef.current);
+      pollTimerRef.current = null;
+    }
+    setPolling(false);
+  };
+
   useEffect(() => {
     aliveRef.current = true;
     return () => {
       aliveRef.current = false;
-      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+      stopPolling();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ✅ backend expects registration_id + pay_plan object
   const buildPayload = () => {
-    const payload = {
-      pay_plan: payPlan.type, // "SEMESTER" | "YEAR"
-      amount: computedAmount,
+    const planType = payPlan?.type === "SEMESTER" ? "SEMESTER" : "YEAR";
+    const sem = clampSemester(payPlan?.semester ?? 1);
+
+    return {
+      registration_id: Number(registrationId), // ✅ REQUIRED by Laravel validation
+      pay_plan: {
+        type: planType,
+        semester: planType === "SEMESTER" ? sem : 1,
+      },
+      semester: planType === "SEMESTER" ? sem : 1, // your backend validates this too
+      amount: computedAmount, // optional
     };
-    // backend still needs semester for joins / student_academic_periods
-    if (payPlan.type === "SEMESTER") payload.semester = clampSemester(payPlan.semester);
-    else payload.semester = 1; // safe default for YEAR (or keep 1)
-    return payload;
   };
 
   const startPolling = (tranIdValue) => {
     if (!tranIdValue) return;
-    if (pollTimerRef.current) clearInterval(pollTimerRef.current);
 
+    stopPolling();
     setPolling(true);
+
     pollTimerRef.current = setInterval(async () => {
       try {
         const res = await checkPaymentStatus(tranIdValue);
         const d = res?.data?.data || res?.data || {};
+
         const st =
           d.payment_status ||
           d.status ||
@@ -131,21 +150,15 @@ const PaymentForm = ({
           d.ack ||
           "PENDING";
 
-        const msg =
-          d.message ||
-          d.description ||
-          "";
+        const msg = d.message || d.description || "";
 
         if (!aliveRef.current) return;
         setStatus(normalizeStatus(st) || "PENDING");
         setStatusMsg(String(msg || ""));
 
         if (isPaidStatus(st)) {
-          clearInterval(pollTimerRef.current);
-          pollTimerRef.current = null;
-          setPolling(false);
+          stopPolling();
 
-          // ✅ success callback (parent will refresh list)
           onSuccess?.({
             registrationId,
             tranId: tranIdValue,
@@ -156,7 +169,7 @@ const PaymentForm = ({
           });
         }
       } catch (e) {
-        // do not stop polling on one error
+        // keep polling
       }
     }, 2500);
   };
@@ -171,8 +184,19 @@ const PaymentForm = ({
     setGenerating(true);
     setLoading(true);
 
+    // ✅ prevent old polling + old status while generating new QR
+    stopPolling();
+    setStatus("PENDING");
+    setStatusMsg("");
+    setQrImage(null);
+    setQrString(null);
+    setTranId(null);
+
     try {
       const payload = buildPayload();
+
+      // generatePaymentQR should POST to backend generateQr
+      // It can ignore registrationId param if it already uses payload.registration_id
       const res = await generatePaymentQR(registrationId, payload);
 
       const { qrImage, qrString, tranId } = pickQrFromResponse(res?.data);
@@ -182,17 +206,15 @@ const PaymentForm = ({
       setQrString(qrString);
       setTranId(tranId);
 
-      // reset status view
-      setStatus("PENDING");
-      setStatusMsg("");
-
       if (tranId) startPolling(tranId);
     } catch (e) {
       const msg =
         e.response?.data?.message ||
+        (e.response?.data?.errors ? JSON.stringify(e.response.data.errors) : null) ||
         e.response?.data?.error ||
         e.message ||
         "Failed to generate QR";
+
       if (!aliveRef.current) return;
       setError(msg);
     } finally {
@@ -202,7 +224,6 @@ const PaymentForm = ({
     }
   };
 
-  // auto-generate QR once when modal opens
   useEffect(() => {
     generateQrNow();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -228,19 +249,13 @@ const PaymentForm = ({
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="relative w-full max-w-lg"
-      >
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative w-full max-w-lg">
         <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/80 to-white/70 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] border-2 border-white/60 overflow-hidden">
           <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
 
           <button
             onClick={() => {
-              if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-              pollTimerRef.current = null;
+              stopPolling();
               onClose?.();
             }}
             className="absolute top-4 right-4 backdrop-blur-xl bg-white/60 p-2 rounded-full hover:bg-white/80 transition-all duration-300 border border-white/40"
@@ -263,7 +278,6 @@ const PaymentForm = ({
               </p>
             </div>
 
-            {/* Pay Plan Selector */}
             <div className="backdrop-blur-xl bg-white/60 border border-white/60 rounded-2xl p-4 shadow-sm mb-4">
               <div className="grid grid-cols-2 gap-3">
                 <button
@@ -333,7 +347,6 @@ const PaymentForm = ({
               </div>
             </div>
 
-            {/* Error */}
             {error && (
               <div className="mb-4 backdrop-blur-xl bg-red-50/70 border border-red-200/60 rounded-2xl p-4 flex items-start gap-3">
                 <AlertTriangle className="text-red-600 mt-0.5" size={18} />
@@ -341,7 +354,6 @@ const PaymentForm = ({
               </div>
             )}
 
-            {/* Status */}
             <div className={`mb-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border ${statusUI.cls}`}>
               <StatusIcon size={14} />
               {statusUI.label}
@@ -350,7 +362,6 @@ const PaymentForm = ({
 
             {statusMsg ? <div className="text-xs text-gray-500 mb-4">{statusMsg}</div> : null}
 
-            {/* QR Section */}
             <div className="backdrop-blur-xl bg-white/60 border border-white/60 rounded-2xl p-4 shadow-sm">
               {!qrImage && !qrString ? (
                 <div className="py-10 text-center text-gray-600">
