@@ -51,6 +51,12 @@ const MessagesPage = () => {
 
     const echo = makeEcho();
 
+    const pusher = echo.connector.pusher;
+    pusher.connection.bind("connected", () => console.log("✅ WS connected"));
+    pusher.connection.bind("error", (e) => console.log("❌ WS error", e));
+    pusher.connection.bind("disconnected", () => console.log("⚠️ WS disconnected"));
+
+
     const a = Math.min(Number(currentUser.id), Number(selectedConversation.id));
     const b = Math.max(Number(currentUser.id), Number(selectedConversation.id));
     const channel = `chat.${a}.${b}`;
@@ -75,11 +81,11 @@ const MessagesPage = () => {
           const updated = prev.map((c) =>
             c.id === selectedConversation.id
               ? {
-                  ...c,
-                  last_message: msg.content ?? msg.message ?? "",
-                  last_message_time: msg.created_at,
-                  // if receiver: decrement unread can be handled by backend later
-                }
+                ...c,
+                last_message: msg.content ?? msg.message ?? "",
+                last_message_time: msg.created_at,
+                // if receiver: decrement unread can be handled by backend later
+              }
               : c
           );
 
@@ -173,11 +179,11 @@ const MessagesPage = () => {
       const updated = prev.map((c) =>
         c.id === selectedConversation.id
           ? {
-              ...c,
-              last_message: contentToSend,
-              last_message_time: new Date().toISOString(),
-              unread_count: 0,
-            }
+            ...c,
+            last_message: contentToSend,
+            last_message_time: new Date().toISOString(),
+            unread_count: 0,
+          }
           : c
       );
 
@@ -268,13 +274,12 @@ const MessagesPage = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-120px)] p-4 md:p-6">
+    <div className="h-[calc(100vh-120px)] md:p-6">
       <div className="h-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm flex">
         {/* LEFT: Telegram-style sidebar */}
         <div
-          className={`w-full md:w-[360px] border-r border-slate-200 flex flex-col ${
-            showChat ? "hidden md:flex" : "flex"
-          }`}
+          className={`w-full md:w-[360px] border-r border-slate-200 flex flex-col ${showChat ? "hidden md:flex" : "flex"
+            }`}
         >
           {/* Top bar */}
           <div className="px-4 pt-4 pb-3 border-b border-slate-200">
@@ -330,9 +335,8 @@ const MessagesPage = () => {
                   <button
                     key={c.id}
                     onClick={() => setSelectedConversation(c)}
-                    className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition flex items-center gap-3 border-b border-slate-100 ${
-                      active ? "bg-blue-50" : ""
-                    }`}
+                    className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition flex items-center gap-3 border-b border-slate-100 ${active ? "bg-blue-50" : ""
+                      }`}
                   >
                     <div className="h-11 w-11 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold flex-shrink-0">
                       {initials(c.name)}
@@ -425,11 +429,10 @@ const MessagesPage = () => {
                       >
                         <div className="max-w-[78%] md:max-w-[70%]">
                           <div
-                            className={`rounded-2xl px-4 py-2.5 shadow-sm border ${
-                              m.is_mine
+                            className={`rounded-2xl px-4 py-2.5 shadow-sm border ${m.is_mine
                                 ? "bg-blue-600 text-white border-blue-600 rounded-br-md"
                                 : "bg-white text-slate-900 border-slate-200 rounded-bl-md"
-                            }`}
+                              }`}
                           >
                             {showName && (
                               <div className="text-[11px] font-semibold text-slate-500 mb-1">
@@ -442,9 +445,8 @@ const MessagesPage = () => {
                             </div>
 
                             <div
-                              className={`mt-1 flex items-center gap-1 justify-end text-[11px] ${
-                                m.is_mine ? "text-white/80" : "text-slate-500"
-                              }`}
+                              className={`mt-1 flex items-center gap-1 justify-end text-[11px] ${m.is_mine ? "text-white/80" : "text-slate-500"
+                                }`}
                             >
                               <span>{formatTime(m.created_at)}</span>
 
