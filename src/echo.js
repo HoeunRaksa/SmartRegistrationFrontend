@@ -1,4 +1,3 @@
-// src/echo.js
 import Echo from "laravel-echo";
 import Pusher from "pusher-js";
 
@@ -7,20 +6,19 @@ window.Pusher = Pusher;
 export function makeEcho() {
   const token = localStorage.getItem("token");
 
-  return new Echo({
+  const echo = new Echo({
     broadcaster: "reverb",
-    key: import.meta.env.VITE_REVERB_APP_KEY || "local",
+    key: "local",
 
+    // ✅ MUST match your nginx location ^~ /ws/
     wsHost: "study.learner-teach.online",
-
-    // ✅ THIS is the missing piece
-    wsPath: "/ws",
-
     wsPort: 443,
     wssPort: 443,
+    wsPath: "/ws",              // ✅ THIS is the key fix
     forceTLS: true,
     enabledTransports: ["wss"],
 
+    // ✅ auth to Laravel
     authEndpoint: "https://study.learner-teach.online/broadcasting/auth",
     auth: {
       headers: {
@@ -28,5 +26,13 @@ export function makeEcho() {
         Accept: "application/json",
       },
     },
+
+    // optional but helps reduce noise
+    disableStats: true,
   });
+
+  // ✅ HARD PROOF what path it will use
+  console.log("PUSHER CONFIG:", echo.connector.pusher.config);
+
+  return echo;
 }
