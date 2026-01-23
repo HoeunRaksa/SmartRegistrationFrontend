@@ -15,7 +15,7 @@ import {
   CheckCheck,
 } from "lucide-react";
 import { fetchConversations, fetchMessages, sendMessage } from "../api/message_api";
-import { makeEcho } from "../echo"; // ✅ NEW
+import { makeEcho } from "../echo";
 
 const MessagesPage = () => {
   const [conversations, setConversations] = useState([]);
@@ -25,75 +25,10 @@ const MessagesPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-
-  // Mobile-friendly: show list or chat
   const [showChat, setShowChat] = useState(false);
 
   const messagesEndRef = useRef(null);
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
-
-  useEffect(() => {
-    loadConversations();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (selectedConversation?.id) {
-      loadMessages(selectedConversation.id);
-      setShowChat(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedConversation?.id]);
-
-  useEffect(() => {
-    console.log("🔥 realtime effect fired", {
-      currentUserId: currentUser?.id,
-      selectedId: selectedConversation?.id,
-      token: !!localStorage.getItem("token"),
-    });
-
-    if (!currentUser?.id || !selectedConversation?.id) return;
-
-    const echo = makeEcho();
-    console.log("🔥 echo created", echo);
-
-    setTimeout(() => {
-      const pusher = echo?.connector?.pusher;
-      console.log("🔥 pusher", pusher);
-
-      if (!pusher) {
-        console.log("❌ No pusher instance - Echo config/broadcaster wrong");
-        return;
-      }
-
-      pusher.connection.bind("state_change", (states) =>
-        console.log("🔁 WS state", states)
-      );
-      pusher.connection.bind("connected", () => console.log("✅ WS connected"));
-      pusher.connection.bind("error", (e) => console.log("❌ WS error", e));
-      pusher.connection.bind("disconnected", () =>
-        console.log("⚠️ WS disconnected")
-      );
-    }, 0);
-
-    const a = Math.min(Number(currentUser.id), Number(selectedConversation.id));
-    const b = Math.max(Number(currentUser.id), Number(selectedConversation.id));
-    const channel = `chat.${a}.${b}`;
-
-    echo.private(channel).listen(".message.sent", (e) => {
-      console.log("✅ EVENT RECEIVED", e);
-    });
-
-    return () => {
-      echo.leave(`private-${channel}`);
-      echo.disconnect();
-    };
-  }, [currentUser?.id, selectedConversation?.id]);
-
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   const mapServerMessageToUI = (m) => {
     const senderId = m.s_id ?? m.sender_id;
@@ -114,6 +49,103 @@ const MessagesPage = () => {
       _status: m._status, // "sending" | "sent" | "failed"
     };
   };
+
+  useEffect(() => {
+    loadConversations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (selectedConversation?.id) {
+      loadMessages(selectedConversation.id);
+      setShowChat(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedConversation?.id]);
+
+  // ✅ REALTIME
+  useEffect(() => {
+    console.log("🔥 realtime effect fired", {
+      currentUserId: currentUser?.id,
+      selectedId: selectedConversation?.id,
+      token: !!localStorage.getItem("token"),
+    });
+
+    if (!currentUser?.id || !selectedConversation?.id) return;
+
+    const echo = makeEcho();
+    console.log("🔥 echo created", echo);
+
+    const pusher = echo?.connector?.pusher;
+    if (pusher?.connection) {
+      pusher.connection.bind("state_change", (states) =>
+        console.log("🔁 WS state", states)
+      );
+      pusher.connection.bind("connected", () => console.log("✅ WS connected"));
+      pusher.connection.bind("error", (e) => console.log("❌ WS error", e));
+      pusher.connection.bind("disconnected", () =>
+        console.log("⚠️ WS disconnected")
+      );
+    } else {
+      console.log("❌ No pusher connection - Echo config is wrong or connector not ready");
+    }
+
+    const a = Math.min(Number(currentUser.id), Number(selectedConversation.id));
+    const b = Math.max(Number(currentUser.id), Number(selectedConversation.id));
+    const channel = `chat.${a}.${b}`;
+
+    const subscription = echo
+      .private(channel)
+      // ✅ try both names to be sure
+      .listen(".message.sent", (e) => {
+        console.log("✅ EVENT .message.sent", e);
+
+        const msg = e?.message || e?.data?.message || e?.data || null;
+        if (!msg?.id) return;
+
+        setMessages((prev) => {
+          const exists = prev.some((x) => String(x.id) === String(msg.id));
+          if (exists) return prev;
+          return [...prev, mapServerMessageToUI(msg)];
+        });
+
+        setConversations((prev) => {
+          const updated = prev.map((c) =>
+            c.id === selectedConversation.id
+              ? {
+                  ...c,
+                  last_message: msg.content ?? msg.message ?? "",
+                  last_message_time: msg.created_at,
+                }
+              : c
+          );
+
+          const idx = updated.findIndex((c) => c.id === selectedConversation.id);
+          if (idx > 0) {
+            const [item] = updated.splice(idx, 1);
+            updated.unshift(item);
+          }
+          return updated;
+        });
+      })
+      .listen("MessageSent", (e) => {
+        console.log("✅ EVENT MessageSent", e);
+      });
+
+    console.log("📡 subscribed to", `private-${channel}`, subscription);
+
+    return () => {
+      // ✅ IMPORTANT: leaveChannel with correct prefix
+      echo.leaveChannel(`private-${channel}`);
+      echo.disconnect();
+      console.log("🧹 unsubscribed", `private-${channel}`);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.id, selectedConversation?.id]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const loadConversations = async () => {
     try {
@@ -164,14 +196,13 @@ const MessagesPage = () => {
       const updated = prev.map((c) =>
         c.id === selectedConversation.id
           ? {
-            ...c,
-            last_message: contentToSend,
-            last_message_time: new Date().toISOString(),
-            unread_count: 0,
-          }
+              ...c,
+              last_message: contentToSend,
+              last_message_time: new Date().toISOString(),
+              unread_count: 0,
+            }
           : c
       );
-
       const idx = updated.findIndex((c) => c.id === selectedConversation.id);
       if (idx > 0) {
         const [item] = updated.splice(idx, 1);
@@ -184,16 +215,11 @@ const MessagesPage = () => {
 
     try {
       setSending(true);
-
-      // ✅ API call saves message
       const res = await sendMessage(selectedConversation.id, contentToSend);
-
       const serverMsg = res?.data;
 
       if (serverMsg?.id) {
         const mapped = mapServerMessageToUI(serverMsg);
-
-        // replace optimistic with real saved message
         setMessages((prev) =>
           prev.map((m) => (m.id === tempId ? { ...mapped, _status: "sent" } : m))
         );
@@ -204,11 +230,9 @@ const MessagesPage = () => {
       }
     } catch (error) {
       console.error("Failed to send message:", error);
-
       setMessages((prev) =>
         prev.map((m) => (m.id === tempId ? { ...m, _status: "failed" } : m))
       );
-
       setNewMessage(contentToSend);
     } finally {
       setSending(false);
@@ -261,12 +285,12 @@ const MessagesPage = () => {
   return (
     <div className="h-[calc(100vh-120px)] md:p-6">
       <div className="h-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm flex">
-        {/* LEFT: Telegram-style sidebar */}
+        {/* LEFT: sidebar */}
         <div
-          className={`w-full md:w-[360px] border-r border-slate-200 flex flex-col ${showChat ? "hidden md:flex" : "flex"
-            }`}
+          className={`w-full md:w-[360px] border-r border-slate-200 flex flex-col ${
+            showChat ? "hidden md:flex" : "flex"
+          }`}
         >
-          {/* Top bar */}
           <div className="px-4 pt-4 pb-3 border-b border-slate-200">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold">
@@ -282,16 +306,12 @@ const MessagesPage = () => {
               <button
                 className="h-10 w-10 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-center"
                 title="New chat"
-                onClick={() => {
-                  const el = document.getElementById("chat-search");
-                  el?.focus();
-                }}
+                onClick={() => document.getElementById("chat-search")?.focus()}
               >
                 <Plus className="w-5 h-5 text-slate-700" />
               </button>
             </div>
 
-            {/* Search */}
             <div className="mt-3 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
@@ -305,7 +325,6 @@ const MessagesPage = () => {
             </div>
           </div>
 
-          {/* Chat list */}
           <div className="flex-1 overflow-y-auto">
             {filteredConversations.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-14 px-6 text-slate-500">
@@ -320,8 +339,9 @@ const MessagesPage = () => {
                   <button
                     key={c.id}
                     onClick={() => setSelectedConversation(c)}
-                    className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition flex items-center gap-3 border-b border-slate-100 ${active ? "bg-blue-50" : ""
-                      }`}
+                    className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition flex items-center gap-3 border-b border-slate-100 ${
+                      active ? "bg-blue-50" : ""
+                    }`}
                   >
                     <div className="h-11 w-11 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold flex-shrink-0">
                       {initials(c.name)}
@@ -355,11 +375,10 @@ const MessagesPage = () => {
           </div>
         </div>
 
-        {/* RIGHT: Telegram-style chat */}
+        {/* RIGHT: chat */}
         <div className={`flex-1 flex flex-col ${showChat ? "flex" : "hidden md:flex"}`}>
           {selectedConversation ? (
             <>
-              {/* Chat header */}
               <div className="h-16 border-b border-slate-200 px-3 md:px-4 flex items-center gap-3">
                 <button
                   className="md:hidden h-10 w-10 rounded-xl hover:bg-slate-50 flex items-center justify-center"
@@ -379,7 +398,11 @@ const MessagesPage = () => {
                   </div>
                   <div className="text-xs text-slate-500 truncate">
                     {selectedConversation.role
-                      ? `${selectedConversation.role}${selectedConversation.course ? ` • ${selectedConversation.course}` : ""}`
+                      ? `${selectedConversation.role}${
+                          selectedConversation.course
+                            ? ` • ${selectedConversation.course}`
+                            : ""
+                        }`
                       : "Tap to view profile"}
                   </div>
                 </div>
@@ -397,7 +420,6 @@ const MessagesPage = () => {
                 </div>
               </div>
 
-              {/* Messages */}
               <div className="flex-1 overflow-y-auto px-3 md:px-6 py-4 bg-slate-50">
                 <div className="space-y-2">
                   {messages.map((m, idx) => {
@@ -414,10 +436,11 @@ const MessagesPage = () => {
                       >
                         <div className="max-w-[78%] md:max-w-[70%]">
                           <div
-                            className={`rounded-2xl px-4 py-2.5 shadow-sm border ${m.is_mine
-                              ? "bg-blue-600 text-white border-blue-600 rounded-br-md"
-                              : "bg-white text-slate-900 border-slate-200 rounded-bl-md"
-                              }`}
+                            className={`rounded-2xl px-4 py-2.5 shadow-sm border ${
+                              m.is_mine
+                                ? "bg-blue-600 text-white border-blue-600 rounded-br-md"
+                                : "bg-white text-slate-900 border-slate-200 rounded-bl-md"
+                            }`}
                           >
                             {showName && (
                               <div className="text-[11px] font-semibold text-slate-500 mb-1">
@@ -430,11 +453,11 @@ const MessagesPage = () => {
                             </div>
 
                             <div
-                              className={`mt-1 flex items-center gap-1 justify-end text-[11px] ${m.is_mine ? "text-white/80" : "text-slate-500"
-                                }`}
+                              className={`mt-1 flex items-center gap-1 justify-end text-[11px] ${
+                                m.is_mine ? "text-white/80" : "text-slate-500"
+                              }`}
                             >
                               <span>{formatTime(m.created_at)}</span>
-
                               {m.is_mine && (
                                 <>
                                   {m._status === "sending" && (
@@ -460,11 +483,7 @@ const MessagesPage = () => {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input */}
-              <form
-                onSubmit={handleSendMessage}
-                className="border-t border-slate-200 bg-white px-3 md:px-4 py-3"
-              >
+              <form onSubmit={handleSendMessage} className="border-t border-slate-200 bg-white px-3 md:px-4 py-3">
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -490,11 +509,7 @@ const MessagesPage = () => {
                     className="h-10 px-4 rounded-2xl bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     title="Send"
                   >
-                    {sending ? (
-                      <Loader className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Send className="w-4 h-4" />
-                    )}
+                    {sending ? <Loader className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                     <span className="hidden sm:inline font-semibold">Send</span>
                   </button>
                 </div>
