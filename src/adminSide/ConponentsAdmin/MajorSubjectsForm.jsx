@@ -15,6 +15,7 @@ import { fetchMajors } from "../../api/major_api.jsx";
 import { fetchSubjects } from "../../api/subject_api.jsx";
 import { fetchDepartments } from "../../api/department_api.jsx";
 import { createMajorSubjectsBulk } from "../../api/major_subject_api.jsx";
+import { getCachedDepartments, getCachedMajors, getCachedSubjects } from "../../utils/dataCache";
 
 /* ================= ANIMATION ================= */
 
@@ -76,19 +77,23 @@ const MajorSubjectsForm = ({ onSuccess }) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  /* ================= LOAD DATA ================= */
+  /* ================= LOAD DATA (FIXED: Sequential with caching) ================= */
 
   useEffect(() => {
     (async () => {
       try {
-        const [dRes, mRes, sRes] = await Promise.all([
-          fetchDepartments(),
-          fetchMajors(),
-          fetchSubjects(),
-        ]);
-
+        // ✅ FIXED: Sequential calls with delays + caching to prevent 429 errors
+        const dRes = await getCachedDepartments(fetchDepartments);
         setDepartments(normalizeArray(dRes));
+
+        await new Promise(resolve => setTimeout(resolve, 100)); // 100ms delay
+
+        const mRes = await getCachedMajors(fetchMajors);
         setMajors(normalizeArray(mRes));
+
+        await new Promise(resolve => setTimeout(resolve, 100)); // 100ms delay
+
+        const sRes = await getCachedSubjects(fetchSubjects);
         setSubjects(normalizeArray(sRes));
       } catch (err) {
         console.error(err);
