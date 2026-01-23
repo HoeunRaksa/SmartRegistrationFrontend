@@ -1,7 +1,7 @@
 import PaymentAPI from './paymentClient';
 
 export const generatePaymentQR = (registrationId) => {
-  return PaymentAPI.post('/payment/generate-qr', {
+  return PaymentAPI.post('/generate-qr', {
     registration_id: registrationId,
   });
 };

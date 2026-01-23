@@ -163,17 +163,17 @@ const StudentProfile = ({ student, onClose }) => {
                   <MetaBlock label="Student Code" value={student.student_code} />
                   <MetaBlock label="Department" value={student.department?.name} />
                   <MetaBlock
-                    label="Registration ID"
+                    label="Registration menber ID"
                     value={student.registration_id ? `#${student.registration_id}` : null}
                   />
                   <MetaBlock
-                    label="User ID"
+                    label="User me ID"
                     value={student.user_id ? `#${student.user_id}` : null}
                   />
                 </div>
                  <MetaBlock
-                    label="Registration ID"
-                    value={student.registration_id ? `#${student.r}` : null}
+                    label="Student menber ID"
+                    value={student.registration_id ? `#${student.id}` : null}
                   />
 
               </motion.section>
