@@ -63,85 +63,53 @@ const MessagesPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConversation?.id]);
 
-  // ✅ REALTIME
   useEffect(() => {
-    console.log("🔥 realtime effect fired", {
-      currentUserId: currentUser?.id,
-      selectedId: selectedConversation?.id,
-      token: !!localStorage.getItem("token"),
-    });
-
     if (!currentUser?.id || !selectedConversation?.id) return;
 
     const echo = makeEcho();
-    console.log("🔥 echo created", echo);
+    const pusher = echo.connector.pusher;
 
-    const pusher = echo?.connector?.pusher;
-    if (pusher?.connection) {
-      pusher.connection.bind("state_change", (states) =>
-        console.log("🔁 WS state", states)
-      );
-      pusher.connection.bind("connected", () => console.log("✅ WS connected"));
-      pusher.connection.bind("error", (e) => console.log("❌ WS error", e));
-      pusher.connection.bind("disconnected", () =>
-        console.log("⚠️ WS disconnected")
-      );
-    } else {
-      console.log("❌ No pusher connection - Echo config is wrong or connector not ready");
-    }
+    console.log("✅ PUSHER KEY", pusher.key);
+    console.log("✅ SHOULD CONNECT TO", `wss://${pusher.config.wsHost}${pusher.config.wsPath}/app/${pusher.key}`);
+
+    // --- WS connection state ---
+    pusher.connection.bind("state_change", (s) => console.log("🔁 WS state", s));
+    pusher.connection.bind("connected", () => console.log("✅ WS CONNECTED"));
+    pusher.connection.bind("error", (e) => console.log("❌ WS ERROR", e));
+    pusher.connection.bind("disconnected", () => console.log("⚠️ WS DISCONNECTED"));
 
     const a = Math.min(Number(currentUser.id), Number(selectedConversation.id));
     const b = Math.max(Number(currentUser.id), Number(selectedConversation.id));
-    const channel = `chat.${a}.${b}`;
+    const channelName = `private-chat.${a}.${b}`;   // NOTE: private- prefix is how pusher sees it
+    const channel = echo.private(`chat.${a}.${b}`);
 
-    const subscription = echo
-      .private(channel)
-      // ✅ try both names to be sure
-      .listen("message.sent", (e) => {
-        console.log("✅ EVENT message.sent", e);
+    // --- subscription success / failure ---
+    channel.subscribed(() => console.log("✅ SUBSCRIBED OK:", channelName));
 
-        const msg = e?.message || e?.data?.message || e?.data || null;
-        if (!msg?.id) return;
+    // Laravel Echo doesn't always expose `.error()` on all connectors, so bind to pusher channel:
+    const pChannel = pusher.channel(channelName);
+    if (pChannel) {
+      pChannel.bind("pusher:subscription_succeeded", () =>
+        console.log("✅ PUSHER subscription_succeeded:", channelName)
+      );
+      pChannel.bind("pusher:subscription_error", (status) =>
+        console.log("❌ PUSHER subscription_error:", channelName, status)
+      );
+    } else {
+      console.log("⚠️ pusher.channel() not found yet (wait for connection)");
+    }
 
-        setMessages((prev) => {
-          const exists = prev.some((x) => String(x.id) === String(msg.id));
-          if (exists) return prev;
-          return [...prev, mapServerMessageToUI(msg)];
-        });
-
-        setConversations((prev) => {
-          const updated = prev.map((c) =>
-            c.id === selectedConversation.id
-              ? {
-                  ...c,
-                  last_message: msg.content ?? msg.message ?? "",
-                  last_message_time: msg.created_at,
-                }
-              : c
-          );
-
-          const idx = updated.findIndex((c) => c.id === selectedConversation.id);
-          if (idx > 0) {
-            const [item] = updated.splice(idx, 1);
-            updated.unshift(item);
-          }
-          return updated;
-        });
-      })
-      .listen("MessageSent", (e) => {
-        console.log("✅ EVENT MessageSent", e);
-      });
-
-    console.log("📡 subscribed to", `private-${channel}`, subscription);
+    // --- event listener ---
+    channel.listen(".message.sent", (e) => {
+      console.log("🔥 EVENT RECEIVED .message.sent", e);
+    });
 
     return () => {
-      // ✅ IMPORTANT: leaveChannel with correct prefix
-      echo.leaveChannel(`private-${channel}`);
+      echo.leaveChannel(channelName);
       echo.disconnect();
-      console.log("🧹 unsubscribed", `private-${channel}`);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.id, selectedConversation?.id]);
+
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -196,11 +164,11 @@ const MessagesPage = () => {
       const updated = prev.map((c) =>
         c.id === selectedConversation.id
           ? {
-              ...c,
-              last_message: contentToSend,
-              last_message_time: new Date().toISOString(),
-              unread_count: 0,
-            }
+            ...c,
+            last_message: contentToSend,
+            last_message_time: new Date().toISOString(),
+            unread_count: 0,
+          }
           : c
       );
       const idx = updated.findIndex((c) => c.id === selectedConversation.id);
@@ -287,9 +255,8 @@ const MessagesPage = () => {
       <div className="h-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm flex">
         {/* LEFT: sidebar */}
         <div
-          className={`w-full md:w-[360px] border-r border-slate-200 flex flex-col ${
-            showChat ? "hidden md:flex" : "flex"
-          }`}
+          className={`w-full md:w-[360px] border-r border-slate-200 flex flex-col ${showChat ? "hidden md:flex" : "flex"
+            }`}
         >
           <div className="px-4 pt-4 pb-3 border-b border-slate-200">
             <div className="flex items-center gap-3">
@@ -339,9 +306,8 @@ const MessagesPage = () => {
                   <button
                     key={c.id}
                     onClick={() => setSelectedConversation(c)}
-                    className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition flex items-center gap-3 border-b border-slate-100 ${
-                      active ? "bg-blue-50" : ""
-                    }`}
+                    className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition flex items-center gap-3 border-b border-slate-100 ${active ? "bg-blue-50" : ""
+                      }`}
                   >
                     <div className="h-11 w-11 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold flex-shrink-0">
                       {initials(c.name)}
@@ -398,11 +364,10 @@ const MessagesPage = () => {
                   </div>
                   <div className="text-xs text-slate-500 truncate">
                     {selectedConversation.role
-                      ? `${selectedConversation.role}${
-                          selectedConversation.course
-                            ? ` • ${selectedConversation.course}`
-                            : ""
-                        }`
+                      ? `${selectedConversation.role}${selectedConversation.course
+                        ? ` • ${selectedConversation.course}`
+                        : ""
+                      }`
                       : "Tap to view profile"}
                   </div>
                 </div>
@@ -436,11 +401,10 @@ const MessagesPage = () => {
                       >
                         <div className="max-w-[78%] md:max-w-[70%]">
                           <div
-                            className={`rounded-2xl px-4 py-2.5 shadow-sm border ${
-                              m.is_mine
+                            className={`rounded-2xl px-4 py-2.5 shadow-sm border ${m.is_mine
                                 ? "bg-blue-600 text-white border-blue-600 rounded-br-md"
                                 : "bg-white text-slate-900 border-slate-200 rounded-bl-md"
-                            }`}
+                              }`}
                           >
                             {showName && (
                               <div className="text-[11px] font-semibold text-slate-500 mb-1">
@@ -453,9 +417,8 @@ const MessagesPage = () => {
                             </div>
 
                             <div
-                              className={`mt-1 flex items-center gap-1 justify-end text-[11px] ${
-                                m.is_mine ? "text-white/80" : "text-slate-500"
-                              }`}
+                              className={`mt-1 flex items-center gap-1 justify-end text-[11px] ${m.is_mine ? "text-white/80" : "text-slate-500"
+                                }`}
                             >
                               <span>{formatTime(m.created_at)}</span>
                               {m.is_mine && (
