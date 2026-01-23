@@ -5,25 +5,21 @@ window.Pusher = Pusher;
 
 export function makeEcho() {
   const token = localStorage.getItem("token");
-  const host = "study.learner-teach.online";
 
   return new Echo({
     broadcaster: "reverb",
-    key: "local",
+    key: import.meta.env.VITE_REVERB_APP_KEY || "local",
 
-    // ✅ IMPORTANT
-    wsHost: host,
-    wsPath: "/ws",
-    wssPort: 443,
+    // ✅ IMPORTANT: use host+port+scheme
+    wsHost: "study.learner-teach.online",
     wsPort: 443,
+    wssPort: 443,
     forceTLS: true,
+    enabledTransports: ["ws", "wss"],
 
-    // ✅ allow both so it can try ws in dev and wss in prod
-    enabledTransports: ["wss", "ws"],
-    disableStats: true,
+    // ✅ MUST be POST and must hit Laravel API
+    authEndpoint: "https://study.learner-teach.online/broadcasting/auth",
 
-    // ✅ must be full https URL
-    authEndpoint: `https://${host}/broadcasting/auth`,
     auth: {
       headers: {
         Authorization: `Bearer ${token}`,
