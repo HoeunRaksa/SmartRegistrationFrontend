@@ -10,15 +10,14 @@ export function makeEcho() {
     broadcaster: "reverb",
     key: "local",
 
-    // ✅ MUST match your nginx location ^~ /ws/
     wsHost: "study.learner-teach.online",
     wsPort: 443,
     wssPort: 443,
-    wsPath: "/ws",              // ✅ THIS is the key fix
+    wsPath: "/ws",
     forceTLS: true,
     enabledTransports: ["wss"],
+    disableStats: true,
 
-    // ✅ auth to Laravel
     authEndpoint: "https://study.learner-teach.online/broadcasting/auth",
     auth: {
       headers: {
@@ -26,13 +25,28 @@ export function makeEcho() {
         Accept: "application/json",
       },
     },
-
-    // optional but helps reduce noise
-    disableStats: true,
   });
 
-  // ✅ HARD PROOF what path it will use
-  console.log("PUSHER CONFIG:", echo.connector.pusher.config);
+  // ✅ Wait a tick so connector is fully built
+  setTimeout(() => {
+    const pusher = echo?.connector?.pusher;
+
+    console.log("echo?", !!echo);
+    console.log("connector?", !!echo?.connector);
+    console.log("pusher?", !!pusher);
+
+    // ✅ Snapshot (not live reference)
+    const cfg = pusher?.config ? JSON.parse(JSON.stringify(pusher.config)) : null;
+    console.log("PUSHER CONFIG SNAPSHOT:", cfg);
+
+    // ✅ Show exactly what URL it will hit
+    if (cfg) {
+      const path = cfg.wsPath || "";
+      console.log("WS URL SHOULD BE:",
+        `wss://${cfg.wsHost}${path}/app/${cfg.key}?protocol=7&client=js&version=8.x&flash=false`
+      );
+    }
+  }, 0);
 
   return echo;
 }
