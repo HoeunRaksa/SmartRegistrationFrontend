@@ -1,3 +1,4 @@
+// src/echo.js
 import Echo from "laravel-echo";
 import Pusher from "pusher-js";
 
@@ -10,16 +11,17 @@ export function makeEcho() {
     broadcaster: "reverb",
     key: import.meta.env.VITE_REVERB_APP_KEY || "local",
 
-    // ✅ IMPORTANT: use host+port+scheme
     wsHost: "study.learner-teach.online",
+
+    // ✅ THIS is the missing piece
+    wsPath: "/ws",
+
     wsPort: 443,
     wssPort: 443,
     forceTLS: true,
-    enabledTransports: ["ws", "wss"],
+    enabledTransports: ["wss"],
 
-    // ✅ MUST be POST and must hit Laravel API
     authEndpoint: "https://study.learner-teach.online/broadcasting/auth",
-
     auth: {
       headers: {
         Authorization: `Bearer ${token}`,
