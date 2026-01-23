@@ -38,8 +38,15 @@ import {
 } from "lucide-react";
 
 import PaymentForm from "../Components/payment/PaymentForm.jsx";
-import { submitRegistration, payLater as payLaterApi } from "../api/registration_api.jsx";
-import { fetchDepartments, fetchMajorsByDepartment } from "../api/department_api.jsx";
+import {
+  submitRegistration,
+  payLater as payLaterApi,
+  canRegister,
+} from "../api/registration_api.jsx";
+import {
+  fetchDepartments,
+  fetchMajorsByDepartment,
+} from "../api/department_api.jsx";
 import { fetchMajor } from "../api/major_api.jsx";
 import API from "../api/index"; // ✅ used for major capacity endpoint
 
@@ -183,12 +190,20 @@ const Field = memo(function Field({
   );
 });
 
-const Section = memo(function Section({ title, icon: Icon, gradientBar, iconGradient, children }) {
+const Section = memo(function Section({
+  title,
+  icon: Icon,
+  gradientBar,
+  iconGradient,
+  children,
+}) {
   return (
     <div className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border-2 border-white/60 relative">
       <div className={`absolute inset-x-0 top-0 h-1.5 ${gradientBar} rounded-t-3xl`} />
       <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-white/40">
-        <div className={`p-3 backdrop-blur-xl ${iconGradient} rounded-2xl text-white shadow-lg`}>
+        <div
+          className={`p-3 backdrop-blur-xl ${iconGradient} rounded-2xl text-white shadow-lg`}
+        >
           <Icon size={24} />
         </div>
         <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -251,12 +266,27 @@ const Registration = () => {
   // remember last object URL to revoke
   const lastPreviewUrlRef = useRef(null);
 
+  // ✅ GATE: user must select Academic Year + Department + Major and be allowed
+  const gateReady = useMemo(() => {
+    return !!form.academicYear && !!form.departmentId && !!form.majorId;
+  }, [form.academicYear, form.departmentId, form.majorId]);
+
+  // ✅ If server checked => must be available
+  // ✅ If server NOT checked (endpoint error) => allow (same as your fallback behavior)
+  const gateAllowed = useMemo(() => {
+    if (!gateReady) return false;
+    if (quotaInfo.loading) return false;
+    if (quotaInfo.checked) return quotaInfo.available === true;
+    return true; // server check unavailable => allow
+  }, [gateReady, quotaInfo.loading, quotaInfo.checked, quotaInfo.available]);
+
   useEffect(() => {
     aliveRef.current = true;
     return () => {
       aliveRef.current = false;
       if (quotaTimerRef.current) clearTimeout(quotaTimerRef.current);
-      if (lastPreviewUrlRef.current) URL.revokeObjectURL(lastPreviewUrlRef.current);
+      if (lastPreviewUrlRef.current)
+        URL.revokeObjectURL(lastPreviewUrlRef.current);
     };
   }, []);
 
@@ -270,7 +300,8 @@ const Registration = () => {
         }
       } catch (err) {
         console.error("Error loading departments:", err);
-        if (aliveRef.current) setError("Failed to load departments. Please refresh the page.");
+        if (aliveRef.current)
+          setError("Failed to load departments. Please refresh the page.");
       }
     })();
   }, []);
@@ -293,7 +324,8 @@ const Registration = () => {
         }
       } catch (err) {
         console.error("Error loading majors:", err);
-        if (aliveRef.current) setError("Failed to load majors for selected department.");
+        if (aliveRef.current)
+          setError("Failed to load majors for selected department.");
       }
     })();
   }, [form.departmentId]);
@@ -304,16 +336,26 @@ const Registration = () => {
     const deptId = Number(form.departmentId);
     const selectedDept = departments.find((d) => Number(d.id) === deptId);
     if (selectedDept?.faculty) {
-      setForm((prev) => (prev.faculty === selectedDept.faculty ? prev : { ...prev, faculty: selectedDept.faculty }));
+      setForm((prev) =>
+        prev.faculty === selectedDept.faculty
+          ? prev
+          : { ...prev, faculty: selectedDept.faculty }
+      );
     }
   }, [form.departmentId, departments]);
 
   const departmentOptions = useMemo(() => {
-    return [{ value: "", label: "Select Department" }, ...departments.map((d) => ({ value: String(d.id), label: d.name }))];
+    return [
+      { value: "", label: "Select Department" },
+      ...departments.map((d) => ({ value: String(d.id), label: d.name })),
+    ];
   }, [departments]);
 
   const majorOptions = useMemo(() => {
-    return [{ value: "", label: "Select Major" }, ...majors.map((m) => ({ value: String(m.id), label: m.major_name }))];
+    return [
+      { value: "", label: "Select Major" },
+      ...majors.map((m) => ({ value: String(m.id), label: m.major_name })),
+    ];
   }, [majors]);
 
   const validateEmail = (email) => {
@@ -344,9 +386,11 @@ const Registration = () => {
   }, []);
 
   // ✅ fetch major quota (cached) using your controller endpoint
+  // ✅ fetch "can register" (cached) using: GET /registrations/can-register
   const loadMajorQuota = useCallback(async (majorId, academicYear) => {
     const id = Number(majorId);
     const ay = normalizeAcademicYear(academicYear);
+
     if (!id || !ay) {
       return {
         loading: false,
@@ -375,29 +419,40 @@ const Registration = () => {
     };
 
     try {
-      const res = await API.get(`/majors/${id}/capacity`, { params: { academic_year: ay } });
+      const res = await canRegister(id, ay);
       const data = res?.data;
 
-      // expected:
-      // { success, major_id, academic_year, limited, limit, used, available, remaining }
+      // We accept BOTH formats:
+      // 1) { allowed: true/false }
+      // 2) { available: true/false }  (fallback)
+      const allowed =
+        data?.allowed !== undefined
+          ? !!data.allowed
+          : data?.available !== undefined
+          ? !!data.available
+          : true;
+
       const info = {
         ...infoBase,
-        available: !!data?.available,
+        available: allowed,
         limited: !!data?.limited,
         limit: data?.limit ?? null,
         used: Number(data?.used ?? 0) || 0,
         remaining: data?.remaining ?? null,
-        message: data?.available ? null : "This major is full/closed for this academic year.",
+        message: allowed
+          ? null
+          : data?.message || "Registration not available for this major/year.",
       };
 
       quotaCacheRef.current.set(key, info);
       return info;
     } catch (e) {
-      // if endpoint missing / error => don't block user, but show warning
+      // If endpoint fails, don't block user (same behavior as your current code)
       const info = {
         ...infoBase,
         checked: false,
-        message: "Capacity check unavailable right now (server). You can still submit.",
+        message:
+          "Availability check unavailable right now (server). You can still submit.",
       };
       quotaCacheRef.current.set(key, info);
       return info;
@@ -466,7 +521,8 @@ const Registration = () => {
 
         setForm((prev) => ({ ...prev, [name]: file }));
 
-        if (lastPreviewUrlRef.current) URL.revokeObjectURL(lastPreviewUrlRef.current);
+        if (lastPreviewUrlRef.current)
+          URL.revokeObjectURL(lastPreviewUrlRef.current);
         const url = URL.createObjectURL(file);
         lastPreviewUrlRef.current = url;
         setProfilePreview(url);
@@ -475,7 +531,11 @@ const Registration = () => {
         return;
       }
 
-      const nextVal = NUMBER_FIELDS.has(name) ? (value === "" ? "" : Number(value)) : value;
+      const nextVal = NUMBER_FIELDS.has(name)
+        ? value === ""
+          ? ""
+          : Number(value)
+        : value;
 
       setForm((prev) => {
         if (name === "departmentId") {
@@ -560,7 +620,9 @@ const Registration = () => {
     setQuotaInfo({ ...quota, loading: false });
 
     if (quota.checked && !quota.available) {
-      setError("This major is full or registration is closed for the selected academic year. Please choose another major/year.");
+      setError(
+        "This major is full or registration is closed for the selected academic year. Please choose another major/year."
+      );
       return false;
     }
     return true;
@@ -595,7 +657,10 @@ const Registration = () => {
         const errorMessages = Object.values(errors).flat().join("\n");
         setError(errorMessages);
       } else {
-        setError(err.response?.data?.message || "Registration failed. Please try again.");
+        setError(
+          err.response?.data?.message ||
+            "Registration failed. Please try again."
+        );
       }
 
       throw err;
@@ -640,7 +705,10 @@ const Registration = () => {
     return fee;
   }, []);
 
-  const payAmount = useMemo(() => computePayAmount(selectedMajorFee, payPlan), [selectedMajorFee, payPlan, computePayAmount]);
+  const payAmount = useMemo(
+    () => computePayAmount(selectedMajorFee, payPlan),
+    [selectedMajorFee, payPlan, computePayAmount]
+  );
 
   const handleSubmit = useCallback(
     async (e) => {
@@ -685,7 +753,8 @@ const Registration = () => {
 
           setSuccess({
             title: "Registration Submitted Successfully!",
-            message: "Your registration has been created. Please complete payment within 7 days at the university finance office.",
+            message:
+              "Your registration has been created. Please complete payment within 7 days at the university finance office.",
             data: regData,
           });
 
@@ -721,9 +790,24 @@ const Registration = () => {
   // ✅ Field configs
   const personalFields = useMemo(
     () => [
-      { name: "firstName", label: "First Name (English)", required: true, icon: User2, placeholder: "First Name" },
-      { name: "lastName", label: "Last Name (English)", required: true, placeholder: "Last Name" },
-      { name: "fullNameKh", label: "Full Name (Khmer)", placeholder: "ឈ្មោះ នាមត្រកូល" },
+      {
+        name: "firstName",
+        label: "First Name (English)",
+        required: true,
+        icon: User2,
+        placeholder: "First Name",
+      },
+      {
+        name: "lastName",
+        label: "Last Name (English)",
+        required: true,
+        placeholder: "Last Name",
+      },
+      {
+        name: "fullNameKh",
+        label: "Full Name (Khmer)",
+        placeholder: "ឈ្មោះ នាមត្រកូល",
+      },
       {
         name: "gender",
         label: "Gender",
@@ -737,7 +821,14 @@ const Registration = () => {
       },
       { name: "dateOfBirth", label: "Date of Birth", type: "date", required: true },
       { name: "phoneNumber", label: "Phone Number", icon: Phone, placeholder: "012 345 678" },
-      { name: "personalEmail", label: "Email Address", type: "email", required: true, icon: Mail, placeholder: "student@example.com" },
+      {
+        name: "personalEmail",
+        label: "Email Address",
+        type: "email",
+        required: true,
+        icon: Mail,
+        placeholder: "student@example.com",
+      },
       { name: "address", label: "Permanent Address", icon: MapPin, placeholder: "#123, Street ABC" },
       { name: "currentAddress", label: "Current Address", icon: MapPin, placeholder: "Same as permanent" },
     ],
@@ -789,7 +880,14 @@ const Registration = () => {
     () => [
       { name: "academicYear", label: "Academic Year", required: true, placeholder: "2026-2027" },
       { name: "departmentId", label: "Department", type: "select", required: true, options: departmentOptions },
-      { name: "majorId", label: "Major", type: "select", required: true, options: majorOptions, disabled: !form.departmentId },
+      {
+        name: "majorId",
+        label: "Major",
+        type: "select",
+        required: true,
+        options: majorOptions,
+        disabled: !form.departmentId,
+      },
       {
         name: "faculty",
         label: "Faculty",
@@ -825,7 +923,9 @@ const Registration = () => {
       return (
         <div className="mt-4 backdrop-blur-xl bg-white/60 border border-white/60 rounded-xl p-3 flex items-center gap-2">
           <Loader size={18} className="animate-spin text-blue-600" />
-          <p className="text-sm text-gray-700 font-medium">Checking major availability...</p>
+          <p className="text-sm text-gray-700 font-medium">
+            Checking major availability...
+          </p>
         </div>
       );
     }
@@ -835,14 +935,18 @@ const Registration = () => {
         <div className="mt-4 backdrop-blur-xl bg-red-50/70 border border-red-200/60 rounded-xl p-4 flex items-start gap-3">
           <Lock size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="text-sm font-bold text-red-700">Registration not available</p>
+            <p className="text-sm font-bold text-red-700">
+              Registration not available
+            </p>
             <p className="text-xs text-gray-700 mt-1">
-              This major is full or registration is closed for <span className="font-semibold">{form.academicYear}</span>. Please choose another.
+              This major is full or registration is closed for{" "}
+              <span className="font-semibold">{form.academicYear}</span>. Please
+              choose another.
             </p>
             {quotaInfo.limited && quotaInfo.limit != null ? (
               <p className="text-xs text-gray-600 mt-2">
-                Limit: <span className="font-semibold">{quotaInfo.limit}</span> • Used:{" "}
-                <span className="font-semibold">{quotaInfo.used}</span>
+                Limit: <span className="font-semibold">{quotaInfo.limit}</span>{" "}
+                • Used: <span className="font-semibold">{quotaInfo.used}</span>
               </p>
             ) : null}
           </div>
@@ -860,12 +964,19 @@ const Registration = () => {
               <p className="text-xs text-gray-700 mt-1">
                 Remaining seats:{" "}
                 <span className="font-semibold">
-                  {quotaInfo.remaining != null ? quotaInfo.remaining : Math.max(0, (quotaInfo.limit || 0) - (quotaInfo.used || 0))}
+                  {quotaInfo.remaining != null
+                    ? quotaInfo.remaining
+                    : Math.max(
+                        0,
+                        (quotaInfo.limit || 0) - (quotaInfo.used || 0)
+                      )}
                 </span>{" "}
                 (Used {quotaInfo.used} / {quotaInfo.limit})
               </p>
             ) : (
-              <p className="text-xs text-gray-700 mt-1">No limit set for this major/year (unlimited).</p>
+              <p className="text-xs text-gray-700 mt-1">
+                No limit set for this major/year (unlimited).
+              </p>
             )}
           </div>
         </div>
@@ -875,7 +986,10 @@ const Registration = () => {
     if (quotaInfo.message) {
       return (
         <div className="mt-4 backdrop-blur-xl bg-yellow-50/70 border border-yellow-200/60 rounded-xl p-4 flex items-start gap-3">
-          <AlertTriangle size={18} className="text-yellow-700 flex-shrink-0 mt-0.5" />
+          <AlertTriangle
+            size={18}
+            className="text-yellow-700 flex-shrink-0 mt-0.5"
+          />
           <p className="text-xs text-gray-700">{quotaInfo.message}</p>
         </div>
       );
@@ -917,32 +1031,44 @@ const Registration = () => {
 
             {/* ✅ FIX: show student_code from response.data.data (not inside student_account) */}
             <div className="backdrop-blur-xl bg-blue-50/60 border border-blue-200/40 rounded-xl p-4 mb-4">
-              <h4 className="font-semibold text-gray-800 mb-2">Registration Details:</h4>
+              <h4 className="font-semibold text-gray-800 mb-2">
+                Registration Details:
+              </h4>
               <div className="space-y-1 text-sm">
                 <p>
-                  <span className="font-medium">Registration ID:</span> {success?.data?.data?.registration_id ?? "-"}
+                  <span className="font-medium">Registration ID:</span>{" "}
+                  {success?.data?.data?.registration_id ?? "-"}
                 </p>
                 <p>
-                  <span className="font-medium">Student Code:</span> {success?.data?.data?.student_code ?? "-"}
+                  <span className="font-medium">Student Code:</span>{" "}
+                  {success?.data?.data?.student_code ?? "-"}
                 </p>
                 <p>
-                  <span className="font-medium">Academic Year:</span> {success?.data?.data?.academic_year ?? "-"}
+                  <span className="font-medium">Academic Year:</span>{" "}
+                  {success?.data?.data?.academic_year ?? "-"}
                 </p>
               </div>
             </div>
 
             {success.data?.student_account && (
               <div className="backdrop-blur-xl bg-green-50/60 border border-green-200/40 rounded-xl p-4 mb-4">
-                <h4 className="font-semibold text-gray-800 mb-2">Your Account Details:</h4>
+                <h4 className="font-semibold text-gray-800 mb-2">
+                  Your Account Details:
+                </h4>
                 <div className="space-y-1 text-sm">
                   <p>
-                    <span className="font-medium">Email:</span> {success.data.student_account.email}
+                    <span className="font-medium">Email:</span>{" "}
+                    {success.data.student_account.email}
                   </p>
                   <p>
-                    <span className="font-medium">Password:</span> {success.data.student_account.password ?? "Already existing account"}
+                    <span className="font-medium">Password:</span>{" "}
+                    {success.data.student_account.password ??
+                      "Already existing account"}
                   </p>
                 </div>
-                <p className="text-xs text-gray-600 mt-2">⚠️ Please save these credentials!</p>
+                <p className="text-xs text-gray-600 mt-2">
+                  ⚠️ Please save these credentials!
+                </p>
               </div>
             )}
 
@@ -980,16 +1106,21 @@ const Registration = () => {
               <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-1">
                 Choose Payment
               </h3>
-              <p className="text-gray-600 text-sm">Select plan first, then method</p>
+              <p className="text-gray-600 text-sm">
+                Select plan first, then method
+              </p>
 
               {selectedMajorFee != null && (
                 <div className="mt-4 backdrop-blur-xl bg-green-50/60 border border-green-200/40 rounded-xl p-3">
                   <p className="text-sm text-gray-700">
                     <span className="font-semibold">Year Fee:</span>
-                    <span className="text-xl font-bold text-green-600 ml-2">${Number(selectedMajorFee).toFixed(2)}</span>
+                    <span className="text-xl font-bold text-green-600 ml-2">
+                      ${Number(selectedMajorFee).toFixed(2)}
+                    </span>
                   </p>
                   <p className="text-xs text-gray-600 mt-1">
-                    Semester payment = <span className="font-semibold">50%</span> of year fee
+                    Semester payment = <span className="font-semibold">50%</span>{" "}
+                    of year fee
                   </p>
                 </div>
               )}
@@ -997,7 +1128,9 @@ const Registration = () => {
 
             {/* ✅ Pay plan selector */}
             <div className="backdrop-blur-xl bg-white/60 border-2 border-white/60 rounded-2xl p-4 mb-4">
-              <p className="text-sm font-semibold text-gray-800 mb-3">Pay Plan</p>
+              <p className="text-sm font-semibold text-gray-800 mb-3">
+                Pay Plan
+              </p>
 
               <div className="space-y-3">
                 <label className="flex items-center gap-3 cursor-pointer">
@@ -1005,13 +1138,17 @@ const Registration = () => {
                     type="radio"
                     name="payPlan"
                     checked={payPlan.type === "YEAR"}
-                    onChange={() => setPayPlan((p) => ({ ...p, type: "YEAR" }))}
+                    onChange={() =>
+                      setPayPlan((p) => ({ ...p, type: "YEAR" }))
+                    }
                   />
                   <div className="flex-1">
                     <p className="font-semibold text-gray-800">Pay Full Year</p>
                     <p className="text-xs text-gray-600">Pay 100% now</p>
                   </div>
-                  <span className="text-sm font-bold text-gray-800">${Number(selectedMajorFee || 0).toFixed(2)}</span>
+                  <span className="text-sm font-bold text-gray-800">
+                    ${Number(selectedMajorFee || 0).toFixed(2)}
+                  </span>
                 </label>
 
                 <label className="flex items-center gap-3 cursor-pointer">
@@ -1019,22 +1156,37 @@ const Registration = () => {
                     type="radio"
                     name="payPlan"
                     checked={payPlan.type === "SEMESTER"}
-                    onChange={() => setPayPlan((p) => ({ ...p, type: "SEMESTER" }))}
+                    onChange={() =>
+                      setPayPlan((p) => ({ ...p, type: "SEMESTER" }))
+                    }
                   />
                   <div className="flex-1">
-                    <p className="font-semibold text-gray-800">Pay One Semester</p>
-                    <p className="text-xs text-gray-600">Pay 50% now + choose semester</p>
+                    <p className="font-semibold text-gray-800">
+                      Pay One Semester
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      Pay 50% now + choose semester
+                    </p>
                   </div>
-                  <span className="text-sm font-bold text-gray-800">${(Number(selectedMajorFee || 0) * 0.5).toFixed(2)}</span>
+                  <span className="text-sm font-bold text-gray-800">
+                    ${(Number(selectedMajorFee || 0) * 0.5).toFixed(2)}
+                  </span>
                 </label>
 
                 {payPlan.type === "SEMESTER" && (
                   <div className="pl-7">
-                    <label className="text-xs font-semibold text-gray-700">Which semester?</label>
+                    <label className="text-xs font-semibold text-gray-700">
+                      Which semester?
+                    </label>
                     <select
                       className={`${inputClassBase} mt-2`}
                       value={payPlan.semester}
-                      onChange={(e) => setPayPlan((p) => ({ ...p, semester: Number(e.target.value) }))}
+                      onChange={(e) =>
+                        setPayPlan((p) => ({
+                          ...p,
+                          semester: Number(e.target.value),
+                        }))
+                      }
                     >
                       <option value={1}>Semester 1</option>
                       <option value={2}>Semester 2</option>
@@ -1045,7 +1197,9 @@ const Registration = () => {
 
               <div className="mt-4 text-sm text-gray-800">
                 <span className="font-semibold">Amount to pay now:</span>{" "}
-                <span className="font-bold text-green-700">${Number(payAmount || 0).toFixed(2)}</span>
+                <span className="font-bold text-green-700">
+                  ${Number(payAmount || 0).toFixed(2)}
+                </span>
               </div>
             </div>
 
@@ -1059,11 +1213,19 @@ const Registration = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                 <div className="relative z-10 flex items-center gap-4">
                   <div className="backdrop-blur-xl bg-white/20 p-3 rounded-xl">
-                    {loading ? <Loader className="animate-spin" size={28} /> : <Smartphone size={28} />}
+                    {loading ? (
+                      <Loader className="animate-spin" size={28} />
+                    ) : (
+                      <Smartphone size={28} />
+                    )}
                   </div>
                   <div className="text-left flex-1">
-                    <h4 className="font-bold text-lg">{loading ? "Processing..." : "Pay with QR Code"}</h4>
-                    <p className="text-sm text-white/80 mt-1">Scan and pay using ABA Mobile</p>
+                    <h4 className="font-bold text-lg">
+                      {loading ? "Processing..." : "Pay with QR Code"}
+                    </h4>
+                    <p className="text-sm text-white/80 mt-1">
+                      Scan and pay using ABA Mobile
+                    </p>
                   </div>
                   {!loading && <div className="text-2xl">→</div>}
                 </div>
@@ -1081,7 +1243,9 @@ const Registration = () => {
                   </div>
                   <div className="text-left flex-1">
                     <h4 className="font-bold text-lg">Pay Later</h4>
-                    <p className="text-sm text-gray-600 mt-1">Submit and pay at campus</p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Submit and pay at campus
+                    </p>
                   </div>
                   <div className="text-2xl text-gray-400">→</div>
                 </div>
@@ -1089,9 +1253,13 @@ const Registration = () => {
             </div>
 
             <div className="mt-6 backdrop-blur-xl bg-blue-50/60 border border-blue-200/40 rounded-xl p-4 flex items-start gap-3">
-              <AlertTriangle size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
+              <AlertTriangle
+                size={20}
+                className="text-blue-600 flex-shrink-0 mt-0.5"
+              />
               <p className="text-xs text-gray-700">
-                <span className="font-semibold">Note:</span> If you choose "Pay Later", please complete payment within 7 days.
+                <span className="font-semibold">Note:</span> If you choose "Pay
+                Later", please complete payment within 7 days.
               </p>
             </div>
           </div>
@@ -1146,22 +1314,204 @@ const Registration = () => {
             NovaTech University
           </h1>
           <div className="backdrop-blur-xl bg-white/50 inline-block px-6 py-3 rounded-full border-2 border-white/60 shadow-lg">
-            <p className="text-gray-800 text-lg font-semibold">Student Registration Portal</p>
+            <p className="text-gray-800 text-lg font-semibold">
+              Student Registration Portal
+            </p>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Personal Information */}
-          <Section
-            title="Personal Information"
-            icon={User}
-            gradientBar="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
-            iconGradient="bg-gradient-to-br from-blue-500 to-purple-600"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {personalFields.map((f) => (
-                <div key={f.name} className={f.name === "personalEmail" ? "md:col-span-2" : ""}>
+        {/* ✅ GATE SCREEN: show ONLY selection + quota before full form */}
+        {!gateAllowed && (
+          <div className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border-2 border-white/60 relative">
+            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-t-3xl" />
+
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-white/40">
+              <div className="p-3 backdrop-blur-xl bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl text-white shadow-lg">
+                <Lock size={24} />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Check Registration Availability
+                </h2>
+                <p className="text-sm text-gray-700 font-medium mt-1">
+                  Select Academic Year + Department + Major first. If not allowed,
+                  the full form stays hidden (no wasting time).
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Field
+                name="academicYear"
+                label="Academic Year"
+                required
+                value={form.academicYear}
+                onChange={handleChange}
+                placeholder="2026-2027"
+              />
+
+              <Field
+                type="select"
+                name="departmentId"
+                label="Department"
+                required
+                value={form.departmentId}
+                onChange={handleChange}
+                options={departmentOptions}
+              />
+
+              <Field
+                type="select"
+                name="majorId"
+                label="Major"
+                required
+                value={form.majorId}
+                onChange={handleChange}
+                options={majorOptions}
+                disabled={!form.departmentId}
+              />
+            </div>
+
+            <div className="mt-4">{quotaBadge}</div>
+
+            <div className="mt-4">
+              {!gateReady ? (
+                <div className="flex items-start gap-2 text-gray-700">
+                  <Info size={18} className="mt-0.5 text-blue-600" />
+                  <p className="text-sm font-semibold">
+                    Please choose Academic Year, Department, and Major to
+                    continue.
+                  </p>
+                </div>
+              ) : quotaInfo.loading ? (
+                <div className="flex items-center gap-2 text-blue-700 font-semibold">
+                  <Loader className="animate-spin" size={18} />
+                  Checking availability...
+                </div>
+              ) : quotaInfo.checked && quotaInfo.available === false ? (
+                <div className="flex items-start gap-2 text-red-700">
+                  <Lock size={18} className="mt-0.5" />
+                  <p className="text-sm font-semibold">
+                    Registration is not available for this Major / Academic Year.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex items-start gap-2 text-yellow-700">
+                  <AlertTriangle size={18} className="mt-0.5" />
+                  <p className="text-sm font-semibold">
+                    Availability check unavailable right now (server). You can
+                    still proceed when allowed.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ✅ FULL FORM: show ONLY when gateAllowed */}
+        {gateAllowed && (
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Personal Information */}
+            <Section
+              title="Personal Information"
+              icon={User}
+              gradientBar="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
+              iconGradient="bg-gradient-to-br from-blue-500 to-purple-600"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {personalFields.map((f) => (
+                  <div
+                    key={f.name}
+                    className={f.name === "personalEmail" ? "md:col-span-2" : ""}
+                  >
+                    <Field
+                      type={f.type || "text"}
+                      name={f.name}
+                      label={f.label}
+                      value={form[f.name]}
+                      onChange={handleChange}
+                      placeholder={f.placeholder}
+                      required={!!f.required}
+                      icon={f.icon}
+                      options={f.options}
+                      disabled={f.disabled}
+                      readOnly={f.readOnly}
+                      className={f.className}
+                    />
+                  </div>
+                ))}
+              </div>
+            </Section>
+
+            {/* Family Information */}
+            <Section
+              title="Family Information"
+              icon={User}
+              gradientBar="bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500"
+              iconGradient="bg-gradient-to-br from-purple-500 to-pink-600"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {familyFieldsFather.map((f) => (
                   <Field
+                    key={f.name}
+                    type={f.type || "text"}
+                    name={f.name}
+                    label={f.label}
+                    value={form[f.name]}
+                    onChange={handleChange}
+                    placeholder={f.placeholder}
+                  />
+                ))}
+
+                <div className="md:col-span-3 border-t-2 border-white/40 pt-6 mt-2" />
+
+                {familyFieldsMother.map((f) => (
+                  <Field
+                    key={f.name}
+                    type={f.type || "text"}
+                    name={f.name}
+                    label={f.label}
+                    value={form[f.name]}
+                    onChange={handleChange}
+                    placeholder={f.placeholder}
+                  />
+                ))}
+              </div>
+            </Section>
+
+            {/* Guardian & Emergency Contact */}
+            <Section
+              title="Guardian & Emergency Contact"
+              icon={Shield}
+              gradientBar="bg-gradient-to-r from-green-500 via-teal-500 to-cyan-500"
+              iconGradient="bg-gradient-to-br from-green-500 to-teal-600"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {guardianFields.map((f) => (
+                  <Field
+                    key={f.name}
+                    type={f.type || "text"}
+                    name={f.name}
+                    label={f.label}
+                    value={form[f.name]}
+                    onChange={handleChange}
+                    placeholder={f.placeholder}
+                  />
+                ))}
+              </div>
+            </Section>
+
+            {/* High School Information */}
+            <Section
+              title="High School Information"
+              icon={University}
+              gradientBar="bg-gradient-to-r from-orange-500 via-pink-500 to-rose-500"
+              iconGradient="bg-gradient-to-br from-orange-500 to-pink-600"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {schoolFields.map((f) => (
+                  <Field
+                    key={f.name}
                     type={f.type || "text"}
                     name={f.name}
                     label={f.label}
@@ -1169,183 +1519,103 @@ const Registration = () => {
                     onChange={handleChange}
                     placeholder={f.placeholder}
                     required={!!f.required}
-                    icon={f.icon}
+                  />
+                ))}
+              </div>
+            </Section>
+
+            {/* Academic Information */}
+            <Section
+              title="Academic Information"
+              icon={School}
+              gradientBar="bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500"
+              iconGradient="bg-gradient-to-br from-blue-500 to-cyan-600"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {academicFields.map((f) => (
+                  <Field
+                    key={f.name}
+                    type={f.type || "text"}
+                    name={f.name}
+                    label={f.label}
+                    value={form[f.name]}
+                    onChange={handleChange}
+                    placeholder={f.placeholder}
+                    required={!!f.required}
                     options={f.options}
                     disabled={f.disabled}
                     readOnly={f.readOnly}
                     className={f.className}
                   />
-                </div>
-              ))}
-            </div>
-          </Section>
+                ))}
 
-          {/* Family Information */}
-          <Section
-            title="Family Information"
-            icon={User}
-            gradientBar="bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500"
-            iconGradient="bg-gradient-to-br from-purple-500 to-pink-600"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {familyFieldsFather.map((f) => (
-                <Field
-                  key={f.name}
-                  type={f.type || "text"}
-                  name={f.name}
-                  label={f.label}
-                  value={form[f.name]}
-                  onChange={handleChange}
-                  placeholder={f.placeholder}
-                />
-              ))}
+                {/* ✅ quota info shown right after academic selection */}
+                <div className="md:col-span-3">{quotaBadge}</div>
 
-              <div className="md:col-span-3 border-t-2 border-white/40 pt-6 mt-2" />
-
-              {familyFieldsMother.map((f) => (
-                <Field
-                  key={f.name}
-                  type={f.type || "text"}
-                  name={f.name}
-                  label={f.label}
-                  value={form[f.name]}
-                  onChange={handleChange}
-                  placeholder={f.placeholder}
-                />
-              ))}
-            </div>
-          </Section>
-
-          {/* Guardian & Emergency Contact */}
-          <Section
-            title="Guardian & Emergency Contact"
-            icon={Shield}
-            gradientBar="bg-gradient-to-r from-green-500 via-teal-500 to-cyan-500"
-            iconGradient="bg-gradient-to-br from-green-500 to-teal-600"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {guardianFields.map((f) => (
-                <Field
-                  key={f.name}
-                  type={f.type || "text"}
-                  name={f.name}
-                  label={f.label}
-                  value={form[f.name]}
-                  onChange={handleChange}
-                  placeholder={f.placeholder}
-                />
-              ))}
-            </div>
-          </Section>
-
-          {/* High School Information */}
-          <Section
-            title="High School Information"
-            icon={University}
-            gradientBar="bg-gradient-to-r from-orange-500 via-pink-500 to-rose-500"
-            iconGradient="bg-gradient-to-br from-orange-500 to-pink-600"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {schoolFields.map((f) => (
-                <Field
-                  key={f.name}
-                  type={f.type || "text"}
-                  name={f.name}
-                  label={f.label}
-                  value={form[f.name]}
-                  onChange={handleChange}
-                  placeholder={f.placeholder}
-                  required={!!f.required}
-                />
-              ))}
-            </div>
-          </Section>
-
-          {/* Academic Information */}
-          <Section
-            title="Academic Information"
-            icon={School}
-            gradientBar="bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500"
-            iconGradient="bg-gradient-to-br from-blue-500 to-cyan-600"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {academicFields.map((f) => (
-                <Field
-                  key={f.name}
-                  type={f.type || "text"}
-                  name={f.name}
-                  label={f.label}
-                  value={form[f.name]}
-                  onChange={handleChange}
-                  placeholder={f.placeholder}
-                  required={!!f.required}
-                  options={f.options}
-                  disabled={f.disabled}
-                  readOnly={f.readOnly}
-                  className={f.className}
-                />
-              ))}
-
-              {/* ✅ quota info shown right after academic selection */}
-              <div className="md:col-span-3">{quotaBadge}</div>
-
-              {/* Profile Picture */}
-              <div className="md:col-span-3 mt-4">
-                <label className={labelClassBase}>Profile Picture</label>
-                <div className="backdrop-blur-2xl bg-white/50 border-2 border-dashed border-white/60 rounded-3xl p-8 flex flex-col items-center justify-center text-center hover:border-blue-400 hover:bg-blue-50/40 transition-all duration-300 cursor-pointer shadow-lg group">
-                  <input
-                    type="file"
-                    name="profilePicture"
-                    onChange={handleChange}
-                    className="hidden"
-                    id="file-upload"
-                    accept="image/png,image/jpeg,image/jpg"
-                  />
-                  <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center w-full">
-                    {profilePreview ? (
-                      <img
-                        src={profilePreview}
-                        alt="Preview"
-                        className="w-32 h-32 rounded-full object-cover shadow-xl mb-3 border-4 border-white/70"
-                      />
-                    ) : (
-                      <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-3 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
-                        <User size={40} />
-                      </div>
-                    )}
-                    <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-bold flex items-center gap-2 text-lg">
-                      <Upload size={18} /> {form.profilePicture ? "Change Photo" : "Upload Photo"}
-                    </span>
-                    <span className="text-xs text-gray-500 mt-2 font-medium">PNG, JPG up to 5MB</span>
-                  </label>
+                {/* Profile Picture */}
+                <div className="md:col-span-3 mt-4">
+                  <label className={labelClassBase}>Profile Picture</label>
+                  <div className="backdrop-blur-2xl bg-white/50 border-2 border-dashed border-white/60 rounded-3xl p-8 flex flex-col items-center justify-center text-center hover:border-blue-400 hover:bg-blue-50/40 transition-all duration-300 cursor-pointer shadow-lg group">
+                    <input
+                      type="file"
+                      name="profilePicture"
+                      onChange={handleChange}
+                      className="hidden"
+                      id="file-upload"
+                      accept="image/png,image/jpeg,image/jpg"
+                    />
+                    <label
+                      htmlFor="file-upload"
+                      className="cursor-pointer flex flex-col items-center w-full"
+                    >
+                      {profilePreview ? (
+                        <img
+                          src={profilePreview}
+                          alt="Preview"
+                          className="w-32 h-32 rounded-full object-cover shadow-xl mb-3 border-4 border-white/70"
+                        />
+                      ) : (
+                        <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-3 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+                          <User size={40} />
+                        </div>
+                      )}
+                      <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-bold flex items-center gap-2 text-lg">
+                        <Upload size={18} />{" "}
+                        {form.profilePicture ? "Change Photo" : "Upload Photo"}
+                      </span>
+                      <span className="text-xs text-gray-500 mt-2 font-medium">
+                        PNG, JPG up to 5MB
+                      </span>
+                    </label>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Section>
+            </Section>
 
-          {/* Submit Button */}
-          <div className="flex justify-center pt-6 pb-20">
-            <button
-              type="submit"
-              disabled={loading || (quotaInfo.checked && quotaInfo.available === false)}
-              className="group relative backdrop-blur-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white py-5 px-16 rounded-3xl font-bold text-lg shadow-[0_20px_60px_rgba(99,102,241,0.4)] hover:shadow-[0_30px_80px_rgba(99,102,241,0.6)] hover:scale-105 transition-all duration-500 overflow-hidden border-2 border-white/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <span className="relative flex items-center gap-3">
-                {loading ? (
-                  <>
-                    <Loader className="animate-spin" size={22} />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    Proceed to Payment <CreditCard size={22} />
-                  </>
-                )}
-              </span>
-            </button>
-          </div>
-        </form>
+            {/* Submit Button */}
+            <div className="flex justify-center pt-6 pb-20">
+              <button
+                type="submit"
+                disabled={loading || (quotaInfo.checked && quotaInfo.available === false)}
+                className="group relative backdrop-blur-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white py-5 px-16 rounded-3xl font-bold text-lg shadow-[0_20px_60px_rgba(99,102,241,0.4)] hover:shadow-[0_30px_80px_rgba(99,102,241,0.6)] hover:scale-105 transition-all duration-500 overflow-hidden border-2 border-white/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <span className="relative flex items-center gap-3">
+                  {loading ? (
+                    <>
+                      <Loader className="animate-spin" size={22} />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      Proceed to Payment <CreditCard size={22} />
+                    </>
+                  )}
+                </span>
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </section>
   );

@@ -156,3 +156,9 @@ export const generateAndDownloadReport = async (filters = {}, filename = null) =
   downloadPDFBlob(response.data, filename);
   return { success: true };
 };
+ 
+export const canRegister = (majorId, academicYear) => {
+  return API.get("/registrations/can-register", {
+    params: { major_id: majorId, academic_year: academicYear },
+  });
+};
