@@ -19,6 +19,8 @@ import { fetchMajors } from "../../api/major_api";
 import RegistrationReportPage from "./RegistrationReportPage";
 import PaymentForm from "../../Components/payment/PaymentForm.jsx";
 import { ToastContext } from "../../Components/Context/ToastProvider.jsx";
+import { staggeredRequests } from "../../utils/apiThrottle";
+import { getCachedDepartments, getCachedMajors } from "../../utils/dataCache";
 
 import {
   Users,
@@ -283,11 +285,13 @@ const RegistrationPage = () => {
 
       const semKey = String(selectedSemesterInt);
 
-      const [regRes, deptRes, majorRes] = await Promise.all([
-        fetchRegistrations({ semester: selectedSemesterInt }),
-        fetchDepartments(),
-        fetchMajors(),
-      ]);
+      // ✅ FIXED: Staggered requests instead of Promise.all (prevents 429)
+      // Registrations load first, then departments/majors with delays + caching
+      const [regRes, deptRes, majorRes] = await staggeredRequests([
+        () => fetchRegistrations({ semester: selectedSemesterInt }),
+        () => getCachedDepartments(fetchDepartments),
+        () => getCachedMajors(fetchMajors),
+      ], 150); // 150ms delay between each request
 
       const regData = regRes.data?.data || regRes.data || [];
       const deptData = deptRes.data?.data || deptRes.data || [];
