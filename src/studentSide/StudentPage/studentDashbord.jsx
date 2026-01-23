@@ -9,7 +9,7 @@ import SchedulePage from './SchedulePage.jsx';
 import GradesPage from './GradesPage.jsx';
 import AssignmentsPage from './AssignmentsPage.jsx';
 import AttendancePage from './AttendancePage.jsx';
-import MessagesPage from './MessagesPage.jsx';
+import MessagesPage from '../../gobalConponent/MessagesPage.jsx';
 import ProfilePage from './ProfilePage.jsx';
 import {
     LayoutDashboard,
