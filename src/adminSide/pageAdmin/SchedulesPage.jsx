@@ -3,6 +3,7 @@ import ScheduleForm from "../ConponentsAdmin/ScheduleForm.jsx";
 import SchedulesList from "../ConponentsAdmin/SchedulesList.jsx";
 import { fetchAllSchedules } from "../../api/admin_course_api.jsx";
 import { fetchCourses } from "../../api/course_api.jsx";
+import { getCachedCourses } from "../../utils/dataCache";
 import {
   Calendar,
   Clock,
@@ -16,9 +17,10 @@ const SchedulesPage = () => {
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // ✅ FIXED: Staggered loading to prevent 429 errors
   useEffect(() => {
     loadSchedules();
-    loadCourses();
+    setTimeout(() => loadCourses(), 100); // 100ms delay
   }, []);
 
   // ================= LOAD SCHEDULES =================
@@ -36,11 +38,11 @@ const SchedulesPage = () => {
     }
   };
 
-  // ================= LOAD COURSES =================
+  // ================= LOAD COURSES (WITH CACHING) =================
   const loadCourses = async () => {
     try {
-      const res = await fetchCourses();
-      const data = res.data?.data || [];
+      const res = await getCachedCourses(fetchCourses);
+      const data = res.data?.data || res.data || [];
       setCourses(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Failed to load courses:", error);

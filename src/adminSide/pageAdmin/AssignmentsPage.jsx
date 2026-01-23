@@ -3,6 +3,7 @@ import AssignmentForm from "../ConponentsAdmin/AssignmentForm.jsx";
 import AssignmentsList from "../ConponentsAdmin/AssignmentsList.jsx";
 import { fetchAllAssignments } from "../../api/admin_course_api.jsx";
 import { fetchCourses } from "../../api/course_api.jsx";
+import { getCachedCourses } from "../../utils/dataCache";
 import {
   FileText,
   BookOpen,
@@ -16,9 +17,10 @@ const AssignmentsPage = () => {
   const [editingAssignment, setEditingAssignment] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // ✅ FIXED: Staggered loading to prevent 429 errors
   useEffect(() => {
     loadAssignments();
-    loadCourses();
+    setTimeout(() => loadCourses(), 100); // 100ms delay
   }, []);
 
   // ================= LOAD ASSIGNMENTS =================
@@ -36,11 +38,11 @@ const AssignmentsPage = () => {
     }
   };
 
-  // ================= LOAD COURSES =================
+  // ================= LOAD COURSES (WITH CACHING) =================
   const loadCourses = async () => {
     try {
-      const res = await fetchCourses();
-      const data = res.data?.data || [];
+      const res = await getCachedCourses(fetchCourses);
+      const data = res.data?.data || res.data || [];
       setCourses(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Failed to load courses:", error);
