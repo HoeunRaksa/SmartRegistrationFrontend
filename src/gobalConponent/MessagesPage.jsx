@@ -45,66 +45,37 @@ const MessagesPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConversation?.id]);
 
-  // ✅ REALTIME: subscribe to private channel for this chat pair
   useEffect(() => {
+    console.log("🔥 realtime effect fired", {
+      currentUserId: currentUser?.id,
+      selectedId: selectedConversation?.id,
+      token: !!localStorage.getItem("token"),
+    });
+
     if (!currentUser?.id || !selectedConversation?.id) return;
 
     const echo = makeEcho();
+    console.log("🔥 echo created", echo);
 
     const pusher = echo.connector.pusher;
     pusher.connection.bind("connected", () => console.log("✅ WS connected"));
     pusher.connection.bind("error", (e) => console.log("❌ WS error", e));
     pusher.connection.bind("disconnected", () => console.log("⚠️ WS disconnected"));
 
-
     const a = Math.min(Number(currentUser.id), Number(selectedConversation.id));
     const b = Math.max(Number(currentUser.id), Number(selectedConversation.id));
     const channel = `chat.${a}.${b}`;
 
-    // Listen to MessageSent event: broadcastAs() => 'message.sent'
-    echo
-      .private(channel)
-      .listen(".message.sent", (e) => {
-        const msg = e?.message || e?.data?.message || e?.data || null;
-        if (!msg?.id) return;
-
-        // Ignore duplicates (ex: reload or optimistic replace)
-        setMessages((prev) => {
-          const exists = prev.some((m) => String(m.id) === String(msg.id));
-          if (exists) return prev;
-
-          return [...prev, mapServerMessageToUI(msg)];
-        });
-
-        // Update sidebar preview and move chat to top
-        setConversations((prev) => {
-          const updated = prev.map((c) =>
-            c.id === selectedConversation.id
-              ? {
-                ...c,
-                last_message: msg.content ?? msg.message ?? "",
-                last_message_time: msg.created_at,
-                // if receiver: decrement unread can be handled by backend later
-              }
-              : c
-          );
-
-          const idx = updated.findIndex((c) => c.id === selectedConversation.id);
-          if (idx > 0) {
-            const [item] = updated.splice(idx, 1);
-            updated.unshift(item);
-          }
-          return updated;
-        });
-      });
+    echo.private(channel).listen(".message.sent", (e) => {
+      console.log("✅ EVENT RECEIVED", e);
+    });
 
     return () => {
-      // leave private channel
       echo.leave(`private-${channel}`);
       echo.disconnect();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.id, selectedConversation?.id]);
+
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -430,8 +401,8 @@ const MessagesPage = () => {
                         <div className="max-w-[78%] md:max-w-[70%]">
                           <div
                             className={`rounded-2xl px-4 py-2.5 shadow-sm border ${m.is_mine
-                                ? "bg-blue-600 text-white border-blue-600 rounded-br-md"
-                                : "bg-white text-slate-900 border-slate-200 rounded-bl-md"
+                              ? "bg-blue-600 text-white border-blue-600 rounded-br-md"
+                              : "bg-white text-slate-900 border-slate-200 rounded-bl-md"
                               }`}
                           >
                             {showName && (
