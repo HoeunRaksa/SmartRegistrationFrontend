@@ -97,8 +97,8 @@ const MessagesPage = () => {
     const subscription = echo
       .private(channel)
       // ✅ try both names to be sure
-      .listen(".message.sent", (e) => {
-        console.log("✅ EVENT .message.sent", e);
+      .listen("message.sent", (e) => {
+        console.log("✅ EVENT message.sent", e);
 
         const msg = e?.message || e?.data?.message || e?.data || null;
         if (!msg?.id) return;
