@@ -48,9 +48,14 @@ export const generatePaymentQR = (registrationId, payload = {}) =>
   PaymentAPI.post("/payment/generate-qr", {
     registration_id: registrationId,
     ...payload,
+    // keep semester numeric if provided
+    ...(payload?.semester !== undefined ? { semester: Number(payload.semester) } : {}),
   });
 
 // ✅ Admin Generate QR (use same function)
+// Usage examples:
+// adminGenerateQr(id, { pay_plan: "SEMESTER", semester: 1, amount: 100 })
+// adminGenerateQr(id, { semester: 2 })
 export const adminGenerateQr = (id, payload = {}) => generatePaymentQR(id, payload);
 
 // ==============================
@@ -58,13 +63,23 @@ export const adminGenerateQr = (id, payload = {}) => generatePaymentQR(id, paylo
 // backend route example: POST /admin/registrations/{id}/mark-paid-cash
 // payload supports: { pay_plan, semester, amount }
 // ==============================
+//
+// Supports BOTH calling styles:
+// markPaidCash(id, 1)  ✅ (semester only)
+// markPaidCash(id, { semester: 1, amount: 100 }) ✅ (payload)
+//
 export const markPaidCash = (registrationId, payload = {}) => {
+  // allow old style: payload is semester number
+  const finalPayload =
+    typeof payload === "number"
+      ? { semester: payload }
+      : { ...payload };
+
   return API.post(`/admin/registrations/${registrationId}/mark-paid-cash`, {
-    ...payload,
-    semester: Number(payload.semester || 1),
+    ...finalPayload,
+    semester: Number(finalPayload.semester || 1),
   });
 };
-
 
 // ==============================
 // PAYMENT STATUS
@@ -78,28 +93,44 @@ export const getRegistrationPayment = (registrationId) =>
 // ==============================
 // REPORTS
 // ==============================
+//
+// ✅ Use axios params instead of manual URLSearchParams
+// (Axios will build clean query string and avoid nested-object bugs)
+//
+
+// GET /reports/registrations?department_id=&major_id=&semester=...
 export const generateRegistrationReport = (filters = {}) => {
-  const params = new URLSearchParams();
-  Object.entries(filters).forEach(([k, v]) => {
-    if (v !== null && v !== undefined && v !== "") params.append(k, v);
+  const params = {};
+  Object.entries(filters || {}).forEach(([k, v]) => {
+    if (v !== null && v !== undefined && v !== "") params[k] = v;
   });
-  return API.get(`/reports/registrations?${params.toString()}`);
+
+  return API.get("/reports/registrations", { params });
 };
 
+// GET /reports/registrations/pdf?department_id=&major_id=&semester=...
 export const downloadRegistrationReportPDF = (filters = {}) => {
-  const params = new URLSearchParams();
-  Object.entries(filters).forEach(([k, v]) => {
-    if (v !== null && v !== undefined && v !== "") params.append(k, v);
+  const params = {};
+  Object.entries(filters || {}).forEach(([k, v]) => {
+    if (v !== null && v !== undefined && v !== "") params[k] = v;
   });
-  return API.get(`/reports/registrations/pdf?${params.toString()}`, {
+
+  return API.get("/reports/registrations/pdf", {
+    params,
     responseType: "blob",
   });
 };
 
-export const getRegistrationSummary = (academicYear = null) => {
-  const params = academicYear ? { academic_year: academicYear } : {};
+// ✅ FIX: accept filters object (academic_year, semester)
+export const getRegistrationSummary = (filters = {}) => {
+  const params = {};
+  Object.entries(filters).forEach(([k, v]) => {
+    if (v !== null && v !== undefined && v !== "") params[k] = v;
+  });
   return API.get("/reports/registrations/summary", { params });
 };
+
+
 
 export const checkMajorCapacity = (majorId, academicYear) =>
   API.get(`/majors/${majorId}/capacity`, {

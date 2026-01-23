@@ -1,8 +1,5 @@
-// src/adminSide/pageAdmin/RegistrationReportPage.jsx
-// ✅ FULL NO CUT — NEW FLOW (student_academic_periods first) + SAFE OLD SUPPORT
-// ✅ FAST: memo, stable callbacks, clean payload, small debounce, minimal rerenders
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   FileText,
@@ -140,6 +137,11 @@ const RegistrationReportPage = () => {
     semester: "", // ✅ semester-aware
   });
 
+  // ✅ FIX 429: prevent overlapping + duplicate summary calls
+  const summaryInFlightRef = useRef(false);
+  const summaryLastKeyRef = useRef("");
+  const summaryTimerRef = useRef(null);
+
   /* ================== OPTIONS ================== */
 
   const academicYearOptions = useMemo(() => {
@@ -198,39 +200,82 @@ const RegistrationReportPage = () => {
     return payload;
   }, []);
 
-  const loadSummary = useCallback(
-    async (override = null) => {
-      const payload = override || filters;
+  // ✅ SUMMARY payload: only send what summary endpoint needs
+  const buildSummaryPayload = useCallback((f) => {
+    const payload = {};
+    const ay = f?.academic_year ?? "";
+    const sem = f?.semester ?? "";
 
+    if (ay !== "" && ay !== null && ay !== undefined) payload.academic_year = ay;
+    if (sem !== "" && sem !== null && sem !== undefined) payload.semester = sem;
+
+    // (optional) if later you want date range in summary, you can add here safely
+    // if (f?.date_from) payload.date_from = f.date_from;
+    // if (f?.date_to) payload.date_to = f.date_to;
+
+    return payload;
+  }, []);
+
+  /**
+   * ✅ loadSummary
+   * - dedupe: skip if same key and not forced
+   * - in-flight lock: skip overlap (prevents spam)
+   * - safe empty params
+   */
+  const loadSummary = useCallback(
+    async (overrideFilters = null, options = {}) => {
+      const { force = false } = options || {};
+      const base = overrideFilters || filters;
+
+      const payload = buildSummaryPayload(base);
+
+      // ✅ build dedupe key from payload (not from whole filters)
+      const key = JSON.stringify(payload);
+
+      if (!force && summaryLastKeyRef.current === key) return; // ✅ same params -> skip
+      if (!force && summaryInFlightRef.current) return; // ✅ already calling -> skip
+
+      summaryLastKeyRef.current = key;
+      summaryInFlightRef.current = true;
       setSummaryLoading(true);
+
       try {
-        // only send what summary endpoint needs (fast)
-        const res = await getRegistrationSummary({
-          academic_year: payload.academic_year || "",
-          semester: payload.semester || "",
-        });
+        const res = await getRegistrationSummary(payload);
         setSummaryData(res?.data?.data ?? res?.data ?? null);
       } catch (err) {
         console.error("Failed to load summary:", err);
         setSummaryData(null);
       } finally {
+        summaryInFlightRef.current = false;
         setSummaryLoading(false);
       }
     },
-    [filters]
+    [filters, buildSummaryPayload]
   );
 
+  // ✅ load base options only
   useEffect(() => {
     loadDepartments();
     loadMajors();
-    loadSummary();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ✅ small debounce: refresh summary when year/semester changes
+  /**
+   * ✅ SINGLE debounce for summary
+   * - only react to academic_year + semester (cheap, stable)
+   * - clears previous timer
+   * - prevents request spam (429)
+   */
   useEffect(() => {
-    const t = setTimeout(() => loadSummary(), 250);
-    return () => clearTimeout(t);
+    if (summaryTimerRef.current) clearTimeout(summaryTimerRef.current);
+
+    summaryTimerRef.current = setTimeout(() => {
+      loadSummary();
+    }, 450);
+
+    return () => {
+      if (summaryTimerRef.current) clearTimeout(summaryTimerRef.current);
+    };
   }, [filters.academic_year, filters.semester, loadSummary]);
 
   /* ================== HANDLERS ================== */
@@ -285,6 +330,15 @@ const RegistrationReportPage = () => {
     });
     setReportData(null);
     setSummaryData(null);
+
+    // ✅ reset dedupe so user can refresh again after reset
+    summaryLastKeyRef.current = "";
+    summaryInFlightRef.current = false;
+
+    if (summaryTimerRef.current) {
+      clearTimeout(summaryTimerRef.current);
+      summaryTimerRef.current = null;
+    }
   }, []);
 
   /* ================== RENDER ================== */
@@ -319,7 +373,7 @@ const RegistrationReportPage = () => {
           </div>
 
           <button
-            onClick={() => loadSummary()}
+            onClick={() => loadSummary(null, { force: true })}
             disabled={summaryLoading}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/70 border border-gray-200 text-sm font-medium text-gray-800 hover:bg-white transition-all disabled:opacity-60"
           >
@@ -673,9 +727,7 @@ const ReportTable = React.memo(function ReportTable({ registrations }) {
                 <tr key={reg?.id ?? `${index}`} className="hover:bg-blue-50/30 transition-colors">
                   <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
 
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                    {getSafe(getStudentCode(reg))}
-                  </td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{getSafe(getStudentCode(reg))}</td>
 
                   <td className="px-6 py-4 text-sm text-gray-900">{getSafe(reg?.full_name_en ?? reg?.full_name)}</td>
 
