@@ -21,6 +21,7 @@ import PaymentForm from "../../Components/payment/PaymentForm.jsx";
 import { ToastContext } from "../../Components/Context/ToastProvider.jsx";
 import { staggeredRequests } from "../../utils/apiThrottle";
 import { getCachedDepartments, getCachedMajors } from "../../utils/dataCache";
+import { createPortal } from "react-dom";
 
 import {
   Users,
@@ -714,37 +715,47 @@ const RegistrationPage = () => {
 
 /* ================== REPORT MODAL ================== */
 const ReportModal = ({ onClose }) => {
-  return (
+  return createPortal(
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 z-50"
+        className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       >
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-7xl max-h-[80vh] overflow-y-auto bg-white rounded-3xl shadow-2xl"
-        >
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 z-50 p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors shadow-lg"
+        <div className="absolute inset-0 grid place-items-center p-4">
+          <motion.div
+            initial={{ scale: 0.96, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.96, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-[95vw] max-w-7xl h-[90vh] bg-white rounded-3xl shadow-2xl flex flex-col"
           >
-            <X className="w-5 h-5" />
-          </button>
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 z-50 p-2 rounded-full bg-red-500 text-white hover:bg-red-600 shadow-lg"
+            >
+              <X className="w-5 h-5" />
+            </button>
 
-          <div className="p-6">
-            <RegistrationReportPage />
-          </div>
-        </motion.div>
+            <div className="flex-1 overflow-y-auto p-6">
+              <RegistrationReportPage />
+            </div>
+          </motion.div>
+        </div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
+
+
+
+
+
+
 
 /* ================== LIST ================== */
 

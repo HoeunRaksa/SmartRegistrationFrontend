@@ -13,6 +13,8 @@ import StudentsForm from "../ConponentsAdmin/StudentsForm.jsx";
 import "../../App.css";
 import { motion, AnimatePresence } from "framer-motion";
 import Clock from "../ConponentsAdmin/Clock";
+import { createPortal } from "react-dom";
+
 import {
   Building2,
   GraduationCap,
@@ -1114,60 +1116,65 @@ const Dashboard = () => {
         </motion.div>
 
         {/* MODALS */}
-        <AnimatePresence>
-          {["departments", "majors", "subjects", "students"].map((view) => {
-            const FormComponent = {
-              departments: DepartmentsForm,
-              majors: MajorsForm,
-              subjects: SubjectsForm,
-              students: StudentsForm,
-            }[view];
+{/* MODALS (PORTAL CENTER FIX) */}
+{createPortal(
+  <AnimatePresence>
+    {["departments", "majors", "subjects", "students"].map((view) => {
+      const FormComponent = {
+        departments: DepartmentsForm,
+        majors: MajorsForm,
+        subjects: SubjectsForm,
+        students: StudentsForm,
+      }[view];
 
-            const borderColors = {
-              departments: "border-blue-200/50",
-              majors: "border-purple-200/50",
-              subjects: "border-green-200/50",
-              students: "border-indigo-200/50",
-            };
+      const borderColors = {
+        departments: "border-blue-200/50",
+        majors: "border-purple-200/50",
+        subjects: "border-green-200/50",
+        students: "border-indigo-200/50",
+      };
 
-            return (
-              activeView === view && (
-                <motion.div
-                  key={view}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/20 backdrop-blur-sm p-4"
+      return (
+        activeView === view && (
+          <motion.div
+            key={view}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[9999] bg-gray-900/20 backdrop-blur-sm"
+            onClick={() => setActiveView("admin/dashboard")}
+          >
+            {/* center */}
+            <div className="absolute inset-0 grid place-items-center p-4">
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                onClick={(e) => e.stopPropagation()}
+                className={`relative w-full max-w-7xl h-[90vh] overflow-y-auto rounded-3xl p-8 bg-white/95 backdrop-blur-3xl border ${borderColors[view]} shadow-2xl`}
+              >
+                <motion.button
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => setActiveView("admin/dashboard")}
+                  className="absolute top-4 right-4 w-10 h-10 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-lg flex items-center justify-center font-bold z-10"
                 >
-                  <motion.div
-                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                    animate={{ scale: 1, opacity: 1, y: 0 }}
-                    exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 30,
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    className={`relative w-full max-w-7xl max-h-[90vh] overflow-y-auto rounded-3xl p-8 bg-white/95 backdrop-blur-3xl border ${borderColors[view]} shadow-2xl`}
-                  >
-                    <motion.button
-                      whileHover={{ scale: 1.1, rotate: 90 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => setActiveView("admin/dashboard")}
-                      className="sticky top-0 right-0 ml-auto mb-4 w-10 h-10 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-lg transition-colors duration-200 flex items-center justify-center font-bold z-10"
-                    >
-                      ✕
-                    </motion.button>
-                    <FormComponent onUpdate={loadAllData} />
-                  </motion.div>
-                </motion.div>
-              )
-            );
-          })}
-        </AnimatePresence>
+                  ✕
+                </motion.button>
+
+                <FormComponent onUpdate={loadAllData} />
+              </motion.div>
+            </div>
+          </motion.div>
+        )
+      );
+    })}
+  </AnimatePresence>,
+  document.body
+)}
+
       </div>
 
       {/* RECENT STUDENTS + SUBJECTS SUMMARY */}
