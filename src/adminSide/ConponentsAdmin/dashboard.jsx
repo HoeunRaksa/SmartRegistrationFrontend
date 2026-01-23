@@ -33,6 +33,14 @@ import { fetchMajors } from "../../api/major_api.jsx";
 import { fetchSubjects } from "../../api/subject_api.jsx";
 import { fetchStudents } from "../../api/student_api.jsx";
 import { fetchRegistrations } from "../../api/registration_api.jsx";
+import { staggeredRequests } from "../../utils/apiThrottle";
+import {
+  getCachedDepartments,
+  getCachedMajors,
+  getCachedSubjects,
+  getCachedStudents,
+  invalidateCache
+} from "../../utils/dataCache";
 
 /* ================== ULTRA-FAST PURE HELPERS (OUTSIDE COMPONENT) ================== */
 
@@ -302,15 +310,15 @@ const Dashboard = () => {
     try {
       if (isMountedRef.current) setLoading(true);
 
-      // Retry each API call on 429 (small, safe retries)
+      // Staggered requests with caching to prevent 429 errors
       const [deptRes, majorRes, subjectRes, studentRes, regRes] =
-        await Promise.all([
-          withRetry(() => fetchDepartments(), { retries: 2, baseDelayMs: 800 }),
-          withRetry(() => fetchMajors(), { retries: 2, baseDelayMs: 800 }),
-          withRetry(() => fetchSubjects(), { retries: 2, baseDelayMs: 800 }),
-          withRetry(() => fetchStudents(), { retries: 2, baseDelayMs: 800 }),
-          withRetry(() => fetchRegistrations(), { retries: 2, baseDelayMs: 800 }),
-        ]);
+        await staggeredRequests([
+          () => getCachedDepartments(() => withRetry(() => fetchDepartments(), { retries: 2, baseDelayMs: 800 })),
+          () => getCachedMajors(() => withRetry(() => fetchMajors(), { retries: 2, baseDelayMs: 800 })),
+          () => getCachedSubjects(() => withRetry(() => fetchSubjects(), { retries: 2, baseDelayMs: 800 })),
+          () => getCachedStudents(() => withRetry(() => fetchStudents(), { retries: 2, baseDelayMs: 800 })),
+          () => withRetry(() => fetchRegistrations(), { retries: 2, baseDelayMs: 800 }),
+        ], 150);
 
       // ignore outdated responses
       if (reqId !== loadReqIdRef.current) return;

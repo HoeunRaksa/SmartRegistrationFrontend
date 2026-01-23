@@ -3,6 +3,7 @@ import SubjectsForm from "../ConponentsAdmin/SubjectsForm.jsx";
 import SubjectsList from "../ConponentsAdmin/SubjectsList.jsx";
 import { fetchSubjects } from "../../api/subject_api.jsx";
 import { fetchStudents } from "../../api/student_api.jsx";
+import { invalidateCache } from "../../utils/dataCache";
 import {
   BookOpen,
   TrendingUp,
@@ -25,6 +26,8 @@ const SubjectsPage = () => {
   const loadSubjects = async () => {
     try {
       setLoading(true);
+      // Invalidate cache to ensure fresh data after create/update/delete
+      invalidateCache('subjects');
       const res = await fetchSubjects();
       const data = res.data?.data || res.data || [];
       setSubjects(Array.isArray(data) ? data : []);

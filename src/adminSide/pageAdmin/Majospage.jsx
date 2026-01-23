@@ -3,6 +3,7 @@ import MajorsForm from '../ConponentsAdmin/MajorsForm.jsx';
 import MajorsList from '../ConponentsAdmin/MajorsList.jsx';
 import { fetchMajors } from "../../api/major_api.jsx";
 import { fetchStudents } from "../../api/student_api.jsx";
+import { invalidateCache } from "../../utils/dataCache";
 import {
   GraduationCap,
   TrendingUp,
@@ -22,6 +23,8 @@ const MajorsPage = () => {
 
   const loadMajors = async () => {
     try {
+      // Invalidate cache to ensure fresh data after create/update/delete
+      invalidateCache('majors');
       const res = await fetchMajors();
       setMajors(res.data?.data || res.data || []);
     } catch (err) {

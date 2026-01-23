@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import CourseForm from "../ConponentsAdmin/CourseForm.jsx";
 import CoursesList from "../ConponentsAdmin/CoursesList.jsx";
 import { fetchAllCourses, createCourse, updateCourse, deleteCourse } from "../../api/course_api.jsx";
+import { invalidateCache } from "../../utils/dataCache";
 import { BookOpen, PlusCircle } from "lucide-react";
 
 const CoursesPage = () => {
@@ -12,6 +13,8 @@ const CoursesPage = () => {
   const loadCourses = async () => {
     try {
       setLoading(true);
+      // Invalidate cache to ensure fresh data after create/update/delete
+      invalidateCache('courses');
       const res = await fetchAllCourses();
       const data = res.data?.data ?? res.data ?? [];
       setCourses(Array.isArray(data) ? data : []);

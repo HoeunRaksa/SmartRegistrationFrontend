@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import DepartmentsForm from "../ConponentsAdmin/DepartmentsForm.jsx";
 import { fetchStudents } from "../../api/student_api.jsx";
 import { fetchDepartments, deleteDepartment } from "../../api/department_api.jsx";
+import { invalidateCache } from "../../utils/dataCache";
 import {
   Building2,
   Users,
@@ -49,6 +50,8 @@ const DepartmentsPage = () => {
   const loadDepartments = useCallback(async () => {
     try {
       setLoading(true);
+      // Invalidate cache to ensure fresh data after create/update/delete
+      invalidateCache('departments');
       const res = await fetchDepartments();
       const data = res?.data?.data ?? res?.data ?? [];
       setDepartments(safeArray(data));

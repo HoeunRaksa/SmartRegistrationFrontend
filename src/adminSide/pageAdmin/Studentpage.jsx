@@ -3,6 +3,7 @@ import StudentsForm from "../ConponentsAdmin/StudentsForm.jsx";
 import StudentsTable from "../ConponentsAdmin/Studentstable.jsx";
 import StudentProfile from "../../gobalConponent/Studentprofile.jsx";
 import { fetchStudents } from "../../api/student_api.jsx";
+import { invalidateCache } from "../../utils/dataCache";
 import { Users, TrendingUp, BarChart3 } from "lucide-react";
 
 const safeArray = (v) => (Array.isArray(v) ? v : []);
@@ -16,6 +17,8 @@ const StudentPage = () => {
   const loadStudents = useCallback(async () => {
     try {
       setLoading(true);
+      // Invalidate cache to ensure fresh data after create/update/delete
+      invalidateCache('students');
       const res = await fetchStudents();
       const data = res?.data?.data ?? res?.data ?? [];
       setStudents(safeArray(data));
