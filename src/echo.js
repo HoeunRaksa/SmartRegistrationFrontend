@@ -8,15 +8,16 @@ export function makeEcho() {
 
   const echo = new Echo({
     broadcaster: "reverb",
+
+    // ✅ FORCE KEY (stop relying on VITE env until it works)
     key: "local",
 
     wsHost: "study.learner-teach.online",
-    wsPort: 443,
-    wssPort: 443,
     wsPath: "/ws",
+    wssPort: 443,
+    wsPort: 443,
     forceTLS: true,
     enabledTransports: ["wss"],
-    disableStats: true,
 
     authEndpoint: "https://study.learner-teach.online/broadcasting/auth",
     auth: {
@@ -27,26 +28,10 @@ export function makeEcho() {
     },
   });
 
-  // ✅ Wait a tick so connector is fully built
-  setTimeout(() => {
-    const pusher = echo?.connector?.pusher;
-
-    console.log("echo?", !!echo);
-    console.log("connector?", !!echo?.connector);
-    console.log("pusher?", !!pusher);
-
-    // ✅ Snapshot (not live reference)
-    const cfg = pusher?.config ? JSON.parse(JSON.stringify(pusher.config)) : null;
-    console.log("PUSHER CONFIG SNAPSHOT:", cfg);
-
-    // ✅ Show exactly what URL it will hit
-    if (cfg) {
-      const path = cfg.wsPath || "";
-      console.log("WS URL SHOULD BE:",
-        `wss://${cfg.wsHost}${path}/app/${cfg.key}?protocol=7&client=js&version=8.x&flash=false`
-      );
-    }
-  }, 0);
+  // ✅ DEBUG: confirm key is not undefined
+  const p = echo?.connector?.pusher;
+  console.log("PUSHER KEY =", p?.key);
+  console.log("PUSHER OPTIONS =", p?.config);
 
   return echo;
 }
