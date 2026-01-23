@@ -57,10 +57,24 @@ const MessagesPage = () => {
     const echo = makeEcho();
     console.log("🔥 echo created", echo);
 
-    const pusher = echo.connector.pusher;
-    pusher.connection.bind("connected", () => console.log("✅ WS connected"));
-    pusher.connection.bind("error", (e) => console.log("❌ WS error", e));
-    pusher.connection.bind("disconnected", () => console.log("⚠️ WS disconnected"));
+    setTimeout(() => {
+      const pusher = echo?.connector?.pusher;
+      console.log("🔥 pusher", pusher);
+
+      if (!pusher) {
+        console.log("❌ No pusher instance - Echo config/broadcaster wrong");
+        return;
+      }
+
+      pusher.connection.bind("state_change", (states) =>
+        console.log("🔁 WS state", states)
+      );
+      pusher.connection.bind("connected", () => console.log("✅ WS connected"));
+      pusher.connection.bind("error", (e) => console.log("❌ WS error", e));
+      pusher.connection.bind("disconnected", () =>
+        console.log("⚠️ WS disconnected")
+      );
+    }, 0);
 
     const a = Math.min(Number(currentUser.id), Number(selectedConversation.id));
     const b = Math.max(Number(currentUser.id), Number(selectedConversation.id));
