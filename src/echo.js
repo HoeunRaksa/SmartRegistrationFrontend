@@ -3,19 +3,21 @@ import Pusher from "pusher-js";
 
 window.Pusher = Pusher;
 
+let echoInstance = null;
+
 export function makeEcho() {
+  if (echoInstance) return echoInstance;
+
   const token = localStorage.getItem("token");
 
-  const echo = new Echo({
+  echoInstance = new Echo({
     broadcaster: "reverb",
-
-    // ✅ FORCE KEY (stop relying on VITE env until it works)
-    key: "local",
+    key: import.meta.env.VITE_REVERB_APP_KEY || "local",
 
     wsHost: "study.learner-teach.online",
-    wsPath: "/ws",
-    wssPort: 443,
+    wsPath: "/ws",            // IMPORTANT
     wsPort: 443,
+    wssPort: 443,
     forceTLS: true,
     enabledTransports: ["wss"],
 
@@ -28,10 +30,18 @@ export function makeEcho() {
     },
   });
 
-  // ✅ DEBUG: confirm key is not undefined
-  const p = echo?.connector?.pusher;
-  console.log("PUSHER KEY =", p?.key);
-  console.log("PUSHER OPTIONS =", p?.config);
+  // global connection logs (bind ONCE)
+  const pusher = echoInstance.connector.pusher;
+  pusher.connection.bind("state_change", (s) => console.log("🔁 WS state", s));
+  pusher.connection.bind("connected", () => console.log("✅ WS CONNECTED"));
+  pusher.connection.bind("error", (e) => console.log("❌ WS ERROR", e));
+  pusher.connection.bind("disconnected", () => console.log("⚠️ WS DISCONNECTED"));
 
-  return echo;
+  return echoInstance;
+}
+
+export function destroyEcho() {
+  if (!echoInstance) return;
+  echoInstance.disconnect();
+  echoInstance = null;
 }
