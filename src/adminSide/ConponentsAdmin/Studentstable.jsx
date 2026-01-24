@@ -369,19 +369,23 @@ const StudentRow = ({ student, index, onView, onEdit, onDelete }) => (
     <td className="px-6 py-4">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold overflow-hidden shadow-md">
-          {student.profile_picture_path ? (
-            <img
-              src={`${student.profile_picture_url}`}
-              alt={student.full_name_en}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.parentElement.innerHTML = `<span class="text-lg font-bold">${student.full_name_en?.charAt(0) || "S"}</span>`;
-              }}
-            />
-          ) : (
-            <span className="text-lg font-bold">{student.full_name_en?.charAt(0) || "S"}</span>
-          )}
+     {student.profile_picture_url ? (
+  <img
+    src={student.profile_picture_url}
+    alt={student.full_name_en || "Student"}
+    className="w-full h-full object-cover"
+    onError={(e) => {
+      e.currentTarget.style.display = "none";
+      const parent = e.currentTarget.parentElement;
+      if (parent) parent.innerHTML = `<span class="text-lg font-bold">${(student.full_name_en?.charAt(0) || student.full_name_kh?.charAt(0) || "S")}</span>`;
+    }}
+  />
+) : (
+  <span className="text-lg font-bold">
+    {student.full_name_en?.charAt(0) || student.full_name_kh?.charAt(0) || "S"}
+  </span>
+)}
+
         </div>
         <div>
           <p className="text-sm font-semibold text-gray-900">{student.full_name_en}</p>
