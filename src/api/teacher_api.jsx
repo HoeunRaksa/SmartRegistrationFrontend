@@ -48,7 +48,7 @@ export const createTeacher = async (teacherData) => {
         return;
       }
 
-      // support arrays/ objects safely
+      // support arrays/  objects safely
       if (typeof value === "object" && !(value instanceof File)) {
         formData.append(key, JSON.stringify(value));
         return;
