@@ -62,32 +62,42 @@ const MessagesPage = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConversation?.id]);
+
   useEffect(() => {
     if (!currentUser?.id || !selectedConversation?.id) return;
 
-    console.log("🚀 Starting Echo...");
-
-    const echo = makeEcho();
-    const pusher = echo.connector.pusher;
-
-    pusher.connection.bind("connected", () =>
-      console.log("✅ WS CONNECTED")
-    );
-
-    pusher.connection.bind("error", (e) =>
-      console.log("❌ WS ERROR", e)
-    );
+    console.log("🚀 Starting Echo with user context");
 
     const a = Math.min(currentUser.id, selectedConversation.id);
     const b = Math.max(currentUser.id, selectedConversation.id);
     const channelName = `chat.${a}.${b}`;
 
+    const echo = makeEcho(currentUser.id, selectedConversation.id);
+    const pusher = echo.connector.pusher;
+
+    pusher.connection.bind("connected", () => {
+      console.log("✅ WS CONNECTED");
+    });
+
+    pusher.connection.bind("error", (e) => {
+      console.error("❌ WS ERROR", e);
+    });
+
     console.log("📡 Subscribing to:", channelName);
 
     const channel = echo.private(channelName);
 
+    // 🔥 THIS IS NEW AND IMPORTANT
+    channel.subscription.bind("pusher:subscription_succeeded", () => {
+      console.log("🔓 PRIVATE CHANNEL AUTHORIZED");
+    });
+
+    channel.subscription.bind("pusher:subscription_error", (status) => {
+      console.error("🚫 SUBSCRIPTION FAILED", status);
+    });
+
     channel.listen(".message.sent", (event) => {
-      console.log("🔥 MESSAGE EVENT", event);
+      console.log("🔥 MESSAGE EVENT RECEIVED", event);
       setMessages((prev) => [...prev, mapServerMessageToUI(event)]);
     });
 
@@ -95,6 +105,7 @@ const MessagesPage = () => {
       echo.leave(channelName);
     };
   }, [currentUser?.id, selectedConversation?.id]);
+
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
