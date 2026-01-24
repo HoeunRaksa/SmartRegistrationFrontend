@@ -85,15 +85,11 @@ const getStudentAddress = (enrollment) => {
   );
 };
 
-const getStudentImage = (enrollment) => {
-  const st = enrollment?.student || {};
-  // ✅ your backend accessor appends: profile_picture_url
-  return (
-    st?.profile_picture_url ||
-    enrollment?.profile_picture_url ||
-    ""
-  );
-};
+const getStudentImage = (row) =>
+  row?.student?.profile_picture_url || row?.profile_picture_url || "";
+
+
+
 
 const EnrollmentsList = ({ enrollments = [], onEdit, onRefresh }) => {
   const [visibleColumns, setVisibleColumns] = useState({
@@ -389,10 +385,19 @@ const EnrollmentRow = ({ enrollment, index, onEdit, onDelete, visibleColumns, st
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     e.currentTarget.style.display = "none";
+                    e.currentTarget.nextSibling.style.display = "flex";
                   }}
                 />
               ) : null}
+
+              <div
+                className={`w-full h-full flex items-center justify-center text-white font-bold ${studentImage ? "hidden" : "flex"
+                  }`}
+              >
+                {initials}
+              </div>
             </div>
+
 
             <div>
               <div className="text-sm font-bold text-gray-900">{studentLabel}</div>
