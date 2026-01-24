@@ -148,7 +148,7 @@ const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
       nationality: editingStudent.nationality || "Cambodian",
       phone_number: editingStudent.phone_number || "",
       address: editingStudent.address || "",
-      generation: editingStudent.generation || "",
+      generation: editingStudent.generation != null ? String(editingStudent.generation) : "",
       parent_name: editingStudent.parent_name || "",
       parent_phone: editingStudent.parent_phone || "",
 
@@ -244,7 +244,7 @@ const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
         nationality: form.nationality,
         phone_number: form.phone_number,
         address: form.address,
-        generation: form.generation,
+       generation: form.generation != null ? String(form.generation) : "",
         parent_name: form.parent_name,
         parent_phone: form.parent_phone,
 
