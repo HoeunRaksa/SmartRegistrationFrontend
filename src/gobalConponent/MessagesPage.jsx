@@ -70,46 +70,45 @@ const MessagesPage = () => {
     const pusher = echo.connector.pusher;
 
     console.log("✅ PUSHER KEY", pusher.key);
-    console.log("✅ SHOULD CONNECT TO", `wss://${pusher.config.wsHost}${pusher.config.wsPath}/app/${pusher.key}`);
-
-    // --- WS connection state ---
-    pusher.connection.bind("state_change", (s) => console.log("🔁 WS state", s));
-    pusher.connection.bind("connected", () => console.log("✅ WS CONNECTED"));
-    pusher.connection.bind("error", (e) => console.log("❌ WS ERROR", e));
-    pusher.connection.bind("disconnected", () => console.log("⚠️ WS DISCONNECTED"));
 
     const a = Math.min(Number(currentUser.id), Number(selectedConversation.id));
     const b = Math.max(Number(currentUser.id), Number(selectedConversation.id));
-    const channelName = `private-chat.${a}.${b}`;   // NOTE: private- prefix is how pusher sees it
-    const channel = echo.private(`chat.${a}.${b}`);
+    const channelName = `chat.${a}.${b}`;
 
-    // --- subscription success / failure ---
-    channel.subscribed(() => console.log("✅ SUBSCRIBED OK:", channelName));
+    const channel = echo.private(channelName);
 
-    // Laravel Echo doesn't always expose `.error()` on all connectors, so bind to pusher channel:
-    const pChannel = pusher.channel(channelName);
-    if (pChannel) {
-      pChannel.bind("pusher:subscription_succeeded", () =>
-        console.log("✅ PUSHER subscription_succeeded:", channelName)
-      );
-      pChannel.bind("pusher:subscription_error", (status) =>
-        console.log("❌ PUSHER subscription_error:", channelName, status)
-      );
-    } else {
-      console.log("⚠️ pusher.channel() not found yet (wait for connection)");
-    }
+    // Listen for the event
+    channel.listen('.message.sent', (event) => {
+      console.log("🔥 EVENT RECEIVED .message.sent", event);
 
-    // --- event listener ---
-    channel.listen(".message.sent", (e) => {
-      console.log("🔥 EVENT RECEIVED .message.sent", e);
+      // Add the new message to your state
+      const newMsg = mapServerMessageToUI(event.message);
+      setMessages((prev) => [...prev, newMsg]);
+
+      // Update conversation list
+      setConversations((prev) => {
+        return prev.map((c) =>
+          c.id === selectedConversation.id
+            ? {
+              ...c,
+              last_message: event.message.content,
+              last_message_time: event.message.created_at,
+            }
+            : c
+        );
+      });
+    });
+
+    // Error handling
+    channel.error((error) => {
+      console.error("❌ CHANNEL ERROR:", error);
     });
 
     return () => {
-      echo.leaveChannel(channelName);
-      echo.disconnect();
+      channel.stopListening('.message.sent');
+      echo.leave(channelName);
     };
   }, [currentUser?.id, selectedConversation?.id]);
-
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -402,8 +401,8 @@ const MessagesPage = () => {
                         <div className="max-w-[78%] md:max-w-[70%]">
                           <div
                             className={`rounded-2xl px-4 py-2.5 shadow-sm border ${m.is_mine
-                                ? "bg-blue-600 text-white border-blue-600 rounded-br-md"
-                                : "bg-white text-slate-900 border-slate-200 rounded-bl-md"
+                              ? "bg-blue-600 text-white border-blue-600 rounded-br-md"
+                              : "bg-white text-slate-900 border-slate-200 rounded-bl-md"
                               }`}
                           >
                             {showName && (
