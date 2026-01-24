@@ -63,42 +63,39 @@ const MessagesPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConversation?.id]);
   useEffect(() => {
-    if (!currentUser?.id || !selectedConversation?.id) {
-      console.log("❌ No user or conversation");
-      return;
-    }
+    if (!currentUser?.id || !selectedConversation?.id) return;
 
-    console.log("🚀 Starting Echo setup...");
+    console.log("🚀 Starting Echo...");
+
     const echo = makeEcho();
     const pusher = echo.connector.pusher;
 
-    console.log("✅ PUSHER KEY", pusher.key);
-    console.log("✅ SHOULD CONNECT TO", `wss://${pusher.config.wsHost}${pusher.config.wsPath}/app/${pusher.key}`);
+    pusher.connection.bind("connected", () =>
+      console.log("✅ WS CONNECTED")
+    );
 
-    // WS connection state
-    pusher.connection.bind("state_change", (s) => console.log("🔁 WS state", s));
-    pusher.connection.bind("connected", () => console.log("✅ WS CONNECTED"));
-    pusher.connection.bind("error", (e) => console.log("❌ WS ERROR", e));
+    pusher.connection.bind("error", (e) =>
+      console.log("❌ WS ERROR", e)
+    );
 
-    const a = Math.min(Number(currentUser.id), Number(selectedConversation.id));
-    const b = Math.max(Number(currentUser.id), Number(selectedConversation.id));
+    const a = Math.min(currentUser.id, selectedConversation.id);
+    const b = Math.max(currentUser.id, selectedConversation.id);
     const channelName = `chat.${a}.${b}`;
 
     console.log("📡 Subscribing to:", channelName);
+
     const channel = echo.private(channelName);
 
-    channel.listen('.message.sent', (event) => {
-      console.log("🔥 EVENT RECEIVED", event);
-      const newMsg = mapServerMessageToUI(event.message);
-      setMessages((prev) => [...prev, newMsg]);
+    channel.listen(".message.sent", (event) => {
+      console.log("🔥 MESSAGE EVENT", event);
+      setMessages((prev) => [...prev, mapServerMessageToUI(event)]);
     });
 
     return () => {
-      console.log("🧹 Cleaning up Echo");
-      channel.stopListening('.message.sent');
       echo.leave(channelName);
     };
   }, [currentUser?.id, selectedConversation?.id]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
