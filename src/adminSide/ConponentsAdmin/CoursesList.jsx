@@ -4,28 +4,54 @@ import { RefreshCcw, Pencil, Trash2, Search } from "lucide-react";
 const CoursesList = ({ loading, courses, onEdit, onDelete, onRefresh }) => {
   const [q, setQ] = useState("");
 
+  // ✅ build course name safely (frontend fallback)
+  const buildCourseName = (c) => {
+    // Prefer backend computed name if exists
+    if (c?.display_name) return c.display_name;
+
+    const subject =
+      c?.majorSubject?.subject?.subject_name ??
+      c?.majorSubject?.subject?.name ??
+      "Unknown Subject";
+
+    const className = c?.classGroup?.class_name;
+    const year = c?.academic_year;
+    const sem = c?.semester ? `Sem ${c.semester}` : null;
+
+    const parts = [subject];
+    if (className) parts.push(className);
+    if (year) parts.push(year);
+    if (sem) parts.push(sem);
+
+    return parts.join(" — ");
+  };
+
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return courses;
 
     return courses.filter((c) => {
-      const courseName = c?.majorSubject?.subject?.subject_name ?? c?.majorSubject?.subject?.name ?? "";
-      const majorName = c?.majorSubject?.major?.major_name ?? "";
-      const code = c?.course_code ?? "";
-      const teacher = c?.teacher?.name ?? c?.teacher?.full_name ?? "";
-      const semester = c?.semester ?? "";
-      const year = c?.academic_year ?? "";
+      const courseName = buildCourseName(c).toLowerCase();
+      const majorName =
+        c?.majorSubject?.major?.major_name ??
+        c?.majorSubject?.major?.name ??
+        "";
+      const teacher =
+        c?.teacher?.name ??
+        c?.teacher?.full_name ??
+        c?.teacher?.teacher_name ??
+        "";
+      const semester = String(c?.semester ?? "");
+      const year = String(c?.academic_year ?? "");
 
       return (
         String(c?.id ?? "").includes(s) ||
         String(c?.major_subject_id ?? "").includes(s) ||
-        String(c?.teacher_id ?? "").includes(s) ||
-        code.toLowerCase().includes(s) ||
-        courseName.toLowerCase().includes(s) ||
+        courseName.includes(s) ||
         majorName.toLowerCase().includes(s) ||
         teacher.toLowerCase().includes(s) ||
-        String(semester).toLowerCase().includes(s) ||
-        String(year).toLowerCase().includes(s)
+        semester.includes(s) ||
+        year.includes(s)
       );
     });
   }, [courses, q]);
@@ -41,8 +67,8 @@ const CoursesList = ({ loading, courses, onEdit, onDelete, onRefresh }) => {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search..."
-              className="bg-transparent outline-none text-sm w-56"
+              placeholder="Search course, subject, teacher..."
+              className="bg-transparent outline-none text-sm w-64"
             />
           </div>
 
@@ -62,13 +88,14 @@ const CoursesList = ({ loading, courses, onEdit, onDelete, onRefresh }) => {
           <thead className="bg-white/60">
             <tr className="text-left text-gray-700">
               <th className="p-3">ID</th>
-              <th className="p-3">Major Subject</th>
+              <th className="p-3">Course Name</th>
               <th className="p-3">Teacher</th>
               <th className="p-3">Semester</th>
-              <th className="p-3">Year</th>
+              <th className="p-3">Academic Year</th>
               <th className="p-3 text-right">Actions</th>
             </tr>
           </thead>
+
           <tbody className="bg-white/40">
             {loading && (
               <tr>
@@ -89,19 +116,36 @@ const CoursesList = ({ loading, courses, onEdit, onDelete, onRefresh }) => {
             {!loading &&
               filtered.map((c) => (
                 <tr key={c.id} className="border-t border-white/30">
-                  <td className="p-3 font-medium text-gray-900">{c.id}</td>
+                  <td className="p-3 font-medium text-gray-900">
+                    {c.id}
+                  </td>
+
+                  {/* ✅ COURSE NAME */}
                   <td className="p-3 text-gray-800">
-                    <div className="text-xs text-gray-500">major_subject_id: {c.major_subject_id}</div>
-                    <div className="font-medium">
-                      {c?.majorSubject?.major?.major_name || "—"} / {c?.majorSubject?.subject?.subject_name || "—"}
+                    <div className="text-xs text-gray-500">
+                      major_subject_id: {c.major_subject_id}
+                    </div>
+                    <div className="font-semibold">
+                      {buildCourseName(c)}
                     </div>
                   </td>
+
+                  {/* TEACHER */}
                   <td className="p-3 text-gray-800">
-                    <div className="text-xs text-gray-500">teacher_id: {c.teacher_id}</div>
-                    <div className="font-medium">{c?.teacher?.name || c?.teacher?.full_name || "—"}</div>
+                    <div className="text-xs text-gray-500">
+                      teacher_id: {c.teacher_id}
+                    </div>
+                    <div className="font-medium">
+                      {c?.teacher?.name ||
+                        c?.teacher?.full_name ||
+                        c?.teacher?.teacher_name ||
+                        "—"}
+                    </div>
                   </td>
+
                   <td className="p-3">{c.semester}</td>
                   <td className="p-3">{c.academic_year}</td>
+
                   <td className="p-3">
                     <div className="flex justify-end gap-2">
                       <button
@@ -112,9 +156,12 @@ const CoursesList = ({ loading, courses, onEdit, onDelete, onRefresh }) => {
                         <Pencil size={16} />
                         Edit
                       </button>
+
                       <button
                         onClick={() => {
-                          if (confirm("Delete this course?")) onDelete?.(c.id);
+                          if (confirm("Delete this course?")) {
+                            onDelete?.(c.id);
+                          }
                         }}
                         className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 transition"
                         type="button"
@@ -131,7 +178,7 @@ const CoursesList = ({ loading, courses, onEdit, onDelete, onRefresh }) => {
       </div>
 
       <p className="text-[11px] text-gray-500 mt-3">
-        Note: If you want dropdowns, we can load MajorSubjects + Teachers in this page.
+        Course name is computed from Subject + Class Group + Academic Year + Semester.
       </p>
     </div>
   );

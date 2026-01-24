@@ -720,8 +720,8 @@ const ReportTable = React.memo(function ReportTable({ registrations }) {
                 genderRaw.toLowerCase() === "male"
                   ? "Male"
                   : genderRaw.toLowerCase() === "female"
-                  ? "Female"
-                  : genderRaw || "N/A";
+                    ? "Female"
+                    : genderRaw || "N/A";
 
               return (
                 <tr key={reg?.id ?? `${index}`} className="hover:bg-blue-50/30 transition-colors">
@@ -733,13 +733,12 @@ const ReportTable = React.memo(function ReportTable({ registrations }) {
 
                   <td className="px-6 py-4">
                     <span
-                      className={`text-xs px-2 py-1 rounded-full ${
-                        gender === "Male"
+                      className={`text-xs px-2 py-1 rounded-full ${gender === "Male"
                           ? "bg-blue-100 text-blue-600"
                           : gender === "Female"
-                          ? "bg-pink-100 text-pink-600"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
+                            ? "bg-pink-100 text-pink-600"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
                     >
                       {gender}
                     </span>
@@ -748,17 +747,19 @@ const ReportTable = React.memo(function ReportTable({ registrations }) {
                   <td className="px-6 py-4 text-sm text-gray-600">{getSafe(deptName)}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{getSafe(majorName)}</td>
                   <td className="px-6 py-4 text-sm text-gray-700">{getSafe(year)}</td>
-                  <td className="px-6 py-4 text-sm text-gray-700">{sem ? `Sem ${sem}` : "N/A"}</td>
+                  <td className="px-6 py-4 text-sm text-gray-700">
+                    {sem ? `Sem ${sem}` : "Both(1,2)"}
+                  </td>
+
 
                   <td className="px-6 py-4">
                     <span
-                      className={`text-xs px-2 py-1 rounded-full ${
-                        paid
+                      className={`text-xs px-2 py-1 rounded-full ${paid
                           ? "bg-green-100 text-green-700"
                           : pending
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
                     >
                       {getPaymentLabel(reg)}
                     </span>

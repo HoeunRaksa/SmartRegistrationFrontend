@@ -159,21 +159,28 @@ const ClassGroupStudentsModal = ({ open, group, onClose }) => {
               </div>
             ) : (
               <div className="max-h-[420px] overflow-auto space-y-2">
-                {studentsInClass.map((s) => (
-                  <div
-                    key={s.id}
-                    className="flex items-center justify-between rounded-xl bg-white/70 border border-white/60 px-3 py-2"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">
-                        {s.full_name_en || s.full_name_kh || s.name || `Student #${s.id}`}
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        Code: {s.student_code || "-"} • Email: {s.email || s.personal_email || "-"}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+          {studentsInClass.map((s) => {
+  const key =
+    s.pivot?.id ??
+    `${s.id}-${group.academic_year}-${group.semester}`;
+
+  return (
+    <div
+      key={key}
+      className="flex items-center justify-between rounded-xl bg-white/70 border border-white/60 px-3 py-2"
+    >
+      <div>
+        <p className="text-sm font-semibold text-gray-900">
+          {s.full_name_en || s.full_name_kh || s.name || `Student #${s.id}`}
+        </p>
+        <p className="text-xs text-gray-600">
+          Code: {s.student_code || "-"} • Email: {s.email || s.personal_email || "-"}
+        </p>
+      </div>
+    </div>
+  );
+})}
+
               </div>
             )}
           </div>
@@ -211,29 +218,30 @@ const ClassGroupStudentsModal = ({ open, group, onClose }) => {
                 </div>
               ) : (
                 <div className="max-h-[420px] overflow-auto space-y-2">
-                  {candidates.map((s) => (
-                    <div
-                      key={s.id}
-                      className="flex items-center justify-between rounded-xl bg-white/70 border border-white/60 px-3 py-2"
-                    >
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">
-                          {s.full_name_en || s.full_name_kh || s.name || `Student #${s.id}`}
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          Code: {s.student_code || "-"} • Email: {s.email || s.personal_email || "-"}
-                        </p>
-                      </div>
+            {candidates.map((s) => (
+  <div
+    key={`candidate-${s.id}`}
+    className="flex items-center justify-between rounded-xl bg-white/70 border border-white/60 px-3 py-2"
+  >
+    <div>
+      <p className="text-sm font-semibold text-gray-900">
+        {s.full_name_en || s.full_name_kh || s.name || `Student #${s.id}`}
+      </p>
+      <p className="text-xs text-gray-600">
+        Code: {s.student_code || "-"} • Email: {s.email || s.personal_email || "-"}
+      </p>
+    </div>
 
-                      <button
-                        onClick={() => addStudent(s)}
-                        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 border border-blue-200 hover:bg-blue-100 transition"
-                      >
-                        <UserPlus size={16} className="text-blue-700" />
-                        <span className="text-xs font-semibold text-blue-700">Add</span>
-                      </button>
-                    </div>
-                  ))}
+    <button
+      onClick={() => addStudent(s)}
+      className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 border border-blue-200 hover:bg-blue-100 transition"
+    >
+      <UserPlus size={16} className="text-blue-700" />
+      <span className="text-xs font-semibold text-blue-700">Add</span>
+    </button>
+  </div>
+))}
+
                 </div>
               )}
             </div>

@@ -17,6 +17,8 @@ import { fetchMajorSubjects } from "../../api/major_subject_api.jsx";
 import { fetchTeachers } from "../../api/teacher_api.jsx";
 import { fetchAllClassGroups } from "../../api/class_group_api.jsx";
 
+/* ================= DEFAULT STATE ================= */
+
 const empty = {
   department_id: "",
   major_id: "",
@@ -24,6 +26,7 @@ const empty = {
   teacher_id: "",
   semester: "", // number-like string
   academic_year: "", // "YYYY-YYYY"
+  class_group_id: "", // ✅ FIX: you use it, so it must exist
 };
 
 const normalizeArray = (res) => {
@@ -48,7 +51,6 @@ const fieldWithIconPadding = "pl-14";
 
 /* ================= ACADEMIC YEAR OPTIONS ================= */
 /**
- * Current year based on user's timezone (Asia/Phnom_Penh)
  * Build 5 past + current + 5 future = 11 options
  * Format: "YYYY-YYYY"
  */
@@ -59,7 +61,7 @@ const buildAcademicYears = (past = 5, future = 5) => {
 
   const arr = [];
   for (let y = start; y <= end; y++) {
-    arr.push(`${y}-${y + 1}`);
+    arr.push({ value: `${y}-${y + 1}`, label: `${y}-${y + 1}` });
   }
   return arr;
 };
@@ -82,27 +84,7 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
   const [classGroups, setClassGroups] = useState([]);
   const [loadingCG, setLoadingCG] = useState(false);
 
-  const classGroupsFiltered = useMemo(() => {
-    if (!form.major_id) return [];
-    return classGroups.filter((cg) => {
-      const sameMajor = String(cg.major_id) === String(form.major_id);
-      const sameYear = form.academic_year ? String(cg.academic_year) === String(form.academic_year) : true;
-      const sameSem = form.semester ? String(cg.semester) === String(form.semester) : true;
-      return sameMajor && sameYear && sameSem;
-    });
-  }, [classGroups, form.major_id, form.academic_year, form.semester]);
-
-
-  const academicYearOptions = useMemo(() => {
-    const now = new Date().getFullYear();
-    return Array.from({ length: 11 }, (_, i) => {
-      const start = now - 5 + i;
-      return {
-        value: `${start}-${start + 1}`,
-        label: `${start}-${start + 1}`,
-      };
-    });
-  }, []);
+  const academicYearOptions = useMemo(() => buildAcademicYears(5, 5), []);
 
   const handleChange = (key, value) => {
     setError("");
@@ -114,26 +96,29 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
     if (editingCourse) {
       const ms =
         editingCourse?.majorSubject ?? editingCourse?.major_subject ?? null;
+
       const majorId =
         ms?.major_id ?? ms?.major?.id ?? editingCourse?.major_id ?? "";
+
       const deptId =
         ms?.major?.department_id ?? editingCourse?.department_id ?? "";
 
-      const ay = editingCourse.academic_year
+      const ay = editingCourse?.academic_year
         ? String(editingCourse.academic_year)
         : "";
 
       setForm({
         department_id: deptId ? String(deptId) : "",
         major_id: majorId ? String(majorId) : "",
-        major_subject_id: editingCourse.major_subject_id
+        major_subject_id: editingCourse?.major_subject_id
           ? String(editingCourse.major_subject_id)
           : "",
-        teacher_id: editingCourse.teacher_id
-          ? String(editingCourse.teacher_id)
-          : "",
-        semester: editingCourse.semester ? String(editingCourse.semester) : "",
+        teacher_id: editingCourse?.teacher_id ? String(editingCourse.teacher_id) : "",
+        semester: editingCourse?.semester ? String(editingCourse.semester) : "",
         academic_year: ay,
+        class_group_id: editingCourse?.class_group_id
+          ? String(editingCourse.class_group_id)
+          : "",
       });
     } else {
       setForm(empty);
@@ -178,7 +163,7 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
 
     if (!deptId) {
       setMajors([]);
-      setForm((p) => ({ ...p, major_id: "", major_subject_id: "" }));
+      setForm((p) => ({ ...p, major_id: "", major_subject_id: "", class_group_id: "" }));
       return;
     }
 
@@ -196,13 +181,13 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
     })();
   }, [form.department_id]);
 
+  // Load class groups once
   useEffect(() => {
     (async () => {
       try {
         setLoadingCG(true);
         const res = await fetchAllClassGroups();
-        const data = res?.data?.data ?? res?.data ?? [];
-        setClassGroups(Array.isArray(data) ? data : []);
+        setClassGroups(normalizeArray(res));
       } catch (e) {
         console.error("fetchAllClassGroups error:", e);
         setClassGroups([]);
@@ -211,7 +196,6 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
       }
     })();
   }, []);
-
 
   // Load major-subjects once
   useEffect(() => {
@@ -229,9 +213,9 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
     })();
   }, []);
 
-  // Reset major_subject_id when major changes
+  // Reset major_subject_id + class_group_id when major changes
   useEffect(() => {
-    setForm((p) => ({ ...p, major_subject_id: "" }));
+    setForm((p) => ({ ...p, major_subject_id: "", class_group_id: "" }));
   }, [form.major_id]);
 
   // Filter major-subjects by selected major
@@ -245,7 +229,22 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
     });
   }, [majorSubjects, form.major_id]);
 
-  // ✅ EASY: auto-fill semester from major_subjects when selecting subject
+  // Filter class groups by selected major + optional year/semester
+  const classGroupsFiltered = useMemo(() => {
+    if (!form.major_id) return [];
+    return classGroups.filter((cg) => {
+      const sameMajor = String(cg.major_id) === String(form.major_id);
+      const sameYear = form.academic_year
+        ? String(cg.academic_year) === String(form.academic_year)
+        : true;
+      const sameSem = form.semester
+        ? String(cg.semester) === String(form.semester)
+        : true;
+      return sameMajor && sameYear && sameSem;
+    });
+  }, [classGroups, form.major_id, form.academic_year, form.semester]);
+
+  // ✅ auto-fill semester from major_subjects when selecting subject
   useEffect(() => {
     if (!form.major_subject_id) return;
     const ms = majorSubjectsFiltered.find(
@@ -255,7 +254,7 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
     if (sem && !form.semester) {
       setForm((p) => ({ ...p, semester: String(sem) }));
     }
-  }, [form.major_subject_id, majorSubjectsFiltered]);
+  }, [form.major_subject_id, majorSubjectsFiltered, form.semester]);
 
   const majorLabel = useMemo(() => {
     const m = majors.find((x) => String(x.id) === String(form.major_id));
@@ -296,7 +295,6 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
         class_group_id: form.class_group_id ? Number(form.class_group_id) : null,
       };
 
-
       if (editingCourse?.id) {
         await onUpdate(editingCourse.id, payload);
       } else {
@@ -317,7 +315,7 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
     }
   };
 
-  // ✅ ensure editing course academic year appears even if outside 5 past/future
+  // ensure editing course academic year appears even if outside 5 past/future
   const academicYearSelectOptions = useMemo(() => {
     const ay = String(form.academic_year || "");
     if (!ay) return academicYearOptions;
@@ -408,8 +406,8 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
                 {!form.department_id
                   ? "Select department first"
                   : loadingMaj
-                    ? "Loading..."
-                    : "Select major"}
+                  ? "Loading..."
+                  : "Select major"}
               </option>
               {majors.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -437,8 +435,8 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
                 {!form.major_id
                   ? "Select major first"
                   : loadingMS
-                    ? "Loading..."
-                    : "Select subject"}
+                  ? "Loading..."
+                  : "Select subject"}
               </option>
 
               {majorSubjectsFiltered.map((ms) => (
@@ -452,7 +450,6 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
             </select>
           </div>
         </div>
-
 
         {/* Teacher */}
         <div className="md:col-span-1">
@@ -535,18 +532,22 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
               disabled={!form.major_id || loadingCG}
             >
               <option value="">
-                {!form.major_id ? "Select major first" : loadingCG ? "Loading..." : "No class group / General"}
+                {!form.major_id
+                  ? "Select major first"
+                  : loadingCG
+                  ? "Loading..."
+                  : "No class group / General"}
               </option>
 
               {classGroupsFiltered.map((cg) => (
                 <option key={cg.id} value={cg.id}>
-                  {cg.class_name} • {cg.shift ?? "-"} • Sem {cg.semester} • {cg.academic_year}
+                  {cg.class_name} • {cg.shift ?? "-"} • Sem {cg.semester} •{" "}
+                  {cg.academic_year}
                 </option>
               ))}
             </select>
           </div>
         </div>
-
 
         {/* Preview */}
         <div className="md:col-span-2">
