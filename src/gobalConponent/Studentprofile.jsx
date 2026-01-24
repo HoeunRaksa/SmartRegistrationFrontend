@@ -1,3 +1,4 @@
+import React, { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   GraduationCap,
@@ -11,15 +12,73 @@ import {
   Users,
 } from "lucide-react";
 
+const safeStr = (v) => (v === null || v === undefined ? "" : String(v));
+
+const pickFirst = (...vals) => {
+  for (const v of vals) {
+    if (v !== null && v !== undefined && String(v).trim() !== "") return v;
+  }
+  return "";
+};
+
 const StudentProfile = ({ student, onClose }) => {
   if (!student) return null;
 
-  const fullNameEn = student.full_name_en || "Student";
-  const fullNameKh = student.full_name_kh || "";
+  const fullNameEn = student.full_name_en || student.student_name || student.full_name || "Student";
+  const fullNameKh = student.full_name_kh || student.student_name_kh || "";
   const studentCode = student.student_code || "N/A";
   const generation = student.generation ?? "N/A";
-  const profileUrl = student.profile_picture_url || "";
-  const hasProfileImage = Boolean(student.profile_picture_path || student.profile_picture_url);
+
+  // ✅ accept multiple possible image fields
+  const rawProfile =
+    pickFirst(
+      student.profile_picture_url,
+      student.profile_url,
+      student.profile_picture_path,
+      student.profile_picture,
+      student.user?.profile_picture_url,
+      student.user?.profile_picture_path
+    ) || "";
+
+  // ✅ normalize path -> url (handles: full URL, /uploads/..., uploads/..., just filename)
+  const normalizedProfileUrl = useMemo(() => {
+    if (!rawProfile) return "";
+    const s = String(rawProfile);
+
+    // already full url
+    if (/^https?:\/\//i.test(s)) return s;
+
+    // already absolute path
+    if (s.startsWith("/")) return s;
+
+    // looks like "uploads/..." or "storage/..." or "public/..."
+    if (
+      s.startsWith("uploads/") ||
+      s.startsWith("storage/") ||
+      s.startsWith("public/")
+    ) {
+      return `/${s}`;
+    }
+
+    // just a filename -> assume profiles folder
+    return `/uploads/profiles/${s.split("/").pop()}`;
+  }, [rawProfile]);
+
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    // reset image error when opening a different student
+    setImgError(false);
+  }, [student?.id, rawProfile]);
+
+  const hasProfileImage = Boolean(normalizedProfileUrl) && !imgError;
+
+  // ✅ department safe display
+  const departmentLabel =
+    student.department?.department_name ||
+    student.department?.name ||
+    student.department_name ||
+    "";
 
   return (
     <AnimatePresence>
@@ -47,7 +106,7 @@ const StudentProfile = ({ student, onClose }) => {
                 className="absolute inset-0 opacity-30"
                 style={{
                   backgroundImage:
-                    "url(\"data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==\")",
+                    'url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==")',
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
@@ -75,15 +134,20 @@ const StudentProfile = ({ student, onClose }) => {
                   <div className="w-40 h-40 rounded-3xl overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-2xl border-4 border-white">
                     {hasProfileImage ? (
                       <img
-                        src={profileUrl}
+                        src={normalizedProfileUrl}
                         alt={fullNameEn}
                         className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                        }}
+                        loading="lazy"
+                        referrerPolicy="no-referrer"
+                        onError={() => setImgError(true)}
                       />
                     ) : (
-                      <GraduationCap className="w-20 h-20" />
+                      <div className="flex flex-col items-center justify-center">
+                        <GraduationCap className="w-20 h-20" />
+                        <span className="mt-2 text-xs font-semibold opacity-90">
+                          {fullNameEn?.charAt(0)?.toUpperCase() || "S"}
+                        </span>
+                      </div>
                     )}
                   </div>
                   <div className="absolute -bottom-2 -right-2 bg-green-500 w-8 h-8 rounded-full border-4 border-white" />
@@ -161,21 +225,20 @@ const StudentProfile = ({ student, onClose }) => {
 
                 <div className="space-y-4">
                   <MetaBlock label="Student Code" value={student.student_code} />
-                  <MetaBlock label="Department" value={student.department?.name} />
+                  <MetaBlock label="Department" value={departmentLabel} />
                   <MetaBlock
-                    label="Registration menber ID"
+                    label="Registration member ID"
                     value={student.registration_id ? `#${student.registration_id}` : null}
                   />
                   <MetaBlock
-                    label="User me ID"
+                    label="User ID"
                     value={student.user_id ? `#${student.user_id}` : null}
                   />
-                </div>
-                 <MetaBlock
-                    label="Student menber ID"
-                    value={student.registration_id ? `#${student.id}` : null}
+                  <MetaBlock
+                    label="Student member ID"
+                    value={student.id ? `#${student.id}` : null}
                   />
-
+                </div>
               </motion.section>
             </div>
 

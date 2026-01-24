@@ -1,23 +1,48 @@
-import API from './index';
+import API from "./index";
+
+/**
+ * Helper to safely extract backend data
+ * Supports:
+ *  - { data: { data: [...] } }
+ *  - { data: [...] }
+ *  - { data: { ... } }
+ */
+const extractData = (res) => {
+  if (res?.data?.data !== undefined) return res.data.data;
+  if (res?.data !== undefined) return res.data;
+  return null;
+};
 
 // ==============================
-// BASIC MAJOR CRUD (EXISTING)
+// BASIC MAJOR CRUD (NO ENDPOINT CHANGE)
 // ==============================
-export const fetchMajors = () => API.get("/majors");
 
+// GET: all majors
+export const fetchMajors = async () => {
+  const res = await API.get("/majors");
+  const data = extractData(res);
+  return {
+    data: { data: Array.isArray(data) ? data : [] },
+  };
+};
+
+// GET: single major
 export const fetchMajor = (id) => API.get(`/majors/${id}`);
 
+// POST: create major (supports FormData or JSON)
 export const createMajor = (data) => {
-  const config = data instanceof FormData
-    ? { headers: { 'Content-Type': 'multipart/form-data' } }
-    : {};
+  const config =
+    data instanceof FormData
+      ? { headers: { "Content-Type": "multipart/form-data" } }
+      : {};
   return API.post("/majors", data, config);
 };
 
+// PUT: update major (Laravel-friendly _method)
 export const updateMajor = (id, data) => {
   const formData = new FormData();
 
-  Object.entries(data).forEach(([key, value]) => {
+  Object.entries(data || {}).forEach(([key, value]) => {
     if (value !== null && value !== undefined) {
       formData.append(key, value);
     }
@@ -26,23 +51,22 @@ export const updateMajor = (id, data) => {
   formData.append("_method", "PUT");
 
   return API.post(`/majors/${id}`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
+    headers: { "Content-Type": "multipart/form-data" },
   });
 };
 
+// DELETE: delete major
 export const deleteMajor = (id) => API.delete(`/majors/${id}`);
 
 // =====================================================
-// ✅ NEW: MAJOR CAPACITY / QUOTA (LONG-LIFE, SAFE)
+// MAJOR CAPACITY / QUOTA (NO ENDPOINT CHANGE)
 // =====================================================
 
 /**
- * ✅ PUBLIC
+ * PUBLIC
  * Check if a major is available for registration
- * Used BEFORE showing full register form
  *
- * backend:
- * GET /api/majors/{id}/capacity?academic_year=2026-2027
+ * GET /majors/{id}/capacity?academic_year=YYYY-YYYY
  */
 export const checkMajorCapacity = (majorId, academicYear) =>
   API.get(`/majors/${majorId}/capacity`, {
@@ -50,29 +74,24 @@ export const checkMajorCapacity = (majorId, academicYear) =>
   });
 
 /**
- * ✅ ADMIN / STAFF
+ * ADMIN / STAFF
  * Create or update quota for a major per academic year
  *
- * backend:
- * POST /api/admin/majors/{id}/quota
- *
- * payload example:
- * {
- *   academic_year: "2026-2027",
- *   limit: 120,
- *   opens_at: "2026-01-01 08:00:00",
- *   closes_at: "2026-03-31 23:59:59"
- * }
+ * POST /admin/majors/{id}/quota
  */
 export const saveMajorQuota = (majorId, payload) =>
   API.post(`/admin/majors/${majorId}/quota`, payload);
 
 /**
- * ✅ ADMIN / STAFF
+ * ADMIN / STAFF
  * Get all quotas for a major (all years)
  *
- * backend:
- * GET /api/admin/majors/{id}/quotas
+ * GET /admin/majors/{id}/quotas
  */
-export const fetchMajorQuotas = (majorId) =>
-  API.get(`/admin/majors/${majorId}/quotas`);
+export const fetchMajorQuotas = async (majorId) => {
+  const res = await API.get(`/admin/majors/${majorId}/quotas`);
+  const data = extractData(res);
+  return {
+    data: { data: Array.isArray(data) ? data : [] },
+  };
+};

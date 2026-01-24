@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { loginApi } from "../api/auth.jsx";
 import { useNavigate } from "react-router-dom";
+import { saveAuthData } from "../utils/auth.js";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -10,48 +11,73 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // ✅ extra hard lock (prevents double submit even before state updates)
+  const inFlightRef = useRef(false);
+
+  // ✅ optional: cooldown after 429 so user can’t spam
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // ✅ cooldown active
+    const now = Date.now();
+    if (cooldownUntil > now) {
+      const sec = Math.ceil((cooldownUntil - now) / 1000);
+      setError(`Too many attempts. Please wait ${sec}s and try again.`);
+      return;
+    }
+
+    // ✅ HARD GUARD: prevents double submit even if button not disabled yet
+    if (loading || inFlightRef.current) return;
+
+    const email = (form.email || "").trim();
+    const password = form.password || "";
+
+    if (!email || !password) {
+      setError("Email and password are required.");
+      return;
+    }
+
     setLoading(true);
     setError("");
+    inFlightRef.current = true;
 
     try {
-      const res = await loginApi(form);
+      const res = await loginApi({ email, password });
       const { token, user } = res.data;
 
-      // Save to localStorage
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
+      // ✅ use your util (no duplicates)
+      saveAuthData(token, user);
 
-      console.log("✅ Logged in as:", user.name, "| Role:", user.role);
-      console.log("👤 User object:", user);
-
-      // Small delay to ensure localStorage is set
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // Redirect based on role
       if (user.role === "admin" || user.role === "staff") {
-        console.log("🔄 Redirecting to admin dashboard...");
         navigate("/admin/dashboard", { replace: true });
       } else if (user.role === "student") {
-        console.log("🔄 Redirecting to student dashboard...");
         navigate("/student/dashboard", { replace: true });
+      } else if (user.role === "teacher") {
+        navigate("/teacher/dashboard", { replace: true });
       } else {
-        console.log("⚠️ Unknown role:", user.role, "- redirecting to home");
         navigate("/", { replace: true });
       }
     } catch (err) {
-      console.error("❌ Login error:", err);
-      setError(err.response?.data?.message || "Login failed. Please try again.");
+      const status = err?.response?.status;
+
+      if (status === 429) {
+        // ✅ match your backend throttle window (adjust if you changed it)
+        const waitMs = 30_000;
+        setCooldownUntil(Date.now() + waitMs);
+        setError("Too many attempts. Please wait 30 seconds and try again.");
+      } else {
+        setError(err?.response?.data?.message || "Login failed. Please try again.");
+      }
     } finally {
       setLoading(false);
+      inFlightRef.current = false;
     }
   };
 
@@ -60,9 +86,18 @@ const Login = () => {
       {/* Animated background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-blue-400 to-cyan-400 opacity-30 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-purple-400 to-pink-400 opacity-30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
-        <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-r from-pink-400 to-orange-400 opacity-30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
-        <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-gradient-to-r from-indigo-400 to-blue-400 opacity-20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div
+          className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-purple-400 to-pink-400 opacity-30 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        />
+        <div
+          className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-r from-pink-400 to-orange-400 opacity-30 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "4s" }}
+        />
+        <div
+          className="absolute top-1/2 right-1/4 w-64 h-64 bg-gradient-to-r from-indigo-400 to-blue-400 opacity-20 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        />
       </div>
 
       {/* Login Card */}
@@ -90,20 +125,21 @@ const Login = () => {
               transition={{ delay: 0.2, duration: 0.5 }}
               className="inline-block mb-4 backdrop-blur-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 p-4 rounded-2xl border border-white/50"
             >
-              <svg 
-                className="w-12 h-12 text-blue-600" 
-                fill="none" 
-                stroke="currentColor" 
+              <svg
+                className="w-12 h-12 text-blue-600"
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                 />
               </svg>
             </motion.div>
+
             <h1 className="text-[32px] font-bold tracking-tight bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent drop-shadow-lg">
               Admin Access
             </h1>
@@ -120,15 +156,25 @@ const Login = () => {
             >
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 <span>{error}</span>
               </div>
             </motion.div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <motion.div 
+          <form
+            onSubmit={handleSubmit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (loading || inFlightRef.current)) e.preventDefault();
+            }}
+            className="space-y-5"
+          >
+            <motion.div
               className="space-y-2"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -140,7 +186,12 @@ const Login = () => {
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
+                    />
                   </svg>
                 </div>
                 <input
@@ -155,7 +206,7 @@ const Login = () => {
               </div>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               className="space-y-2"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -167,7 +218,12 @@ const Login = () => {
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
                   </svg>
                 </div>
                 <input
@@ -188,11 +244,12 @@ const Login = () => {
               transition={{ delay: 0.5, duration: 0.5 }}
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
-              disabled={loading}
+              disabled={loading || (cooldownUntil > Date.now())}
               type="submit"
               className="relative w-full mt-6 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 py-4 text-sm font-bold text-white shadow-[0_10px_40px_rgba(139,92,246,0.4)] hover:shadow-[0_20px_60px_rgba(139,92,246,0.6)] transition-all duration-500 disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden group"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+
               {loading ? (
                 <span className="relative z-10 flex items-center justify-center gap-2">
                   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
@@ -212,20 +269,17 @@ const Login = () => {
             </motion.button>
           </form>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 0.5 }}
             className="mt-8"
           >
             <div className="backdrop-blur-xl bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-2xl p-4 border border-white/40 text-center">
-              <p className="text-xs text-gray-500 font-medium">
-                🔒 Protected administrative area
-              </p>
+              <p className="text-xs text-gray-500 font-medium">🔒 Protected administrative area</p>
             </div>
           </motion.div>
 
-          {/* Decorative elements */}
           <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-gradient-to-br from-pink-400/20 to-orange-400/20 rounded-full blur-3xl pointer-events-none" />
         </motion.div>

@@ -1,4 +1,9 @@
+// ==============================
+// ✅ major_quota_api.js (NO ENDPOINT CHANGES)
+// src/api/major_quota_api.js
+// ==============================
 import API from "./index";
+import { cachedGet, invalidateCache } from "../utils/requestCache";
 
 /**
  * Get quotas (optionally filtered by major_id and/or academic_year)
@@ -12,52 +17,31 @@ export const fetchMajorQuotas = (params = {}) => {
   if (academic_year !== undefined && academic_year !== null && String(academic_year).trim() !== "")
     query.academic_year = String(academic_year).trim();
 
-  return API.get("/major-quotas", { params: query });
+  // ✅ build stable key (sorted)
+  const keyObj = { ...query };
+  const key = `GET:/major-quotas?${new URLSearchParams(Object.entries(keyObj).sort()).toString()}`;
+
+  return cachedGet(() => API.get("/major-quotas", { params: query }), key, 30_000);
 };
 
-/**
- * Create or update quota row (your controller uses updateOrCreate)
- * Body fields: major_id, academic_year, limit, opens_at?, closes_at?
- * @param {{
- *  major_id: number|string,
- *  academic_year: string,
- *  limit: number|string,
- *  opens_at?: string|null,
- *  closes_at?: string|null
- * }} payload
- */
-export const createMajorQuota = (payload) => {
-  return API.post("/major-quotas", payload);
+export const createMajorQuota = async (payload) => {
+  const res = await API.post("/major-quotas", payload);
+  invalidateCache("GET:/major-quotas");
+  return res;
 };
 
-/**
- * Update quota by id
- * Body fields: limit, opens_at?, closes_at?
- * @param {number|string} id
- * @param {{
- *  limit: number|string,
- *  opens_at?: string|null,
- *  closes_at?: string|null
- * }} payload
- */
-export const updateMajorQuota = (id, payload) => {
-  return API.put(`/major-quotas/${id}`, payload);
+export const updateMajorQuota = async (id, payload) => {
+  const res = await API.put(`/major-quotas/${id}`, payload);
+  invalidateCache("GET:/major-quotas");
+  return res;
 };
 
-/**
- * Delete quota by id
- * @param {number|string} id
- */
-export const deleteMajorQuota = (id) => {
-  return API.delete(`/major-quotas/${id}`);
+export const deleteMajorQuota = async (id) => {
+  const res = await API.delete(`/major-quotas/${id}`);
+  invalidateCache("GET:/major-quotas");
+  return res;
 };
 
-/**
- * Convenience helper: get latest quota row for a major + academic year.
- * Your backend returns latest('id')->get(), so we pick first item.
- * @param {number|string} majorId
- * @param {string} academicYear
- */
 export const fetchLatestQuotaForMajorYear = async (majorId, academicYear) => {
   const res = await fetchMajorQuotas({ major_id: majorId, academic_year: academicYear });
   const list = res?.data?.data || [];

@@ -1,79 +1,97 @@
 // ==============================
-// registration_api.jsx (FULL, CLEAN, CONSISTENT) ✅ NO CUT
+// ✅ registration_api.js (NO ENDPOINT CHANGES)
+// src/api/registration_api.js
 // ==============================
 import API from "./index";
 import PaymentAPI from "./paymentClient";
+import { cachedGet, invalidateCache } from "../utils/requestCache";
 
 // ==============================
 // REGISTRATION CRUD (STAFF/ADMIN)
 // backend routes: /registers
 // ==============================
-export const fetchRegistrations = (params = {}) => API.get("/registers", { params });
-export const fetchRegistrationById = (id) => API.get(`/registers/${id}`);
+export const fetchRegistrations = (params = {}) => {
+  const qs = new URLSearchParams(
+    Object.entries(params || {})
+      .filter(([, v]) => v !== null && v !== undefined && v !== "")
+      .map(([k, v]) => [k, String(v)])
+  ).toString();
+
+  const key = `GET:/registers${qs ? `?${qs}` : ""}`;
+  return cachedGet(() => API.get("/registers", { params }), key, 15_000);
+};
+
+export const fetchRegistrationById = (id) => {
+  const url = `/registers/${id}`;
+  return cachedGet(() => API.get(url), `GET:${url}`, 30_000);
+};
 
 export const searchRegistrations = (searchTerm, status = "all") => {
   const params = {};
   if (searchTerm) params.search = searchTerm;
   if (status !== "all") params.payment_status = status;
-  return API.get("/registers", { params });
+
+  const qs = new URLSearchParams(
+    Object.entries(params).map(([k, v]) => [k, String(v)])
+  ).toString();
+
+  const key = `GET:/registers${qs ? `?${qs}` : ""}`;
+  return cachedGet(() => API.get("/registers", { params }), key, 10_000);
 };
 
 // Public route for student self register
-export const submitRegistration = (formData) =>
-  API.post("/register/save", formData, {
+export const submitRegistration = async (formData) => {
+  const res = await API.post("/register/save", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  invalidateCache("GET:/registers");
+  return res;
+};
 
-export const updateRegistration = (id, formData) =>
-  API.put(`/registers/${id}`, formData, {
+export const updateRegistration = async (id, formData) => {
+  const res = await API.put(`/registers/${id}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  invalidateCache("GET:/registers");
+  invalidateCache(`GET:/registers/${id}`);
+  return res;
+};
 
-export const deleteRegistration = (id) => API.delete(`/registers/${id}`);
+export const deleteRegistration = async (id) => {
+  const res = await API.delete(`/registers/${id}`);
+  invalidateCache("GET:/registers");
+  invalidateCache(`GET:/registers/${id}`);
+  return res;
+};
 
 // ==============================
 // PAY LATER
 // backend route: POST /registrations/{id}/pay-later
-// payload supports: { pay_plan, semester, amount }
 // ==============================
-export const payLater = (id, payload = {}) =>
-  API.post(`/registrations/${id}/pay-later`, payload);
+export const payLater = (id, payload = {}) => {
+  // no caching for POST
+  return API.post(`/registrations/${id}/pay-later`, payload);
+};
 
 // ==============================
-// ✅ GENERATE QR (ONE TRUE FUNCTION)
+// ✅ GENERATE QR
 // backend route: POST /payment/generate-qr
-// payload supports: { pay_plan, semester, amount }
 // ==============================
 export const generatePaymentQR = (registrationId, payload = {}) =>
   PaymentAPI.post("/payment/generate-qr", {
     registration_id: registrationId,
     ...payload,
-    // keep semester numeric if provided
     ...(payload?.semester !== undefined ? { semester: Number(payload.semester) } : {}),
   });
 
-// ✅ Admin Generate QR (use same function)
-// Usage examples:
-// adminGenerateQr(id, { pay_plan: "SEMESTER", semester: 1, amount: 100 })
-// adminGenerateQr(id, { semester: 2 })
 export const adminGenerateQr = (id, payload = {}) => generatePaymentQR(id, payload);
 
 // ==============================
 // ✅ ADMIN CASH PAYMENT
-// backend route example: POST /admin/registrations/{id}/mark-paid-cash
-// payload supports: { pay_plan, semester, amount }
+// backend route: POST /admin/registrations/{id}/mark-paid-cash
 // ==============================
-//
-// Supports BOTH calling styles:
-// markPaidCash(id, 1)  ✅ (semester only)
-// markPaidCash(id, { semester: 1, amount: 100 }) ✅ (payload)
-//
 export const markPaidCash = (registrationId, payload = {}) => {
-  // allow old style: payload is semester number
-  const finalPayload =
-    typeof payload === "number"
-      ? { semester: payload }
-      : { ...payload };
+  const finalPayload = typeof payload === "number" ? { semester: payload } : { ...payload };
 
   return API.post(`/admin/registrations/${registrationId}/mark-paid-cash`, {
     ...finalPayload,
@@ -82,64 +100,55 @@ export const markPaidCash = (registrationId, payload = {}) => {
 };
 
 // ==============================
-// PAYMENT STATUS
+// PAYMENT STATUS (do not cache)
 // ==============================
-export const checkPaymentStatus = (tranId) =>
-  PaymentAPI.get(`/payment/check-status/${tranId}`);
-
-export const getRegistrationPayment = (registrationId) =>
-  PaymentAPI.get(`/payment/registration/${registrationId}`);
+export const checkPaymentStatus = (tranId) => PaymentAPI.get(`/payment/check-status/${tranId}`);
+export const getRegistrationPayment = (registrationId) => PaymentAPI.get(`/payment/registration/${registrationId}`);
 
 // ==============================
-// REPORTS
+// REPORTS (optional cache short, but safe to not cache)
 // ==============================
-//
-// ✅ Use axios params instead of manual URLSearchParams
-// (Axios will build clean query string and avoid nested-object bugs)
-//
-
-// GET /reports/registrations?department_id=&major_id=&semester=...
 export const generateRegistrationReport = (filters = {}) => {
   const params = {};
   Object.entries(filters || {}).forEach(([k, v]) => {
     if (v !== null && v !== undefined && v !== "") params[k] = v;
   });
 
-  return API.get("/reports/registrations", { params });
+  const qs = new URLSearchParams(
+    Object.entries(params).map(([k, v]) => [k, String(v)])
+  ).toString();
+
+  const key = `GET:/reports/registrations${qs ? `?${qs}` : ""}`;
+  return cachedGet(() => API.get("/reports/registrations", { params }), key, 15_000);
 };
 
-// GET /reports/registrations/pdf?department_id=&major_id=&semester=...
 export const downloadRegistrationReportPDF = (filters = {}) => {
   const params = {};
   Object.entries(filters || {}).forEach(([k, v]) => {
     if (v !== null && v !== undefined && v !== "") params[k] = v;
   });
 
-  return API.get("/reports/registrations/pdf", {
-    params,
-    responseType: "blob",
-  });
+  // no cache (blob download)
+  return API.get("/reports/registrations/pdf", { params, responseType: "blob" });
 };
 
-// ✅ FIX: accept filters object (academic_year, semester)
 export const getRegistrationSummary = (filters = {}) => {
   const params = {};
-  Object.entries(filters).forEach(([k, v]) => {
+  Object.entries(filters || {}).forEach(([k, v]) => {
     if (v !== null && v !== undefined && v !== "") params[k] = v;
   });
-  return API.get("/reports/registrations/summary", { params });
+
+  const qs = new URLSearchParams(
+    Object.entries(params).map(([k, v]) => [k, String(v)])
+  ).toString();
+
+  const key = `GET:/reports/registrations/summary${qs ? `?${qs}` : ""}`;
+  return cachedGet(() => API.get("/reports/registrations/summary", { params }), key, 15_000);
 };
 
-
-
 export const checkMajorCapacity = (majorId, academicYear) =>
-  API.get(`/majors/${majorId}/capacity`, {
-    params: { academic_year: academicYear },
-  });
+  API.get(`/majors/${majorId}/capacity`, { params: { academic_year: academicYear } });
 
-// ==============================
-// HELPERS
-// ==============================
 export const downloadPDFBlob = (blob, filename = null) => {
   const url = window.URL.createObjectURL(new Blob([blob]));
   const link = document.createElement("a");
@@ -156,9 +165,8 @@ export const generateAndDownloadReport = async (filters = {}, filename = null) =
   downloadPDFBlob(response.data, filename);
   return { success: true };
 };
- 
-export const canRegister = (majorId, academicYear) => {
-  return API.get("/registrations/can-register", {
+
+export const canRegister = (majorId, academicYear) =>
+  API.get("/registrations/can-register", {
     params: { major_id: majorId, academic_year: academicYear },
   });
-};

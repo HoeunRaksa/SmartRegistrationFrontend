@@ -74,6 +74,23 @@ const getCourseLabel = (c) => {
   return parts.join(" — ");
 };
 
+/* ================== MAJOR/DEPT HELPERS (via registration) ================== */
+const getStudentDeptId = (st) =>
+  safeStr(st?.department_id ?? st?.registration?.department_id ?? st?.department?.id ?? "");
+
+const getStudentMajorId = (st) =>
+  safeStr(st?.major_id ?? st?.registration?.major_id ?? st?.major?.id ?? "");
+
+/**
+ * Course major/department (preferred path):
+ *   course.majorSubject.major.id
+ *   course.majorSubject.major.department_id
+ * Fallbacks:
+ *   course.major_id / course.department_id (if your API includes them)
+ */
+const getCourseMajorId = (c) => safeStr(c?.majorSubject?.major?.id ?? c?.major_id ?? "");
+const getCourseDeptId = (c) => safeStr(c?.majorSubject?.major?.department_id ?? c?.department_id ?? "");
+
 const EnrollmentForm = ({ onUpdate, editingEnrollment, onCancel, students = [], courses = [] }) => {
   const [form, setForm] = useState(INITIAL_FORM_STATE);
   const [loading, setLoading] = useState(false);
@@ -84,17 +101,93 @@ const EnrollmentForm = ({ onUpdate, editingEnrollment, onCancel, students = [], 
 
   const studentOptions = useMemo(() => {
     const arr = Array.isArray(students) ? students : [];
-    return arr.map((s) => ({ 
-      id: String(s?.id ?? ""), 
+    return arr.map((s) => ({
+      id: String(s?.id ?? ""),
       label: getStudentLabel(s),
-      original: s  // Pass full student object
+      original: s, // Pass full student object
     }));
   }, [students]);
 
+  /* ================== SELECTION VALIDATION ================== */
+  const selectionError = useMemo(() => {
+    if (isEditMode) return null;
+
+    const selectedStudents = (form.student_ids || [])
+      .map((id) => studentOptions.find((x) => String(x.id) === String(id))?.original)
+      .filter(Boolean);
+
+    if (selectedStudents.length <= 1) return null;
+
+    const deptSet = new Set(selectedStudents.map(getStudentDeptId).filter(Boolean));
+    const majorSet = new Set(selectedStudents.map(getStudentMajorId).filter(Boolean));
+
+    if (deptSet.size !== 1) return "Selected students are from different departments. Please select same department students.";
+    if (majorSet.size !== 1) return "Selected students are from different majors. Please select same major students.";
+    return null;
+  }, [form.student_ids, studentOptions, isEditMode]);
+
+  /* ================== FILTER COURSE OPTIONS BY SELECTED STUDENTS ================== */
   const courseOptions = useMemo(() => {
-    const arr = Array.isArray(courses) ? courses : [];
-    return arr.map((c) => ({ id: String(c?.id ?? ""), label: getCourseLabel(c) }));
-  }, [courses]);
+    const allCourses = Array.isArray(courses) ? courses : [];
+
+    // ✅ Edit mode: keep all courses (or backend will show the current course anyway)
+    if (isEditMode) {
+      return allCourses.map((c) => ({
+        id: String(c?.id ?? ""),
+        label: getCourseLabel(c),
+        original: c,
+      }));
+    }
+
+    const selectedStudents = (form.student_ids || [])
+      .map((id) => studentOptions.find((x) => String(x.id) === String(id))?.original)
+      .filter(Boolean);
+
+    // No students picked -> show all courses (you can change to [] if you prefer)
+    if (selectedStudents.length === 0) {
+      return allCourses.map((c) => ({
+        id: String(c?.id ?? ""),
+        label: getCourseLabel(c),
+        original: c,
+      }));
+    }
+
+    const deptSet = new Set(selectedStudents.map(getStudentDeptId).filter(Boolean));
+    const majorSet = new Set(selectedStudents.map(getStudentMajorId).filter(Boolean));
+
+    // Mixed dept/major -> show no courses
+    if (deptSet.size !== 1 || majorSet.size !== 1) return [];
+
+    const deptId = [...deptSet][0];
+    const majorId = [...majorSet][0];
+
+    const filtered = allCourses.filter((c) => {
+      const cMajor = getCourseMajorId(c);
+      const cDept = getCourseDeptId(c);
+
+      // if course doesn't have major/dept info, exclude it (prevents wrong enroll)
+      if (!cMajor || !cDept) return false;
+
+      return String(cMajor) === String(majorId) && String(cDept) === String(deptId);
+    });
+
+    return filtered.map((c) => ({
+      id: String(c?.id ?? ""),
+      label: getCourseLabel(c),
+      original: c,
+    }));
+  }, [courses, isEditMode, form.student_ids, studentOptions]);
+
+  // ✅ If selected course becomes invalid after changing students -> clear it
+  useEffect(() => {
+    if (isEditMode) return;
+    if (!form.course_id) return;
+
+    const stillValid = courseOptions.some((c) => String(c.id) === String(form.course_id));
+    if (!stillValid) {
+      setForm((p) => ({ ...p, course_id: "" }));
+    }
+  }, [courseOptions, form.course_id, isEditMode]);
 
   // ✅ Populate form when editingEnrollment changes
   useEffect(() => {
@@ -122,6 +215,9 @@ const EnrollmentForm = ({ onUpdate, editingEnrollment, onCancel, students = [], 
     setSuccess(false);
 
     try {
+      // ✅ block mixed dept/major selection
+      if (selectionError) throw new Error(selectionError);
+
       if (!form.course_id) throw new Error("Course is required.");
       if (!form.status) throw new Error("Status is required.");
 
@@ -177,6 +273,9 @@ const EnrollmentForm = ({ onUpdate, editingEnrollment, onCancel, students = [], 
             message={`Enrollment ${isEditMode ? "updated" : "created"} successfully!`}
           />
         )}
+        {selectionError && (
+          <Alert type="error" message={selectionError} onClose={null} />
+        )}
         {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
       </AnimatePresence>
 
@@ -202,14 +301,16 @@ const Alert = ({ type, message, onClose }) => (
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, scale: 0.92, transition: { duration: 0.2 } }}
     className={`relative flex items-center gap-4 p-5 rounded-2xl border-2 shadow-lg backdrop-blur-sm ${
-      type === "success" 
-        ? "bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-300" 
+      type === "success"
+        ? "bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-300"
         : "bg-gradient-to-r from-rose-50 to-red-50 border-red-300"
     }`}
   >
-    <div className={`p-2 rounded-xl ${
-      type === "success" ? "bg-emerald-100" : "bg-red-100"
-    }`}>
+    <div
+      className={`p-2 rounded-xl ${
+        type === "success" ? "bg-emerald-100" : "bg-red-100"
+      }`}
+    >
       {type === "success" ? (
         <CheckCircle2 className="w-6 h-6 text-emerald-600" />
       ) : (
@@ -217,20 +318,22 @@ const Alert = ({ type, message, onClose }) => (
       )}
     </div>
 
-    <p className={`flex-1 text-sm font-semibold ${
-      type === "success" ? "text-emerald-900" : "text-red-900"
-    }`}>
+    <p
+      className={`flex-1 text-sm font-semibold ${
+        type === "success" ? "text-emerald-900" : "text-red-900"
+      }`}
+    >
       {message}
     </p>
 
     {onClose && (
-      <motion.button 
+      <motion.button
         whileHover={{ scale: 1.1, rotate: 90 }}
         whileTap={{ scale: 0.9 }}
-        onClick={onClose} 
+        onClick={onClose}
         className={`p-1.5 rounded-lg transition-colors ${
-          type === "success" 
-            ? "hover:bg-emerald-200 text-emerald-700" 
+          type === "success"
+            ? "hover:bg-emerald-200 text-emerald-700"
             : "hover:bg-red-200 text-red-700"
         }`}
         type="button"
@@ -260,7 +363,7 @@ const FormSection = ({
     {/* Decorative corner elements */}
     <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-100/30 to-purple-100/30 rounded-full blur-3xl" />
     <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-pink-100/30 to-orange-100/30 rounded-full blur-3xl" />
-    
+
     <div className="relative z-10">
       <FormHeader isEditMode={isEditMode} onCancel={onCancel} />
 
@@ -285,7 +388,7 @@ const FormSection = ({
             value={form.course_id}
             onChange={(v) => setForm((p) => ({ ...p, course_id: v }))}
             options={courseOptions}
-            disabled={false}
+            disabled={!isEditMode && (form.student_ids?.length ?? 0) === 0}
             name="course_id"
           />
 
@@ -341,24 +444,24 @@ const FormHeader = ({ isEditMode, onCancel }) => (
 const MultiStudentSelect = ({ value = [], onChange, options = [], disabled }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredOptions = options.filter(opt => {
+  const filteredOptions = options.filter((opt) => {
     const label = (opt.label || opt.name || "").toLowerCase();
     return label.includes(searchTerm.toLowerCase());
   });
 
   const toggleStudent = (studentId) => {
     if (disabled) return;
-    
+
     const newValue = value.includes(studentId)
-      ? value.filter(id => id !== studentId)
+      ? value.filter((id) => id !== studentId)
       : [...value, studentId];
-    
+
     onChange(newValue);
   };
 
   const selectAll = () => {
     if (disabled) return;
-    onChange(filteredOptions.map(opt => String(opt.id)));
+    onChange(filteredOptions.map((opt) => String(opt.id)));
   };
 
   const clearAll = () => {
@@ -432,62 +535,64 @@ const MultiStudentSelect = ({ value = [], onChange, options = [], disabled }) =>
               {filteredOptions.map((opt) => {
                 const studentData = opt.original || opt;
                 const isSelected = value.includes(String(opt.id));
-                
-                const name = studentData.student_name || studentData.full_name_en || studentData.name || 'Unknown';
-                const nameKh = studentData.student_name_kh || studentData.full_name_kh || '';
-                const email = studentData.student_email || studentData.email || studentData.personal_email || '';
-                const phone = studentData.student_phone || studentData.phone || '';
-                const address = studentData.student_address || studentData.address || '';
-               const image = studentData.profile_picture_url || "";
-                const code = studentData.student_code || '';
-      
+
+                const name =
+                  studentData.student_name ||
+                  studentData.full_name_en ||
+                  studentData.name ||
+                  "Unknown";
+                const nameKh = studentData.student_name_kh || studentData.full_name_kh || "";
+                const email = studentData.student_email || studentData.email || studentData.personal_email || "";
+                const phone = studentData.student_phone || studentData.phone || "";
+                const address = studentData.student_address || studentData.address || "";
+                const image = studentData.profile_picture_url || "";
+                const code = studentData.student_code || "";
+
                 return (
                   <motion.div
                     key={opt.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className={`p-4 hover:bg-blue-50 transition-colors cursor-pointer ${
-                      isSelected ? 'bg-blue-50 border-l-4 border-blue-500' : ''
-                    } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      isSelected ? "bg-blue-50 border-l-4 border-blue-500" : ""
+                    } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                     onClick={() => !disabled && toggleStudent(String(opt.id))}
                   >
                     <div className="flex gap-4">
                       {/* Checkbox */}
                       <div className="flex-shrink-0 pt-1">
-                        <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
-                          isSelected 
-                            ? 'bg-gradient-to-br from-blue-500 to-indigo-600 border-blue-500' 
-                            : 'border-gray-300 bg-white'
-                        }`}>
-                          {isSelected && (
-                            <CheckCircle2 className="w-5 h-5 text-white" />
-                          )}
+                        <div
+                          className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                            isSelected
+                              ? "bg-gradient-to-br from-blue-500 to-indigo-600 border-blue-500"
+                              : "border-gray-300 bg-white"
+                          }`}
+                        >
+                          {isSelected && <CheckCircle2 className="w-5 h-5 text-white" />}
                         </div>
                       </div>
 
                       {/* Student Image */}
-                       
                       <div className="flex-shrink-0">
                         {image ? (
                           <img
                             src={image}
-                          
                             alt={name}
                             className="w-16 h-16 rounded-xl object-cover border-2 border-gray-200"
                             onError={(e) => {
-                              e.target.style.display = 'none';
-                              e.target.nextSibling.style.display = 'flex';
-                               console.log(image)
+                              e.target.style.display = "none";
+                              e.target.nextSibling.style.display = "flex";
+                              console.log(image);
                             }}
                           />
                         ) : null}
-                        <div 
-                          className={`w-16 h-16 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center ${image ? 'hidden' : 'flex'}`}
+                        <div
+                          className={`w-16 h-16 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center ${
+                            image ? "hidden" : "flex"
+                          }`}
                         >
-                          
                           <span className="text-xl font-bold text-white">
                             {name.charAt(0).toUpperCase()}
-                            
                           </span>
                         </div>
                       </div>
@@ -497,9 +602,7 @@ const MultiStudentSelect = ({ value = [], onChange, options = [], disabled }) =>
                         <div className="flex items-start justify-between mb-1">
                           <div>
                             <h4 className="text-sm font-bold text-gray-900">{name}</h4>
-                            {nameKh && (
-                              <p className="text-xs text-gray-600">{nameKh}</p>
-                            )}
+                            {nameKh && <p className="text-xs text-gray-600">{nameKh}</p>}
                           </div>
                           {code && (
                             <span className="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 text-xs font-semibold">
@@ -519,7 +622,7 @@ const MultiStudentSelect = ({ value = [], onChange, options = [], disabled }) =>
                               <span className="truncate">{email}</span>
                             </div>
                           )}
-                          
+
                           {phone && (
                             <div className="flex items-center gap-1.5 text-xs text-gray-600">
                               <div className="p-1 rounded bg-green-100 flex-shrink-0">
@@ -530,7 +633,7 @@ const MultiStudentSelect = ({ value = [], onChange, options = [], disabled }) =>
                               <span>{phone}</span>
                             </div>
                           )}
-                          
+
                           {address && (
                             <div className="flex items-center gap-1.5 text-xs text-gray-600">
                               <div className="p-1 rounded bg-purple-100 flex-shrink-0">
@@ -555,7 +658,7 @@ const MultiStudentSelect = ({ value = [], onChange, options = [], disabled }) =>
 
       {filteredOptions.length > 0 && (
         <div className="mt-2 text-xs text-gray-500 text-center">
-          Showing {filteredOptions.length} student{filteredOptions.length !== 1 ? 's' : ''}
+          Showing {filteredOptions.length} student{filteredOptions.length !== 1 ? "s" : ""}
         </div>
       )}
     </motion.div>
@@ -582,9 +685,9 @@ const SelectField = ({ icon: Icon, placeholder, value, onChange, options = [], d
       className="w-full rounded-2xl bg-white px-4 py-3 text-sm text-gray-900 border-2 border-gray-300 outline-none focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md appearance-none cursor-pointer"
       style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'right 1rem center',
-        paddingRight: '3rem'
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "right 1rem center",
+        paddingRight: "3rem",
       }}
     >
       <option value="">{placeholder}</option>
@@ -635,9 +738,7 @@ const SubmitButton = ({ loading, isEditMode }) => (
         </>
       )}
     </span>
-    
   </motion.button>
-  
 );
 
 export default EnrollmentForm;

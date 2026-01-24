@@ -1,7 +1,7 @@
-import API from '../api/index';
+import API from "../api/index";
 
 export const fetchStaff = async (params = {}) => {
-  return await API.get('/staff', { params });
+  return await API.get("/staff", { params });
 };
 
 export const fetchStaffById = async (id) => {
@@ -10,45 +10,52 @@ export const fetchStaffById = async (id) => {
 
 export const createStaff = async (staffData) => {
   const formData = new FormData();
-  
-  // Add all fields to FormData
-  Object.keys(staffData).forEach(key => {
-    if (staffData[key] !== null && staffData[key] !== undefined) {
-      if (key === 'profile_image' && staffData[key] instanceof File) {
-        formData.append(key, staffData[key]);
-      } else {
-        formData.append(key, staffData[key]);
-      }
+
+  Object.entries(staffData || {}).forEach(([key, value]) => {
+    if (value === null || value === undefined) return;
+
+    if (key === "profile_image" && value instanceof File) {
+      formData.append(key, value);
+      return;
     }
+
+    if (typeof value === "object" && !(value instanceof File)) {
+      formData.append(key, JSON.stringify(value));
+      return;
+    }
+
+    formData.append(key, String(value));
   });
 
-  return await API.post('/staff', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    }
+  return await API.post("/staff", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
   });
 };
 
 export const updateStaff = async (id, staffData) => {
   const formData = new FormData();
-  
-  Object.keys(staffData).forEach(key => {
-    if (staffData[key] !== null && staffData[key] !== undefined) {
-      if (key === 'profile_image' && staffData[key] instanceof File) {
-        formData.append(key, staffData[key]);
-      } else {
-        formData.append(key, staffData[key]);
-      }
+
+  Object.entries(staffData || {}).forEach(([key, value]) => {
+    if (value === null || value === undefined) return;
+
+    if (key === "profile_image" && value instanceof File) {
+      formData.append(key, value);
+      return;
     }
+
+    if (typeof value === "object" && !(value instanceof File)) {
+      formData.append(key, JSON.stringify(value));
+      return;
+    }
+
+    formData.append(key, String(value));
   });
 
-  // Laravel doesn't handle PUT with FormData well, so we use POST with _method
-  formData.append('_method', 'PUT');
+  // Laravel: POST with _method for multipart update
+  formData.append("_method", "PUT");
 
   return await API.post(`/staff/${id}`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    }
+    headers: { "Content-Type": "multipart/form-data" },
   });
 };
 

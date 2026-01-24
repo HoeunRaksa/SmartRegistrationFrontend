@@ -10,7 +10,15 @@ import { fetchDepartments, fetchMajorsByDepartment } from "../../api/department_
 
 import { getCachedStudents, getCachedCourses } from "../../utils/dataCache";
 
-import { BookOpen, Users, CheckCircle, GraduationCap, Building2, Search, Filter } from "lucide-react";
+import {
+  BookOpen,
+  Users,
+  CheckCircle,
+  GraduationCap,
+  Building2,
+  Search,
+  Filter,
+} from "lucide-react";
 import { motion } from "framer-motion";
 
 const EnrollmentsPage = () => {
@@ -39,6 +47,36 @@ const EnrollmentsPage = () => {
     setTimeout(() => loadCourses(), 300);
     setTimeout(() => loadDepartments(), 450);
   }, []);
+
+  /* ================= HELPERS ================= */
+
+  // ✅ major_id comes from registration, fallback to direct major_id if your API includes it
+  const getStudentMajorId = (st) => {
+    if (!st) return "";
+    return String(
+      st?.registration?.major_id ??
+        st?.registration_major_id ??
+        st?.major_id ??
+        ""
+    );
+  };
+
+  const getStudentDeptId = (st) => {
+    if (!st) return "";
+    return String(st?.department_id ?? st?.registration?.department_id ?? "");
+  };
+
+  // ✅ enrollment major can be returned directly by backend (recommended)
+  // fallback to nested student.registration.major_id, or local student lookup
+  const getEnrollmentMajorId = (e) => {
+    if (!e) return "";
+    return String(
+      e?.major_id ??
+        e?.student?.registration?.major_id ??
+        e?.student?.major_id ??
+        ""
+    );
+  };
 
   /* ================= LOADERS ================= */
 
@@ -128,8 +166,11 @@ const EnrollmentsPage = () => {
     const arr = Array.isArray(students) ? students : [];
     return arr
       .filter((st) => {
-        const byDept = dept ? String(st.department_id) === dept : true;
-        const byMajor = major ? String(st.major_id) === major : true;
+        const stDept = getStudentDeptId(st);
+        const stMajor = getStudentMajorId(st);
+
+        const byDept = dept ? stDept === dept : true;
+        const byMajor = major ? stMajor === major : true;
 
         if (!byDept || !byMajor) return false;
 
@@ -140,22 +181,37 @@ const EnrollmentsPage = () => {
         const nameEn = String(st.full_name_en || "").toLowerCase();
         const nameKh = String(st.full_name_kh || "").toLowerCase();
         const nameKhAlt = String(st.student_name_kh || "").toLowerCase();
-        const email = String(st.student_email || st.email || st.personal_email || "").toLowerCase();
-        const phone = String(st.student_phone || "").toLowerCase();
-        const address = String(st.student_address || "").toLowerCase();
+        const email = String(
+          st.student_email || st.email || st.personal_email || ""
+        ).toLowerCase();
+        const phone = String(st.student_phone || st.phone_number || "").toLowerCase();
+        const address = String(st.student_address || st.address || "").toLowerCase();
 
-        return code.includes(s) || name.includes(s) || nameEn.includes(s) || nameKh.includes(s) || 
-               nameKhAlt.includes(s) || email.includes(s) || phone.includes(s) || address.includes(s);
+        return (
+          code.includes(s) ||
+          name.includes(s) ||
+          nameEn.includes(s) ||
+          nameKh.includes(s) ||
+          nameKhAlt.includes(s) ||
+          email.includes(s) ||
+          phone.includes(s) ||
+          address.includes(s)
+        );
       })
       .map((st) => ({
         ...st,
         id: st.id,
-        original: st,  // Pass full student object
+        original: st, // Pass full student object
         // for EnrollmentForm select label
         name:
           (st.student_code ? `${st.student_code} — ` : "") +
-          (st.student_name || st.full_name_en || st.full_name_kh || st.student_name_kh || 
-           st.name || st.full_name || `Student #${st.id}`),
+          (st.student_name ||
+            st.full_name_en ||
+            st.full_name_kh ||
+            st.student_name_kh ||
+            st.name ||
+            st.full_name ||
+            `Student #${st.id}`),
       }));
   }, [students, filters.department_id, filters.major_id, filters.search]);
 
@@ -186,13 +242,23 @@ const EnrollmentsPage = () => {
 
       if (!st || !co) return false;
 
-      const byDept = dept ? String(st.department_id) === dept : true;
-      const byMajor = major ? String(st.major_id) === major : true;
+      const stDept = getStudentDeptId(st);
+      const enMajor = getEnrollmentMajorId(e) || getStudentMajorId(st);
+
+      const byDept = dept ? stDept === dept : true;
+      const byMajor = major ? String(enMajor) === major : true;
       const byCourse = courseId ? String(co.id) === courseId : true;
 
       return byDept && byMajor && byCourse;
     });
-  }, [enrollments, students, courses, filters.department_id, filters.major_id, filters.course_id]);
+  }, [
+    enrollments,
+    students,
+    courses,
+    filters.department_id,
+    filters.major_id,
+    filters.course_id,
+  ]);
 
   /* ================= ACTIONS ================= */
 
@@ -212,8 +278,12 @@ const EnrollmentsPage = () => {
 
   /* ================= QUICK STATS ================= */
 
-  const enrolledCount = filteredEnrollments.filter((e) => e.status === "enrolled").length;
-  const completedCount = filteredEnrollments.filter((e) => e.status === "completed").length;
+  const enrolledCount = filteredEnrollments.filter(
+    (e) => e.status === "enrolled"
+  ).length;
+  const completedCount = filteredEnrollments.filter(
+    (e) => e.status === "completed"
+  ).length;
 
   const quickStats = [
     {
@@ -241,7 +311,6 @@ const EnrollmentsPage = () => {
 
   return (
     <div className="min-h-screen space-y-8 pb-12">
-      
       {/* ================= FILTER BAR ================= */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -252,7 +321,7 @@ const EnrollmentsPage = () => {
         {/* Decorative elements */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100/30 to-purple-100/30 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-pink-100/30 to-orange-100/30 rounded-full blur-3xl" />
-        
+
         <div className="relative">
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">
@@ -260,8 +329,12 @@ const EnrollmentsPage = () => {
               <Filter className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900">Filter Enrollments</h3>
-              <p className="text-xs text-gray-500">Narrow down your search criteria</p>
+              <h3 className="text-lg font-bold text-gray-900">
+                Filter Enrollments
+              </h3>
+              <p className="text-xs text-gray-500">
+                Narrow down your search criteria
+              </p>
             </div>
           </div>
 
@@ -272,7 +345,10 @@ const EnrollmentsPage = () => {
               icon={Building2}
               value={filters.department_id}
               onChange={(v) => handleFilterChange("department_id", v)}
-              options={departments.map(d => ({ id: d.id, label: d.department_name || d.name }))}
+              options={departments.map((d) => ({
+                id: d.id,
+                label: d.department_name || d.name,
+              }))}
               placeholder="All Departments"
               iconColor="text-blue-600"
               iconBg="from-blue-100 to-indigo-100"
@@ -283,7 +359,10 @@ const EnrollmentsPage = () => {
               icon={GraduationCap}
               value={filters.major_id}
               onChange={(v) => handleFilterChange("major_id", v)}
-              options={majors.map(m => ({ id: m.id, label: m.major_name || m.name }))}
+              options={majors.map((m) => ({
+                id: m.id,
+                label: m.major_name || m.name,
+              }))}
               placeholder="All Majors"
               disabled={!filters.department_id}
               iconColor="text-purple-600"
@@ -295,7 +374,11 @@ const EnrollmentsPage = () => {
               icon={BookOpen}
               value={filters.course_id}
               onChange={(v) => handleFilterChange("course_id", v)}
-              options={courses.map(c => ({ id: c.id, label: c.course_name || c.display_name || `Course #${c.id}` }))}
+              options={courses.map((c) => ({
+                id: c.id,
+                label:
+                  c.course_name || c.display_name || `Course #${c.id}`,
+              }))}
               placeholder="All Courses"
               iconColor="text-teal-600"
               iconBg="from-teal-100 to-cyan-100"
@@ -331,9 +414,9 @@ const EnrollmentsPage = () => {
             >
               {/* Decorative gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
+
               <div className="relative flex items-center gap-4">
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.1, rotate: 5 }}
                   className={`p-4 rounded-2xl bg-gradient-to-br ${stat.gradient} shadow-lg`}
                 >
@@ -377,9 +460,20 @@ const EnrollmentsPage = () => {
 };
 
 /* ================= FILTER SELECT COMPONENT ================= */
-const FilterSelect = ({ icon: Icon, value, onChange, options, placeholder, disabled, iconColor, iconBg }) => (
+const FilterSelect = ({
+  icon: Icon,
+  value,
+  onChange,
+  options,
+  placeholder,
+  disabled,
+  iconColor,
+  iconBg,
+}) => (
   <div className="relative">
-    <div className={`absolute left-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-gradient-to-br ${iconBg}`}>
+    <div
+      className={`absolute left-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-gradient-to-br ${iconBg}`}
+    >
       <Icon className={`w-4 h-4 ${iconColor}`} />
     </div>
     <select
@@ -389,9 +483,9 @@ const FilterSelect = ({ icon: Icon, value, onChange, options, placeholder, disab
       className="w-full pl-14 pr-4 py-3 rounded-2xl border-2 border-gray-300 bg-white text-sm outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md appearance-none cursor-pointer"
       style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'right 1rem center',
-        paddingRight: '3rem'
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "right 1rem center",
+        paddingRight: "3rem",
       }}
     >
       <option value="">{placeholder}</option>

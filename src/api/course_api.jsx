@@ -9,6 +9,10 @@ const extractData = (response) => {
   return null;
 };
 
+// ==============================
+// STUDENT COURSES (NO ENDPOINT CHANGE)
+// ==============================
+
 // GET: enrolled courses
 export const fetchStudentCourses = async () => {
   const response = await API.get("/student/courses/enrolled");
@@ -25,29 +29,29 @@ export const fetchAvailableCourses = async () => {
 
 // POST: enroll
 export const enrollInCourse = async (courseId) => {
-  return await API.post("/student/courses/enroll", {
-    course_id: courseId,
+  return API.post("/student/courses/enroll", {
+    course_id: Number(courseId),
   });
 };
 
 // DELETE: drop course
 export const dropCourse = async (courseId) => {
-  return await API.delete(`/student/courses/${courseId}/drop`);
+  return API.delete(`/student/courses/${courseId}/drop`);
 };
 
+// ==============================
+// COURSES (ADMIN/STAFF) (NO ENDPOINT CHANGE)
+// ==============================
 
-// Alias used in many pages
-export const fetchCourses = async () => {
-  return await fetchAllCourses();
-};
+// ✅ keep alias used in many pages (no recursion / no hoist confusion)
 export const fetchAllCourses = async () => {
   try {
     const response = await API.get("/courses");
     const data = extractData(response);
     return {
       data: {
-        data: Array.isArray(data) ? data : []
-      }
+        data: Array.isArray(data) ? data : [],
+      },
     };
   } catch (error) {
     console.error("fetchAllCourses error:", error);
@@ -55,11 +59,15 @@ export const fetchAllCourses = async () => {
   }
 };
 
+// Alias used in many pages
+export const fetchCourses = async () => {
+  return fetchAllCourses();
+};
+
 // POST: Create course
 export const createCourse = async (courseData) => {
   try {
-    const response = await API.post("/courses", courseData);
-    return response;
+    return await API.post("/courses", courseData);
   } catch (error) {
     console.error("createCourse error:", error);
     throw error;
@@ -69,8 +77,7 @@ export const createCourse = async (courseData) => {
 // PUT: Update course
 export const updateCourse = async (courseId, courseData) => {
   try {
-    const response = await API.put(`/courses/${courseId}`, courseData);
-    return response;
+    return await API.put(`/courses/${courseId}`, courseData);
   } catch (error) {
     console.error("updateCourse error:", error);
     throw error;
@@ -80,8 +87,7 @@ export const updateCourse = async (courseId, courseData) => {
 // DELETE: Delete course
 export const deleteCourse = async (courseId) => {
   try {
-    const response = await API.delete(`/courses/${courseId}`);
-    return response;
+    return await API.delete(`/courses/${courseId}`);
   } catch (error) {
     console.error("deleteCourse error:", error);
     throw error;

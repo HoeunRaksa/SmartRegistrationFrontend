@@ -4,13 +4,68 @@ import API from "./index";
  * Helper function to safely extract data from API response
  */
 const extractData = (response) => {
-  if (response?.data?.data !== undefined) {
-    return response.data.data;
-  }
-  if (response?.data !== undefined) {
-    return response.data;
-  }
+  if (response?.data?.data !== undefined) return response.data.data;
+  if (response?.data !== undefined) return response.data;
   return null;
+};
+
+// ==============================
+// ANTI-429 (dedupe + retry)
+//  - prevents duplicated requests on refresh / React StrictMode
+//  - retries 429 with backoff (+ respects Retry-After if sent)
+// ==============================
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const inflight = new Map();
+
+const buildKey = (method, url, payloadOrConfig) => {
+  let extra = "";
+  try {
+    if (payloadOrConfig !== undefined) extra = JSON.stringify(payloadOrConfig);
+  } catch {
+    extra = String(payloadOrConfig);
+  }
+  return `${method}:${url}:${extra}`;
+};
+
+const requestOnce = async (method, url, payloadOrConfig) => {
+  const key = buildKey(method, url, payloadOrConfig);
+
+  if (inflight.has(key)) return inflight.get(key);
+
+  const promise = (async () => {
+    let attempt = 0;
+
+    while (true) {
+      try {
+        if (method === "get" || method === "delete") {
+          return await API[method](url, payloadOrConfig);
+        }
+        // post / put
+        return await API[method](url, payloadOrConfig);
+      } catch (err) {
+        if (err?.response?.status === 429 && attempt < 3) {
+          attempt += 1;
+
+          const retryAfter = err?.response?.headers?.["retry-after"];
+          const waitMs = retryAfter
+            ? Math.min(Number(retryAfter) * 1000, 10_000)
+            : 800 * attempt + Math.floor(Math.random() * 250);
+
+          await sleep(waitMs);
+          continue;
+        }
+
+        throw err;
+      }
+    }
+  })();
+
+  inflight.set(key, promise);
+  try {
+    return await promise;
+  } finally {
+    inflight.delete(key);
+  }
 };
 
 // ==============================
@@ -19,51 +74,29 @@ const extractData = (response) => {
 
 // GET: Fetch all course enrollments
 export const fetchAllEnrollments = async () => {
-  try {
-    const response = await API.get("/admin/enrollments");
-    const data = extractData(response);
-    return {
-      data: {
-        data: Array.isArray(data) ? data : []
-      }
-    };
-  } catch (error) {
-    console.error("fetchAllEnrollments error:", error);
-    throw error;
-  }
+  const response = await requestOnce("get", "/admin/enrollments");
+  const data = extractData(response);
+  return { data: { data: Array.isArray(data) ? data : [] } };
 };
 
 // POST: Manually enroll a student
 export const enrollStudent = async (enrollmentData) => {
-  try {
-    const response = await API.post("/admin/enrollments", enrollmentData);
-    return response;
-  } catch (error) {
-    console.error("enrollStudent error:", error);
-    throw error;
-  }
+  return await requestOnce("post", "/admin/enrollments", enrollmentData);
 };
 
 // DELETE: Remove enrollment
 export const deleteEnrollment = async (enrollmentId) => {
-  try {
-    const response = await API.delete(`/admin/enrollments/${enrollmentId}`);
-    return response;
-  } catch (error) {
-    console.error("deleteEnrollment error:", error);
-    throw error;
-  }
+  return await requestOnce("delete", `/admin/enrollments/${enrollmentId}`);
 };
 
 // PUT: Update enrollment status
-export const updateEnrollmentStatus = async (enrollmentId, status) => {
-  try {
-    const response = await API.put(`/admin/enrollments/${enrollmentId}/status`, { status });
-    return response;
-  } catch (error) {
-    console.error("updateEnrollmentStatus error:", error);
-    throw error;
-  }
+export const updateEnrollmentStatus = async (enrollmentId, payload) => {
+  // payload expected: { status: "enrolled" | "dropped" | "completed" }
+  return await requestOnce(
+    "put",
+    `/admin/enrollments/${enrollmentId}/status`,
+    payload
+  );
 };
 
 // ==============================
@@ -72,51 +105,24 @@ export const updateEnrollmentStatus = async (enrollmentId, status) => {
 
 // GET: Fetch all grades
 export const fetchAllGrades = async () => {
-  try {
-    const response = await API.get("/admin/grades");
-    const data = extractData(response);
-    return {
-      data: {
-        data: Array.isArray(data) ? data : []
-      }
-    };
-  } catch (error) {
-    console.error("fetchAllGrades error:", error);
-    throw error;
-  }
+  const response = await requestOnce("get", "/admin/grades");
+  const data = extractData(response);
+  return { data: { data: Array.isArray(data) ? data : [] } };
 };
 
 // POST: Create grade entry
 export const createGrade = async (gradeData) => {
-  try {
-    const response = await API.post("/admin/grades", gradeData);
-    return response;
-  } catch (error) {
-    console.error("createGrade error:", error);
-    throw error;
-  }
+  return await requestOnce("post", "/admin/grades", gradeData);
 };
 
 // PUT: Update grade
 export const updateGrade = async (gradeId, gradeData) => {
-  try {
-    const response = await API.put(`/admin/grades/${gradeId}`, gradeData);
-    return response;
-  } catch (error) {
-    console.error("updateGrade error:", error);
-    throw error;
-  }
+  return await requestOnce("put", `/admin/grades/${gradeId}`, gradeData);
 };
 
 // DELETE: Delete grade
 export const deleteGrade = async (gradeId) => {
-  try {
-    const response = await API.delete(`/admin/grades/${gradeId}`);
-    return response;
-  } catch (error) {
-    console.error("deleteGrade error:", error);
-    throw error;
-  }
+  return await requestOnce("delete", `/admin/grades/${gradeId}`);
 };
 
 // ==============================
@@ -125,78 +131,47 @@ export const deleteGrade = async (gradeId) => {
 
 // GET: Fetch all assignments
 export const fetchAllAssignments = async () => {
-  try {
-    const response = await API.get("/admin/assignments");
-    const data = extractData(response);
-    return {
-      data: {
-        data: Array.isArray(data) ? data : []
-      }
-    };
-  } catch (error) {
-    console.error("fetchAllAssignments error:", error);
-    throw error;
-  }
+  const response = await requestOnce("get", "/admin/assignments");
+  const data = extractData(response);
+  return { data: { data: Array.isArray(data) ? data : [] } };
 };
 
 // POST: Create assignment
 export const createAssignment = async (assignmentData) => {
-  try {
-    const response = await API.post("/admin/assignments", assignmentData);
-    return response;
-  } catch (error) {
-    console.error("createAssignment error:", error);
-    throw error;
-  }
+  return await requestOnce("post", "/admin/assignments", assignmentData);
 };
 
 // PUT: Update assignment
 export const updateAssignment = async (assignmentId, assignmentData) => {
-  try {
-    const response = await API.put(`/admin/assignments/${assignmentId}`, assignmentData);
-    return response;
-  } catch (error) {
-    console.error("updateAssignment error:", error);
-    throw error;
-  }
+  return await requestOnce(
+    "put",
+    `/admin/assignments/${assignmentId}`,
+    assignmentData
+  );
 };
 
 // DELETE: Delete assignment
 export const deleteAssignment = async (assignmentId) => {
-  try {
-    const response = await API.delete(`/admin/assignments/${assignmentId}`);
-    return response;
-  } catch (error) {
-    console.error("deleteAssignment error:", error);
-    throw error;
-  }
+  return await requestOnce("delete", `/admin/assignments/${assignmentId}`);
 };
 
 // GET: Fetch assignment submissions
 export const fetchSubmissions = async (assignmentId) => {
-  try {
-    const response = await API.get(`/admin/assignments/${assignmentId}/submissions`);
-    const data = extractData(response);
-    return {
-      data: {
-        data: Array.isArray(data) ? data : []
-      }
-    };
-  } catch (error) {
-    console.error("fetchSubmissions error:", error);
-    throw error;
-  }
+  const response = await requestOnce(
+    "get",
+    `/admin/assignments/${assignmentId}/submissions`
+  );
+  const data = extractData(response);
+  return { data: { data: Array.isArray(data) ? data : [] } };
 };
 
 // PUT: Grade submission
 export const gradeSubmission = async (submissionId, gradeData) => {
-  try {
-    const response = await API.put(`/admin/submissions/${submissionId}/grade`, gradeData);
-    return response;
-  } catch (error) {
-    console.error("gradeSubmission error:", error);
-    throw error;
-  }
+  return await requestOnce(
+    "put",
+    `/admin/submissions/${submissionId}/grade`,
+    gradeData
+  );
 };
 
 // ==============================
@@ -205,51 +180,25 @@ export const gradeSubmission = async (submissionId, gradeData) => {
 
 // GET: Fetch all attendance records
 export const fetchAllAttendance = async () => {
-  try {
-    const response = await API.get("/admin/attendance");
-    const data = extractData(response);
-    return {
-      data: {
-        data: Array.isArray(data) ? data : []
-      }
-    };
-  } catch (error) {
-    console.error("fetchAllAttendance error:", error);
-    throw error;
-  }
+  const response = await requestOnce("get", "/admin/attendance");
+  const data = extractData(response);
+  return { data: { data: Array.isArray(data) ? data : [] } };
 };
 
 // POST: Create class session
 export const createClassSession = async (sessionData) => {
-  try {
-    const response = await API.post("/admin/class-sessions", sessionData);
-    return response;
-  } catch (error) {
-    console.error("createClassSession error:", error);
-    throw error;
-  }
+  return await requestOnce("post", "/admin/class-sessions", sessionData);
 };
 
 // POST: Mark attendance
 export const markAttendance = async (attendanceData) => {
-  try {
-    const response = await API.post("/admin/attendance", attendanceData);
-    return response;
-  } catch (error) {
-    console.error("markAttendance error:", error);
-    throw error;
-  }
+  return await requestOnce("post", "/admin/attendance", attendanceData);
 };
 
 // PUT: Update attendance status
-export const updateAttendance = async (attendanceId, status) => {
-  try {
-    const response = await API.put(`/admin/attendance/${attendanceId}`, { status });
-    return response;
-  } catch (error) {
-    console.error("updateAttendance error:", error);
-    throw error;
-  }
+export const updateAttendance = async (attendanceId, payload) => {
+  // payload expected: { status: "present" | "absent" | ... }
+  return await requestOnce("put", `/admin/attendance/${attendanceId}`, payload);
 };
 
 // ==============================
@@ -258,49 +207,22 @@ export const updateAttendance = async (attendanceId, status) => {
 
 // GET: Fetch all class schedules
 export const fetchAllSchedules = async () => {
-  try {
-    const response = await API.get("/admin/schedules");
-    const data = extractData(response);
-    return {
-      data: {
-        data: Array.isArray(data) ? data : []
-      }
-    };
-  } catch (error) {
-    console.error("fetchAllSchedules error:", error);
-    throw error;
-  }
+  const response = await requestOnce("get", "/admin/schedules");
+  const data = extractData(response);
+  return { data: { data: Array.isArray(data) ? data : [] } };
 };
 
 // POST: Create class schedule
 export const createSchedule = async (scheduleData) => {
-  try {
-    const response = await API.post("/admin/schedules", scheduleData);
-    return response;
-  } catch (error) {
-    console.error("createSchedule error:", error);
-    throw error;
-  }
+  return await requestOnce("post", "/admin/schedules", scheduleData);
 };
 
 // PUT: Update schedule
 export const updateSchedule = async (scheduleId, scheduleData) => {
-  try {
-    const response = await API.put(`/admin/schedules/${scheduleId}`, scheduleData);
-    return response;
-  } catch (error) {
-    console.error("updateSchedule error:", error);
-    throw error;
-  }
+  return await requestOnce("put", `/admin/schedules/${scheduleId}`, scheduleData);
 };
 
 // DELETE: Delete schedule
 export const deleteSchedule = async (scheduleId) => {
-  try {
-    const response = await API.delete(`/admin/schedules/${scheduleId}`);
-    return response;
-  } catch (error) {
-    console.error("deleteSchedule error:", error);
-    throw error;
-  }
+  return await requestOnce("delete", `/admin/schedules/${scheduleId}`);
 };
