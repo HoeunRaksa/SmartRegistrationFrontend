@@ -6,12 +6,15 @@ import { Footer } from "../Components/footer/Footer";
 import MainRouter from "../Router/mainRouter";
 import "../App.css";
 import { ToastProvider } from "../Components/Context/ToastProvider";
+import { AdminDataProvider } from "../contexts/AdminDataContext";
 
 function App() {
   return (
     <Router>
       <ToastProvider>
-        <AppContent />
+        <AdminDataProvider>
+          <AppContent />
+        </AdminDataProvider>
       </ToastProvider>
     </Router>
   );
