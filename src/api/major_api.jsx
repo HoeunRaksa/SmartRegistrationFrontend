@@ -40,20 +40,18 @@ export const createMajor = (data) => {
 
 // PUT: update major (Laravel-friendly _method)
 export const updateMajor = (id, data) => {
-  const formData = new FormData();
+  let payload = data;
 
-  Object.entries(data || {}).forEach(([key, value]) => {
-    if (value !== null && value !== undefined) {
-      formData.append(key, value);
-    }
-  });
+  if (!(data instanceof FormData)) {
+    payload = new FormData();
+    Object.entries(data || {}).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) payload.append(key, value);
+    });
+  }
 
-  formData.append("_method", "PUT");
-
-  return API.post(`/majors/${id}`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  return API.post(`/majors/${id}`, payload);
 };
+
 
 // DELETE: delete major
 export const deleteMajor = (id) => API.delete(`/majors/${id}`);
