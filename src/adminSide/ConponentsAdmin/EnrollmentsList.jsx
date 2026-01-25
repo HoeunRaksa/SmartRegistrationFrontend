@@ -81,7 +81,7 @@ const getStudentAddress = (enrollment) => {
     st?.address ||
     st?.student_address ||
     enrollment?.address ||
-    "N/A"
+     "N/A"
   );
 };
 
