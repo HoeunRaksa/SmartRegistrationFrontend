@@ -1,8 +1,6 @@
 // =====================================================
 // src/adminSide/ConponentsAdmin/ClassGroupForm.jsx
-// ✅ FULL CLEAN NO CUT — matches backend (semester 1/2)
-// - shift optional
-// - capacity optional (not sent if empty)
+// ✅ ENHANCED UI — All logic preserved
 // =====================================================
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -14,6 +12,8 @@ import {
   Clock,
   Users,
   BookOpen,
+  Sparkles,
+  CheckCircle2,
 } from "lucide-react";
 import { fetchDepartments, fetchMajorsByDepartment } from "../../api/department_api.jsx";
 
@@ -32,18 +32,19 @@ const normalizeArray = (res) => {
   return Array.isArray(d) ? d : [];
 };
 
-const labelCls = "text-xs font-semibold text-gray-700";
+const labelCls = "text-xs font-bold text-gray-700 uppercase tracking-wide mb-2 flex items-center gap-2";
 const baseField =
   "mt-1 w-full rounded-2xl border border-white/60 bg-white/80 backdrop-blur-xl px-4 py-3 " +
-  "text-sm text-gray-800 shadow-sm outline-none transition-all " +
-  "hover:border-white/80 focus:ring-2 focus:ring-blue-400/35 focus:border-blue-300 " +
+  "text-sm text-gray-800 shadow-sm outline-none transition-all duration-200 " +
+  "hover:border-blue-300/60 hover:shadow-md focus:ring-2 focus:ring-blue-400/35 focus:border-blue-400 focus:shadow-lg " +
   "disabled:opacity-60 disabled:cursor-not-allowed";
 
 const iconWrap =
-  "absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-xl " +
-  "bg-white/70 border border-white/60 shadow-sm flex items-center justify-center";
+  "absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl " +
+  "bg-gradient-to-br from-white/90 to-white/70 border border-white/80 shadow-md flex items-center justify-center " +
+  "transition-all duration-200 group-hover:scale-105 group-focus-within:scale-105";
 
-const fieldWithIconPadding = "pl-14";
+const fieldWithIconPadding = "pl-[3.25rem]";
 
 const buildAcademicYears = (past = 2, future = 3) => {
   const currentYear = new Date().getFullYear();
@@ -56,10 +57,10 @@ const buildAcademicYears = (past = 2, future = 3) => {
 
 const SHIFT_OPTIONS = [
   { value: "", label: "No shift (optional)" },
-  { value: "Morning", label: "Morning" },
-  { value: "Afternoon", label: "Afternoon" },
-  { value: "Evening", label: "Evening" },
-  { value: "Weekend", label: "Weekend" },
+  { value: "Morning", label: "🌅 Morning" },
+  { value: "Afternoon", label: "☀️ Afternoon" },
+  { value: "Evening", label: "🌆 Evening" },
+  { value: "Weekend", label: "📅 Weekend" },
 ];
 
 const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
@@ -262,235 +263,325 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
     }
   };
 
-  return (
-    <div className="relative overflow-hidden rounded-3xl border border-white/60 bg-white/55 backdrop-blur-2xl shadow-[0_22px_70px_-30px_rgba(15,23,42,0.35)] p-6">
-      <div className="relative flex items-center justify-between mb-5">
-        <div>
-          <h3 className="text-lg font-extrabold text-gray-900">
-            {editingGroup ? "Edit Class Group" : "Create Class Group"}
-          </h3>
-          <p className="text-xs text-gray-600 mt-0.5">Flow: Department → Major → Class Group</p>
-        </div>
+  // Calculate completion percentage
+  const completionPercentage = useMemo(() => {
+    const fields = ['department_id', 'major_id', 'class_name', 'academic_year', 'semester'];
+    const filled = fields.filter(f => form[f]).length;
+    return Math.round((filled / fields.length) * 100);
+  }, [form]);
 
-        {editingGroup ? (
+  return (
+    <div className="relative overflow-hidden rounded-3xl border border-white/60 bg-white/55 backdrop-blur-2xl shadow-[0_22px_70px_-30px_rgba(15,23,42,0.35)]">
+      {/* Decorative gradient orbs */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl -mr-32 -mt-32" />
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-pink-400/10 to-purple-400/10 rounded-full blur-3xl -ml-24 -mb-24" />
+
+      <div className="relative p-6">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-6">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg">
+                {editingGroup ? (
+                  <GraduationCap className="w-5.5 h-5.5 text-white" />
+                ) : (
+                  <Sparkles className="w-5.5 h-5.5 text-white" />
+                )}
+              </div>
+              <div>
+                <h3 className="text-xl font-extrabold text-gray-900">
+                  {editingGroup ? "Edit Class Group" : "Create New Class Group"}
+                </h3>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  Flow: Department → Major → Class Group Details
+                </p>
+              </div>
+            </div>
+
+            {/* Progress bar for new classes */}
+            {!editingGroup && (
+              <div className="mt-4 max-w-md">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-wide">
+                    Form Completion
+                  </span>
+                  <span className="text-xs font-bold text-blue-600">{completionPercentage}%</span>
+                </div>
+                <div className="h-2 bg-white/60 rounded-full overflow-hidden border border-white/60">
+                  <div
+                    className="h-full bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 transition-all duration-500 ease-out"
+                    style={{ width: `${completionPercentage}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
           <button
             type="button"
             onClick={() => {
-              onCancel?.();
+              editingGroup ? onCancel?.() : reset();
               reset();
             }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/70 border border-white/60 hover:bg-white transition shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/70 border border-white/60 hover:bg-white hover:shadow-md transition-all duration-200 ml-4"
           >
             <X size={16} className="text-gray-700" />
-            <span className="text-sm font-semibold text-gray-800">Cancel</span>
+            <span className="text-sm font-semibold text-gray-800">
+              {editingGroup ? "Cancel" : "Clear"}
+            </span>
           </button>
-        ) : (
-          <button
-            type="button"
-            onClick={reset}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/70 border border-white/60 hover:bg-white transition shadow-sm"
-          >
-            <X size={16} className="text-gray-700" />
-            <span className="text-sm font-semibold text-gray-800">Clear</span>
-          </button>
+        </div>
+
+        {/* Error Alert */}
+        {error && (
+          <div className="relative mb-5 p-4 rounded-2xl bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex items-start gap-3">
+              <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <X className="w-3 h-3 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-red-900 mb-0.5">Validation Error</p>
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            </div>
+          </div>
         )}
+
+        {/* Form */}
+        <form onSubmit={submit} className="relative space-y-5">
+          {/* Row 1: Department, Major, Class Name */}
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-5">
+            {/* Department */}
+            <div className="md:col-span-2 group">
+              <label className={labelCls}>
+                <Building2 className="w-3.5 h-3.5 text-blue-600" />
+                Department *
+              </label>
+              <div className="relative">
+                <div className={iconWrap}>
+                  <Building2 className="w-5 h-5 text-blue-600" />
+                </div>
+                <select
+                  value={form.department_id}
+                  onChange={(e) => setField("department_id", e.target.value)}
+                  className={`${baseField} ${fieldWithIconPadding}`}
+                  disabled={loadingDept}
+                >
+                  <option value="">{loadingDept ? "Loading..." : "Select department"}</option>
+                  {departmentOptions.map((d) => (
+                    <option key={d.value} value={d.value}>
+                      {d.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Major */}
+            <div className="md:col-span-2 group">
+              <label className={labelCls}>
+                <GraduationCap className="w-3.5 h-3.5 text-purple-600" />
+                Major *
+              </label>
+              <div className="relative">
+                <div className={iconWrap}>
+                  <GraduationCap className="w-5 h-5 text-purple-600" />
+                </div>
+                <select
+                  value={form.major_id}
+                  onChange={(e) => setField("major_id", e.target.value)}
+                  className={`${baseField} ${fieldWithIconPadding}`}
+                  disabled={!form.department_id || loadingMaj}
+                >
+                  <option value="">
+                    {!form.department_id ? "Select department first" : loadingMaj ? "Loading..." : "Select major"}
+                  </option>
+                  {majorOptions.map((m) => (
+                    <option key={m.value} value={m.value}>
+                      {m.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Class name */}
+            <div className="md:col-span-2 group">
+              <label className={labelCls}>
+                <BookOpen className="w-3.5 h-3.5 text-pink-600" />
+                Class Name *
+              </label>
+              <div className="relative">
+                <div className={iconWrap}>
+                  <BookOpen className="w-5 h-5 text-pink-600" />
+                </div>
+                <input
+                  value={form.class_name}
+                  onChange={(e) => setField("class_name", e.target.value)}
+                  className={`${baseField} ${fieldWithIconPadding}`}
+                  placeholder="e.g. A1, B2, SE-2026A"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Row 2: Academic Year, Semester, Shift, Capacity */}
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-5">
+            {/* Academic year */}
+            <div className="md:col-span-2 group">
+              <label className={labelCls}>
+                <Calendar className="w-3.5 h-3.5 text-indigo-600" />
+                Academic Year *
+              </label>
+              <div className="relative">
+                <div className={iconWrap}>
+                  <Calendar className="w-5 h-5 text-indigo-600" />
+                </div>
+                <select
+                  value={form.academic_year}
+                  onChange={(e) => setField("academic_year", e.target.value)}
+                  className={`${baseField} ${fieldWithIconPadding}`}
+                >
+                  <option value="">Select academic year</option>
+                  {academicYears.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Semester */}
+            <div className="md:col-span-2 group">
+              <label className={labelCls}>
+                <Calendar className="w-3.5 h-3.5 text-cyan-600" />
+                Semester *
+              </label>
+              <div className="relative">
+                <div className={iconWrap}>
+                  <Calendar className="w-5 h-5 text-cyan-600" />
+                </div>
+                <select
+                  value={form.semester}
+                  onChange={(e) => setField("semester", e.target.value)}
+                  className={`${baseField} ${fieldWithIconPadding}`}
+                >
+                  <option value="">Select semester</option>
+                  <option value="1">📚 Semester 1</option>
+                  <option value="2">📖 Semester 2</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Shift */}
+            <div className="md:col-span-1 group">
+              <label className={labelCls}>
+                <Clock className="w-3.5 h-3.5 text-orange-600" />
+                Shift
+              </label>
+              <div className="relative">
+                <div className={iconWrap}>
+                  <Clock className="w-5 h-5 text-orange-600" />
+                </div>
+                <select
+                  value={form.shift}
+                  onChange={(e) => setField("shift", e.target.value)}
+                  className={`${baseField} ${fieldWithIconPadding}`}
+                >
+                  {SHIFT_OPTIONS.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Capacity */}
+            <div className="md:col-span-1 group">
+              <label className={labelCls}>
+                <Users className="w-3.5 h-3.5 text-green-600" />
+                Capacity
+              </label>
+              <div className="relative">
+                <div className={iconWrap}>
+                  <Users className="w-5 h-5 text-green-600" />
+                </div>
+                <input
+                  type="number"
+                  min="1"
+                  value={form.capacity}
+                  onChange={(e) => setField("capacity", e.target.value)}
+                  className={`${baseField} ${fieldWithIconPadding}`}
+                  placeholder="e.g. 40"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Preview Card */}
+          <div className="rounded-2xl bg-gradient-to-br from-blue-50/80 via-purple-50/60 to-pink-50/80 border border-white/80 p-5 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-white/80 border border-white/60 flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="w-4.5 h-4.5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">
+                  Preview
+                </p>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  <span className="font-extrabold text-purple-700">
+                    {majorLabel || "Major"}
+                  </span>
+                  {" → "}
+                  <span className="font-extrabold text-pink-700">
+                    {form.class_name || "Class"}
+                  </span>
+                  {form.academic_year && (
+                    <span className="ml-2 text-gray-600">
+                      • <span className="font-semibold">{form.academic_year}</span>
+                    </span>
+                  )}
+                  {form.semester && (
+                    <span className="ml-2 text-gray-600">
+                      • Semester <span className="font-semibold">{form.semester}</span>
+                    </span>
+                  )}
+                  {form.shift ? (
+                    <span className="ml-2 text-gray-600">
+                      • <span className="font-semibold">{form.shift}</span>
+                    </span>
+                  ) : (
+                    <span className="ml-2 text-gray-500">• No shift</span>
+                  )}
+                  {form.capacity ? (
+                    <span className="ml-2 text-gray-600">
+                      • Capacity <span className="font-semibold">{form.capacity}</span>
+                    </span>
+                  ) : (
+                    <span className="ml-2 text-gray-500">• Default capacity</span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex justify-end pt-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="group relative inline-flex items-center gap-2.5 px-7 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold shadow-[0_20px_50px_-25px_rgba(59,130,246,0.9)] hover:shadow-[0_25px_60px_-20px_rgba(59,130,246,1)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+            >
+              <Save size={18} className="transition-transform group-hover:rotate-12" />
+              <span className="text-[15px]">
+                {saving ? "Saving..." : editingGroup ? "Update Class Group" : "Create Class Group"}
+              </span>
+            </button>
+          </div>
+        </form>
       </div>
-
-      {error && (
-        <div className="relative mb-4 p-3 rounded-2xl bg-red-50/80 border border-red-200 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={submit} className="relative grid grid-cols-1 md:grid-cols-6 gap-4">
-        {/* Department */}
-        <div className="md:col-span-2">
-          <label className={labelCls}>Department *</label>
-          <div className="relative">
-            <div className={iconWrap}>
-              <Building2 className="w-4.5 h-4.5 text-gray-600" />
-            </div>
-            <select
-              value={form.department_id}
-              onChange={(e) => setField("department_id", e.target.value)}
-              className={`${baseField} ${fieldWithIconPadding}`}
-              disabled={loadingDept}
-            >
-              <option value="">{loadingDept ? "Loading..." : "Select department"}</option>
-              {departmentOptions.map((d) => (
-                <option key={d.value} value={d.value}>
-                  {d.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Major */}
-        <div className="md:col-span-2">
-          <label className={labelCls}>Major *</label>
-          <div className="relative">
-            <div className={iconWrap}>
-              <GraduationCap className="w-4.5 h-4.5 text-gray-600" />
-            </div>
-            <select
-              value={form.major_id}
-              onChange={(e) => setField("major_id", e.target.value)}
-              className={`${baseField} ${fieldWithIconPadding}`}
-              disabled={!form.department_id || loadingMaj}
-            >
-              <option value="">
-                {!form.department_id ? "Select department first" : loadingMaj ? "Loading..." : "Select major"}
-              </option>
-              {majorOptions.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Class name */}
-        <div className="md:col-span-2">
-          <label className={labelCls}>Class Name *</label>
-          <div className="relative">
-            <div className={iconWrap}>
-              <BookOpen className="w-4.5 h-4.5 text-gray-600" />
-            </div>
-            <input
-              value={form.class_name}
-              onChange={(e) => setField("class_name", e.target.value)}
-              className={`${baseField} ${fieldWithIconPadding}`}
-              placeholder="e.g. A1, B2, SE-2026A"
-            />
-          </div>
-        </div>
-
-        {/* Academic year */}
-        <div className="md:col-span-2">
-          <label className={labelCls}>Academic Year *</label>
-          <div className="relative">
-            <div className={iconWrap}>
-              <Calendar className="w-4.5 h-4.5 text-gray-600" />
-            </div>
-            <select
-              value={form.academic_year}
-              onChange={(e) => setField("academic_year", e.target.value)}
-              className={`${baseField} ${fieldWithIconPadding}`}
-            >
-              <option value="">Select academic year</option>
-              {academicYears.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Semester */}
-        <div className="md:col-span-2">
-          <label className={labelCls}>Semester *</label>
-          <div className="relative">
-            <div className={iconWrap}>
-              <Calendar className="w-4.5 h-4.5 text-gray-600" />
-            </div>
-            <select
-              value={form.semester}
-              onChange={(e) => setField("semester", e.target.value)}
-              className={`${baseField} ${fieldWithIconPadding}`}
-            >
-              <option value="">Select semester</option>
-              <option value="1">Semester 1</option>
-              <option value="2">Semester 2</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Shift */}
-        <div className="md:col-span-1">
-          <label className={labelCls}>Shift (optional)</label>
-          <div className="relative">
-            <div className={iconWrap}>
-              <Clock className="w-4.5 h-4.5 text-gray-600" />
-            </div>
-            <select
-              value={form.shift}
-              onChange={(e) => setField("shift", e.target.value)}
-              className={`${baseField} ${fieldWithIconPadding}`}
-            >
-              {SHIFT_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Capacity */}
-        <div className="md:col-span-1">
-          <label className={labelCls}>Capacity (optional)</label>
-          <div className="relative">
-            <div className={iconWrap}>
-              <Users className="w-4.5 h-4.5 text-gray-600" />
-            </div>
-            <input
-              type="number"
-              min="1"
-              value={form.capacity}
-              onChange={(e) => setField("capacity", e.target.value)}
-              className={`${baseField} ${fieldWithIconPadding}`}
-              placeholder="e.g. 40"
-            />
-          </div>
-        </div>
-
-        {/* Preview */}
-        <div className="md:col-span-4">
-          <div className="mt-6 rounded-2xl bg-white/70 border border-white/60 px-4 py-3 text-[12px] text-gray-700 shadow-sm">
-            Preview:{" "}
-            <span className="font-extrabold text-gray-900">{majorLabel || "Major"}</span>{" "}
-            → <span className="font-extrabold text-gray-900">{form.class_name || "Class"}</span>
-            {form.academic_year ? (
-              <span className="ml-2 text-gray-600">
-                • <b>{form.academic_year}</b>
-              </span>
-            ) : null}
-            {form.semester ? (
-              <span className="ml-2 text-gray-600">
-                • Semester <b>{form.semester}</b>
-              </span>
-            ) : null}
-            {form.shift ? (
-              <span className="ml-2 text-gray-600">
-                • <b>{form.shift}</b>
-              </span>
-            ) : (
-              <span className="ml-2 text-gray-500">• No shift</span>
-            )}
-            {form.capacity ? (
-              <span className="ml-2 text-gray-600">
-                • Capacity <b>{form.capacity}</b>
-              </span>
-            ) : (
-              <span className="ml-2 text-gray-500">• Default capacity</span>
-            )}
-          </div>
-        </div>
-
-        <div className="md:col-span-2 flex justify-end items-end">
-          <button
-            type="submit"
-            disabled={saving}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold shadow-[0_18px_45px_-25px_rgba(59,130,246,0.9)] hover:opacity-95 disabled:opacity-60"
-          >
-            <Save size={16} />
-            {saving ? "Saving..." : editingGroup ? "Update" : "Create"}
-          </button>
-        </div>
-      </form>
     </div>
   );
 };

@@ -18,7 +18,8 @@ import CoursesPage from "../pageAdmin/CoursesPage.jsx";
 import MajorSubjectsPage from "../pageAdmin/MajorSubjectsPage.jsx";
 import TeacherPage from "../pageAdmin/TeacherPage.jsx";
 import ClassGroupsPage from "../pageAdmin/ClassGroupsPage.jsx";
-
+import RoomsPage from '../pageAdmin/RoomsPage.jsx'
+import BuildingsPage from "./BuildingsPage.jsx";
 import { logoutApi } from "../../api/auth.jsx";
 import {
   LayoutDashboard,
@@ -43,6 +44,8 @@ import {
   CheckSquare,
   Calendar,
   Link2,
+  Building,
+  University
 } from "lucide-react";
 
 import Dashboard from "../../adminSide/ConponentsAdmin/dashboard.jsx";
@@ -68,7 +71,7 @@ const MENU_ITEMS = [
   {
     id: "departments",
     label: "Departments",
-    icon: Building2,
+    icon: Building,
     gradient: "from-purple-500 to-pink-500",
   },
   {
@@ -76,6 +79,24 @@ const MENU_ITEMS = [
     label: "Majors",
     icon: GraduationCap,
     gradient: "from-orange-500 to-red-500",
+  },
+    {
+    id: "class",
+    label: "ClassSession",
+    icon: GraduationCap,
+    gradient: "from-orange-500 to-red-500",
+  },
+    {
+    id: "buidings",
+    label: "Buidings",
+    icon: Building,
+    gradient: "from-green-500 to-emerald-500",
+  },
+     {
+    id: "rooms",
+    label: "Rooms",
+    icon: University,
+    gradient: "from-green-500 to-emerald-500",
   },
   {
     id: "subjects",
@@ -190,6 +211,9 @@ const SECTIONS = [
   { id: "dashboard", el: <Dashboard /> },
   { id: "departments", el: <DepartmentsPage /> },
   { id: "majors", el: <MajorsPage /> },
+  { id: "buidings", el: <BuildingsPage /> },
+  { id: "rooms", el: <RoomsPage /> },
+   { id: "class", el: <RoomsPage /> },
   { id: "subjects", el: <SubjectsPage /> },
   { id: "major-subjects", el: <MajorSubjectsPage /> },
   { id: "students", el: <StudentPage /> },

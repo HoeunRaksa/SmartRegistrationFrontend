@@ -1,35 +1,43 @@
-// ScheduleForm.jsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { createSchedule, updateSchedule } from "../../api/admin_course_api.jsx";
-import {fetchRoomOptions } from "../../api/room_api.jsx";
-import { fetchBuildingOptions} from '../../api/building_api.jsx';
+import { createSession, updateSession } from "../../api/course_api.jsx";
+import { fetchRoomOptions } from "../../api/room_api.jsx";
+import { fetchBuildingOptions } from "../../api/building_api.jsx";
 import {
-  Calendar,
   X,
   CheckCircle2,
   AlertCircle,
   Sparkles,
   BookOpen,
+  Calendar,
   Clock,
-  MapPin,
+  DoorOpen,
+  Building2,
   Pencil,
   RotateCcw,
-  Building2,
 } from "lucide-react";
-
-/* ================== CONSTANTS ================== */
 
 const INITIAL_FORM_STATE = {
   course_id: "",
-  day_of_week: "",
-  session_id: "",
+  session_date: "",
   start_time: "",
   end_time: "",
-  building_id: "", // ✅ NEW
-  room_id: "",     // ✅ NEW
+  building_id: "",
+  room_id: "",
+  session_type: "",
 };
 
+const SESSION_TYPES = [
+  { id: "lecture", name: "Lecture" },
+  { id: "lab", name: "Laboratory" },
+  { id: "tutorial", name: "Tutorial" },
+  { id: "seminar", name: "Seminar" },
+  { id: "exam", name: "Exam" },
+  { id: "makeup", name: "Makeup Class" },
+  { id: "other", name: "Other" },
+];
+
+// ✅ Same session times as ScheduleForm
 const SHIFT_SESSIONS = {
   morning: [
     { id: "M1", name: "Morning Session 1 (07:45 - 09:00)", start: "07:45", end: "09:00" },
@@ -44,16 +52,6 @@ const SHIFT_SESSIONS = {
     { id: "E2", name: "Evening Session 2 (19:15 - 20:30)", start: "19:15", end: "20:30" },
   ],
 };
-
-const DAY_OPTIONS = [
-  { id: "Monday", name: "Monday" },
-  { id: "Tuesday", name: "Tuesday" },
-  { id: "Wednesday", name: "Wednesday" },
-  { id: "Thursday", name: "Thursday" },
-  { id: "Friday", name: "Friday" },
-  { id: "Saturday", name: "Saturday" },
-  { id: "Sunday", name: "Sunday" },
-];
 
 /* ================== HELPERS ================== */
 
@@ -81,30 +79,74 @@ const normalizeShift = (shift) => {
 
 /* ================== COMPONENT ================== */
 
-const ScheduleForm = ({ onUpdate, onSuccess, editingSchedule, onCancel, courses }) => {
+const ClassSessionForm = ({ onUpdate, onSuccess, editingSession, onCancel, courses, buildings }) => {
   const [form, setForm] = useState(INITIAL_FORM_STATE);
   const [loading, setLoading] = useState(false);
-
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
 
   const [timeEditable, setTimeEditable] = useState(false);
   const [defaultTimes, setDefaultTimes] = useState({ start: "", end: "" });
+  const [sessionId, setSessionId] = useState("");
 
-  // ✅ NEW: buildings + rooms state
-  const [buildings, setBuildings] = useState([]);
+  // Buildings & Rooms
+  const [buildingsList, setBuildingsList] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [roomsLoading, setRoomsLoading] = useState(false);
 
-  const isEditMode = !!editingSchedule;
+  const isEditMode = !!editingSession;
 
+  // ✅ Load buildings
+  useEffect(() => {
+    if (Array.isArray(buildings) && buildings.length > 0) {
+      setBuildingsList(buildings);
+    } else {
+      loadBuildings();
+    }
+  }, [buildings]);
+
+  const loadBuildings = async () => {
+    try {
+      const res = await fetchBuildingOptions();
+      setBuildingsList(Array.isArray(res?.data?.data) ? res.data.data : []);
+    } catch {
+      setBuildingsList([]);
+    }
+  };
+
+  // ✅ Load rooms when building changes
+  useEffect(() => {
+    (async () => {
+      if (!form.building_id) {
+        setRooms([]);
+        setForm((p) => ({ ...p, room_id: "" }));
+        return;
+      }
+
+      setRoomsLoading(true);
+      try {
+        const res = await fetchRoomOptions({ building_id: form.building_id });
+        setRooms(Array.isArray(res?.data?.data) ? res.data.data : []);
+      } catch {
+        setRooms([]);
+      } finally {
+        setRoomsLoading(false);
+      }
+    })();
+  }, [form.building_id]);
+
+  // ✅ Course options
   const courseOptions = useMemo(() => {
     const arr = Array.isArray(courses) ? courses : [];
     return arr
       .filter((c) => c && typeof c.id !== "undefined" && c.id !== null)
-      .map((c) => ({ id: c.id, name: courseLabel(c) }));
+      .map((c) => ({
+        id: c.id,
+        name: courseLabel(c),
+      }));
   }, [courses]);
 
+  // ✅ Selected course
   const selectedCourse = useMemo(() => {
     const arr = Array.isArray(courses) ? courses : [];
     return arr.find((c) => String(c.id) === String(form.course_id));
@@ -117,86 +159,52 @@ const ScheduleForm = ({ onUpdate, onSuccess, editingSchedule, onCancel, courses 
     return SHIFT_SESSIONS[shift] || [];
   }, [shift]);
 
-  // ✅ LOAD building options once
+  // ✅ Prefill when editing
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetchBuildingOptions();
-        // expected: { success:true, data:[{id,label,code,name}] }
-        setBuildings(Array.isArray(res?.data?.data) ? res.data.data : []);
-      } catch {
-        setBuildings([]);
-      }
-    })();
-  }, []);
-
-  // ✅ when building changes -> load rooms in that building
-  useEffect(() => {
-    (async () => {
-      if (!form.building_id) {
-        setRooms([]);
-        setForm((p) => ({ ...p, room_id: "" }));
-        return;
-      }
-
-      setRoomsLoading(true);
-      try {
-        const res = await fetchRoomOptions({ building_id: form.building_id });
-        // expected: { success:true, data:[{id,label,building_id,...}] }
-        setRooms(Array.isArray(res?.data?.data) ? res.data.data : []);
-      } catch {
-        setRooms([]);
-      } finally {
-        setRoomsLoading(false);
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.building_id]);
-
-  // ✅ prefill when edit
-  useEffect(() => {
-    if (editingSchedule) {
+    if (editingSession) {
       setForm({
-        course_id: editingSchedule.course_id ?? "",
-        day_of_week: editingSchedule.day_of_week ?? "",
-        session_id: "",
-        start_time: editingSchedule.start_time ?? "",
-        end_time: editingSchedule.end_time ?? "",
-        building_id: editingSchedule.building_id ?? "", // if you return it from API
-        room_id: editingSchedule.room_id ?? "",
+        course_id: editingSession.course_id ?? "",
+        session_date: editingSession.session_date ?? "",
+        start_time: editingSession.start_time ?? "",
+        end_time: editingSession.end_time ?? "",
+        building_id: editingSession.building_id ?? "",
+        room_id: editingSession.room_id ?? "",
+        session_type: editingSession.session_type ?? "",
       });
 
       setTimeEditable(false);
       setDefaultTimes({
-        start: editingSchedule.start_time ?? "",
-        end: editingSchedule.end_time ?? "",
+        start: editingSession.start_time ?? "",
+        end: editingSession.end_time ?? "",
       });
+      setSessionId("");
     } else {
       setForm(INITIAL_FORM_STATE);
       setTimeEditable(false);
       setDefaultTimes({ start: "", end: "" });
+      setSessionId("");
     }
-  }, [editingSchedule]);
+  }, [editingSession]);
 
-  // ✅ when course changes: reset session and times (create mode only)
+  // ✅ Reset session when course changes (create mode only)
   useEffect(() => {
-    if (!editingSchedule) {
+    if (!editingSession) {
+      setSessionId("");
       setForm((prev) => ({
         ...prev,
-        session_id: "",
         start_time: "",
         end_time: "",
       }));
       setTimeEditable(false);
       setDefaultTimes({ start: "", end: "" });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.course_id, editingSchedule]);
+  }, [form.course_id, editingSession]);
 
   const resetForm = () => {
     setForm(INITIAL_FORM_STATE);
     setTimeEditable(false);
     setDefaultTimes({ start: "", end: "" });
+    setSessionId("");
     setError(null);
     if (onCancel) onCancel();
   };
@@ -204,13 +212,13 @@ const ScheduleForm = ({ onUpdate, onSuccess, editingSchedule, onCancel, courses 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // session -> set default times and lock edit
+    // Session selection -> set times
     if (name === "session_id") {
       const s = (sessionOptions || []).find((x) => x.id === value);
       if (s) {
+        setSessionId(value);
         setForm((prev) => ({
           ...prev,
-          session_id: value,
           start_time: s.start,
           end_time: s.end,
         }));
@@ -221,7 +229,7 @@ const ScheduleForm = ({ onUpdate, onSuccess, editingSchedule, onCancel, courses 
       }
     }
 
-    // building change -> clear room_id immediately
+    // Building change -> clear room
     if (name === "building_id") {
       setForm((prev) => ({
         ...prev,
@@ -257,10 +265,11 @@ const ScheduleForm = ({ onUpdate, onSuccess, editingSchedule, onCancel, courses 
     try {
       const submitData = {
         course_id: Number.parseInt(form.course_id, 10),
-        day_of_week: form.day_of_week,
+        session_date: form.session_date,
         start_time: form.start_time,
         end_time: form.end_time,
-        room_id: form.room_id ? Number.parseInt(form.room_id, 10) : null, // ✅ send FK
+        room_id: form.room_id ? Number.parseInt(form.room_id, 10) : null,
+        session_type: form.session_type || null,
       };
 
       if (!submitData.course_id || Number.isNaN(submitData.course_id)) {
@@ -269,14 +278,8 @@ const ScheduleForm = ({ onUpdate, onSuccess, editingSchedule, onCancel, courses 
         return;
       }
 
-      if (!submitData.day_of_week) {
-        setError("Please select day of week");
-        setLoading(false);
-        return;
-      }
-
-      if (!form.session_id && !isEditMode) {
-        setError("Please select a session");
+      if (!submitData.session_date) {
+        setError("Please select a date");
         setLoading(false);
         return;
       }
@@ -293,13 +296,10 @@ const ScheduleForm = ({ onUpdate, onSuccess, editingSchedule, onCancel, courses 
         return;
       }
 
-      // optional: enforce room selection
-      // if (!submitData.room_id) { setError("Please select a room"); ... }
-
       if (isEditMode) {
-        await updateSchedule(editingSchedule.id, submitData);
+        await updateSession(editingSession.id, submitData);
       } else {
-        await createSchedule(submitData);
+        await createSession(submitData);
       }
 
       resetForm();
@@ -310,7 +310,7 @@ const ScheduleForm = ({ onUpdate, onSuccess, editingSchedule, onCancel, courses 
 
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      let errorMessage = "Failed to save schedule";
+      let errorMessage = "Failed to save session";
       if (err.response?.data) {
         const data = err.response.data;
         if (data.errors) errorMessage = Object.values(data.errors).flat().join(", ");
@@ -328,7 +328,7 @@ const ScheduleForm = ({ onUpdate, onSuccess, editingSchedule, onCancel, courses 
     <div className="space-y-4">
       <AnimatePresence>
         {success && (
-          <Alert type="success" message={`Schedule ${isEditMode ? "updated" : "created"} successfully!`} />
+          <Alert type="success" message={`Session ${isEditMode ? "updated" : "created"} successfully!`} />
         )}
         {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
       </AnimatePresence>
@@ -343,7 +343,8 @@ const ScheduleForm = ({ onUpdate, onSuccess, editingSchedule, onCancel, courses 
         courseOptions={courseOptions}
         shift={shift}
         sessionOptions={sessionOptions}
-        buildings={buildings}
+        sessionId={sessionId}
+        buildingsList={buildingsList}
         rooms={rooms}
         roomsLoading={roomsLoading}
         handleChange={handleChange}
@@ -393,7 +394,8 @@ const FormSection = ({
   courseOptions,
   shift,
   sessionOptions,
-  buildings,
+  sessionId,
+  buildingsList,
   rooms,
   roomsLoading,
   handleChange,
@@ -423,19 +425,17 @@ const FormSection = ({
         placeholder="Select Course"
         options={courseOptions}
         required
-        col="md:col-span-2"
       />
 
-      {/* DAY */}
-      <FieldSelect
+      {/* SESSION DATE */}
+      <FieldInput
         icon={Calendar}
-        name="day_of_week"
-        value={form.day_of_week}
+        name="session_date"
+        type="date"
+        value={form.session_date}
         onChange={handleChange}
-        placeholder="Day of Week"
-        options={DAY_OPTIONS}
+        placeholder="Session Date"
         required
-        col="md:col-span-2"
       />
 
       {/* SHIFT INFO */}
@@ -448,20 +448,18 @@ const FormSection = ({
         <div className="text-xs text-gray-500 px-1">Select a course to detect shift and show session options.</div>
       )}
 
-      {/* SESSION */}
+      {/* SESSION SELECT (optional - for quick time selection) */}
       <FieldSelect
         icon={Clock}
         name="session_id"
-        value={form.session_id}
+        value={sessionId}
         onChange={handleChange}
-        placeholder={shift ? `Select Session (${shift})` : "Select Session"}
+        placeholder={shift ? `Quick Select Session (${shift})` : "Quick Select Session (optional)"}
         options={(Array.isArray(sessionOptions) ? sessionOptions : []).map((s) => ({ id: s.id, name: s.name }))}
-        required={!isEditMode}
-        col="md:col-span-2"
         disabled={!Array.isArray(sessionOptions) || sessionOptions.length === 0}
       />
 
-      {/* TIME */}
+      {/* TIME FIELDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <FieldTime
           icon={Clock}
@@ -470,6 +468,7 @@ const FormSection = ({
           onChange={(e) => setForm((p) => ({ ...p, start_time: e.target.value }))}
           label="Start Time"
           disabled={!timeEditable}
+          required
         />
         <FieldTime
           icon={Clock}
@@ -478,6 +477,7 @@ const FormSection = ({
           onChange={(e) => setForm((p) => ({ ...p, end_time: e.target.value }))}
           label="End Time"
           disabled={!timeEditable}
+          required
         />
       </div>
 
@@ -512,26 +512,36 @@ const FormSection = ({
         value={form.building_id}
         onChange={handleChange}
         placeholder="Select Building (optional)"
-        options={(Array.isArray(buildings) ? buildings : []).map((b) => ({
+        options={(Array.isArray(buildingsList) ? buildingsList : []).map((b) => ({
           id: b.id,
           name: b.label ?? `${b.code ?? b.building_code ?? ""} - ${b.name ?? b.building_name ?? ""}`.trim(),
         }))}
-        col="md:col-span-2"
       />
 
-      {/* ROOM (filtered by building) */}
+      {/* ROOM */}
       <FieldSelect
-        icon={MapPin}
+        icon={DoorOpen}
         name="room_id"
         value={form.room_id}
         onChange={handleChange}
-        placeholder={form.building_id ? (roomsLoading ? "Loading rooms..." : "Select Room (optional)") : "Select building first"}
+        placeholder={
+          form.building_id ? (roomsLoading ? "Loading rooms..." : "Select Room (optional)") : "Select building first"
+        }
         options={(Array.isArray(rooms) ? rooms : []).map((r) => ({
           id: r.id,
           name: r.label ?? `${r.building_code ?? ""}-${r.room_number ?? ""}`.replace(/^-|-$/g, ""),
         }))}
-        col="md:col-span-2"
         disabled={!form.building_id || roomsLoading}
+      />
+
+      {/* SESSION TYPE */}
+      <FieldSelect
+        icon={BookOpen}
+        name="session_type"
+        value={form.session_type}
+        onChange={handleChange}
+        placeholder="Session Type (optional)"
+        options={SESSION_TYPES}
       />
 
       <SubmitButton loading={loading} isEditMode={isEditMode} />
@@ -543,7 +553,9 @@ const FormHeader = ({ isEditMode, onCancel }) => (
   <div className="flex items-center justify-between mb-4">
     <div className="flex items-center gap-2">
       <Sparkles className="w-4 h-4 text-purple-600" />
-      <h2 className="text-lg font-semibold text-gray-900">{isEditMode ? "Edit Schedule" : "Create New Schedule"}</h2>
+      <h2 className="text-lg font-semibold text-gray-900">
+        {isEditMode ? "Edit Class Session" : "Create New Class Session"}
+      </h2>
     </div>
     {isEditMode && (
       <motion.button
@@ -560,8 +572,8 @@ const FormHeader = ({ isEditMode, onCancel }) => (
   </div>
 );
 
-const FieldSelect = ({ icon: Icon, name, value, onChange, placeholder, options, required, col, disabled }) => (
-  <div className={`relative ${col || ""}`}>
+const FieldSelect = ({ icon: Icon, name, value, onChange, placeholder, options, required, disabled }) => (
+  <div className="relative">
     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
       <Icon className="w-3.5 h-3.5" />
     </div>
@@ -583,7 +595,25 @@ const FieldSelect = ({ icon: Icon, name, value, onChange, placeholder, options, 
   </div>
 );
 
-const FieldTime = ({ icon: Icon, name, value, onChange, label, disabled }) => (
+const FieldInput = ({ icon: Icon, name, type = "text", value, onChange, placeholder, required, ...props }) => (
+  <div className="relative">
+    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
+      <Icon className="w-3.5 h-3.5" />
+    </div>
+    <input
+      type={type}
+      name={name}
+      value={value ?? ""}
+      onChange={onChange}
+      placeholder={placeholder}
+      required={!!required}
+      className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
+      {...props}
+    />
+  </div>
+);
+
+const FieldTime = ({ icon: Icon, name, value, onChange, label, disabled, required }) => (
   <div className="relative">
     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
       <Icon className="w-3.5 h-3.5" />
@@ -595,6 +625,7 @@ const FieldTime = ({ icon: Icon, name, value, onChange, label, disabled }) => (
       onChange={onChange}
       aria-label={label}
       disabled={!!disabled}
+      required={!!required}
       className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
     />
   </div>
@@ -624,16 +655,16 @@ const SubmitButton = ({ loading, isEditMode }) => (
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
             className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
           />
-          {isEditMode ? "Updating Schedule..." : "Saving Schedule..."}
+          {isEditMode ? "Updating Session..." : "Saving Session..."}
         </>
       ) : (
         <>
           <CheckCircle2 className="w-5 h-5" />
-          {isEditMode ? "Update Schedule" : "Create Schedule"}
+          {isEditMode ? "Update Session" : "Create Session"}
         </>
       )}
     </span>
   </motion.button>
 );
 
-export default ScheduleForm;
+export default ClassSessionForm;

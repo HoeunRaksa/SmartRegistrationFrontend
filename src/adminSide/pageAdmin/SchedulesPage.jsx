@@ -1,32 +1,29 @@
-import React, { useEffect, useState } from "react";
+// SchedulesPage.jsx
+import { useEffect, useState } from "react";
 import ScheduleForm from "../ConponentsAdmin/ScheduleForm.jsx";
 import SchedulesList from "../ConponentsAdmin/SchedulesList.jsx";
 import { fetchAllSchedules } from "../../api/admin_course_api.jsx";
-import { fetchCourses } from "../../api/course_api.jsx";
-import { getCachedCourses } from "../../utils/dataCache";
-import {
-  Calendar,
-  Clock,
-  BookOpen,
-  MapPin,
-} from "lucide-react";
+import { fetchCourseOptions } from "../../api/course_api.jsx";
+import { Calendar, Clock, BookOpen } from "lucide-react";
 
 const SchedulesPage = () => {
   const [schedules, setSchedules] = useState([]);
   const [courses, setCourses] = useState([]);
   const [editingSchedule, setEditingSchedule] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loadingSchedules, setLoadingSchedules] = useState(false);
+  const [loadingCourses, setLoadingCourses] = useState(false);
 
-  // ✅ FIXED: Staggered loading to prevent 429 errors
+  // ✅ staggered loading to reduce 429 risk
   useEffect(() => {
     loadSchedules();
-    setTimeout(() => loadCourses(), 100); // 100ms delay
+    const t = setTimeout(() => loadCourses(), 150);
+    return () => clearTimeout(t);
   }, []);
 
   // ================= LOAD SCHEDULES =================
   const loadSchedules = async () => {
     try {
-      setLoading(true);
+      setLoadingSchedules(true);
       const res = await fetchAllSchedules();
       const data = res.data?.data || res.data || [];
       setSchedules(Array.isArray(data) ? data : []);
@@ -34,27 +31,34 @@ const SchedulesPage = () => {
       console.error("Failed to load schedules:", error);
       setSchedules([]);
     } finally {
-      setLoading(false);
+      setLoadingSchedules(false);
     }
   };
 
-  // ================= LOAD COURSES (WITH CACHING) =================
+  // ================= LOAD COURSES =================
   const loadCourses = async () => {
     try {
-      const res = await getCachedCourses(fetchCourses);
-      const data = res.data?.data || res.data || [];
-      setCourses(Array.isArray(data) ? data : []);
+      setLoadingCourses(true);
+      const res = await fetchCourseOptions();
+      
+      // ✅ Handle different response structures safely
+      const data = res.data?.data || res.data || res || [];
+      const coursesArray = Array.isArray(data) ? data : [];
+      
+      console.log('✅ Loaded courses:', coursesArray.length, coursesArray);
+      setCourses(coursesArray);
     } catch (error) {
       console.error("Failed to load courses:", error);
       setCourses([]);
+    } finally {
+      setLoadingCourses(false);
     }
   };
 
   // ================= HANDLE EDIT =================
   const handleEdit = (schedule) => {
     setEditingSchedule(schedule);
-    // Scroll to form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // ================= HANDLE SUCCESS =================
@@ -68,9 +72,11 @@ const SchedulesPage = () => {
     setEditingSchedule(null);
   };
 
-  // ================= REAL QUICK STATS =================
-  const totalCourses = new Set(schedules.map(s => s.course_id)).size;
-  const totalDays = new Set(schedules.map(s => s.day_of_week)).size;
+  // ================= QUICK STATS =================
+  const totalCourses = new Set((schedules || []).map((s) => s.course_id)).size;
+  const totalDays = new Set((schedules || []).map((s) => s.day_of_week)).size;
+
+  const isLoading = loadingSchedules || loadingCourses;
 
   const quickStats = [
     {
@@ -110,7 +116,7 @@ const SchedulesPage = () => {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-gray-900">
-                    {loading ? "…" : stat.value}
+                    {isLoading ? "…" : stat.value}
                   </p>
                   <p className="text-xs text-gray-600">{stat.label}</p>
                 </div>
