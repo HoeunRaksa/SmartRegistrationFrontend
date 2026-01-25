@@ -173,7 +173,7 @@ export const clearStudentsCache = () => {
 };
 
 export const searchStudents = (params) => {
-  return API.get("/students/search", {
+  return API.get("/admin/students/search", {
     params,
   });
 };
