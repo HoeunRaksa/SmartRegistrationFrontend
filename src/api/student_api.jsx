@@ -1,3 +1,4 @@
+import { AiFillPicture } from "react-icons/ai";
 import API from "./index"; // ✅ shared axios instance with token
 
 // ==============================
@@ -173,7 +174,5 @@ export const clearStudentsCache = () => {
 };
 
 export const searchStudents = (params) => {
-  return API.get("/admin/students/search", {
-    params,
-  });
+  return API.get("/admin/students/search", { params });
 };

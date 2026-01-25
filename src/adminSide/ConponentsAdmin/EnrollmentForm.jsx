@@ -1,5 +1,5 @@
-/* ========================= EnrollmentForm.jsx (GLASS iOS26, BIGGER UI, FULL) ========================= */
-import React, { useEffect, useMemo, useState } from "react";
+/* ========================= EnrollmentForm.jsx (GLASS iOS26, BIGGER UI, COURSE FILTER BY MAJOR) ========================= */
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { enrollStudent, updateEnrollmentStatus } from "../../api/admin_course_api.jsx";
 import {
@@ -13,6 +13,7 @@ import {
   Lock,
   RefreshCw,
   ChevronDown,
+  Filter,
 } from "lucide-react";
 
 /* ================== CONSTANTS ================== */
@@ -67,6 +68,18 @@ const getStudentDeptId = (st) =>
 const getStudentMajorId = (st) =>
   safeStr(st?.major_id ?? st?.registration?.major_id ?? st?.major?.id ?? "");
 
+/* ================== COURSE HELPERS ================== */
+const getCourseMajorId = (c) => {
+  // Try multiple paths to get major_id from course
+  return safeStr(
+    c?.major_id ?? 
+    c?.majorSubject?.major_id ?? 
+    c?.majorSubject?.major?.id ?? 
+    c?.classGroup?.major_id ?? 
+    ""
+  );
+};
+
 /* ================== COURSE LABELS ================== */
 const getCourseLabelShort = (c) => {
   const courseName = safeStr(c?.course_name);
@@ -93,11 +106,13 @@ const buildCourseFullText = (c) => {
   const year = c?.academic_year || "";
   const sem = c?.semester ? `Semester ${c.semester}` : "";
   const primary = c?.display_name || c?.course_name || "";
+  const majorName = c?.majorSubject?.major?.major_name || c?.major_name || "";
 
   return [
     primary,
     subject ? `Subject: ${subject}` : "",
     className ? `Class: ${className}` : "",
+    majorName ? `Major: ${majorName}` : "",
     year ? `Year: ${year}` : "",
     sem,
     teacher ? `Teacher: ${teacher}` : "",
@@ -148,13 +163,34 @@ const CourseDetailsCard = ({ course }) => {
   );
 };
 
-/* ================== STUDENT TABLE (BIGGER) ==================
-   ✅ IMPORTANT CHANGES:
-   - Server-side results only (students prop is SMALL list)
-   - Debounced search uses onSearchStudents(q)
-   - Supports "Load more" for pagination (onLoadMoreStudents)
-   - Bulk selection still works
-*/
+/* ================== COURSE FILTER INFO BANNER ================== */
+const CourseFilterBanner = ({ selectedMajorId, majorName, totalCourses, filteredCourses }) => {
+  if (!selectedMajorId) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: "auto" }}
+      exit={{ opacity: 0, height: 0 }}
+      className="mb-3"
+    >
+      <GlassCard className="px-4 py-2">
+        <div className="flex items-center gap-2 text-xs">
+          <Filter className="w-4 h-4 text-indigo-600" />
+          <span className="font-semibold text-gray-700">
+            Courses filtered by major:{" "}
+            <span className="font-black text-indigo-800">{majorName || selectedMajorId}</span>
+          </span>
+          <span className="text-gray-500">
+            ({filteredCourses} of {totalCourses} courses)
+          </span>
+        </div>
+      </GlassCard>
+    </motion.div>
+  );
+};
+
+/* ================== STUDENT TABLE (SERVER MODE + FIX FILTER FLOW) ================== */
 const StudentTableSelect = ({
   value = [],
   onChange,
@@ -162,21 +198,39 @@ const StudentTableSelect = ({
   disabled,
   selectedCourseId,
   isAlreadyEnrolled,
-
-  // NEW (server mode)
   studentsLoading = false,
-  onSearchStudents, // (text) => void
-  onLoadMoreStudents, // () => void
+  onSearchStudents,
+  onLoadMoreStudents,
   hasMoreStudents = false,
+  filterSignature = "",
 }) => {
   const [q, setQ] = useState("");
+  const firstRender = useRef(true);
 
-  // debounce: call parent server search
   useEffect(() => {
+    if (firstRender.current) return;
+    setQ("");
+    if (typeof onSearchStudents === "function") onSearchStudents("");
+    onChange([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterSignature]);
+
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
     if (typeof onSearchStudents !== "function") return;
     const t = setTimeout(() => onSearchStudents(q), 350);
     return () => clearTimeout(t);
   }, [q, onSearchStudents]);
+
+  useEffect(() => {
+    const idsInList = new Set((Array.isArray(students) ? students : []).map((s) => String(s?.id ?? "")));
+    const next = (Array.isArray(value) ? value : []).filter((sid) => idsInList.has(String(sid)));
+    if (next.length !== (value || []).length) onChange(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [students]);
 
   const canToggle = (sid) => {
     if (!selectedCourseId) return true;
@@ -190,11 +244,11 @@ const StudentTableSelect = ({
     onChange(value.includes(sid) ? value.filter((x) => x !== sid) : [...value, sid]);
   };
 
-  // students already filtered server-side, but keep a tiny local match for smoothness
   const filtered = useMemo(() => {
     const t = q.trim().toLowerCase();
-    if (!t) return students;
-    return (Array.isArray(students) ? students : []).filter((s) => {
+    const arr = Array.isArray(students) ? students : [];
+    if (!t) return arr;
+    return arr.filter((s) => {
       const text = `${pickStudentCode(s)} ${pickStudentName(s)} ${pickEmail(s)}`.toLowerCase();
       return text.includes(t);
     });
@@ -334,7 +388,6 @@ const StudentTableSelect = ({
           </table>
         </div>
 
-        {/* Load more */}
         <div className="border-t border-white/20 p-3 flex items-center justify-between">
           <div className="text-xs font-semibold text-gray-700">
             Showing <span className="font-black text-gray-900">{filtered.length}</span>
@@ -382,6 +435,7 @@ const SelectField = ({ icon: Icon, placeholder, value, onChange, options = [], d
     <div className="relative">
       <select
         name={name}
+        id={name}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required
@@ -424,7 +478,6 @@ const Alert = ({ type, message, onClose }) => (
     className={[
       "relative flex items-center gap-4 rounded-3xl border border-white/30 bg-white/55 backdrop-blur-xl",
       "px-4 py-3 shadow-[0_14px_40px_-22px_rgba(0,0,0,0.50)] ring-1 ring-black/5",
-      type === "success" ? "" : "",
     ].join(" ")}
   >
     <div className="w-11 h-11 rounded-2xl flex items-center justify-center border border-white/35 bg-white/55 backdrop-blur-xl">
@@ -523,9 +576,13 @@ const FormSection = ({
   onSearchStudents,
   onLoadMoreStudents,
   hasMoreStudents,
+  filterSignature,
 
   courseOptions,
   selectedCourse,
+  selectedMajorId,
+  selectedMajorName,
+  totalCourses,
 }) => (
   <motion.div variants={animations.fadeUp} initial="hidden" animate="show" className="relative">
     <GlassCard className="p-5">
@@ -550,9 +607,20 @@ const FormSection = ({
             onSearchStudents={onSearchStudents}
             onLoadMoreStudents={onLoadMoreStudents}
             hasMoreStudents={hasMoreStudents}
+            filterSignature={filterSignature}
           />
 
           <div className="lg:col-span-2 space-y-3">
+            {/* ✅ COURSE FILTER INFO BANNER */}
+            <AnimatePresence>
+              <CourseFilterBanner
+                selectedMajorId={selectedMajorId}
+                majorName={selectedMajorName}
+                totalCourses={totalCourses}
+                filteredCourses={courseOptions.length}
+              />
+            </AnimatePresence>
+
             <SelectField
               icon={BookOpen}
               placeholder="Select Course"
@@ -588,18 +656,17 @@ const EnrollmentForm = ({
   editingEnrollment,
   onCancel,
 
-  // IMPORTANT: this "students" must be a SMALL server result list (not all students)
   students = [],
   courses = [],
 
-  // already enrolled check (fast set from page)
   isAlreadyEnrolled,
 
-  // NEW: server search controls from page
   studentsLoading = false,
-  onSearchStudents, // (q) => void
-  onLoadMoreStudents, // () => void
+  onSearchStudents,
+  onLoadMoreStudents,
   hasMoreStudents = false,
+
+  filterSignature = "",
 }) => {
   const [form, setForm] = useState(INITIAL_FORM_STATE);
   const [loading, setLoading] = useState(false);
@@ -609,6 +676,12 @@ const EnrollmentForm = ({
   const isEditMode = !!editingEnrollment;
 
   const studentRows = useMemo(() => (Array.isArray(students) ? students : []), [students]);
+
+  useEffect(() => {
+    if (isEditMode) return;
+    setForm((p) => ({ ...p, student_ids: [] }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterSignature]);
 
   const selectionError = useMemo(() => {
     if (isEditMode) return null;
@@ -627,14 +700,87 @@ const EnrollmentForm = ({
     return null;
   }, [form.student_ids, studentRows, isEditMode]);
 
+  // ✅ GET SELECTED STUDENTS' MAJOR
+  const selectedMajorInfo = useMemo(() => {
+    if (isEditMode || !form.student_ids || form.student_ids.length === 0) {
+      return { majorId: null, majorName: null };
+    }
+
+    const selectedStudents = (form.student_ids || [])
+      .map((id) => studentRows.find((x) => String(x?.id) === String(id)))
+      .filter(Boolean);
+
+    if (selectedStudents.length === 0) return { majorId: null, majorName: null };
+
+    // Get major from first student
+    const firstStudent = selectedStudents[0];
+    const majorId = getStudentMajorId(firstStudent);
+    const majorName = firstStudent?.registration?.major?.major_name || "";
+
+    return { majorId, majorName };
+  }, [form.student_ids, studentRows, isEditMode]);
+
+  // ✅ FILTER COURSES BY SELECTED STUDENTS' MAJOR
   const courseOptions = useMemo(() => {
     const all = Array.isArray(courses) ? courses : [];
-    return all.map((c) => ({
+    const { majorId } = selectedMajorInfo;
+
+    // If no students selected or in edit mode, show all courses
+    if (!majorId) {
+      return all.map((c) => ({
+        id: String(c?.id ?? ""),
+        label: getCourseLabelShort(c),
+        original: c,
+      }));
+    }
+
+    // Filter courses by major
+    const filtered = all.filter((c) => {
+      const courseMajorId = getCourseMajorId(c);
+      
+      // If course has no major_id, include it (backward compatibility)
+      if (!courseMajorId) return true;
+      
+      // Otherwise, match by major
+      return courseMajorId === majorId;
+    });
+
+    // ✅ DEBUG: Log if filtering results in no courses
+    if (filtered.length === 0) {
+      console.warn('No courses found for major:', majorId);
+      console.log('Sample course structure:', all[0]);
+      console.log('Total courses:', all.length);
+    }
+
+    return filtered.map((c) => ({
       id: String(c?.id ?? ""),
       label: getCourseLabelShort(c),
       original: c,
     }));
-  }, [courses]);
+  }, [courses, selectedMajorInfo]);
+
+  // ✅ CLEAR COURSE SELECTION WHEN MAJOR CHANGES
+  useEffect(() => {
+    if (isEditMode) return;
+    
+    const { majorId } = selectedMajorInfo;
+    if (!majorId) {
+      // No students selected, allow any course
+      return;
+    }
+
+    // Check if current course belongs to the selected major
+    if (form.course_id) {
+      const currentCourse = courses.find((c) => String(c?.id) === String(form.course_id));
+      if (currentCourse) {
+        const courseMajorId = getCourseMajorId(currentCourse);
+        if (courseMajorId !== majorId) {
+          // Current course doesn't match major, clear it
+          setForm((p) => ({ ...p, course_id: "" }));
+        }
+      }
+    }
+  }, [selectedMajorInfo, form.course_id, courses, isEditMode]);
 
   useEffect(() => {
     if (editingEnrollment) {
@@ -658,6 +804,10 @@ const EnrollmentForm = ({
     onCancel?.();
   };
 
+  useEffect(() => {
+    setForm(INITIAL_FORM_STATE);
+  }, [filterSignature]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -674,14 +824,17 @@ const EnrollmentForm = ({
       } else {
         if (!form.student_ids || form.student_ids.length === 0) throw new Error("Select at least 1 student.");
 
-        // ✅ IMPORTANT: BULK ENROLL ONE REQUEST (FAST)
-        const studentIds = (form.student_ids || []).map((x) => Number(x)).filter((n) => Number.isFinite(n) && n > 0);
+        const studentIds = (form.student_ids || [])
+          .map((x) => Number(x))
+          .filter((n) => Number.isFinite(n) && n > 0);
 
-        // optional client-side skip (fast)
         const toSend = [];
         const skippedLocal = [];
+
         for (const sid of studentIds) {
-          const already = typeof isAlreadyEnrolled === "function" && isAlreadyEnrolled(String(sid), String(form.course_id));
+          const already =
+            typeof isAlreadyEnrolled === "function" &&
+            isAlreadyEnrolled(String(sid), String(form.course_id));
           if (already) skippedLocal.push(sid);
           else toSend.push(sid);
         }
@@ -690,24 +843,11 @@ const EnrollmentForm = ({
           throw new Error(`All selected students are already enrolled. (${skippedLocal.length})`);
         }
 
-        const res = await enrollStudent({
+        await enrollStudent({
           student_ids: toSend,
           course_id: Number(form.course_id),
           status: String(form.status),
         });
-
-        // ✅ backend returns skipped list too (recommended)
-        const skippedServer = res?.data?.result?.skipped_count ? res?.data?.result?.skipped || [] : [];
-        const createdCount = res?.data?.result?.created_count ?? null;
-
-        if ((skippedLocal.length > 0 || skippedServer.length > 0) && createdCount !== null) {
-          // show a friendly partial info, still success
-          setSuccess(true);
-          onUpdate?.();
-          resetForm();
-          setTimeout(() => setSuccess(false), 2500);
-          return;
-        }
       }
 
       resetForm();
@@ -751,8 +891,12 @@ const EnrollmentForm = ({
         onSearchStudents={onSearchStudents}
         onLoadMoreStudents={onLoadMoreStudents}
         hasMoreStudents={hasMoreStudents}
+        filterSignature={filterSignature}
         courseOptions={courseOptions}
         selectedCourse={selectedCourse}
+        selectedMajorId={selectedMajorInfo.majorId}
+        selectedMajorName={selectedMajorInfo.majorName}
+        totalCourses={Array.isArray(courses) ? courses.length : 0}
       />
     </div>
   );

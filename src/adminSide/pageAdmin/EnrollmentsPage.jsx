@@ -6,7 +6,6 @@ import EnrollmentsList from "../ConponentsAdmin/EnrollmentsList.jsx";
 import { fetchAllEnrollments } from "../../api/admin_course_api.jsx";
 import { fetchCourses } from "../../api/course_api.jsx";
 import { fetchDepartments, fetchMajorsByDepartment } from "../../api/department_api.jsx";
-
 import { searchStudents } from "../../api/student_api.jsx";
 
 import { getCachedCourses } from "../../utils/dataCache";
@@ -23,6 +22,7 @@ import {
   X,
   SlidersHorizontal,
   Calendar,
+  Layers,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -75,7 +75,10 @@ const SoftButton = ({ icon: Icon, children, onClick, disabled, variant = "ghost"
       disabled={disabled}
       className={[base, style, disabled ? "opacity-60 cursor-not-allowed" : ""].join(" ")}
     >
-      <span className="flex items-center gap-2">{Icon ? <Icon className="w-4 h-4" /> : null}{children}</span>
+      <span className="flex items-center gap-2">
+        {Icon ? <Icon className="w-4 h-4" /> : null}
+        {children}
+      </span>
     </button>
   );
 };
@@ -91,6 +94,7 @@ const FilterSelect = ({
   iconBg = "from-blue-100 to-indigo-100",
   iconColor = "text-blue-600",
   ringColor = "focus:ring-blue-500/20 focus:border-blue-500",
+  name, // ✅ for HTML warning
 }) => (
   <div className="relative">
     <div className={`absolute left-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-gradient-to-br ${iconBg}`}>
@@ -98,6 +102,8 @@ const FilterSelect = ({
     </div>
 
     <select
+      name={name}
+      id={name}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
@@ -127,12 +133,14 @@ const FilterSelect = ({
   </div>
 );
 
-const FilterSearchInput = ({ value, onChange }) => (
+const FilterSearchInput = ({ value, onChange, name = "search" }) => (
   <div className="relative">
     <div className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-gradient-to-br from-orange-100 to-red-100">
       <Search className="w-4 h-4 text-orange-600" />
     </div>
     <input
+      id={name}
+      name={name}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder="Search student (server)…"
@@ -158,7 +166,7 @@ const StatCard = ({ label, value, loading, icon: Icon, gradient, bgGradient }) =
 
       <div>
         <p className="text-4xl font-black text-gray-900 tracking-tight">
-          {loading ? <span className="inline-block w-16 h-10 bg-gray-200 rounded-lg animate-pulse" /> : value}
+          {loading ? <span className="inline-block w-16 h-10 bg-gray-200 rounded-lg animate-pulse" /> : Number(value || 0).toLocaleString()}
         </p>
         <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mt-1">{label}</p>
       </div>
@@ -180,22 +188,38 @@ const EnrollmentsPage = () => {
   const [studentsPage, setStudentsPage] = useState(1);
   const [studentsHasMore, setStudentsHasMore] = useState(false);
 
-  const [filters, setFilters] = useState({
-    department_id: "",
-    major_id: "",
-    course_id: "",
-    search: "",
-  });
+  // ✅ Add dropdown period filters (optional but ready)
+  const YEARS = useMemo(() => ["2024-2025", "2025-2026", "2026-2027"], []);
+  const SEMESTERS = useMemo(() => ["1", "2", "3"], []);
+
+const [filters, setFilters] = useState({
+  department_id: "",
+  major_id: "",
+  course_id: "",
+  academic_year: "",
+  semester: "",
+  search: "",
+});
+
 
   const [editingEnrollment, setEditingEnrollment] = useState(null);
   const [loading, setLoading] = useState(false);
 
   /* ================= INITIAL LOAD ================= */
   useEffect(() => {
-    loadEnrollments();
     loadCourses();
     loadDepartments();
+    // initial enrollments (no filter)
+    loadEnrollments({
+      department_id: "",
+      major_id: "",
+      course_id: "",
+      q: "",
+      academic_year: "",
+      semester: "",
+    });
     // NOTE: we DO NOT load all students (million) anymore
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /* ================= ENROLLMENT INDEX (FAST CHECK) ================= */
@@ -213,16 +237,20 @@ const EnrollmentsPage = () => {
   };
 
   /* ================= LOADERS ================= */
-  const loadEnrollments = async () => {
+  const loadEnrollments = async (override = null) => {
+    const f = override || filters;
+
     try {
       setLoading(true);
 
-      // ✅ recommended: server side filter by dept/major/course/search in API
+      // ✅ server side filter (your AdminEnrollmentController already supports these)
       const res = await fetchAllEnrollments({
-        department_id: filters.department_id || undefined,
-        major_id: filters.major_id || undefined,
-        course_id: filters.course_id || undefined,
-        q: (filters.search || "").trim() || undefined,
+        department_id: f.department_id || undefined,
+        major_id: f.major_id || undefined,
+        course_id: f.course_id || undefined,
+        academic_year: f.academic_year || undefined,
+        semester: f.semester || undefined,
+        q: (f.search || "").trim() || undefined,
         per_page: 50,
       });
 
@@ -274,53 +302,33 @@ const EnrollmentsPage = () => {
   };
 
   /* ================= SERVER STUDENT SEARCH =================
-     ✅ MUST exist: searchStudents({ department_id, major_id, q, page, per_page })
+     ✅ MUST exist: searchStudents({ department_id, major_id, academic_year, semester, q, page, per_page })
+     Backend: GET /api/students/search
   */
-  const runStudentSearch = useCallback(
-    async (qText, page = 1, append = false) => {
-      try {
-        setStudentsLoading(true);
+ const runStudentSearch = useCallback(
+  async (qText, page = 1, append = false) => {
+    const res = await searchStudents({
+      department_id: filters.department_id || undefined,
+      major_id: filters.major_id || undefined,
+      academic_year: filters.academic_year || undefined,
+      semester: filters.semester || undefined,
+      q: (qText || "").trim() || undefined,
+      page,
+      per_page: 30,
+    });
 
-        const res = await searchStudents({
-          department_id: filters.department_id || undefined,
-          major_id: filters.major_id || undefined,
-          q: (qText || "").trim() || undefined,
-          page,
-          per_page: 30,
-        });
+    const list = res?.data?.data || [];
 
-        const payload = res?.data?.data ?? res?.data ?? [];
-        const meta = res?.data?.meta ?? null;
+    setStudents((prev) => (append ? [...prev, ...list] : list));
+  },
+  [
+    filters.department_id,
+    filters.major_id,
+    filters.academic_year,
+    filters.semester,
+  ]
+);
 
-        const list = Array.isArray(payload) ? payload : [];
-        const newItems = list.map((s) => ({
-          ...s,
-          id: s.id,
-          student_code: s.student_code || s.student_code,
-          student_name: s.student_name || s.full_name_en || s.full_name_kh,
-          email: s.email || s?.user?.email,
-          profile_picture_url: s.profile_picture_url,
-        }));
-
-        setStudents((prev) => (append ? [...prev, ...newItems] : newItems));
-        setStudentsPage(page);
-
-        // has more
-        if (meta && typeof meta.current_page === "number" && typeof meta.last_page === "number") {
-          setStudentsHasMore(meta.current_page < meta.last_page);
-        } else {
-          setStudentsHasMore(list.length === 30);
-        }
-      } catch (e) {
-        console.error(e);
-        if (!append) setStudents([]);
-        setStudentsHasMore(false);
-      } finally {
-        setStudentsLoading(false);
-      }
-    },
-    [filters.department_id, filters.major_id]
-  );
 
   const onSearchStudents = (text) => {
     runStudentSearch(text, 1, false);
@@ -332,18 +340,28 @@ const EnrollmentsPage = () => {
   };
 
   /* ================= FILTER HANDLERS ================= */
-  const handleFilterChange = (key, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: value,
-      ...(key === "department_id" ? { major_id: "" } : {}),
-    }));
+const handleFilterChange = (key, value) => {
+  setFilters((prev) => {
+    const next = { ...prev, [key]: value };
 
-    if (key === "department_id") loadMajors(value);
-  };
+    if (key === "department_id") {
+      next.major_id = "";
+    }
+
+    if (key === "academic_year" || key === "semester") {
+      next.course_id = "";
+    }
+
+    return next;
+  });
+
+  // side effects
+  if (key === "department_id") loadMajors(value);
+};
+
 
   const clearFilters = () => {
-    setFilters({ department_id: "", major_id: "", course_id: "", search: "" });
+    setFilters({ department_id: "", major_id: "", course_id: "", academic_year: "", semester: "", search: "" });
     setMajors([]);
     setStudents([]);
     setStudentsPage(1);
@@ -351,21 +369,37 @@ const EnrollmentsPage = () => {
   };
 
   const hasAnyFilter =
-    !!filters.department_id || !!filters.major_id || !!filters.course_id || !!(filters.search || "").trim();
+    !!filters.department_id ||
+    !!filters.major_id ||
+    !!filters.course_id ||
+    !!filters.academic_year ||
+    !!filters.semester ||
+    !!(filters.search || "").trim();
 
-  // reload enrollments when filters change (server-side)
+  // reload enrollments when filters change (server-side) + refresh student results
   useEffect(() => {
-    loadEnrollments();
-    // refresh student search too (so form list is always correct)
-    if (filters.department_id || filters.major_id || (filters.search || "").trim()) {
-      runStudentSearch(filters.search, 1, false);
-    } else {
-      setStudents([]);
-      setStudentsPage(1);
-      setStudentsHasMore(false);
-    }
+    const t = setTimeout(() => {
+      loadEnrollments();
+
+      const hasStudentFilters =
+        !!filters.department_id ||
+        !!filters.major_id ||
+        !!filters.academic_year ||
+        !!filters.semester ||
+        !!(filters.search || "").trim();
+
+      if (hasStudentFilters) {
+        runStudentSearch(filters.search, 1, false);
+      } else {
+        setStudents([]);
+        setStudentsPage(1);
+        setStudentsHasMore(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.department_id, filters.major_id, filters.course_id, filters.search]);
+  }, [filters.department_id, filters.major_id, filters.course_id, filters.academic_year, filters.semester, filters.search]);
 
   /* ================= ACTIONS ================= */
   const handleEdit = (enrollment) => {
@@ -425,7 +459,7 @@ const EnrollmentsPage = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <SoftButton icon={RefreshCw} onClick={loadEnrollments} disabled={loading}>
+              <SoftButton icon={RefreshCw} onClick={() => loadEnrollments()} disabled={loading}>
                 Refresh
               </SoftButton>
               {hasAnyFilter ? (
@@ -436,8 +470,10 @@ const EnrollmentsPage = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* ✅ 6 dropdowns: Dept, Major, Year, Semester, Course + Search */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             <FilterSelect
+              name="department_id"
               icon={Building2}
               value={filters.department_id}
               onChange={(v) => handleFilterChange("department_id", v)}
@@ -452,6 +488,7 @@ const EnrollmentsPage = () => {
             />
 
             <FilterSelect
+              name="major_id"
               icon={GraduationCap}
               value={filters.major_id}
               onChange={(v) => handleFilterChange("major_id", v)}
@@ -467,6 +504,31 @@ const EnrollmentsPage = () => {
             />
 
             <FilterSelect
+              name="academic_year"
+              icon={Calendar}
+              value={filters.academic_year}
+              onChange={(v) => handleFilterChange("academic_year", v)}
+              options={YEARS.map((y) => ({ id: y, label: y }))}
+              placeholder="Academic Year"
+              iconColor="text-indigo-600"
+              iconBg="from-indigo-100 to-violet-100"
+              ringColor="focus:ring-indigo-500/20 focus:border-indigo-500"
+            />
+
+            <FilterSelect
+              name="semester"
+              icon={Layers}
+              value={filters.semester}
+              onChange={(v) => handleFilterChange("semester", v)}
+              options={SEMESTERS.map((s) => ({ id: s, label: `Sem ${s}` }))}
+              placeholder="Semester"
+              iconColor="text-sky-600"
+              iconBg="from-sky-100 to-cyan-100"
+              ringColor="focus:ring-sky-500/20 focus:border-sky-500"
+            />
+
+            <FilterSelect
+              name="course_id"
               icon={BookOpen}
               value={filters.course_id}
               onChange={(v) => handleFilterChange("course_id", v)}
@@ -480,7 +542,7 @@ const EnrollmentsPage = () => {
               ringColor="focus:ring-teal-500/20 focus:border-teal-500"
             />
 
-            <FilterSearchInput value={filters.search} onChange={(v) => handleFilterChange("search", v)} />
+            <FilterSearchInput value={filters.search} onChange={(v) => handleFilterChange("search", v)} name="search" />
           </div>
 
           <AnimatePresence>
@@ -493,10 +555,15 @@ const EnrollmentsPage = () => {
               >
                 <Pill>
                   <SlidersHorizontal className="w-4 h-4 text-gray-700" />
-                  Showing <span className="font-black text-gray-900">{(Array.isArray(enrollments) ? enrollments : []).length}</span>
+                  Showing{" "}
+                  <span className="font-black text-gray-900">
+                    {(Array.isArray(enrollments) ? enrollments : []).length}
+                  </span>
                 </Pill>
                 {filters.department_id ? <Pill>Dept: {filters.department_id}</Pill> : null}
                 {filters.major_id ? <Pill>Major: {filters.major_id}</Pill> : null}
+                {filters.academic_year ? <Pill>Year: {filters.academic_year}</Pill> : null}
+                {filters.semester ? <Pill>Sem: {filters.semester}</Pill> : null}
                 {filters.course_id ? <Pill>Course: {filters.course_id}</Pill> : null}
                 {(filters.search || "").trim() ? <Pill>Search: “{(filters.search || "").trim()}”</Pill> : null}
               </motion.div>
@@ -514,7 +581,14 @@ const EnrollmentsPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: i * 0.1 }}
           >
-            <StatCard loading={loading} icon={stat.icon} label={stat.label} value={stat.value} gradient={stat.gradient} bgGradient={stat.bgGradient} />
+            <StatCard
+              loading={loading}
+              icon={stat.icon}
+              label={stat.label}
+              value={stat.value}
+              gradient={stat.gradient}
+              bgGradient={stat.bgGradient}
+            />
           </motion.div>
         ))}
       </div>
@@ -531,13 +605,14 @@ const EnrollmentsPage = () => {
         hasMoreStudents={studentsHasMore}
         courses={courses}
         isAlreadyEnrolled={isAlreadyEnrolled}
+         filterSignature={`${filters.department_id}|${filters.major_id}|${filters.academic_year}|${filters.semester}|${filters.course_id}`}
       />
 
       {/* ================= LIST ================= */}
       <EnrollmentsList
         enrollments={enrollments}
         onEdit={handleEdit}
-        onRefresh={loadEnrollments}
+        onRefresh={() => loadEnrollments()}
         loading={loading}
       />
     </div>
