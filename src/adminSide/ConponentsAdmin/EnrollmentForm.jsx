@@ -1,4 +1,4 @@
-/* ========================= EnrollmentForm.jsx (FULL) ========================= */
+/* ========================= EnrollmentForm.jsx (GLASS iOS26, BIGGER UI, FULL) ========================= */
 import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { enrollStudent, updateEnrollmentStatus } from "../../api/admin_course_api.jsx";
@@ -8,14 +8,11 @@ import {
   CheckCircle2,
   AlertCircle,
   Sparkles,
-  User,
   GraduationCap,
   Search,
-  Mail,
-  Phone,
-  MapPin,
   Lock,
-  Hash,
+  RefreshCw,
+  ChevronDown,
 } from "lucide-react";
 
 /* ================== CONSTANTS ================== */
@@ -34,38 +31,43 @@ const STATUS_OPTIONS = [
 /* ================== ANIMATION VARIANTS ================== */
 const animations = {
   fadeUp: {
-    hidden: { opacity: 0, y: 24 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+    hidden: { opacity: 0, y: 14 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
   },
   container: {
     hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.15 } },
+    show: { opacity: 1, transition: { staggerChildren: 0.05, delayChildren: 0.08 } },
   },
   item: {
-    hidden: { opacity: 0, y: 18, scale: 0.96 },
-    show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 260, damping: 22 } },
+    hidden: { opacity: 0, y: 10, scale: 0.985 },
+    show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 320, damping: 26 } },
   },
 };
 
-/* ================== SAFE LABEL HELPERS ================== */
+/* ================== SAFE HELPERS ================== */
 const safeStr = (v) => (v === null || v === undefined ? "" : String(v));
 
-const getStudentLabel = (s) => {
-  const code = safeStr(s?.student_code);
-  const name =
-    safeStr(s?.student_name) ||
-    safeStr(s?.full_name_en) ||
-    safeStr(s?.full_name_kh) ||
-    safeStr(s?.student_name_kh) ||
-    safeStr(s?.name) ||
-    safeStr(s?.full_name);
+const pickStudentName = (s) =>
+  safeStr(s?.student_name) ||
+  safeStr(s?.full_name_en) ||
+  safeStr(s?.full_name_kh) ||
+  safeStr(s?.student_name_kh) ||
+  safeStr(s?.name) ||
+  safeStr(s?.full_name) ||
+  "Unknown";
 
-  if (code && name) return `${code} — ${name}`;
-  if (name) return name;
-  if (code) return code;
-  return `Student #${s?.id ?? "-"}`;
-};
+const pickStudentCode = (s) => safeStr(s?.student_code);
+const pickEmail = (s) => safeStr(s?.email ?? s?.student_email ?? s?.user?.email);
+const pickAvatar = (s) => safeStr(s?.profile_picture_url ?? s?.avatar_url ?? "");
 
+/* ================== MAJOR/DEPT HELPERS ================== */
+const getStudentDeptId = (st) =>
+  safeStr(st?.department_id ?? st?.registration?.department_id ?? st?.department?.id ?? "");
+
+const getStudentMajorId = (st) =>
+  safeStr(st?.major_id ?? st?.registration?.major_id ?? st?.major?.id ?? "");
+
+/* ================== COURSE LABELS ================== */
 const getCourseLabelShort = (c) => {
   const courseName = safeStr(c?.course_name);
   const display = safeStr(c?.display_name);
@@ -83,79 +85,521 @@ const getCourseLabelShort = (c) => {
   return [subj || "N/A Subject", cls, year, sem].filter(Boolean).join(" — ");
 };
 
-/* ================== MAJOR/DEPT HELPERS ================== */
-const getStudentDeptId = (st) =>
-  safeStr(st?.department_id ?? st?.registration?.department_id ?? st?.department?.id ?? "");
-
-const getStudentMajorId = (st) =>
-  safeStr(st?.major_id ?? st?.registration?.major_id ?? st?.major?.id ?? "");
-
-const getCourseMajorId = (c) => safeStr(c?.majorSubject?.major?.id ?? c?.major_id ?? "");
-const getCourseDeptId = (c) => safeStr(c?.majorSubject?.major?.department_id ?? c?.department_id ?? "");
-
-/* ================== COURSE FULL DISPLAY (NO CUT) ================== */
 const buildCourseFullText = (c) => {
   if (!c) return "";
-  const subject =
-    c?.majorSubject?.subject?.subject_name || c?.subject_name || "";
-  const className =
-    c?.classGroup?.class_name || c?.class_name || "";
-  const teacher =
-    c?.teacher?.full_name || c?.teacher_name || "";
+  const subject = c?.majorSubject?.subject?.subject_name || c?.subject_name || "";
+  const className = c?.classGroup?.class_name || c?.class_name || "";
+  const teacher = c?.teacher?.full_name || c?.teacher_name || "";
   const year = c?.academic_year || "";
   const sem = c?.semester ? `Semester ${c.semester}` : "";
-
   const primary = c?.display_name || c?.course_name || "";
-  const parts = [
+
+  return [
     primary,
     subject ? `Subject: ${subject}` : "",
     className ? `Class: ${className}` : "",
     year ? `Year: ${year}` : "",
-    sem ? sem : "",
+    sem,
     teacher ? `Teacher: ${teacher}` : "",
-  ].filter(Boolean);
-
-  return parts.join(" — ");
+  ]
+    .filter(Boolean)
+    .join(" — ");
 };
 
+/* ================== GLASS PRIMITIVES (BIGGER) ================== */
+const GlassCard = ({ className = "", children }) => (
+  <div
+    className={[
+      "rounded-3xl border border-white/30 bg-white/55 backdrop-blur-xl",
+      "shadow-[0_14px_40px_-22px_rgba(0,0,0,0.50)]",
+      "ring-1 ring-black/5",
+      className,
+    ].join(" ")}
+  >
+    {children}
+  </div>
+);
+
+const GlassPill = ({ className = "", children }) => (
+  <span
+    className={[
+      "inline-flex items-center gap-1 rounded-full border border-white/35 bg-white/55 backdrop-blur-xl",
+      "px-3 py-1 text-xs font-black text-gray-800",
+      "shadow-[0_8px_22px_-16px_rgba(0,0,0,0.55)]",
+      className,
+    ].join(" ")}
+  >
+    {children}
+  </span>
+);
+
+/* ================== COURSE DETAILS (BIGGER) ================== */
 const CourseDetailsCard = ({ course }) => {
   if (!course) return null;
-
-  const subject = course?.majorSubject?.subject?.subject_name || course?.subject_name || "N/A";
-  const className = course?.classGroup?.class_name || course?.class_name || "N/A";
-  const teacher = course?.teacher?.full_name || course?.teacher_name || "N/A";
-  const year = course?.academic_year || "N/A";
-  const sem = course?.semester ? `Semester ${course.semester}` : "N/A";
-
   const full = buildCourseFullText(course);
 
   return (
-    <div className="mt-3 rounded-2xl border-2 border-white/60 bg-white/80 p-4 shadow-lg">
-      <div className="text-xs font-black text-gray-700 uppercase tracking-wide mb-1">
-        Selected course (full, no cut)
-      </div>
-      <div className="text-sm font-bold text-gray-900 break-words whitespace-normal">
+    <GlassCard className="mt-3 px-4 py-3">
+      <div className="text-xs font-black text-gray-700 uppercase tracking-wide">Selected course</div>
+      <div className="mt-1 text-sm font-semibold text-gray-900 break-words whitespace-normal leading-snug">
         {full}
       </div>
-
-      <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-        <div className="font-semibold text-gray-700 break-words whitespace-normal">Subject: {subject}</div>
-        <div className="font-semibold text-gray-700 break-words whitespace-normal">Class: {className}</div>
-        <div className="font-semibold text-gray-700 break-words whitespace-normal">Academic year: {year}</div>
-        <div className="font-semibold text-gray-700 break-words whitespace-normal">Teacher: {teacher}</div>
-        <div className="font-semibold text-gray-700 break-words whitespace-normal">Semester: {sem}</div>
-      </div>
-    </div>
+    </GlassCard>
   );
 };
 
+/* ================== STUDENT TABLE (BIGGER) ==================
+   ✅ IMPORTANT CHANGES:
+   - Server-side results only (students prop is SMALL list)
+   - Debounced search uses onSearchStudents(q)
+   - Supports "Load more" for pagination (onLoadMoreStudents)
+   - Bulk selection still works
+*/
+const StudentTableSelect = ({
+  value = [],
+  onChange,
+  students = [],
+  disabled,
+  selectedCourseId,
+  isAlreadyEnrolled,
+
+  // NEW (server mode)
+  studentsLoading = false,
+  onSearchStudents, // (text) => void
+  onLoadMoreStudents, // () => void
+  hasMoreStudents = false,
+}) => {
+  const [q, setQ] = useState("");
+
+  // debounce: call parent server search
+  useEffect(() => {
+    if (typeof onSearchStudents !== "function") return;
+    const t = setTimeout(() => onSearchStudents(q), 350);
+    return () => clearTimeout(t);
+  }, [q, onSearchStudents]);
+
+  const canToggle = (sid) => {
+    if (!selectedCourseId) return true;
+    if (typeof isAlreadyEnrolled !== "function") return true;
+    return !isAlreadyEnrolled(sid, selectedCourseId);
+  };
+
+  const toggle = (sid) => {
+    if (disabled) return;
+    if (!canToggle(sid) && !value.includes(sid)) return;
+    onChange(value.includes(sid) ? value.filter((x) => x !== sid) : [...value, sid]);
+  };
+
+  // students already filtered server-side, but keep a tiny local match for smoothness
+  const filtered = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    if (!t) return students;
+    return (Array.isArray(students) ? students : []).filter((s) => {
+      const text = `${pickStudentCode(s)} ${pickStudentName(s)} ${pickEmail(s)}`.toLowerCase();
+      return text.includes(t);
+    });
+  }, [q, students]);
+
+  return (
+    <motion.div variants={animations.item} className="lg:col-span-2">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="w-9 h-9 rounded-2xl bg-white/55 border border-white/35 backdrop-blur-xl flex items-center justify-center">
+            <Search className="w-5 h-5 text-gray-700" />
+          </div>
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search student code / name / email…"
+            className={[
+              "w-full h-9 px-3 text-sm rounded-2xl",
+              "border border-white/35 bg-white/45 backdrop-blur-xl",
+              "outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-white/40",
+            ].join(" ")}
+          />
+        </div>
+
+        <GlassPill>
+          {studentsLoading ? (
+            <>
+              <span className="w-3.5 h-3.5 rounded-full border-2 border-gray-400 border-t-transparent animate-spin" />
+              Loading
+            </>
+          ) : (
+            value.length
+          )}
+        </GlassPill>
+      </div>
+
+      <GlassCard className="overflow-hidden">
+        <div className="max-h-[360px] overflow-y-auto overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead className="sticky top-0 bg-white/55 backdrop-blur-xl">
+              <tr className="h-10 text-sm text-gray-700 border-b border-white/20">
+                <th className="w-10"></th>
+                <th className="w-12"></th>
+                <th className="text-left font-black px-3">Code</th>
+                <th className="text-left font-black px-3">Name</th>
+                <th className="text-left font-black px-3">Email</th>
+                <th className="text-center font-black w-20 px-3">Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {studentsLoading && filtered.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-10 text-center text-gray-700 text-sm">
+                    <span className="inline-flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full border-2 border-gray-400 border-t-transparent animate-spin" />
+                      Loading students…
+                    </span>
+                  </td>
+                </tr>
+              )}
+
+              {!studentsLoading && filtered.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-gray-600 text-sm">
+                    No students
+                  </td>
+                </tr>
+              )}
+
+              {filtered.map((s) => {
+                const sid = String(s?.id ?? "");
+                const selected = value.includes(sid);
+                const already =
+                  !!selectedCourseId &&
+                  typeof isAlreadyEnrolled === "function" &&
+                  isAlreadyEnrolled(sid, selectedCourseId);
+
+                const code = pickStudentCode(s) || "-";
+                const name = pickStudentName(s);
+                const email = pickEmail(s) || "-";
+                const avatar = pickAvatar(s);
+
+                return (
+                  <tr
+                    key={sid}
+                    onClick={() => toggle(sid)}
+                    className={[
+                      "h-12 border-t border-white/20",
+                      disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer",
+                      selected ? "bg-white/55" : "hover:bg-white/40",
+                      already && !selected ? "opacity-70" : "",
+                    ].join(" ")}
+                    title={already ? "Already enrolled in selected course" : ""}
+                  >
+                    <td className="text-center">
+                      {selected ? (
+                        <CheckCircle2 className="w-5 h-5 text-indigo-700" />
+                      ) : already ? (
+                        <Lock className="w-5 h-5 text-emerald-700" />
+                      ) : null}
+                    </td>
+
+                    <td className="px-2">
+                      {avatar ? (
+                        <img
+                          src={avatar}
+                          alt=""
+                          className="w-9 h-9 rounded-full object-cover border border-white/40"
+                          loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-white/55 border border-white/35 backdrop-blur-xl flex items-center justify-center text-xs font-black text-gray-800">
+                          {String(name).charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </td>
+
+                    <td className="px-3 whitespace-nowrap">{code}</td>
+                    <td className="px-3 truncate max-w-[220px]">{name}</td>
+                    <td className="px-3 truncate max-w-[240px]">{email}</td>
+
+                    <td className="px-3 text-center">
+                      {already ? (
+                        <span className="text-xs font-black text-emerald-800">ENR</span>
+                      ) : (
+                        <span className="text-xs font-semibold text-gray-700">OK</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Load more */}
+        <div className="border-t border-white/20 p-3 flex items-center justify-between">
+          <div className="text-xs font-semibold text-gray-700">
+            Showing <span className="font-black text-gray-900">{filtered.length}</span>
+          </div>
+
+          {hasMoreStudents ? (
+            <button
+              type="button"
+              onClick={onLoadMoreStudents}
+              disabled={disabled || studentsLoading}
+              className={[
+                "h-9 px-4 rounded-2xl text-sm font-black",
+                "border border-white/30 bg-white/55 backdrop-blur-xl",
+                "shadow-[0_12px_34px_-22px_rgba(0,0,0,0.55)] ring-1 ring-black/5",
+                "hover:bg-white/70 transition-all",
+                "disabled:opacity-60 disabled:cursor-not-allowed",
+              ].join(" ")}
+            >
+              <span className="inline-flex items-center gap-2">
+                {studentsLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ChevronDown className="w-4 h-4" />}
+                Load more
+              </span>
+            </button>
+          ) : (
+            <span className="text-xs font-bold text-gray-500">No more</span>
+          )}
+        </div>
+      </GlassCard>
+    </motion.div>
+  );
+};
+
+/* ================== SELECT FIELD (BIGGER) ================== */
+const SelectField = ({ icon: Icon, placeholder, value, onChange, options = [], disabled, name }) => (
+  <motion.div variants={animations.item} className="relative">
+    <div className="mb-2 flex items-center gap-3">
+      <div className="w-10 h-10 rounded-2xl bg-white/55 border border-white/35 backdrop-blur-xl flex items-center justify-center">
+        <Icon className="w-5 h-5 text-gray-800" />
+      </div>
+      <label className="text-sm font-black text-gray-900">
+        {placeholder} <span className="text-red-500">*</span>
+      </label>
+    </div>
+
+    <div className="relative">
+      <select
+        name={name}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        required
+        disabled={disabled}
+        className={[
+          "w-full h-12 rounded-2xl px-4 pr-10 text-sm font-semibold text-gray-900",
+          "border border-white/35 bg-white/45 backdrop-blur-xl",
+          "outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-white/40",
+          "disabled:opacity-60 disabled:cursor-not-allowed",
+          "appearance-none cursor-pointer",
+        ].join(" ")}
+      >
+        <option value="">{placeholder}</option>
+        {options.map((opt, idx) => {
+          const id = opt?.id ?? opt?.value ?? "";
+          const label = opt?.label ?? opt?.name ?? opt?.title ?? String(id || "");
+          return (
+            <option key={`${name}-${String(id)}-${idx}`} value={String(id)}>
+              {label}
+            </option>
+          );
+        })}
+      </select>
+
+      <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 opacity-70">
+        <svg width="14" height="14" viewBox="0 0 12 12" aria-hidden="true">
+          <path d="M6 9L1 4h10z" fill="#6b7280" />
+        </svg>
+      </div>
+    </div>
+  </motion.div>
+);
+
+/* ================== ALERT (BIGGER) ================== */
+const Alert = ({ type, message, onClose }) => (
+  <motion.div
+    initial={{ opacity: 0, y: -10, scale: 0.98 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.18 } }}
+    className={[
+      "relative flex items-center gap-4 rounded-3xl border border-white/30 bg-white/55 backdrop-blur-xl",
+      "px-4 py-3 shadow-[0_14px_40px_-22px_rgba(0,0,0,0.50)] ring-1 ring-black/5",
+      type === "success" ? "" : "",
+    ].join(" ")}
+  >
+    <div className="w-11 h-11 rounded-2xl flex items-center justify-center border border-white/35 bg-white/55 backdrop-blur-xl">
+      {type === "success" ? (
+        <CheckCircle2 className="w-6 h-6 text-emerald-700" />
+      ) : (
+        <AlertCircle className="w-6 h-6 text-rose-700" />
+      )}
+    </div>
+
+    <p className="flex-1 text-sm font-semibold text-gray-900 leading-snug">{message}</p>
+
+    {onClose && (
+      <button
+        onClick={onClose}
+        type="button"
+        className="p-2 rounded-xl hover:bg-white/50 border border-transparent hover:border-white/30"
+      >
+        <X className="w-5 h-5 text-gray-700" />
+      </button>
+    )}
+  </motion.div>
+);
+
+/* ================== SUBMIT BUTTON (BIGGER) ================== */
+const SubmitButton = ({ loading, isEditMode }) => (
+  <motion.button
+    variants={animations.item}
+    whileHover={{ scale: 1.01, y: -1 }}
+    whileTap={{ scale: 0.99 }}
+    disabled={loading}
+    type="submit"
+    className={[
+      "w-full h-12 rounded-3xl",
+      "border border-white/30 bg-white/55 backdrop-blur-xl",
+      "text-sm font-black text-gray-900",
+      "shadow-[0_16px_44px_-26px_rgba(0,0,0,0.60)] ring-1 ring-black/5",
+      "disabled:opacity-60 disabled:cursor-not-allowed",
+    ].join(" ")}
+  >
+    <span className="flex items-center justify-center gap-3">
+      {loading ? (
+        <>
+          <span className="w-5 h-5 rounded-full border-2 border-gray-400 border-t-transparent animate-spin" />
+          {isEditMode ? "Updating…" : "Saving…"}
+        </>
+      ) : (
+        <>
+          <CheckCircle2 className="w-5 h-5 text-indigo-700" />
+          {isEditMode ? "Update Status" : "Enroll Students"}
+        </>
+      )}
+    </span>
+  </motion.button>
+);
+
+/* ================== HEADER (BIGGER) ================== */
+const FormHeader = ({ isEditMode, onCancel }) => (
+  <div className="flex items-center justify-between pb-3 border-b border-white/25">
+    <div className="flex items-center gap-3">
+      <div className="w-12 h-12 rounded-3xl bg-white/55 border border-white/35 backdrop-blur-xl flex items-center justify-center">
+        <Sparkles className="w-6 h-6 text-indigo-700" />
+      </div>
+      <div className="leading-tight">
+        <h2 className="text-base font-black text-gray-900">{isEditMode ? "Update Enrollment" : "Enroll Students"}</h2>
+        <p className="text-sm text-gray-700">{isEditMode ? "Change status" : "Server search + bulk enroll"}</p>
+      </div>
+    </div>
+
+    {isEditMode && (
+      <button
+        onClick={onCancel}
+        type="button"
+        className="h-10 px-4 rounded-2xl border border-white/30 bg-white/55 backdrop-blur-xl text-sm font-black text-gray-900"
+      >
+        Cancel
+      </button>
+    )}
+  </div>
+);
+
+/* ================== FORM SECTION ================== */
+const FormSection = ({
+  isEditMode,
+  onCancel,
+  onSubmit,
+  form,
+  setForm,
+  loading,
+
+  studentRows,
+  selectedCourseId,
+  isAlreadyEnrolled,
+
+  studentsLoading,
+  onSearchStudents,
+  onLoadMoreStudents,
+  hasMoreStudents,
+
+  courseOptions,
+  selectedCourse,
+}) => (
+  <motion.div variants={animations.fadeUp} initial="hidden" animate="show" className="relative">
+    <GlassCard className="p-5">
+      <FormHeader isEditMode={isEditMode} onCancel={onCancel} />
+
+      <motion.form
+        onSubmit={onSubmit}
+        variants={animations.container}
+        initial="hidden"
+        animate="show"
+        className="space-y-5 mt-5"
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <StudentTableSelect
+            disabled={isEditMode || loading}
+            value={form.student_ids}
+            onChange={(ids) => setForm((p) => ({ ...p, student_ids: ids }))}
+            students={studentRows}
+            selectedCourseId={selectedCourseId}
+            isAlreadyEnrolled={isAlreadyEnrolled}
+            studentsLoading={studentsLoading}
+            onSearchStudents={onSearchStudents}
+            onLoadMoreStudents={onLoadMoreStudents}
+            hasMoreStudents={hasMoreStudents}
+          />
+
+          <div className="lg:col-span-2 space-y-3">
+            <SelectField
+              icon={BookOpen}
+              placeholder="Select Course"
+              value={form.course_id}
+              onChange={(v) => setForm((p) => ({ ...p, course_id: v }))}
+              options={courseOptions}
+              disabled={loading}
+              name="course_id"
+            />
+            <CourseDetailsCard course={selectedCourse} />
+          </div>
+
+          <SelectField
+            icon={GraduationCap}
+            placeholder="Status"
+            value={form.status}
+            onChange={(v) => setForm((p) => ({ ...p, status: v }))}
+            options={STATUS_OPTIONS.map((x) => ({ id: x.id, label: x.name }))}
+            disabled={loading}
+            name="status"
+          />
+        </div>
+
+        <SubmitButton loading={loading} isEditMode={isEditMode} />
+      </motion.form>
+    </GlassCard>
+  </motion.div>
+);
+
+/* ================== MAIN ================== */
 const EnrollmentForm = ({
   onUpdate,
   editingEnrollment,
   onCancel,
+
+  // IMPORTANT: this "students" must be a SMALL server result list (not all students)
   students = [],
   courses = [],
-  isAlreadyEnrolled, // function(studentId, courseId) => boolean
+
+  // already enrolled check (fast set from page)
+  isAlreadyEnrolled,
+
+  // NEW: server search controls from page
+  studentsLoading = false,
+  onSearchStudents, // (q) => void
+  onLoadMoreStudents, // () => void
+  hasMoreStudents = false,
 }) => {
   const [form, setForm] = useState(INITIAL_FORM_STATE);
   const [loading, setLoading] = useState(false);
@@ -164,21 +608,13 @@ const EnrollmentForm = ({
 
   const isEditMode = !!editingEnrollment;
 
-  const studentOptions = useMemo(() => {
-    const arr = Array.isArray(students) ? students : [];
-    return arr.map((s) => ({
-      id: String(s?.id ?? ""),
-      label: getStudentLabel(s),
-      original: s,
-    }));
-  }, [students]);
+  const studentRows = useMemo(() => (Array.isArray(students) ? students : []), [students]);
 
-  /* ================== SELECTION VALIDATION ================== */
   const selectionError = useMemo(() => {
     if (isEditMode) return null;
 
     const selectedStudents = (form.student_ids || [])
-      .map((id) => studentOptions.find((x) => String(x.id) === String(id))?.original)
+      .map((id) => studentRows.find((x) => String(x?.id) === String(id)))
       .filter(Boolean);
 
     if (selectedStudents.length <= 1) return null;
@@ -186,66 +622,19 @@ const EnrollmentForm = ({
     const deptSet = new Set(selectedStudents.map(getStudentDeptId).filter(Boolean));
     const majorSet = new Set(selectedStudents.map(getStudentMajorId).filter(Boolean));
 
-    if (deptSet.size !== 1) return "Selected students are from different departments. Please select same department students.";
-    if (majorSet.size !== 1) return "Selected students are from different majors. Please select same major students.";
+    if (deptSet.size !== 1) return "Selected students are from different departments.";
+    if (majorSet.size !== 1) return "Selected students are from different majors.";
     return null;
-  }, [form.student_ids, studentOptions, isEditMode]);
+  }, [form.student_ids, studentRows, isEditMode]);
 
-  /* ================== FILTER COURSE OPTIONS ================== */
   const courseOptions = useMemo(() => {
-    const allCourses = Array.isArray(courses) ? courses : [];
-
-    if (isEditMode) {
-      return allCourses.map((c) => ({
-        id: String(c?.id ?? ""),
-        label: getCourseLabelShort(c),
-        original: c,
-      }));
-    }
-
-    const selectedStudents = (form.student_ids || [])
-      .map((id) => studentOptions.find((x) => String(x.id) === String(id))?.original)
-      .filter(Boolean);
-
-    if (selectedStudents.length === 0) {
-      return allCourses.map((c) => ({
-        id: String(c?.id ?? ""),
-        label: getCourseLabelShort(c),
-        original: c,
-      }));
-    }
-
-    const deptSet = new Set(selectedStudents.map(getStudentDeptId).filter(Boolean));
-    const majorSet = new Set(selectedStudents.map(getStudentMajorId).filter(Boolean));
-
-    if (deptSet.size !== 1 || majorSet.size !== 1) return [];
-
-    const deptId = [...deptSet][0];
-    const majorId = [...majorSet][0];
-
-    const filtered = allCourses.filter((c) => {
-      const cMajor = getCourseMajorId(c);
-      const cDept = getCourseDeptId(c);
-      if (!cMajor || !cDept) return false;
-      return String(cMajor) === String(majorId) && String(cDept) === String(deptId);
-    });
-
-    return filtered.map((c) => ({
+    const all = Array.isArray(courses) ? courses : [];
+    return all.map((c) => ({
       id: String(c?.id ?? ""),
       label: getCourseLabelShort(c),
       original: c,
     }));
-  }, [courses, isEditMode, form.student_ids, studentOptions]);
-
-  useEffect(() => {
-    if (isEditMode) return;
-    if (!form.course_id) return;
-
-    const stillValid = courseOptions.some((c) => String(c.id) === String(form.course_id));
-    if (!stillValid) {
-      setForm((p) => ({ ...p, course_id: "" }));
-    }
-  }, [courseOptions, form.course_id, isEditMode]);
+  }, [courses]);
 
   useEffect(() => {
     if (editingEnrollment) {
@@ -277,50 +666,56 @@ const EnrollmentForm = ({
 
     try {
       if (selectionError) throw new Error(selectionError);
-
       if (!form.course_id) throw new Error("Course is required.");
       if (!form.status) throw new Error("Status is required.");
 
       if (isEditMode) {
         await updateEnrollmentStatus(editingEnrollment.id, { status: String(form.status) });
       } else {
-        if (!form.student_ids || form.student_ids.length === 0) {
-          throw new Error("Select at least 1 student.");
+        if (!form.student_ids || form.student_ids.length === 0) throw new Error("Select at least 1 student.");
+
+        // ✅ IMPORTANT: BULK ENROLL ONE REQUEST (FAST)
+        const studentIds = (form.student_ids || []).map((x) => Number(x)).filter((n) => Number.isFinite(n) && n > 0);
+
+        // optional client-side skip (fast)
+        const toSend = [];
+        const skippedLocal = [];
+        for (const sid of studentIds) {
+          const already = typeof isAlreadyEnrolled === "function" && isAlreadyEnrolled(String(sid), String(form.course_id));
+          if (already) skippedLocal.push(sid);
+          else toSend.push(sid);
         }
 
-        const courseIdNum = Number(form.course_id);
-        const statusStr = String(form.status);
-
-        const skipped = [];
-        for (const sid of form.student_ids) {
-          const already =
-            typeof isAlreadyEnrolled === "function" &&
-            isAlreadyEnrolled(sid, form.course_id);
-
-          if (already) {
-            skipped.push(sid);
-            continue;
-          }
-
-          await enrollStudent({
-            student_id: Number(sid),
-            course_id: courseIdNum,
-            status: statusStr,
-          });
+        if (toSend.length === 0) {
+          throw new Error(`All selected students are already enrolled. (${skippedLocal.length})`);
         }
 
-        if (skipped.length) {
-          throw new Error(`Skipped ${skipped.length} student(s): already enrolled in this course.`);
+        const res = await enrollStudent({
+          student_ids: toSend,
+          course_id: Number(form.course_id),
+          status: String(form.status),
+        });
+
+        // ✅ backend returns skipped list too (recommended)
+        const skippedServer = res?.data?.result?.skipped_count ? res?.data?.result?.skipped || [] : [];
+        const createdCount = res?.data?.result?.created_count ?? null;
+
+        if ((skippedLocal.length > 0 || skippedServer.length > 0) && createdCount !== null) {
+          // show a friendly partial info, still success
+          setSuccess(true);
+          onUpdate?.();
+          resetForm();
+          setTimeout(() => setSuccess(false), 2500);
+          return;
         }
       }
 
       resetForm();
       setSuccess(true);
       onUpdate?.();
-      setTimeout(() => setSuccess(false), 3000);
+      setTimeout(() => setSuccess(false), 2500);
     } catch (err) {
       let errorMessage = "Failed to save enrollment";
-
       if (err?.response?.data) {
         const data = err.response.data;
         if (data.errors) errorMessage = Object.values(data.errors).flat().join(", ");
@@ -328,7 +723,6 @@ const EnrollmentForm = ({
       } else if (err?.message) {
         errorMessage = err.message;
       }
-
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -336,7 +730,7 @@ const EnrollmentForm = ({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       <AnimatePresence>
         {success && <Alert type="success" message={`Enrollment ${isEditMode ? "updated" : "created"} successfully!`} />}
         {selectionError && <Alert type="error" message={selectionError} onClose={null} />}
@@ -350,518 +744,18 @@ const EnrollmentForm = ({
         form={form}
         setForm={setForm}
         loading={loading}
-        studentOptions={studentOptions}
+        studentRows={studentRows}
+        selectedCourseId={form.course_id}
+        isAlreadyEnrolled={isAlreadyEnrolled}
+        studentsLoading={studentsLoading}
+        onSearchStudents={onSearchStudents}
+        onLoadMoreStudents={onLoadMoreStudents}
+        hasMoreStudents={hasMoreStudents}
         courseOptions={courseOptions}
         selectedCourse={selectedCourse}
-        isAlreadyEnrolled={isAlreadyEnrolled}
       />
     </div>
   );
 };
-
-/* ================== SUB-COMPONENTS ================== */
-const Alert = ({ type, message, onClose }) => (
-  <motion.div
-    initial={{ opacity: 0, y: -16, scale: 0.92 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.92, transition: { duration: 0.2 } }}
-    className={`relative flex items-center gap-4 p-5 rounded-2xl border-2 shadow-xl backdrop-blur-xl ${
-      type === "success"
-        ? "bg-gradient-to-r from-emerald-50/90 via-teal-50/90 to-emerald-50/90 border-emerald-300/50"
-        : "bg-gradient-to-r from-rose-50/90 via-red-50/90 to-rose-50/90 border-red-300/50"
-    }`}
-  >
-    <div
-      className={`p-2.5 rounded-xl shadow-md ${
-        type === "success"
-          ? "bg-gradient-to-br from-emerald-500 to-teal-600"
-          : "bg-gradient-to-br from-red-500 to-rose-600"
-      }`}
-    >
-      {type === "success" ? <CheckCircle2 className="w-5 h-5 text-white" /> : <AlertCircle className="w-5 h-5 text-white" />}
-    </div>
-
-    <p className={`flex-1 text-sm font-bold ${type === "success" ? "text-emerald-900" : "text-red-900"}`}>{message}</p>
-
-    {onClose && (
-      <motion.button
-        whileHover={{ scale: 1.1, rotate: 90 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={onClose}
-        className={`p-1.5 rounded-lg transition-all shadow-sm ${
-          type === "success" ? "hover:bg-emerald-200/70 text-emerald-700" : "hover:bg-red-200/70 text-red-700"
-        }`}
-        type="button"
-      >
-        <X className="w-4 h-4" />
-      </motion.button>
-    )}
-  </motion.div>
-);
-
-const FormSection = ({
-  isEditMode,
-  onCancel,
-  onSubmit,
-  form,
-  setForm,
-  loading,
-  studentOptions,
-  courseOptions,
-  selectedCourse,
-  isAlreadyEnrolled,
-}) => (
-  <motion.div
-    variants={animations.fadeUp}
-    initial="hidden"
-    animate="show"
-    className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white/90 via-blue-50/30 to-purple-50/30 backdrop-blur-2xl border-2 border-white/60 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] p-8"
-  >
-    <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-blue-400/20 via-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse" />
-    <div className="absolute bottom-0 left-0 w-56 h-56 bg-gradient-to-tr from-pink-400/15 via-orange-400/15 to-purple-400/15 rounded-full blur-3xl animate-pulse delay-1000" />
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-indigo-200/10 to-purple-200/10 rounded-full blur-3xl" />
-
-    <div className="relative z-10">
-      <FormHeader isEditMode={isEditMode} onCancel={onCancel} />
-
-      <motion.form onSubmit={onSubmit} variants={animations.container} initial="hidden" animate="show" className="space-y-6 mt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <MultiStudentSelect
-            disabled={isEditMode}
-            value={form.student_ids}
-            onChange={(ids) => setForm((p) => ({ ...p, student_ids: ids }))}
-            options={studentOptions}
-            selectedCourseId={form.course_id}
-            isAlreadyEnrolled={isAlreadyEnrolled}
-          />
-
-          <div className="lg:col-span-2">
-            <SelectField
-              icon={BookOpen}
-              placeholder="Select Course"
-              value={form.course_id}
-              onChange={(v) => setForm((p) => ({ ...p, course_id: v }))}
-              options={courseOptions}
-              disabled={!isEditMode && (form.student_ids?.length ?? 0) === 0}
-              name="course_id"
-            />
-            <CourseDetailsCard course={selectedCourse} />
-          </div>
-
-          <SelectField
-            icon={GraduationCap}
-            placeholder="Status"
-            value={form.status}
-            onChange={(v) => setForm((p) => ({ ...p, status: v }))}
-            options={STATUS_OPTIONS.map((x) => ({ id: x.id, label: x.name }))}
-            disabled={false}
-            name="status"
-          />
-        </div>
-
-        <SubmitButton loading={loading} isEditMode={isEditMode} />
-      </motion.form>
-    </div>
-  </motion.div>
-);
-
-const FormHeader = ({ isEditMode, onCancel }) => (
-  <div className="flex items-center justify-between pb-6 border-b-2 border-white/40">
-    <div className="flex items-center gap-4">
-      <motion.div
-        whileHover={{ rotate: 360, scale: 1.05 }}
-        transition={{ duration: 0.6 }}
-        className="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 shadow-2xl shadow-indigo-500/40"
-      >
-        <Sparkles className="w-7 h-7 text-white" />
-      </motion.div>
-      <div>
-        <h2 className="text-3xl font-black text-gray-900 tracking-tight">
-          {isEditMode ? "Update Enrollment" : "Enroll Students"}
-        </h2>
-        <p className="text-sm font-medium text-gray-600 mt-1">
-          {isEditMode ? "Modify enrollment status for selected student" : "Add multiple students to a course in one go"}
-        </p>
-      </div>
-    </div>
-
-    {isEditMode && (
-      <motion.button
-        whileHover={{ scale: 1.05, x: 2 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={onCancel}
-        type="button"
-        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/80 hover:bg-red-50 text-gray-700 hover:text-red-600 font-bold transition-all duration-200 border-2 border-white/60 hover:border-red-300 shadow-lg hover:shadow-xl"
-      >
-        <X className="w-4.5 h-4.5" />
-        Cancel
-      </motion.button>
-    )}
-  </div>
-);
-
-/* ================== MULTI STUDENT SELECT ================== */
-const MultiStudentSelect = ({ value = [], onChange, options = [], disabled, selectedCourseId, isAlreadyEnrolled }) => {
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const filteredOptions = options.filter((opt) => {
-    const label = (opt.label || opt.name || "").toLowerCase();
-    return label.includes(searchTerm.toLowerCase());
-  });
-
-  const canToggle = (studentId) => {
-    if (!selectedCourseId) return true;
-    if (typeof isAlreadyEnrolled !== "function") return true;
-    return !isAlreadyEnrolled(studentId, selectedCourseId);
-  };
-
-  const toggleStudent = (studentId) => {
-    if (disabled) return;
-
-    // block selecting already-enrolled students for chosen course
-    if (!canToggle(studentId) && !value.includes(studentId)) return;
-
-    const newValue = value.includes(studentId)
-      ? value.filter((id) => id !== studentId)
-      : [...value, studentId];
-
-    onChange(newValue);
-  };
-
-  const selectAll = () => {
-    if (disabled) return;
-
-    const allowed = filteredOptions
-      .map((opt) => String(opt.id))
-      .filter((sid) => canToggle(sid));
-
-    onChange(allowed);
-  };
-
-  const clearAll = () => {
-    if (disabled) return;
-    onChange([]);
-  };
-
-  return (
-    <motion.div variants={animations.item} className="relative lg:col-span-2">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
-            <User className="w-4.5 h-4.5 text-white" />
-          </div>
-          <label className="text-sm font-black text-gray-900">
-            Students {!disabled && <span className="text-red-500 ml-1">*</span>}
-          </label>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {!disabled && (
-            <>
-              <motion.button
-                whileHover={{ scale: 1.05, y: -1 }}
-                whileTap={{ scale: 0.95 }}
-                type="button"
-                onClick={selectAll}
-                className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-lg shadow-blue-500/30 transition-all"
-              >
-                Select Allowed
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.05, y: -1 }}
-                whileTap={{ scale: 0.95 }}
-                type="button"
-                onClick={clearAll}
-                className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white text-xs font-bold shadow-lg shadow-gray-500/30 transition-all"
-              >
-                Clear All
-              </motion.button>
-            </>
-          )}
-
-          <motion.div
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-black shadow-lg"
-          >
-            {value.length} selected
-          </motion.div>
-        </div>
-      </div>
-
-      {!disabled && (
-        <div className="mb-4 relative">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100">
-            <Search className="w-4 h-4 text-blue-700" />
-          </div>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search students by name, email, phone..."
-            className="w-full pl-14 pr-4 py-3.5 rounded-2xl border-2 border-white/60 bg-white/80 backdrop-blur-xl text-sm font-medium text-gray-900 outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm hover:shadow-md placeholder:text-gray-500"
-          />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm("")}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-all"
-              type="button"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      )}
-
-      <div className="border-2 border-white/60 rounded-2xl bg-white/70 backdrop-blur-xl overflow-hidden shadow-xl">
-        <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
-          {filteredOptions.length === 0 ? (
-            <div className="p-12 text-center">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mx-auto mb-4">
-                <Search className="w-10 h-10 text-gray-400" />
-              </div>
-              <p className="text-sm font-bold text-gray-600">No students found</p>
-              <p className="text-xs text-gray-500 mt-1">Try adjusting your search criteria</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-white/60">
-              {filteredOptions.map((opt) => {
-                const studentData = opt.original || opt;
-                const sid = String(opt.id);
-                const isSelected = value.includes(sid);
-
-                const name = studentData.student_name || studentData.full_name_en || studentData.name || "Unknown";
-                const nameKh = studentData.student_name_kh || studentData.full_name_kh || "";
-                const email = studentData.student_email || studentData.email || studentData.personal_email || "";
-                const phone = studentData.student_phone || studentData.phone_number || studentData.phone || "";
-                const address = studentData.student_address || studentData.address || "";
-                const image = studentData.profile_picture_url || "";
-                const code = studentData.student_code || "";
-
-                const already =
-                  !!selectedCourseId &&
-                  typeof isAlreadyEnrolled === "function" &&
-                  isAlreadyEnrolled(sid, selectedCourseId);
-
-                return (
-                  <motion.div
-                    key={opt.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    whileHover={{ backgroundColor: isSelected ? "rgb(219 234 254)" : "rgb(239 246 255)" }}
-                    className={`p-5 transition-all duration-200 ${
-                      disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-                    } ${isSelected ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-600 shadow-sm" : "hover:shadow-sm"} ${
-                      already && !isSelected ? "opacity-70" : ""
-                    }`}
-                    onClick={() => !disabled && toggleStudent(sid)}
-                    title={already ? "Already enrolled in selected course" : ""}
-                  >
-                    <div className="flex gap-4">
-                      <div className="flex-shrink-0 pt-1">
-                        <motion.div
-                          whileHover={{ scale: disabled ? 1 : 1.1 }}
-                          whileTap={{ scale: disabled ? 1 : 0.9 }}
-                          className={`w-7 h-7 rounded-xl border-2 flex items-center justify-center transition-all shadow-sm ${
-                            isSelected
-                              ? "bg-gradient-to-br from-blue-600 to-indigo-700 border-blue-600 shadow-lg shadow-blue-500/30"
-                              : already
-                              ? "border-emerald-300 bg-emerald-50"
-                              : "border-gray-300 bg-white hover:border-blue-400"
-                          }`}
-                        >
-                          {isSelected ? (
-                            <CheckCircle2 className="w-5 h-5 text-white" />
-                          ) : already ? (
-                            <Lock className="w-4 h-4 text-emerald-700" />
-                          ) : null}
-                        </motion.div>
-                      </div>
-
-                      <div className="flex-shrink-0">
-                        {image ? (
-                          <motion.img
-                            whileHover={{ scale: 1.05 }}
-                            src={image}
-                            alt={name}
-                            className="w-20 h-20 rounded-2xl object-cover border-2 border-white shadow-lg"
-                            onError={(e) => {
-                              e.target.style.display = "none";
-                              if (e.target.nextSibling) e.target.nextSibling.style.display = "flex";
-                            }}
-                          />
-                        ) : null}
-                        <motion.div
-                          whileHover={{ scale: 1.05 }}
-                          className={`w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg ${
-                            image ? "hidden" : "flex"
-                          }`}
-                        >
-                          <span className="text-2xl font-black text-white">{String(name).charAt(0).toUpperCase()}</span>
-                        </motion.div>
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-3 mb-2">
-                          <div className="min-w-0">
-                            <h4 className="text-sm font-black text-gray-900 mb-0.5 break-words whitespace-normal">{name}</h4>
-                            {nameKh && <p className="text-xs font-medium text-gray-600 break-words whitespace-normal">{nameKh}</p>}
-                          </div>
-
-                          <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                            {code && (
-                              <motion.span
-                                whileHover={{ scale: 1.05 }}
-                                className="px-3 py-1 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-black shadow-md"
-                              >
-                                {code}
-                              </motion.span>
-                            )}
-
-                            {selectedCourseId && (
-                              <span
-                                className={`px-3 py-1 rounded-xl text-xs font-black border-2 ${
-                                  already
-                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                    : "bg-gray-50 text-gray-700 border-gray-200"
-                                }`}
-                              >
-                                {already ? "Already enrolled" : "Not enrolled"}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-3">
-                          {email && (
-                            <div className="flex items-center gap-2 text-xs text-gray-700 min-w-0">
-                              <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex-shrink-0 shadow-sm">
-                                <Mail className="w-3.5 h-3.5 text-blue-700" />
-                              </div>
-                              <span className="truncate font-medium">{email}</span>
-                            </div>
-                          )}
-
-                          {phone && (
-                            <div className="flex items-center gap-2 text-xs text-gray-700 min-w-0">
-                              <div className="p-1.5 rounded-lg bg-gradient-to-br from-green-100 to-green-200 flex-shrink-0 shadow-sm">
-                                <Phone className="w-3.5 h-3.5 text-green-700" />
-                              </div>
-                              <span className="font-medium break-words whitespace-normal">{phone}</span>
-                            </div>
-                          )}
-
-                          {address && (
-                            <div className="flex items-center gap-2 text-xs text-gray-700 min-w-0">
-                              <div className="p-1.5 rounded-lg bg-gradient-to-br from-purple-100 to-purple-200 flex-shrink-0 shadow-sm">
-                                <MapPin className="w-3.5 h-3.5 text-purple-700" />
-                              </div>
-                              <span className="truncate font-medium">{address}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {opt?.original?.enroll_count !== undefined && (
-                          <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-white/80 border-2 border-white/60 text-xs font-bold text-gray-700 shadow-sm">
-                            <Hash className="w-4 h-4 text-gray-500" />
-                            Total enrollments: {Number(opt.original.enroll_count || 0)}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {filteredOptions.length > 0 && (
-        <div className="mt-3 text-xs font-semibold text-gray-600 text-center">
-          Showing {filteredOptions.length} student{filteredOptions.length !== 1 ? "s" : ""}
-        </div>
-      )}
-    </motion.div>
-  );
-};
-
-const SelectField = ({ icon: Icon, placeholder, value, onChange, options = [], disabled, name }) => (
-  <motion.div variants={animations.item} className="relative">
-    <div className="mb-3 flex items-center gap-2.5">
-      <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 shadow-lg">
-        <Icon className="w-4.5 h-4.5 text-white" />
-      </div>
-      <label className="text-sm font-black text-gray-900">
-        {placeholder} <span className="text-red-500 ml-1">*</span>
-      </label>
-    </div>
-
-    <select
-      name={name}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      required
-      disabled={disabled}
-      className="w-full rounded-2xl bg-white/80 backdrop-blur-xl px-5 py-3.5 text-sm font-semibold text-gray-900 border-2 border-white/60 outline-none focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl appearance-none cursor-pointer"
-      style={{
-        backgroundImage:
-          `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "right 1.25rem center",
-        paddingRight: "3.5rem",
-      }}
-    >
-      <option value="">{placeholder}</option>
-      {options.map((opt, idx) => {
-        const id = opt?.id ?? opt?.value ?? "";
-        const label = opt?.label ?? opt?.name ?? opt?.title ?? String(id || "");
-        return (
-          <option key={`${name}-${String(id)}-${idx}`} value={String(id)}>
-            {label}
-          </option>
-        );
-      })}
-    </select>
-  </motion.div>
-);
-
-const SubmitButton = ({ loading, isEditMode }) => (
-  <motion.button
-    variants={animations.item}
-    whileHover={{ scale: 1.02, y: -3 }}
-    whileTap={{ scale: 0.98 }}
-    disabled={loading}
-    type="submit"
-    className="w-full relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 py-4.5 text-base font-black text-white shadow-2xl shadow-purple-500/40 disabled:opacity-70 disabled:cursor-not-allowed transition-all border-2 border-white/20 hover:shadow-purple-500/50"
-  >
-    {!loading && (
-      <motion.div
-        animate={{ x: ["-100%", "100%"] }}
-        transition={{ duration: 2, repeat: Infinity, repeatDelay: 1.5 }}
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-      />
-    )}
-
-    <span className="relative z-10 flex items-center justify-center gap-3">
-      {loading ? (
-        <>
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full"
-          />
-          <span className="tracking-wide">{isEditMode ? "Updating..." : "Saving..."}</span>
-        </>
-      ) : (
-        <>
-          <CheckCircle2 className="w-6 h-6" />
-          <span className="tracking-wide">{isEditMode ? "Update Status" : "Enroll Students"}</span>
-        </>
-      )}
-    </span>
-  </motion.button>
-);
 
 export default EnrollmentForm;

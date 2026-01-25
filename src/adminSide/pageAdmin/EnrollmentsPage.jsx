@@ -1,25 +1,184 @@
-/* ========================= EnrollmentsPage.jsx (FULL) ========================= */
-import React, { useEffect, useMemo, useState } from "react";
+/* ========================= EnrollmentsPage.jsx (FULL, COLOR LIKE YOUR DESIGN, SERVER SEARCH) ========================= */
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import EnrollmentForm from "../ConponentsAdmin/EnrollmentForm.jsx";
 import EnrollmentsList from "../ConponentsAdmin/EnrollmentsList.jsx";
 
 import { fetchAllEnrollments } from "../../api/admin_course_api.jsx";
-import { fetchStudents } from "../../api/student_api.jsx";
 import { fetchCourses } from "../../api/course_api.jsx";
 import { fetchDepartments, fetchMajorsByDepartment } from "../../api/department_api.jsx";
 
-import { getCachedStudents, getCachedCourses } from "../../utils/dataCache";
+import { searchStudents } from "../../api/student_api.jsx";
 
-import { BookOpen, Users, CheckCircle, GraduationCap, Building2, Search, Filter } from "lucide-react";
-import { motion } from "framer-motion";
+import { getCachedCourses } from "../../utils/dataCache";
 
+import {
+  BookOpen,
+  Users,
+  CheckCircle,
+  GraduationCap,
+  Building2,
+  Search,
+  Filter,
+  RefreshCw,
+  X,
+  SlidersHorizontal,
+  Calendar,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+/* ========================= UI PRIMITIVES (COLORFUL LIKE YOUR SAMPLE) ========================= */
+const GlassPanel = ({ className = "", children }) => (
+  <div
+    className={[
+      "relative overflow-hidden rounded-3xl p-6",
+      "bg-gradient-to-br from-white via-white to-gray-50",
+      "border-2 border-gray-200 shadow-xl shadow-gray-200/50",
+      className,
+    ].join(" ")}
+  >
+    <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-blue-100/30 to-purple-100/30 rounded-full blur-3xl" />
+    <div className="absolute bottom-0 left-0 w-56 h-56 bg-gradient-to-tr from-pink-100/30 to-orange-100/30 rounded-full blur-3xl" />
+    <div className="relative">{children}</div>
+  </div>
+);
+
+const IconGradient = ({ icon: Icon, gradient, className = "" }) => (
+  <div className={["p-2.5 rounded-xl shadow-lg", `bg-gradient-to-br ${gradient}`, className].join(" ")}>
+    <Icon className="w-5 h-5 text-white" />
+  </div>
+);
+
+const Pill = ({ className = "", children }) => (
+  <span
+    className={[
+      "inline-flex items-center gap-2 rounded-full px-3 py-1",
+      "bg-white/80 border border-white shadow-sm",
+      "text-xs font-bold text-gray-700",
+      className,
+    ].join(" ")}
+  >
+    {children}
+  </span>
+);
+
+const SoftButton = ({ icon: Icon, children, onClick, disabled, variant = "ghost" }) => {
+  const base = "h-10 px-4 rounded-2xl text-sm font-bold transition-all border-2 shadow-sm hover:shadow-md";
+  const style =
+    variant === "danger"
+      ? "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100/70"
+      : "border-gray-300 bg-white text-gray-900 hover:bg-gray-50";
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={[base, style, disabled ? "opacity-60 cursor-not-allowed" : ""].join(" ")}
+    >
+      <span className="flex items-center gap-2">{Icon ? <Icon className="w-4 h-4" /> : null}{children}</span>
+    </button>
+  );
+};
+
+/* ================= FILTER SELECT COMPONENT (COLOR LIKE YOUR SAMPLE) ================= */
+const FilterSelect = ({
+  icon: Icon,
+  value,
+  onChange,
+  options = [],
+  placeholder,
+  disabled,
+  iconBg = "from-blue-100 to-indigo-100",
+  iconColor = "text-blue-600",
+  ringColor = "focus:ring-blue-500/20 focus:border-blue-500",
+}) => (
+  <div className="relative">
+    <div className={`absolute left-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-gradient-to-br ${iconBg}`}>
+      <Icon className={`w-4 h-4 ${iconColor}`} />
+    </div>
+
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      disabled={disabled}
+      className={[
+        "w-full pl-14 pr-4 py-3 rounded-2xl",
+        "border-2 border-gray-300 bg-white text-sm outline-none",
+        "transition-all shadow-sm hover:shadow-md appearance-none cursor-pointer",
+        "disabled:opacity-50 disabled:cursor-not-allowed",
+        "focus:ring-4",
+        ringColor,
+      ].join(" ")}
+      style={{
+        backgroundImage:
+          `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "right 1rem center",
+        paddingRight: "3rem",
+      }}
+    >
+      <option value="">{placeholder}</option>
+      {options.map((opt) => (
+        <option key={String(opt.id)} value={String(opt.id)}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  </div>
+);
+
+const FilterSearchInput = ({ value, onChange }) => (
+  <div className="relative">
+    <div className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-gradient-to-br from-orange-100 to-red-100">
+      <Search className="w-4 h-4 text-orange-600" />
+    </div>
+    <input
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder="Search student (server)…"
+      className="w-full pl-14 pr-4 py-3 rounded-2xl border-2 border-gray-300 bg-white text-sm outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all shadow-sm hover:shadow-md"
+    />
+  </div>
+);
+
+/* ================= QUICK STAT CARD ================= */
+const StatCard = ({ label, value, loading, icon: Icon, gradient, bgGradient }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+    className={`relative overflow-hidden bg-gradient-to-br ${bgGradient} rounded-3xl p-6 border-2 border-white shadow-xl hover:shadow-2xl transition-all duration-300 group`}
+  >
+    <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+    <div className="relative flex items-center gap-4">
+      <motion.div whileHover={{ scale: 1.1, rotate: 5 }} className={`p-4 rounded-2xl bg-gradient-to-br ${gradient} shadow-lg`}>
+        <Icon className="w-8 h-8 text-white" />
+      </motion.div>
+
+      <div>
+        <p className="text-4xl font-black text-gray-900 tracking-tight">
+          {loading ? <span className="inline-block w-16 h-10 bg-gray-200 rounded-lg animate-pulse" /> : value}
+        </p>
+        <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mt-1">{label}</p>
+      </div>
+    </div>
+  </motion.div>
+);
+
+/* ========================= PAGE ========================= */
 const EnrollmentsPage = () => {
   const [enrollments, setEnrollments] = useState([]);
-  const [students, setStudents] = useState([]);
   const [courses, setCourses] = useState([]);
 
   const [departments, setDepartments] = useState([]);
   const [majors, setMajors] = useState([]);
+
+  // ✅ SERVER students state (small list)
+  const [students, setStudents] = useState([]);
+  const [studentsLoading, setStudentsLoading] = useState(false);
+  const [studentsPage, setStudentsPage] = useState(1);
+  const [studentsHasMore, setStudentsHasMore] = useState(false);
 
   const [filters, setFilters] = useState({
     department_id: "",
@@ -34,26 +193,10 @@ const EnrollmentsPage = () => {
   /* ================= INITIAL LOAD ================= */
   useEffect(() => {
     loadEnrollments();
-    setTimeout(() => loadStudents(), 150);
-    setTimeout(() => loadCourses(), 300);
-    setTimeout(() => loadDepartments(), 450);
+    loadCourses();
+    loadDepartments();
+    // NOTE: we DO NOT load all students (million) anymore
   }, []);
-
-  /* ================= HELPERS ================= */
-  const getStudentMajorId = (st) => {
-    if (!st) return "";
-    return String(st?.registration?.major_id ?? st?.registration_major_id ?? st?.major_id ?? "");
-  };
-
-  const getStudentDeptId = (st) => {
-    if (!st) return "";
-    return String(st?.department_id ?? st?.registration?.department_id ?? "");
-  };
-
-  const getEnrollmentMajorId = (e) => {
-    if (!e) return "";
-    return String(e?.major_id ?? e?.student?.registration?.major_id ?? e?.student?.major_id ?? "");
-  };
 
   /* ================= ENROLLMENT INDEX (FAST CHECK) ================= */
   const enrollmentKeySet = useMemo(() => {
@@ -69,21 +212,20 @@ const EnrollmentsPage = () => {
     return enrollmentKeySet.has(`${Number(studentId)}:${Number(courseId)}`);
   };
 
-  const studentEnrollCount = useMemo(() => {
-    const m = new Map();
-    (Array.isArray(enrollments) ? enrollments : []).forEach((e) => {
-      const sid = e?.student_id ? Number(e.student_id) : null;
-      if (!sid) return;
-      m.set(sid, (m.get(sid) || 0) + 1);
-    });
-    return m;
-  }, [enrollments]);
-
   /* ================= LOADERS ================= */
   const loadEnrollments = async () => {
     try {
       setLoading(true);
-      const res = await fetchAllEnrollments();
+
+      // ✅ recommended: server side filter by dept/major/course/search in API
+      const res = await fetchAllEnrollments({
+        department_id: filters.department_id || undefined,
+        major_id: filters.major_id || undefined,
+        course_id: filters.course_id || undefined,
+        q: (filters.search || "").trim() || undefined,
+        per_page: 50,
+      });
+
       const data = res?.data?.data || res?.data || [];
       setEnrollments(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -91,17 +233,6 @@ const EnrollmentsPage = () => {
       setEnrollments([]);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadStudents = async () => {
-    try {
-      const res = await getCachedStudents(fetchStudents);
-      const data = res?.data?.data || res?.data || [];
-      setStudents(Array.isArray(data) ? data : []);
-    } catch (e) {
-      console.error(e);
-      setStudents([]);
     }
   };
 
@@ -142,6 +273,64 @@ const EnrollmentsPage = () => {
     }
   };
 
+  /* ================= SERVER STUDENT SEARCH =================
+     ✅ MUST exist: searchStudents({ department_id, major_id, q, page, per_page })
+  */
+  const runStudentSearch = useCallback(
+    async (qText, page = 1, append = false) => {
+      try {
+        setStudentsLoading(true);
+
+        const res = await searchStudents({
+          department_id: filters.department_id || undefined,
+          major_id: filters.major_id || undefined,
+          q: (qText || "").trim() || undefined,
+          page,
+          per_page: 30,
+        });
+
+        const payload = res?.data?.data ?? res?.data ?? [];
+        const meta = res?.data?.meta ?? null;
+
+        const list = Array.isArray(payload) ? payload : [];
+        const newItems = list.map((s) => ({
+          ...s,
+          id: s.id,
+          student_code: s.student_code || s.student_code,
+          student_name: s.student_name || s.full_name_en || s.full_name_kh,
+          email: s.email || s?.user?.email,
+          profile_picture_url: s.profile_picture_url,
+        }));
+
+        setStudents((prev) => (append ? [...prev, ...newItems] : newItems));
+        setStudentsPage(page);
+
+        // has more
+        if (meta && typeof meta.current_page === "number" && typeof meta.last_page === "number") {
+          setStudentsHasMore(meta.current_page < meta.last_page);
+        } else {
+          setStudentsHasMore(list.length === 30);
+        }
+      } catch (e) {
+        console.error(e);
+        if (!append) setStudents([]);
+        setStudentsHasMore(false);
+      } finally {
+        setStudentsLoading(false);
+      }
+    },
+    [filters.department_id, filters.major_id]
+  );
+
+  const onSearchStudents = (text) => {
+    runStudentSearch(text, 1, false);
+  };
+
+  const onLoadMoreStudents = () => {
+    const next = Number(studentsPage || 1) + 1;
+    runStudentSearch(filters.search, next, true);
+  };
+
   /* ================= FILTER HANDLERS ================= */
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({
@@ -150,101 +339,33 @@ const EnrollmentsPage = () => {
       ...(key === "department_id" ? { major_id: "" } : {}),
     }));
 
-    if (key === "department_id") {
-      loadMajors(value);
-    }
+    if (key === "department_id") loadMajors(value);
   };
 
-  /* ================= FILTERED STUDENTS / COURSES FOR SELECT ================= */
-  const filteredStudentsForSelect = useMemo(() => {
-    const dept = filters.department_id ? String(filters.department_id) : "";
-    const major = filters.major_id ? String(filters.major_id) : "";
-    const s = (filters.search || "").trim().toLowerCase();
+  const clearFilters = () => {
+    setFilters({ department_id: "", major_id: "", course_id: "", search: "" });
+    setMajors([]);
+    setStudents([]);
+    setStudentsPage(1);
+    setStudentsHasMore(false);
+  };
 
-    const arr = Array.isArray(students) ? students : [];
-    return arr
-      .filter((st) => {
-        const stDept = getStudentDeptId(st);
-        const stMajor = getStudentMajorId(st);
+  const hasAnyFilter =
+    !!filters.department_id || !!filters.major_id || !!filters.course_id || !!(filters.search || "").trim();
 
-        const byDept = dept ? stDept === dept : true;
-        const byMajor = major ? stMajor === major : true;
-
-        if (!byDept || !byMajor) return false;
-        if (!s) return true;
-
-        const code = String(st.student_code || "").toLowerCase();
-        const name = String(st.student_name || "").toLowerCase();
-        const nameEn = String(st.full_name_en || "").toLowerCase();
-        const nameKh = String(st.full_name_kh || "").toLowerCase();
-        const nameKhAlt = String(st.student_name_kh || "").toLowerCase();
-        const email = String(st.student_email || st.email || st.personal_email || "").toLowerCase();
-        const phone = String(st.student_phone || st.phone_number || "").toLowerCase();
-        const address = String(st.student_address || st.address || "").toLowerCase();
-
-        return (
-          code.includes(s) ||
-          name.includes(s) ||
-          nameEn.includes(s) ||
-          nameKh.includes(s) ||
-          nameKhAlt.includes(s) ||
-          email.includes(s) ||
-          phone.includes(s) ||
-          address.includes(s)
-        );
-      })
-      .map((st) => ({
-        ...st,
-        id: st.id,
-        original: st,
-        enroll_count: studentEnrollCount.get(Number(st.id)) || 0,
-        name:
-          (st.student_code ? `${st.student_code} — ` : "") +
-          (st.student_name ||
-            st.full_name_en ||
-            st.full_name_kh ||
-            st.student_name_kh ||
-            st.name ||
-            st.full_name ||
-            `Student #${st.id}`),
-      }));
-  }, [students, filters.department_id, filters.major_id, filters.search, studentEnrollCount]);
-
-  const filteredCoursesForSelect = useMemo(() => {
-    const courseId = filters.course_id ? String(filters.course_id) : "";
-    const arr = Array.isArray(courses) ? courses : [];
-
-    const list = arr.map((c) => ({
-      ...c,
-      name: c.course_name || c.display_name || `Course #${c.id}`,
-    }));
-
-    if (!courseId) return list;
-    return list.filter((c) => String(c.id) === courseId);
-  }, [courses, filters.course_id]);
-
-  /* ================= FILTERED ENROLLMENTS (LIST) ================= */
-  const filteredEnrollments = useMemo(() => {
-    const dept = filters.department_id ? String(filters.department_id) : "";
-    const major = filters.major_id ? String(filters.major_id) : "";
-    const courseId = filters.course_id ? String(filters.course_id) : "";
-
-    return (Array.isArray(enrollments) ? enrollments : []).filter((e) => {
-      const st = e.student || students.find((s) => s.id === e.student_id);
-      const co = e.course || courses.find((c) => c.id === e.course_id);
-
-      if (!st || !co) return false;
-
-      const stDept = getStudentDeptId(st);
-      const enMajor = getEnrollmentMajorId(e) || getStudentMajorId(st);
-
-      const byDept = dept ? stDept === dept : true;
-      const byMajor = major ? String(enMajor) === major : true;
-      const byCourse = courseId ? String(co.id) === courseId : true;
-
-      return byDept && byMajor && byCourse;
-    });
-  }, [enrollments, students, courses, filters.department_id, filters.major_id, filters.course_id]);
+  // reload enrollments when filters change (server-side)
+  useEffect(() => {
+    loadEnrollments();
+    // refresh student search too (so form list is always correct)
+    if (filters.department_id || filters.major_id || (filters.search || "").trim()) {
+      runStudentSearch(filters.search, 1, false);
+    } else {
+      setStudents([]);
+      setStudentsPage(1);
+      setStudentsHasMore(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.department_id, filters.major_id, filters.course_id, filters.search]);
 
   /* ================= ACTIONS ================= */
   const handleEdit = (enrollment) => {
@@ -262,13 +383,13 @@ const EnrollmentsPage = () => {
   };
 
   /* ================= QUICK STATS ================= */
-  const enrolledCount = filteredEnrollments.filter((e) => e.status === "enrolled").length;
-  const completedCount = filteredEnrollments.filter((e) => e.status === "completed").length;
+  const enrolledCount = (Array.isArray(enrollments) ? enrollments : []).filter((e) => e.status === "enrolled").length;
+  const completedCount = (Array.isArray(enrollments) ? enrollments : []).filter((e) => e.status === "completed").length;
 
   const quickStats = [
     {
       label: "Total Enrollments",
-      value: filteredEnrollments.length,
+      value: (Array.isArray(enrollments) ? enrollments : []).length,
       gradient: "from-blue-500 via-indigo-500 to-purple-500",
       icon: BookOpen,
       bgGradient: "from-blue-50 to-indigo-50",
@@ -292,23 +413,26 @@ const EnrollmentsPage = () => {
   return (
     <div className="min-h-screen space-y-8 pb-12">
       {/* ================= FILTER BAR ================= */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative overflow-hidden bg-gradient-to-br from-white via-white to-gray-50 rounded-3xl p-6 border-2 border-gray-200 shadow-xl shadow-gray-200/50"
-      >
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100/30 to-purple-100/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-pink-100/30 to-orange-100/30 rounded-full blur-3xl" />
-
-        <div className="relative">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-200">
-              <Filter className="w-5 h-5 text-white" />
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <GlassPanel>
+          <div className="flex items-center justify-between gap-3 mb-6">
+            <div className="flex items-center gap-3">
+              <IconGradient icon={Filter} gradient="from-indigo-500 to-purple-600" />
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Filter Enrollments</h3>
+                <p className="text-xs text-gray-500">Server filters + fast student search</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">Filter Enrollments</h3>
-              <p className="text-xs text-gray-500">Narrow down your search criteria</p>
+
+            <div className="flex items-center gap-2">
+              <SoftButton icon={RefreshCw} onClick={loadEnrollments} disabled={loading}>
+                Refresh
+              </SoftButton>
+              {hasAnyFilter ? (
+                <SoftButton icon={X} onClick={clearFilters} disabled={loading} variant="danger">
+                  Clear
+                </SoftButton>
+              ) : null}
             </div>
           </div>
 
@@ -319,11 +443,12 @@ const EnrollmentsPage = () => {
               onChange={(v) => handleFilterChange("department_id", v)}
               options={departments.map((d) => ({
                 id: d.id,
-                label: d.department_name || d.name,
+                label: d.department_name || d.name || `Department #${d.id}`,
               }))}
               placeholder="All Departments"
               iconColor="text-blue-600"
               iconBg="from-blue-100 to-indigo-100"
+              ringColor="focus:ring-blue-500/20 focus:border-blue-500"
             />
 
             <FilterSelect
@@ -332,12 +457,13 @@ const EnrollmentsPage = () => {
               onChange={(v) => handleFilterChange("major_id", v)}
               options={majors.map((m) => ({
                 id: m.id,
-                label: m.major_name || m.name,
+                label: m.major_name || m.name || `Major #${m.id}`,
               }))}
               placeholder="All Majors"
               disabled={!filters.department_id}
               iconColor="text-purple-600"
               iconBg="from-purple-100 to-pink-100"
+              ringColor="focus:ring-purple-500/20 focus:border-purple-500"
             />
 
             <FilterSelect
@@ -351,51 +477,46 @@ const EnrollmentsPage = () => {
               placeholder="All Courses"
               iconColor="text-teal-600"
               iconBg="from-teal-100 to-cyan-100"
+              ringColor="focus:ring-teal-500/20 focus:border-teal-500"
             />
 
-            <div className="relative">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-gradient-to-br from-orange-100 to-red-100">
-                <Search className="w-4 h-4 text-orange-600" />
-              </div>
-              <input
-                value={filters.search}
-                onChange={(e) => handleFilterChange("search", e.target.value)}
-                placeholder="Search student..."
-                className="w-full pl-14 pr-4 py-3 rounded-2xl border-2 border-gray-300 bg-white text-sm outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all shadow-sm hover:shadow-md"
-              />
-            </div>
+            <FilterSearchInput value={filters.search} onChange={(v) => handleFilterChange("search", v)} />
           </div>
-        </div>
+
+          <AnimatePresence>
+            {hasAnyFilter ? (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="mt-5 flex flex-wrap items-center gap-2"
+              >
+                <Pill>
+                  <SlidersHorizontal className="w-4 h-4 text-gray-700" />
+                  Showing <span className="font-black text-gray-900">{(Array.isArray(enrollments) ? enrollments : []).length}</span>
+                </Pill>
+                {filters.department_id ? <Pill>Dept: {filters.department_id}</Pill> : null}
+                {filters.major_id ? <Pill>Major: {filters.major_id}</Pill> : null}
+                {filters.course_id ? <Pill>Course: {filters.course_id}</Pill> : null}
+                {(filters.search || "").trim() ? <Pill>Search: “{(filters.search || "").trim()}”</Pill> : null}
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </GlassPanel>
       </motion.div>
 
       {/* ================= QUICK STATS ================= */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        {quickStats.map((stat, i) => {
-          const Icon = stat.icon;
-          return (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              className={`relative overflow-hidden bg-gradient-to-br ${stat.bgGradient} rounded-3xl p-6 border-2 border-white shadow-xl hover:shadow-2xl transition-all duration-300 group`}
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-              <div className="relative flex items-center gap-4">
-                <motion.div whileHover={{ scale: 1.1, rotate: 5 }} className={`p-4 rounded-2xl bg-gradient-to-br ${stat.gradient} shadow-lg`}>
-                  <Icon className="w-8 h-8 text-white" />
-                </motion.div>
-                <div>
-                  <p className="text-4xl font-black text-gray-900 tracking-tight">
-                    {loading ? <span className="inline-block w-16 h-10 bg-gray-200 rounded-lg animate-pulse" /> : stat.value}
-                  </p>
-                  <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mt-1">{stat.label}</p>
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
+        {quickStats.map((stat, i) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: i * 0.1 }}
+          >
+            <StatCard loading={loading} icon={stat.icon} label={stat.label} value={stat.value} gradient={stat.gradient} bgGradient={stat.bgGradient} />
+          </motion.div>
+        ))}
       </div>
 
       {/* ================= FORM ================= */}
@@ -403,14 +524,18 @@ const EnrollmentsPage = () => {
         editingEnrollment={editingEnrollment}
         onUpdate={handleSuccess}
         onCancel={handleCancel}
-        students={filteredStudentsForSelect}
-        courses={filteredCoursesForSelect}
+        students={students}                 // ✅ SMALL server results
+        studentsLoading={studentsLoading}   // ✅ for UI
+        onSearchStudents={onSearchStudents} // ✅ search inside table
+        onLoadMoreStudents={onLoadMoreStudents}
+        hasMoreStudents={studentsHasMore}
+        courses={courses}
         isAlreadyEnrolled={isAlreadyEnrolled}
       />
 
       {/* ================= LIST ================= */}
       <EnrollmentsList
-        enrollments={filteredEnrollments}
+        enrollments={enrollments}
         onEdit={handleEdit}
         onRefresh={loadEnrollments}
         loading={loading}
@@ -418,34 +543,5 @@ const EnrollmentsPage = () => {
     </div>
   );
 };
-
-/* ================= FILTER SELECT COMPONENT ================= */
-const FilterSelect = ({ icon: Icon, value, onChange, options, placeholder, disabled, iconColor, iconBg }) => (
-  <div className="relative">
-    <div className={`absolute left-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-gradient-to-br ${iconBg}`}>
-      <Icon className={`w-4 h-4 ${iconColor}`} />
-    </div>
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      disabled={disabled}
-      className="w-full pl-14 pr-4 py-3 rounded-2xl border-2 border-gray-300 bg-white text-sm outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md appearance-none cursor-pointer"
-      style={{
-        backgroundImage:
-          `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "right 1rem center",
-        paddingRight: "3rem",
-      }}
-    >
-      <option value="">{placeholder}</option>
-      {options.map((opt) => (
-        <option key={opt.id} value={opt.id}>
-          {opt.label}
-        </option>
-      ))}
-    </select>
-  </div>
-);
 
 export default EnrollmentsPage;

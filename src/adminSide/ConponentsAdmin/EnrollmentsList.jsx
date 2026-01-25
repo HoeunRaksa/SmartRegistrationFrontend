@@ -121,9 +121,7 @@ const EnrollmentsList = ({
               >
                 <Filter className="w-4 h-4" />
                 Filters
-                {selectedStatus && (
-                  <span className="px-2 py-0.5 rounded-full bg-white/20 text-xs font-black">1</span>
-                )}
+                {selectedStatus && <span className="px-2 py-0.5 rounded-full bg-white/20 text-xs font-black">1</span>}
               </motion.button>
 
               <motion.button
@@ -204,11 +202,7 @@ const EnrollmentsList = ({
             )}
           </div>
 
-          {loading ? (
-            <LoadingState />
-          ) : filteredEnrollments.length === 0 ? (
-            <EmptyState hasSearch={!!searchTerm || !!selectedStatus} />
-          ) : (
+          {loading ? <LoadingState /> : filteredEnrollments.length === 0 ? <EmptyState hasSearch={!!searchTerm || !!selectedStatus} /> : (
             <EnrollmentsTable enrollments={filteredEnrollments} onEdit={onEdit} onDelete={onDelete} />
           )}
         </div>
@@ -336,10 +330,7 @@ const EnrollmentRow = ({ enrollment, onEdit, onDelete }) => {
 
       <td className="px-4 py-4">
         <div className="space-y-1 min-w-[260px]">
-          <p
-            className="text-sm font-bold text-gray-900 whitespace-normal break-words"
-            title={enrollment.course_name || enrollment.subject_name || ""}
-          >
+          <p className="text-sm font-bold text-gray-900 whitespace-normal break-words" title={enrollment.course_name || enrollment.subject_name || ""}>
             {enrollment.course_name || enrollment.subject_name}
           </p>
 
@@ -390,9 +381,7 @@ const EnrollmentRow = ({ enrollment, onEdit, onDelete }) => {
       </td>
 
       <td className="px-4 py-4">
-        <div
-          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r ${statusConfig.bg} border-2 ${statusConfig.border} shadow-sm`}
-        >
+        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r ${statusConfig.bg} border-2 ${statusConfig.border} shadow-sm`}>
           <StatusIcon className={`w-4 h-4 ${statusConfig.text}`} />
           <span className={`text-xs font-black ${statusConfig.text}`}>{statusConfig.label}</span>
         </div>

@@ -80,9 +80,7 @@ export const fetchAllEnrollments = async () => {
 };
 
 // POST: Manually enroll a student
-export const enrollStudent = async (enrollmentData) => {
-  return await requestOnce("post", "/admin/enrollments", enrollmentData);
-};
+
 
 // DELETE: Remove enrollment
 export const deleteEnrollment = async (enrollmentId) => {
@@ -225,4 +223,16 @@ export const updateSchedule = async (scheduleId, scheduleData) => {
 // DELETE: Delete schedule
 export const deleteSchedule = async (scheduleId) => {
   return await requestOnce("delete", `/admin/schedules/${scheduleId}`);
+};
+export const lookupClassGroups = (params) =>
+  axios.get("/enrollment-lookup/class-groups", { params });
+
+export const lookupCourses = (params) =>
+  axios.get("/enrollment-lookup/courses", { params });
+
+export const lookupStudents = (params) =>
+  axios.get("/enrollment-lookup/students", { params });
+
+export const enrollStudent = async (enrollmentData) => {
+  return await requestOnce("post", "/admin/enrollments", enrollmentData);
 };

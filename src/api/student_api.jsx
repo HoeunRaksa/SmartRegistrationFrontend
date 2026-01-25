@@ -171,3 +171,9 @@ export const fetchStudentProfile = async () => {
 export const clearStudentsCache = () => {
   cache.delete("/students");
 };
+
+export const searchStudents = (params) => {
+  return API.get("/students/search", {
+    params,
+  });
+};
