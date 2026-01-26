@@ -146,8 +146,8 @@ const AssignmentsPage = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className={`backdrop-blur-xl rounded-2xl p-4 border shadow-lg flex items-center gap-3 ${message.type === 'success'
-                ? 'border-green-200/50 bg-green-50/50'
-                : 'border-red-200/50 bg-red-50/50'
+              ? 'border-green-200/50 bg-green-50/50'
+              : 'border-red-200/50 bg-red-50/50'
               }`}
           >
             {message.type === 'success' ? (
@@ -163,7 +163,7 @@ const AssignmentsPage = () => {
       </AnimatePresence>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -252,8 +252,8 @@ const AssignmentsPage = () => {
                 key={status}
                 onClick={() => setFilterStatus(status)}
                 className={`px-4 py-2 rounded-xl font-bold text-sm transition-all capitalize ${filterStatus === status
-                    ? 'bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-lg'
-                    : 'backdrop-blur-xl bg-white/60 border border-white/40 text-gray-600 hover:bg-white/80'
+                  ? 'bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-lg'
+                  : 'backdrop-blur-xl bg-white/60 border border-white/40 text-gray-600 hover:bg-white/80'
                   }`}
               >
                 {status}

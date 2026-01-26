@@ -177,7 +177,7 @@ const ProfilePage = () => {
         animate={{ opacity: 1, y: 0 }}
         className="backdrop-blur-xl bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl p-8 border border-white/20 shadow-lg"
       >
-        <div className="flex flex-col md:flex-row items-center gap-6">
+        <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
           {/* ✅ FIXED IMAGE BLOCK */}
           <div className="relative group">
             <div className="absolute -inset-1 bg-white rounded-full opacity-75 blur group-hover:opacity-100 transition duration-300" />
@@ -239,7 +239,7 @@ const ProfilePage = () => {
       </motion.div>
 
       {/* Academic Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

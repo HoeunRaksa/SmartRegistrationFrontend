@@ -86,7 +86,7 @@ const AttendancePage = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Overall Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -192,8 +192,8 @@ const AttendancePage = () => {
               key={mode}
               onClick={() => setViewMode(mode)}
               className={`px-4 py-2 rounded-xl font-semibold transition-all capitalize ${viewMode === mode
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
-                  : 'backdrop-blur-xl bg-white/60 border border-white/40 text-gray-700 hover:bg-white/80'
+                ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+                : 'backdrop-blur-xl bg-white/60 border border-white/40 text-gray-700 hover:bg-white/80'
                 }`}
             >
               {mode}
@@ -204,7 +204,7 @@ const AttendancePage = () => {
 
       {/* Summary View - Course-wise Breakdown */}
       {viewMode === 'summary' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {stats?.courses?.map((course, index) => (
             <motion.div
               key={course.course_code}
@@ -291,8 +291,8 @@ const AttendancePage = () => {
                 key={course}
                 onClick={() => setSelectedCourse(course)}
                 className={`px-4 py-2 rounded-xl font-semibold transition-all ${selectedCourse === course
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
-                    : 'backdrop-blur-xl bg-white/60 border border-white/40 text-gray-700 hover:bg-white/80'
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+                  : 'backdrop-blur-xl bg-white/60 border border-white/40 text-gray-700 hover:bg-white/80'
                   }`}
               >
                 {course === 'all' ? 'All Courses' : course}

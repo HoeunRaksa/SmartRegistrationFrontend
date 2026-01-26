@@ -6,6 +6,7 @@ import SettingPage from '../../gobalConponent/Settingpage.jsx';
 import DashboardHome from './DashboardHome.jsx';
 import CoursesPage from './CoursesPage.jsx';
 import SchedulePage from './SchedulePage.jsx';
+import CalendarPage from './CalendarPage.jsx';
 import GradesPage from './GradesPage.jsx';
 import AssignmentsPage from './AssignmentsPage.jsx';
 import AttendancePage from './AttendancePage.jsx';
@@ -180,6 +181,8 @@ const StudentDashboard = () => {
                 return <CoursesPage />;
             case 'schedule':
                 return <SchedulePage />;
+            case 'calendar':
+                return <CalendarPage />;
             case 'grades':
                 return <GradesPage />;
             case 'assignments':

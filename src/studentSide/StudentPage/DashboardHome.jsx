@@ -345,11 +345,10 @@ const PendingAssignmentsCard = ({ assignments, onViewAll }) => (
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.6 + index * 0.1 }}
               whileHover={{ scale: 1.02, x: 5 }}
-              className={`p-4 rounded-xl border cursor-pointer ${
-                isUrgent
+              className={`p-4 rounded-xl border cursor-pointer ${isUrgent
                   ? "bg-red-50/50 border-red-200"
                   : "bg-orange-50/50 border-orange-200"
-              }`}
+                }`}
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="font-semibold text-gray-900">
@@ -365,9 +364,8 @@ const PendingAssignmentsCard = ({ assignments, onViewAll }) => (
               </div>
 
               <div
-                className={`flex items-center gap-2 text-sm ${
-                  isUrgent ? "text-red-600 font-semibold" : "text-gray-600"
-                }`}
+                className={`flex items-center gap-2 text-sm ${isUrgent ? "text-red-600 font-semibold" : "text-gray-600"
+                  }`}
               >
                 <Clock className="w-4 h-4" />
                 {assignment.due_date ? (
@@ -524,7 +522,7 @@ const QuickActionsCard = ({ navigate }) => (
     className="backdrop-blur-xl bg-white/60 rounded-2xl p-6 border border-white/40 shadow-lg"
   >
     <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
       <motion.button
         whileHover={{ scale: 1.05, y: -5 }}
         whileTap={{ scale: 0.95 }}

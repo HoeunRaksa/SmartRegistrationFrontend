@@ -176,3 +176,30 @@ export const clearStudentsCache = () => {
 export const searchStudents = (params) => {
   return API.get("/admin/students/search", { params });
 };
+
+// ==============================
+// STUDENT SELF-SERVICE API
+// ==============================
+
+// PUT: Update own profile
+export const updateStudentProfile = async (data) => {
+  return await API.put("/student/profile", data);
+};
+
+// PUT: Change own password
+export const changeStudentPassword = async (currentPassword, newPassword, newPasswordConfirmation) => {
+  return await API.put("/student/profile/password", {
+    current_password: currentPassword,
+    new_password: newPassword,
+    new_password_confirmation: newPasswordConfirmation
+  });
+};
+
+// POST: Upload profile picture
+export const uploadStudentProfilePicture = async (formData) => {
+  return await API.post("/student/profile/picture", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
