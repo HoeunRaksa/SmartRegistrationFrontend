@@ -94,7 +94,7 @@ const FilterSelect = ({
   iconBg = "from-blue-100 to-indigo-100",
   iconColor = "text-blue-600",
   ringColor = "focus:ring-blue-500/20 focus:border-blue-500",
-  name, // ✅ for HTML warning
+  name,
 }) => (
   <div className="relative">
     <div className={`absolute left-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-gradient-to-br ${iconBg}`}>
@@ -182,25 +182,22 @@ const EnrollmentsPage = () => {
   const [departments, setDepartments] = useState([]);
   const [majors, setMajors] = useState([]);
 
-  // ✅ SERVER students state (small list)
   const [students, setStudents] = useState([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [studentsPage, setStudentsPage] = useState(1);
   const [studentsHasMore, setStudentsHasMore] = useState(false);
 
-  // ✅ Add dropdown period filters (optional but ready)
   const YEARS = useMemo(() => ["2024-2025", "2025-2026", "2026-2027"], []);
   const SEMESTERS = useMemo(() => ["1", "2", "3"], []);
 
-const [filters, setFilters] = useState({
-  department_id: "",
-  major_id: "",
-  course_id: "",
-  academic_year: "",
-  semester: "",
-  search: "",
-});
-
+  const [filters, setFilters] = useState({
+    department_id: "",
+    major_id: "",
+    course_id: "",
+    academic_year: "",
+    semester: "",
+    search: "",
+  });
 
   const [editingEnrollment, setEditingEnrollment] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -209,7 +206,6 @@ const [filters, setFilters] = useState({
   useEffect(() => {
     loadCourses();
     loadDepartments();
-    // initial enrollments (no filter)
     loadEnrollments({
       department_id: "",
       major_id: "",
@@ -218,7 +214,6 @@ const [filters, setFilters] = useState({
       academic_year: "",
       semester: "",
     });
-    // NOTE: we DO NOT load all students (million) anymore
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -243,7 +238,6 @@ const [filters, setFilters] = useState({
     try {
       setLoading(true);
 
-      // ✅ server side filter (your AdminEnrollmentController already supports these)
       const res = await fetchAllEnrollments({
         department_id: f.department_id || undefined,
         major_id: f.major_id || undefined,
@@ -301,64 +295,67 @@ const [filters, setFilters] = useState({
     }
   };
 
-  /* ================= SERVER STUDENT SEARCH =================
-     ✅ MUST exist: searchStudents({ department_id, major_id, academic_year, semester, q, page, per_page })
-     Backend: GET /api/students/search
-  */
- const runStudentSearch = useCallback(
-  async (qText, page = 1, append = false) => {
-    const res = await searchStudents({
-      department_id: filters.department_id || undefined,
-      major_id: filters.major_id || undefined,
-      academic_year: filters.academic_year || undefined,
-      semester: filters.semester || undefined,
-      q: (qText || "").trim() || undefined,
-      page,
-      per_page: 30,
-    });
+  /* ================= SERVER STUDENT SEARCH ================= */
+  const runStudentSearch = useCallback(
+    async (qText, page = 1, append = false) => {
+      try {
+        setStudentsLoading(true);
+        
+        const res = await searchStudents({
+          department_id: filters.department_id || undefined,
+          major_id: filters.major_id || undefined,
+          academic_year: filters.academic_year || undefined,
+          semester: filters.semester || undefined,
+          q: (qText || "").trim() || undefined,
+          page,
+          per_page: 30,
+        });
 
-    const list = res?.data?.data || [];
-
-    setStudents((prev) => (append ? [...prev, ...list] : list));
-  },
-  [
-    filters.department_id,
-    filters.major_id,
-    filters.academic_year,
-    filters.semester,
-  ]
-);
-
+        const list = res?.data?.data || [];
+        const meta = res?.data?.meta || {};
+        
+        setStudents((prev) => (append ? [...prev, ...list] : list));
+        setStudentsPage(page);
+        setStudentsHasMore(meta.current_page < meta.last_page);
+      } catch (error) {
+        console.error('Failed to search students:', error);
+        setStudents(append ? students : []);
+      } finally {
+        setStudentsLoading(false);
+      }
+    },
+    [filters.department_id, filters.major_id, filters.academic_year, filters.semester]
+  );
 
   const onSearchStudents = (text) => {
+    setStudentsPage(1);
+    setStudentsHasMore(false);
     runStudentSearch(text, 1, false);
   };
 
   const onLoadMoreStudents = () => {
-    const next = Number(studentsPage || 1) + 1;
+    const next = studentsPage + 1;
     runStudentSearch(filters.search, next, true);
   };
 
   /* ================= FILTER HANDLERS ================= */
-const handleFilterChange = (key, value) => {
-  setFilters((prev) => {
-    const next = { ...prev, [key]: value };
+  const handleFilterChange = (key, value) => {
+    setFilters((prev) => {
+      const next = { ...prev, [key]: value };
 
-    if (key === "department_id") {
-      next.major_id = "";
-    }
+      if (key === "department_id") {
+        next.major_id = "";
+      }
 
-    if (key === "academic_year" || key === "semester") {
-      next.course_id = "";
-    }
+      if (key === "academic_year" || key === "semester") {
+        next.course_id = "";
+      }
 
-    return next;
-  });
+      return next;
+    });
 
-  // side effects
-  if (key === "department_id") loadMajors(value);
-};
-
+    if (key === "department_id") loadMajors(value);
+  };
 
   const clearFilters = () => {
     setFilters({ department_id: "", major_id: "", course_id: "", academic_year: "", semester: "", search: "" });
@@ -376,7 +373,6 @@ const handleFilterChange = (key, value) => {
     !!filters.semester ||
     !!(filters.search || "").trim();
 
-  // reload enrollments when filters change (server-side) + refresh student results
   useEffect(() => {
     const t = setTimeout(() => {
       loadEnrollments();
@@ -389,6 +385,8 @@ const handleFilterChange = (key, value) => {
         !!(filters.search || "").trim();
 
       if (hasStudentFilters) {
+        setStudentsPage(1);
+        setStudentsHasMore(false);
         runStudentSearch(filters.search, 1, false);
       } else {
         setStudents([]);
@@ -399,7 +397,7 @@ const handleFilterChange = (key, value) => {
 
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.department_id, filters.major_id, filters.course_id, filters.academic_year, filters.semester, filters.search]);
+  }, [filters.department_id, filters.major_id, filters.academic_year, filters.semester, filters.search, filters.course_id]);
 
   /* ================= ACTIONS ================= */
   const handleEdit = (enrollment) => {
@@ -446,8 +444,27 @@ const handleFilterChange = (key, value) => {
 
   return (
     <div className="min-h-screen space-y-8 pb-12">
-      {/* ================= FILTER BAR ================= */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        {quickStats.map((stat, i) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: i * 0.1 }}
+          >
+            <StatCard
+              loading={loading}
+              icon={stat.icon}
+              label={stat.label}
+              value={stat.value}
+              gradient={stat.gradient}
+              bgGradient={stat.bgGradient}
+            />
+          </motion.div>
+        ))}
+      </div>
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        
         <GlassPanel>
           <div className="flex items-center justify-between gap-3 mb-6">
             <div className="flex items-center gap-3">
@@ -457,6 +474,7 @@ const handleFilterChange = (key, value) => {
                 <p className="text-xs text-gray-500">Server filters + fast student search</p>
               </div>
             </div>
+            
 
             <div className="flex items-center gap-2">
               <SoftButton icon={RefreshCw} onClick={() => loadEnrollments()} disabled={loading}>
@@ -470,7 +488,6 @@ const handleFilterChange = (key, value) => {
             </div>
           </div>
 
-          {/* ✅ 6 dropdowns: Dept, Major, Year, Semester, Course + Search */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             <FilterSelect
               name="department_id"
@@ -545,6 +562,8 @@ const handleFilterChange = (key, value) => {
             <FilterSearchInput value={filters.search} onChange={(v) => handleFilterChange("search", v)} name="search" />
           </div>
 
+          
+
           <AnimatePresence>
             {hasAnyFilter ? (
               <motion.div
@@ -565,50 +584,29 @@ const handleFilterChange = (key, value) => {
                 {filters.academic_year ? <Pill>Year: {filters.academic_year}</Pill> : null}
                 {filters.semester ? <Pill>Sem: {filters.semester}</Pill> : null}
                 {filters.course_id ? <Pill>Course: {filters.course_id}</Pill> : null}
-                {(filters.search || "").trim() ? <Pill>Search: “{(filters.search || "").trim()}”</Pill> : null}
+                {(filters.search || "").trim() ? <Pill>Search: "{(filters.search || "").trim()}"</Pill> : null}
               </motion.div>
             ) : null}
           </AnimatePresence>
         </GlassPanel>
       </motion.div>
 
-      {/* ================= QUICK STATS ================= */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        {quickStats.map((stat, i) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: i * 0.1 }}
-          >
-            <StatCard
-              loading={loading}
-              icon={stat.icon}
-              label={stat.label}
-              value={stat.value}
-              gradient={stat.gradient}
-              bgGradient={stat.bgGradient}
-            />
-          </motion.div>
-        ))}
-      </div>
 
-      {/* ================= FORM ================= */}
+
       <EnrollmentForm
         editingEnrollment={editingEnrollment}
         onUpdate={handleSuccess}
         onCancel={handleCancel}
-        students={students}                 // ✅ SMALL server results
-        studentsLoading={studentsLoading}   // ✅ for UI
-        onSearchStudents={onSearchStudents} // ✅ search inside table
+        students={students}
+        studentsLoading={studentsLoading}
+        onSearchStudents={onSearchStudents}
         onLoadMoreStudents={onLoadMoreStudents}
         hasMoreStudents={studentsHasMore}
         courses={courses}
         isAlreadyEnrolled={isAlreadyEnrolled}
-         filterSignature={`${filters.department_id}|${filters.major_id}|${filters.academic_year}|${filters.semester}|${filters.course_id}`}
+        filterSignature={`${filters.department_id}|${filters.major_id}|${filters.academic_year}|${filters.semester}|${filters.course_id}`}
       />
 
-      {/* ================= LIST ================= */}
       <EnrollmentsList
         enrollments={enrollments}
         onEdit={handleEdit}
