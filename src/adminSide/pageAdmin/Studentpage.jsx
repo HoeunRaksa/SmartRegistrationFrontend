@@ -60,23 +60,38 @@ const StudentPage = () => {
     <div className="min-h-screen space-y-6">
       {/* ================= QUICK STATS ================= */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {quickStats.map((stat) => {
+        {quickStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <div
+            <motion.div
               key={stat.label}
-              className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/40 shadow-sm hover:shadow-md transition-all"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/40 shadow-sm hover:shadow-md transition-all cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.color}`}>
+                <motion.div
+                  whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+                  transition={{ duration: 0.5 }}
+                  className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.color}`}
+                >
                   <Icon className="w-5 h-5 text-white" />
-                </div>
+                </motion.div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                  <motion.p
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: index * 0.1 + 0.2, type: "spring" }}
+                    className="text-2xl font-bold text-gray-900"
+                  >
+                    {stat.value}
+                  </motion.p>
                   <p className="text-xs text-gray-600">{stat.label}</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>

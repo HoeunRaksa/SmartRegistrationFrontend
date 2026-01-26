@@ -63,10 +63,18 @@ const MajorQuotasPage = lazy(() => import("./MajorQuotasPage.jsx"));
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[400px]">
     <div className="relative">
-      <div className="w-16 h-16 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin" />
-      <div className="mt-4 text-center">
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        className="w-16 h-16 rounded-full border-4 border-blue-200 border-t-blue-600"
+      />
+      <motion.div
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{ duration: 1.5, repeat: Infinity }}
+        className="mt-4 text-center"
+      >
         <p className="text-sm font-medium text-gray-600">Loading...</p>
-      </div>
+      </motion.div>
     </div>
   </div>
 );
@@ -214,11 +222,17 @@ const SidebarItem = React.memo(function SidebarItem({
   isActive,
   sidebarCollapsed,
   onClick,
+  index,
 }) {
   const Icon = item.icon;
 
   return (
-    <button
+    <motion.button
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.03 }}
+      whileHover={{ scale: 1.02, x: 4 }}
+      whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
         isActive
@@ -229,14 +243,30 @@ const SidebarItem = React.memo(function SidebarItem({
       } border border-white/30`}
       type="button"
     >
-      <Icon size={18} className={isActive ? "drop-shadow-sm" : ""} />
+      <motion.div
+        animate={isActive ? { rotate: [0, -10, 10, 0] } : {}}
+        transition={{ duration: 0.5 }}
+      >
+        <Icon size={18} className={isActive ? "drop-shadow-sm" : ""} />
+      </motion.div>
       {!sidebarCollapsed && (
-        <span className="font-medium text-[13px]">{item.label}</span>
+        <motion.span
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="font-medium text-[13px]"
+        >
+          {item.label}
+        </motion.span>
       )}
       {isActive && !sidebarCollapsed && (
-        <div className="ml-auto w-2 h-2 rounded-full bg-white shadow-lg" />
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="ml-auto w-2 h-2 rounded-full bg-white shadow-lg"
+        />
       )}
-    </button>
+    </motion.button>
   );
 });
 
@@ -376,9 +406,47 @@ const AdminDashboard = () => {
       {/* ================= BACKGROUND SYSTEM ================= */}
       <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/30" />
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 right-10 w-[500px] h-[500px] bg-purple-400/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 left-1/4 w-80 h-80 bg-pink-400/20 rounded-full blur-3xl" />
+        <motion.div
+          animate={{
+            x: [0, 50, 0],
+            y: [0, 30, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute top-20 left-10 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{
+            x: [0, -40, 0],
+            y: [0, 50, 0],
+            scale: [1, 1.15, 1],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 0.5
+          }}
+          className="absolute top-1/3 right-10 w-[500px] h-[500px] bg-purple-400/20 rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{
+            x: [0, 30, 0],
+            y: [0, -40, 0],
+            scale: [1, 1.08, 1],
+          }}
+          transition={{
+            duration: 18,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1
+          }}
+          className="absolute bottom-20 left-1/4 w-80 h-80 bg-pink-400/20 rounded-full blur-3xl"
+        />
       </div>
       <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-[0.03]">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
@@ -397,42 +465,57 @@ const AdminDashboard = () => {
                 NovaTech
               </h1>
             )}
-            <button
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
               onClick={() => setSidebarCollapsed((v) => !v)}
               className="p-2 rounded-xl backdrop-blur-xl bg-white/40 hover:bg-white/60 transition-all border border-white/30 shadow-sm"
               aria-label="Toggle sidebar"
               type="button"
             >
-              {sidebarCollapsed ? (
-                <ChevronRight size={20} className="text-gray-700" />
-              ) : (
-                <ChevronLeft size={20} className="text-gray-700" />
-              )}
-            </button>
+              <motion.div
+                animate={{ rotate: sidebarCollapsed ? 0 : 180 }}
+                transition={{ duration: 0.3 }}
+              >
+                {sidebarCollapsed ? (
+                  <ChevronRight size={20} className="text-gray-700" />
+                ) : (
+                  <ChevronLeft size={20} className="text-gray-700" />
+                )}
+              </motion.div>
+            </motion.button>
           </div>
 
           <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-hide">
-            {MENU_ITEMS.map((item) => (
+            {MENU_ITEMS.map((item, index) => (
               <SidebarItem
                 key={item.id}
                 item={item}
                 isActive={activeSection === item.id}
                 sidebarCollapsed={sidebarCollapsed}
                 onClick={() => handleSectionChange(item.id)}
+                index={index}
               />
             ))}
           </nav>
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-4"
             type="button"
           >
-            <LogOut size={18} />
+            <motion.div
+              whileHover={{ rotate: [0, -15, 15, 0] }}
+              transition={{ duration: 0.3 }}
+            >
+              <LogOut size={18} />
+            </motion.div>
             {!sidebarCollapsed && (
               <span className="font-medium text-[13px]">Logout</span>
             )}
-          </button>
+          </motion.button>
         </div>
       </motion.aside>
 
@@ -471,13 +554,18 @@ const AdminDashboard = () => {
                 </div>
 
                 <nav className="flex-1 space-y-1 overflow-y-auto">
-                  {MENU_ITEMS.map((item) => {
+                  {MENU_ITEMS.map((item, index) => {
                     const Icon = item.icon;
                     const isActive = activeSection === item.id;
 
                     return (
-                      <button
+                      <motion.button
                         key={item.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                        whileHover={{ scale: 1.02, x: 4 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => handleSectionChange(item.id)}
                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all ${
                           isActive
@@ -488,11 +576,16 @@ const AdminDashboard = () => {
                         } border border-white/30`}
                         type="button"
                       >
-                        <Icon size={18} />
+                        <motion.div
+                          animate={isActive ? { rotate: [0, -10, 10, 0] } : {}}
+                          transition={{ duration: 0.5 }}
+                        >
+                          <Icon size={18} />
+                        </motion.div>
                         <span className="font-medium text-[13px]">
                           {item.label}
                         </span>
-                      </button>
+                      </motion.button>
                     );
                   })}
                 </nav>
@@ -549,22 +642,34 @@ const AdminDashboard = () => {
         <header className="sticky top-0 z-30 backdrop-blur-2xl bg-white/40 border-b border-white/20 shadow-sm">
           <div className="flex items-center justify-between px-4 md:px-6 py-3">
             <div className="flex items-center gap-3">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setMobileMenuOpen(true)}
                 className="md:hidden p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md"
                 type="button"
                 aria-label="Open menu"
               >
                 <Menu size={20} className="text-gray-700" />
-              </button>
+              </motion.button>
 
-              <div className="flex items-center gap-3">
-                <div className="hidden sm:flex p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-md">
+              <motion.div
+                key={activeSection}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="flex items-center gap-3"
+              >
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="hidden sm:flex p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-md"
+                >
                   {React.createElement(activeMenuItem.icon, {
                     size: 20,
                     className: "text-white",
                   })}
-                </div>
+                </motion.div>
                 <div>
                   <h2 className="text-lg md:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                     {activeMenuItem.label}
@@ -573,12 +678,21 @@ const AdminDashboard = () => {
                     Welcome back, {user?.name?.split(" ")[0] || "Admin"}
                   </p>
                 </div>
-              </div>
+              </motion.div>
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="hidden lg:flex items-center gap-2 backdrop-blur-xl bg-white/50 rounded-xl px-4 py-2.5 border border-white/40 shadow-sm hover:shadow-md hover:bg-white/60 transition-all min-w-[280px]">
-                <Search size={16} className="text-gray-500" />
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileFocus={{ scale: 1.02 }}
+                className="hidden lg:flex items-center gap-2 backdrop-blur-xl bg-white/50 rounded-xl px-4 py-2.5 border border-white/40 shadow-sm hover:shadow-md hover:bg-white/60 transition-all min-w-[280px]"
+              >
+                <motion.div
+                  animate={{ rotate: [0, 15, -15, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                >
+                  <Search size={16} className="text-gray-500" />
+                </motion.div>
                 <input
                   type="text"
                   placeholder="Search anything..."
@@ -587,57 +701,91 @@ const AdminDashboard = () => {
                 <kbd className="hidden xl:inline-flex px-2 py-1 text-xs font-semibold text-gray-600 bg-white/60 rounded border border-gray-300">
                   ⌘K
                 </kbd>
-              </div>
+              </motion.div>
 
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 className="lg:hidden p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md"
                 type="button"
                 aria-label="Search"
               >
                 <Search size={18} className="text-gray-700" />
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={toggleFullscreen}
                 className="hidden md:flex p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md group"
                 type="button"
                 aria-label="Toggle fullscreen"
               >
-                {isFullscreen ? (
-                  <Minimize2
-                    size={18}
-                    className="text-gray-700 group-hover:text-blue-600 transition-colors"
-                  />
-                ) : (
-                  <Maximize2
-                    size={18}
-                    className="text-gray-700 group-hover:text-blue-600 transition-colors"
-                  />
-                )}
-              </button>
+                <motion.div
+                  animate={{ rotate: isFullscreen ? 180 : 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {isFullscreen ? (
+                    <Minimize2
+                      size={18}
+                      className="text-gray-700 group-hover:text-blue-600 transition-colors"
+                    />
+                  ) : (
+                    <Maximize2
+                      size={18}
+                      className="text-gray-700 group-hover:text-blue-600 transition-colors"
+                    />
+                  )}
+                </motion.div>
+              </motion.button>
 
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 className="relative p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md group"
                 type="button"
                 aria-label="Notifications"
               >
-                <Bell
-                  size={18}
-                  className="text-gray-700 group-hover:text-blue-600 transition-colors"
-                />
+                <motion.div
+                  animate={notifications > 0 ? {
+                    rotate: [0, -10, 10, -10, 10, 0],
+                  } : {}}
+                  transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
+                >
+                  <Bell
+                    size={18}
+                    className="text-gray-700 group-hover:text-blue-600 transition-colors"
+                  />
+                </motion.div>
                 {notifications > 0 && (
                   <>
-                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-[10px] font-bold text-white shadow-lg border-2 border-white">
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-[10px] font-bold text-white shadow-lg border-2 border-white"
+                    >
                       {notifications}
-                    </span>
-                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-400 animate-ping opacity-75" />
+                    </motion.span>
+                    <motion.span
+                      animate={{
+                        scale: [1, 1.2, 1],
+                        opacity: [0.75, 0, 0.75]
+                      }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                      className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-400"
+                    />
                   </>
                 )}
-              </button>
+              </motion.button>
 
-              <div className="hidden sm:flex items-center gap-2 pl-2 pr-3 py-2 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md cursor-pointer group">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="hidden sm:flex items-center gap-2 pl-2 pr-3 py-2 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md cursor-pointer group"
+              >
                 {user?.profile_picture_url ? (
-                  <img
+                  <motion.img
+                    whileHover={{ scale: 1.1 }}
                     src={user.profile_picture_url}
                     alt="Profile"
                     className="w-8 h-8 rounded-lg object-cover ring-2 ring-white/60 group-hover:ring-blue-400 transition-all"
@@ -646,9 +794,13 @@ const AdminDashboard = () => {
                     }}
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md ring-2 ring-white/60 group-hover:ring-blue-400 transition-all">
+                  <motion.div
+                    whileHover={{ scale: 1.1, rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 0.3 }}
+                    className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md ring-2 ring-white/60 group-hover:ring-blue-400 transition-all"
+                  >
                     {user?.name?.charAt(0).toUpperCase() || "A"}
-                  </div>
+                  </motion.div>
                 )}
                 <div className="hidden lg:block">
                   <p className="text-sm font-semibold text-gray-800 leading-tight">
@@ -658,11 +810,16 @@ const AdminDashboard = () => {
                     {user?.role || "Administrator"}
                   </p>
                 </div>
-                <ChevronRight
-                  size={16}
-                  className="text-gray-400 group-hover:text-gray-600 transition-colors hidden lg:block"
-                />
-              </div>
+                <motion.div
+                  animate={{ x: [0, 3, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  <ChevronRight
+                    size={16}
+                    className="text-gray-400 group-hover:text-gray-600 transition-colors hidden lg:block"
+                  />
+                </motion.div>
+              </motion.div>
             </div>
           </div>
 
@@ -676,7 +833,17 @@ const AdminDashboard = () => {
         </header>
 
         <main className="min-h-screen pt-6 relative z-10 w-full">
-          <ActivePage section={activeSection} />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeSection}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ActivePage section={activeSection} />
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 

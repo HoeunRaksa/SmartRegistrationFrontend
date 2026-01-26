@@ -218,8 +218,17 @@ const handleExport = () => {
         className="bg-white/60 backdrop-blur-xl rounded-2xl shadow-lg p-6 border border-white/50"
       >
         <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <motion.div
+            whileHover={{ scale: 1.01 }}
+            className="flex-1 relative"
+          >
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10"
+            >
+              <Search className="w-5 h-5" />
+            </motion.div>
             <input
               type="text"
               value={searchTerm}
@@ -227,7 +236,7 @@ const handleExport = () => {
               placeholder="Search by name, student code, or phone..."
               className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white/80"
             />
-          </div>
+          </motion.div>
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -359,7 +368,8 @@ const StudentRow = ({ student, index, onView, onEdit, onDelete }) => (
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: index * 0.05 }}
-    className="hover:bg-blue-50/50 transition-colors"
+    whileHover={{ scale: 1.01, x: 4 }}
+    className="hover:bg-blue-50/50 transition-colors cursor-pointer"
   >
     <td className="px-6 py-4">
       <span className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600">

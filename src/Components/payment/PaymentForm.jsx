@@ -253,7 +253,9 @@ const PaymentForm = ({
         <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/80 to-white/70 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] border-2 border-white/60 overflow-hidden">
           <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.1, rotate: 90 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => {
               stopPolling();
               onClose?.();
@@ -261,7 +263,7 @@ const PaymentForm = ({
             className="absolute top-4 right-4 backdrop-blur-xl bg-white/60 p-2 rounded-full hover:bg-white/80 transition-all duration-300 border border-white/40"
           >
             <X size={20} className="text-gray-600" />
-          </button>
+          </motion.button>
 
           <div className="p-6">
             <div className="text-center mb-5">
@@ -280,7 +282,9 @@ const PaymentForm = ({
 
             <div className="backdrop-blur-xl bg-white/60 border border-white/60 rounded-2xl p-4 shadow-sm mb-4">
               <div className="grid grid-cols-2 gap-3">
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
                   type="button"
                   onClick={() => setPayPlan((p) => ({ ...p, type: "SEMESTER" }))}
                   className={`px-4 py-3 rounded-2xl font-semibold text-sm transition-all border ${
@@ -291,9 +295,11 @@ const PaymentForm = ({
                   disabled={generating}
                 >
                   Pay Semester (50%)
-                </button>
+                </motion.button>
 
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
                   type="button"
                   onClick={() => setPayPlan((p) => ({ ...p, type: "YEAR" }))}
                   className={`px-4 py-3 rounded-2xl font-semibold text-sm transition-all border ${
@@ -304,7 +310,7 @@ const PaymentForm = ({
                   disabled={generating}
                 >
                   Pay Full Year (100%)
-                </button>
+                </motion.button>
               </div>
 
               {payPlan.type === "SEMESTER" && (
@@ -335,15 +341,22 @@ const PaymentForm = ({
               </div>
 
               <div className="mt-3 flex justify-end">
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
                   type="button"
                   onClick={generateQrNow}
                   disabled={generating}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 overflow-hidden group"
                 >
-                  {generating ? <Loader className="animate-spin" size={16} /> : <RefreshCw size={16} />}
+                  <motion.div
+                    animate={generating ? { rotate: 360 } : {}}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  >
+                    {generating ? <Loader size={16} /> : <RefreshCw size={16} />}
+                  </motion.div>
                   Generate QR
-                </button>
+                </motion.button>
               </div>
             </div>
 
@@ -354,11 +367,20 @@ const PaymentForm = ({
               </div>
             )}
 
-            <div className={`mb-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border ${statusUI.cls}`}>
-              <StatusIcon size={14} />
+            <motion.div
+              animate={polling ? { scale: [1, 1.05, 1] } : {}}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className={`mb-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border ${statusUI.cls}`}
+            >
+              <motion.div
+                animate={polling ? { rotate: 360 } : {}}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              >
+                <StatusIcon size={14} />
+              </motion.div>
               {statusUI.label}
               {polling ? <span className="opacity-70">• checking...</span> : null}
-            </div>
+            </motion.div>
 
             {statusMsg ? <div className="text-xs text-gray-500 mb-4">{statusMsg}</div> : null}
 

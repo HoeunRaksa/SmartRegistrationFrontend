@@ -266,17 +266,28 @@ const MessagesPage = () => {
                 <div className="text-xs text-slate-500 truncate">Online</div>
               </div>
 
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
                 className="h-10 w-10 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-center"
                 title="New chat"
                 onClick={() => document.getElementById("chat-search")?.focus()}
               >
                 <Plus className="w-5 h-5 text-slate-700" />
-              </button>
+              </motion.button>
             </div>
 
-            <div className="mt-3 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <motion.div
+              whileHover={{ scale: 1.01 }}
+              className="mt-3 relative"
+            >
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10"
+              >
+                <Search className="w-4 h-4" />
+              </motion.div>
               <input
                 id="chat-search"
                 type="text"
@@ -285,7 +296,7 @@ const MessagesPage = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm"
               />
-            </div>
+            </motion.div>
           </div>
 
           <div className="flex-1 overflow-y-auto">
@@ -296,11 +307,16 @@ const MessagesPage = () => {
                 <p className="text-sm text-center">Your users list is empty.</p>
               </div>
             ) : (
-              filteredConversations.map((c) => {
+              filteredConversations.map((c, index) => {
                 const active = selectedConversation?.id === c.id;
                 return (
-                  <button
+                  <motion.button
                     key={c.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    whileHover={{ scale: 1.02, x: 4 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => setSelectedConversation(c)}
                     className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition flex items-center gap-3 border-b border-slate-100 ${active ? "bg-blue-50" : ""
                       }`}
@@ -330,7 +346,7 @@ const MessagesPage = () => {
                         )}
                       </div>
                     </div>
-                  </button>
+                  </motion.button>
                 );
               })
             )}
@@ -390,9 +406,10 @@ const MessagesPage = () => {
                     return (
                       <motion.div
                         key={m.id}
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.15 }}
+                        initial={{ opacity: 0, y: 6, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ duration: 0.2, type: "spring", stiffness: 300 }}
+                        whileHover={{ scale: 1.02 }}
                         className={`flex ${m.is_mine ? "justify-end" : "justify-start"}`}
                       >
                         <div className="max-w-[78%] md:max-w-[70%]">

@@ -103,15 +103,34 @@ const DashboardHome = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="backdrop-blur-xl bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl p-8 border border-white/20 shadow-lg"
+        whileHover={{ scale: 1.01 }}
+        className="backdrop-blur-xl bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl p-8 border border-white/20 shadow-lg relative overflow-hidden"
       >
-        <h1 className="text-3xl font-bold text-white mb-2">
-          {getGreeting()}, {dashboardData?.student?.name}! 👋
-        </h1>
-        <p className="text-white/90">
-          {dashboardData?.student?.student_code} •{" "}
-          {dashboardData?.student?.major} • {dashboardData?.student?.year}
-        </p>
+        <motion.div
+          animate={{
+            backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+          style={{ backgroundSize: "200% 100%" }}
+        />
+        <div className="relative z-10">
+          <motion.h1
+            animate={{ x: [0, 5, 0] }}
+            transition={{ duration: 2, repeat: Infinity, repeatDelay: 2 }}
+            className="text-3xl font-bold text-white mb-2"
+          >
+            {getGreeting()}, {dashboardData?.student?.name}! 👋
+          </motion.h1>
+          <p className="text-white/90">
+            {dashboardData?.student?.student_code} •{" "}
+            {dashboardData?.student?.major} • {dashboardData?.student?.year}
+          </p>
+        </div>
       </motion.div>
 
       {/* Quick Stats */}
@@ -191,17 +210,30 @@ const StatCard = ({ title, value, icon: Icon, gradient, onClick, delay }) => (
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay }}
-    className={`backdrop-blur-xl bg-gradient-to-br ${gradient} rounded-2xl p-6 border border-white/20 shadow-lg cursor-pointer hover:scale-105 transition-transform`}
+    whileHover={{ scale: 1.05, y: -5 }}
+    whileTap={{ scale: 0.98 }}
+    className={`backdrop-blur-xl bg-gradient-to-br ${gradient} rounded-2xl p-6 border border-white/20 shadow-lg cursor-pointer transition-all`}
     onClick={onClick}
   >
     <div className="flex items-center justify-between">
       <div className="text-white">
         <p className="text-sm opacity-90 mb-1">{title}</p>
-        <p className="text-3xl font-bold">{value}</p>
+        <motion.p
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: delay + 0.2, type: "spring" }}
+          className="text-3xl font-bold"
+        >
+          {value}
+        </motion.p>
       </div>
-      <div className="p-3 bg-white/20 rounded-xl">
+      <motion.div
+        whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+        transition={{ duration: 0.5 }}
+        className="p-3 bg-white/20 rounded-xl"
+      >
         <Icon className="w-8 h-8 text-white" />
-      </div>
+      </motion.div>
     </div>
   </motion.div>
 );
@@ -220,12 +252,14 @@ const TodayClassesCard = ({ classes, onViewAll }) => (
         </div>
         Today's Classes
       </h2>
-      <button
+      <motion.button
+        whileHover={{ x: 5 }}
+        whileTap={{ scale: 0.95 }}
         onClick={onViewAll}
         className="text-blue-500 hover:text-blue-600 font-semibold text-sm flex items-center gap-1"
       >
-        View All <ArrowRight className="w-4 h-4" />
-      </button>
+        View All <motion.div animate={{ x: [0, 3, 0] }} transition={{ duration: 1, repeat: Infinity }}><ArrowRight className="w-4 h-4" /></motion.div>
+      </motion.button>
     </div>
 
     <div className="space-y-3">
@@ -242,7 +276,8 @@ const TodayClassesCard = ({ classes, onViewAll }) => (
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.6 + index * 0.1 }}
-            className="p-4 bg-gradient-to-r from-blue-50/50 to-purple-50/50 rounded-xl border border-blue-100"
+            whileHover={{ scale: 1.02, x: 5 }}
+            className="p-4 bg-gradient-to-r from-blue-50/50 to-purple-50/50 rounded-xl border border-blue-100 cursor-pointer"
           >
             <div className="flex items-start justify-between mb-2">
               <div className="font-semibold text-blue-600">
@@ -281,12 +316,14 @@ const PendingAssignmentsCard = ({ assignments, onViewAll }) => (
         </div>
         Pending Assignments
       </h2>
-      <button
+      <motion.button
+        whileHover={{ x: 5 }}
+        whileTap={{ scale: 0.95 }}
         onClick={onViewAll}
         className="text-blue-500 hover:text-blue-600 font-semibold text-sm flex items-center gap-1"
       >
-        View All <ArrowRight className="w-4 h-4" />
-      </button>
+        View All <motion.div animate={{ x: [0, 3, 0] }} transition={{ duration: 1, repeat: Infinity }}><ArrowRight className="w-4 h-4" /></motion.div>
+      </motion.button>
     </div>
 
     <div className="space-y-3">
@@ -307,7 +344,8 @@ const PendingAssignmentsCard = ({ assignments, onViewAll }) => (
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.6 + index * 0.1 }}
-              className={`p-4 rounded-xl border ${
+              whileHover={{ scale: 1.02, x: 5 }}
+              className={`p-4 rounded-xl border cursor-pointer ${
                 isUrgent
                   ? "bg-red-50/50 border-red-200"
                   : "bg-orange-50/50 border-orange-200"
@@ -369,12 +407,14 @@ const RecentGradesCard = ({ grades, onViewAll }) => (
         </div>
         Recent Grades
       </h2>
-      <button
+      <motion.button
+        whileHover={{ x: 5 }}
+        whileTap={{ scale: 0.95 }}
         onClick={onViewAll}
         className="text-blue-500 hover:text-blue-600 font-semibold text-sm flex items-center gap-1"
       >
-        View All <ArrowRight className="w-4 h-4" />
-      </button>
+        View All <motion.div animate={{ x: [0, 3, 0] }} transition={{ duration: 1, repeat: Infinity }}><ArrowRight className="w-4 h-4" /></motion.div>
+      </motion.button>
     </div>
 
     <div className="space-y-3">
@@ -391,7 +431,8 @@ const RecentGradesCard = ({ grades, onViewAll }) => (
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 + index * 0.1 }}
-            className="p-4 bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-xl border border-green-100"
+            whileHover={{ scale: 1.02, y: -2 }}
+            className="p-4 bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-xl border border-green-100 cursor-pointer"
           >
             <div className="flex items-start justify-between mb-2">
               <div>
@@ -454,7 +495,8 @@ const NotificationsCard = ({ notifications }) => (
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 + index * 0.1 }}
-            className="p-4 bg-purple-50/50 rounded-xl border border-purple-100"
+            whileHover={{ scale: 1.02, x: 5 }}
+            className="p-4 bg-purple-50/50 rounded-xl border border-purple-100 cursor-pointer"
           >
             <div className="flex items-start gap-3">
               <div className="p-2 bg-purple-100 rounded-lg">
@@ -483,37 +525,65 @@ const QuickActionsCard = ({ navigate }) => (
   >
     <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <button
+      <motion.button
+        whileHover={{ scale: 1.05, y: -5 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => navigate("/student/courses")}
         className="p-4 bg-gradient-to-br from-blue-500 to-cyan-500 text-white rounded-xl hover:shadow-lg transition-all"
       >
-        <BookOpen className="w-8 h-8 mx-auto mb-2" />
+        <motion.div
+          whileHover={{ rotate: [0, -10, 10, 0] }}
+          transition={{ duration: 0.5 }}
+        >
+          <BookOpen className="w-8 h-8 mx-auto mb-2" />
+        </motion.div>
         <p className="font-semibold text-sm">My Courses</p>
-      </button>
+      </motion.button>
 
-      <button
+      <motion.button
+        whileHover={{ scale: 1.05, y: -5 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => navigate("/student/schedule")}
         className="p-4 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-xl hover:shadow-lg transition-all"
       >
-        <Calendar className="w-8 h-8 mx-auto mb-2" />
+        <motion.div
+          whileHover={{ rotate: [0, -10, 10, 0] }}
+          transition={{ duration: 0.5 }}
+        >
+          <Calendar className="w-8 h-8 mx-auto mb-2" />
+        </motion.div>
         <p className="font-semibold text-sm">Schedule</p>
-      </button>
+      </motion.button>
 
-      <button
+      <motion.button
+        whileHover={{ scale: 1.05, y: -5 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => navigate("/student/assignments")}
         className="p-4 bg-gradient-to-br from-orange-500 to-red-500 text-white rounded-xl hover:shadow-lg transition-all"
       >
-        <FileText className="w-8 h-8 mx-auto mb-2" />
+        <motion.div
+          whileHover={{ rotate: [0, -10, 10, 0] }}
+          transition={{ duration: 0.5 }}
+        >
+          <FileText className="w-8 h-8 mx-auto mb-2" />
+        </motion.div>
         <p className="font-semibold text-sm">Assignments</p>
-      </button>
+      </motion.button>
 
-      <button
+      <motion.button
+        whileHover={{ scale: 1.05, y: -5 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => navigate("/student/messages")}
         className="p-4 bg-gradient-to-br from-green-500 to-emerald-500 text-white rounded-xl hover:shadow-lg transition-all"
       >
-        <Users className="w-8 h-8 mx-auto mb-2" />
+        <motion.div
+          whileHover={{ rotate: [0, -10, 10, 0] }}
+          transition={{ duration: 0.5 }}
+        >
+          <Users className="w-8 h-8 mx-auto mb-2" />
+        </motion.div>
         <p className="font-semibold text-sm">Messages</p>
-      </button>
+      </motion.button>
     </div>
   </motion.div>
 );

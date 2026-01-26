@@ -15,6 +15,7 @@ import React, {
   memo,
   useCallback,
 } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
   Loader,
@@ -196,22 +197,42 @@ const Section = memo(function Section({
   gradientBar,
   iconGradient,
   children,
+  index = 0,
 }) {
   return (
-    <div className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border-2 border-white/60 relative">
-      <div className={`absolute inset-x-0 top-0 h-1.5 ${gradientBar} rounded-t-3xl`} />
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1, duration: 0.5 }}
+      whileHover={{ scale: 1.01, y: -5 }}
+      className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border-2 border-white/60 relative"
+    >
+      <motion.div
+        animate={{
+          backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: "linear"
+        }}
+        className={`absolute inset-x-0 top-0 h-1.5 ${gradientBar} rounded-t-3xl`}
+        style={{ backgroundSize: "200% 100%" }}
+      />
       <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-white/40">
-        <div
+        <motion.div
+          whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+          transition={{ duration: 0.5 }}
           className={`p-3 backdrop-blur-xl ${iconGradient} rounded-2xl text-white shadow-lg`}
         >
           <Icon size={24} />
-        </div>
+        </motion.div>
         <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
           {title}
         </h2>
       </div>
       {children}
-    </div>
+    </motion.div>
   );
 });
 
@@ -429,8 +450,8 @@ const Registration = () => {
         data?.allowed !== undefined
           ? !!data.allowed
           : data?.available !== undefined
-          ? !!data.available
-          : true;
+            ? !!data.available
+            : true;
 
       const info = {
         ...infoBase,
@@ -659,7 +680,7 @@ const Registration = () => {
       } else {
         setError(
           err.response?.data?.message ||
-            "Registration failed. Please try again."
+          "Registration failed. Please try again."
         );
       }
 
@@ -967,9 +988,9 @@ const Registration = () => {
                   {quotaInfo.remaining != null
                     ? quotaInfo.remaining
                     : Math.max(
-                        0,
-                        (quotaInfo.limit || 0) - (quotaInfo.used || 0)
-                      )}
+                      0,
+                      (quotaInfo.limit || 0) - (quotaInfo.used || 0)
+                    )}
                 </span>{" "}
                 (Used {quotaInfo.used} / {quotaInfo.limit})
               </p>
@@ -1002,307 +1023,431 @@ const Registration = () => {
     <section className="min-h-screen -mt-9 relative overflow-hidden font-sans rounded-lg bg-gradient-to-br">
       {/* Animated background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-blue-400 to-cyan-400 opacity-20 rounded-full blur-3xl animate-pulse" />
-        <div
-          className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-purple-400 to-pink-400 opacity-20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
+        <motion.div
+          animate={{
+            x: [0, 50, 0],
+            y: [0, 30, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-blue-400 to-cyan-400 opacity-20 rounded-full blur-3xl"
         />
-        <div
-          className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-r from-pink-400 to-orange-400 opacity-20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "4s" }}
+        <motion.div
+          animate={{
+            x: [0, -40, 0],
+            y: [0, 50, 0],
+            scale: [1, 1.15, 1],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 0.5
+          }}
+          className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-purple-400 to-pink-400 opacity-20 rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{
+            x: [0, 30, 0],
+            y: [0, -40, 0],
+            scale: [1, 1.08, 1],
+          }}
+          transition={{
+            duration: 18,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1
+          }}
+          className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-r from-pink-400 to-orange-400 opacity-20 rounded-full blur-3xl"
         />
       </div>
 
       {/* Success Modal */}
-      {success && (
-        <div className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 px-4">
-          <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/80 to-white/70 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] border-2 border-white/60 p-8 max-w-lg w-full">
-            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500" />
+      <AnimatePresence>
+        {success && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="relative backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/80 to-white/70 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] border-2 border-white/60 p-8 max-w-lg w-full"
+            >
+              <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500" />
 
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center p-4 backdrop-blur-xl bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl mb-4 shadow-xl">
-                <CheckCircle size={48} className="text-white" />
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center p-4 backdrop-blur-xl bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl mb-4 shadow-xl">
+                  <CheckCircle size={48} className="text-white" />
+                </div>
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
+                  {success.title}
+                </h3>
+                <p className="text-gray-700 text-base mb-4">{success.message}</p>
               </div>
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
-                {success.title}
-              </h3>
-              <p className="text-gray-700 text-base mb-4">{success.message}</p>
-            </div>
 
-            {/* ✅ FIX: show student_code from response.data.data (not inside student_account) */}
-            <div className="backdrop-blur-xl bg-blue-50/60 border border-blue-200/40 rounded-xl p-4 mb-4">
-              <h4 className="font-semibold text-gray-800 mb-2">
-                Registration Details:
-              </h4>
-              <div className="space-y-1 text-sm">
-                <p>
-                  <span className="font-medium">Registration ID:</span>{" "}
-                  {success?.data?.data?.registration_id ?? "-"}
-                </p>
-                <p>
-                  <span className="font-medium">Student Code:</span>{" "}
-                  {success?.data?.data?.student_code ?? "-"}
-                </p>
-                <p>
-                  <span className="font-medium">Academic Year:</span>{" "}
-                  {success?.data?.data?.academic_year ?? "-"}
-                </p>
-              </div>
-            </div>
-
-            {success.data?.student_account && (
-              <div className="backdrop-blur-xl bg-green-50/60 border border-green-200/40 rounded-xl p-4 mb-4">
+              {/* ✅ FIX: show student_code from response.data.data (not inside student_account) */}
+              <div className="backdrop-blur-xl bg-blue-50/60 border border-blue-200/40 rounded-xl p-4 mb-4">
                 <h4 className="font-semibold text-gray-800 mb-2">
-                  Your Account Details:
+                  Registration Details:
                 </h4>
                 <div className="space-y-1 text-sm">
                   <p>
-                    <span className="font-medium">Email:</span>{" "}
-                    {success.data.student_account.email}
+                    <span className="font-medium">Registration ID:</span>{" "}
+                    {success?.data?.data?.registration_id ?? "-"}
                   </p>
                   <p>
-                    <span className="font-medium">Password:</span>{" "}
-                    {success.data.student_account.password ??
-                      "Already existing account"}
+                    <span className="font-medium">Student Code:</span>{" "}
+                    {success?.data?.data?.student_code ?? "-"}
+                  </p>
+                  <p>
+                    <span className="font-medium">Academic Year:</span>{" "}
+                    {success?.data?.data?.academic_year ?? "-"}
                   </p>
                 </div>
-                <p className="text-xs text-gray-600 mt-2">
-                  ⚠️ Please save these credentials!
-                </p>
               </div>
-            )}
 
-            <button
-              onClick={() => {
-                resetForm();
-                setSuccess(null);
-                setRegistrationData(null);
-              }}
-              className="w-full backdrop-blur-xl bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-xl hover:shadow-xl transition-all duration-300 font-semibold"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Payment Method Choice Modal (includes Pay Plan) */}
-      {showPaymentChoice && (
-        <div className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 px-4">
-          <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/80 to-white/70 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] border-2 border-white/60 p-8 max-w-md w-full">
-            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
-
-            <button
-              onClick={() => setShowPaymentChoice(false)}
-              className="absolute top-4 right-4 backdrop-blur-xl bg-white/60 p-2 rounded-full hover:bg-white/80 transition-all duration-300 border border-white/40"
-            >
-              <X size={20} className="text-gray-600" />
-            </button>
-
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center p-4 backdrop-blur-xl bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-xl">
-                <CreditCard size={32} className="text-white" />
-              </div>
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-1">
-                Choose Payment
-              </h3>
-              <p className="text-gray-600 text-sm">
-                Select plan first, then method
-              </p>
-
-              {selectedMajorFee != null && (
-                <div className="mt-4 backdrop-blur-xl bg-green-50/60 border border-green-200/40 rounded-xl p-3">
-                  <p className="text-sm text-gray-700">
-                    <span className="font-semibold">Year Fee:</span>
-                    <span className="text-xl font-bold text-green-600 ml-2">
-                      ${Number(selectedMajorFee).toFixed(2)}
-                    </span>
-                  </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    Semester payment = <span className="font-semibold">50%</span>{" "}
-                    of year fee
+              {success.data?.student_account && (
+                <div className="backdrop-blur-xl bg-green-50/60 border border-green-200/40 rounded-xl p-4 mb-4">
+                  <h4 className="font-semibold text-gray-800 mb-2">
+                    Your Account Details:
+                  </h4>
+                  <div className="space-y-1 text-sm">
+                    <p>
+                      <span className="font-medium">Email:</span>{" "}
+                      {success.data.student_account.email}
+                    </p>
+                    <p>
+                      <span className="font-medium">Password:</span>{" "}
+                      {success.data.student_account.password ??
+                        "Already existing account"}
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-2">
+                    ⚠️ Please save these credentials!
                   </p>
                 </div>
               )}
-            </div>
 
-            {/* ✅ Pay plan selector */}
-            <div className="backdrop-blur-xl bg-white/60 border-2 border-white/60 rounded-2xl p-4 mb-4">
-              <p className="text-sm font-semibold text-gray-800 mb-3">
-                Pay Plan
-              </p>
+              <motion.button
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  resetForm();
+                  setSuccess(null);
+                  setRegistrationData(null);
+                }}
+                className="w-full backdrop-blur-xl bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-xl hover:shadow-xl transition-all duration-300 font-semibold overflow-hidden group"
+              >
+                <motion.div
+                  animate={{
+                    x: ["-100%", "100%"],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatDelay: 3,
+                    ease: "easeInOut"
+                  }}
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                />
+                <span className="relative z-10">Close</span>
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-              <div className="space-y-3">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="payPlan"
-                    checked={payPlan.type === "YEAR"}
-                    onChange={() =>
-                      setPayPlan((p) => ({ ...p, type: "YEAR" }))
-                    }
-                  />
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-800">Pay Full Year</p>
-                    <p className="text-xs text-gray-600">Pay 100% now</p>
-                  </div>
-                  <span className="text-sm font-bold text-gray-800">
-                    ${Number(selectedMajorFee || 0).toFixed(2)}
-                  </span>
-                </label>
+      {/* Payment Method Choice Modal (includes Pay Plan) */}
+      <AnimatePresence>
+        {showPaymentChoice && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="relative backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/80 to-white/70 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] border-2 border-white/60 p-8 max-w-md w-full"
+            >
+              <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
 
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="payPlan"
-                    checked={payPlan.type === "SEMESTER"}
-                    onChange={() =>
-                      setPayPlan((p) => ({ ...p, type: "SEMESTER" }))
-                    }
-                  />
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-800">
-                      Pay One Semester
+              <motion.button
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setShowPaymentChoice(false)}
+                className="absolute top-4 right-4 backdrop-blur-xl bg-white/60 p-2 rounded-full hover:bg-white/80 transition-all duration-300 border border-white/40"
+              >
+                <X size={20} className="text-gray-600" />
+              </motion.button>
+
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center p-4 backdrop-blur-xl bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-xl">
+                  <CreditCard size={32} className="text-white" />
+                </div>
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-1">
+                  Choose Payment
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Select plan first, then method
+                </p>
+
+                {selectedMajorFee != null && (
+                  <div className="mt-4 backdrop-blur-xl bg-green-50/60 border border-green-200/40 rounded-xl p-3">
+                    <p className="text-sm text-gray-700">
+                      <span className="font-semibold">Year Fee:</span>
+                      <span className="text-xl font-bold text-green-600 ml-2">
+                        ${Number(selectedMajorFee).toFixed(2)}
+                      </span>
                     </p>
-                    <p className="text-xs text-gray-600">
-                      Pay 50% now + choose semester
+                    <p className="text-xs text-gray-600 mt-1">
+                      Semester payment = <span className="font-semibold">50%</span>{" "}
+                      of year fee
                     </p>
-                  </div>
-                  <span className="text-sm font-bold text-gray-800">
-                    ${(Number(selectedMajorFee || 0) * 0.5).toFixed(2)}
-                  </span>
-                </label>
-
-                {payPlan.type === "SEMESTER" && (
-                  <div className="pl-7">
-                    <label className="text-xs font-semibold text-gray-700">
-                      Which semester?
-                    </label>
-                    <select
-                      className={`${inputClassBase} mt-2`}
-                      value={payPlan.semester}
-                      onChange={(e) =>
-                        setPayPlan((p) => ({
-                          ...p,
-                          semester: Number(e.target.value),
-                        }))
-                      }
-                    >
-                      <option value={1}>Semester 1</option>
-                      <option value={2}>Semester 2</option>
-                    </select>
                   </div>
                 )}
               </div>
 
-              <div className="mt-4 text-sm text-gray-800">
-                <span className="font-semibold">Amount to pay now:</span>{" "}
-                <span className="font-bold text-green-700">
-                  ${Number(payAmount || 0).toFixed(2)}
-                </span>
+              {/* ✅ Pay plan selector */}
+              <div className="backdrop-blur-xl bg-white/60 border-2 border-white/60 rounded-2xl p-4 mb-4">
+                <p className="text-sm font-semibold text-gray-800 mb-3">
+                  Pay Plan
+                </p>
+
+                <div className="space-y-3">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="payPlan"
+                      checked={payPlan.type === "YEAR"}
+                      onChange={() =>
+                        setPayPlan((p) => ({ ...p, type: "YEAR" }))
+                      }
+                    />
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-800">Pay Full Year</p>
+                      <p className="text-xs text-gray-600">Pay 100% now</p>
+                    </div>
+                    <span className="text-sm font-bold text-gray-800">
+                      ${Number(selectedMajorFee || 0).toFixed(2)}
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="payPlan"
+                      checked={payPlan.type === "SEMESTER"}
+                      onChange={() =>
+                        setPayPlan((p) => ({ ...p, type: "SEMESTER" }))
+                      }
+                    />
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-800">
+                        Pay One Semester
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        Pay 50% now + choose semester
+                      </p>
+                    </div>
+                    <span className="text-sm font-bold text-gray-800">
+                      ${(Number(selectedMajorFee || 0) * 0.5).toFixed(2)}
+                    </span>
+                  </label>
+
+                  {payPlan.type === "SEMESTER" && (
+                    <div className="pl-7">
+                      <label className="text-xs font-semibold text-gray-700">
+                        Which semester?
+                      </label>
+                      <select
+                        className={`${inputClassBase} mt-2`}
+                        value={payPlan.semester}
+                        onChange={(e) =>
+                          setPayPlan((p) => ({
+                            ...p,
+                            semester: Number(e.target.value),
+                          }))
+                        }
+                      >
+                        <option value={1}>Semester 1</option>
+                        <option value={2}>Semester 2</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-4 text-sm text-gray-800">
+                  <span className="font-semibold">Amount to pay now:</span>{" "}
+                  <span className="font-bold text-green-700">
+                    ${Number(payAmount || 0).toFixed(2)}
+                  </span>
+                </div>
               </div>
-            </div>
 
-            {/* Payment methods */}
-            <div className="space-y-4">
-              <button
-                onClick={() => handlePaymentMethodSelect("qr")}
-                disabled={loading}
-                className="group relative w-full backdrop-blur-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white p-6 rounded-2xl hover:shadow-[0_20px_60px_rgba(139,92,246,0.5)] transition-all duration-500 hover:scale-[1.02] border border-white/30 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                <div className="relative z-10 flex items-center gap-4">
-                  <div className="backdrop-blur-xl bg-white/20 p-3 rounded-xl">
-                    {loading ? (
-                      <Loader className="animate-spin" size={28} />
-                    ) : (
-                      <Smartphone size={28} />
-                    )}
+              {/* Payment methods */}
+              <div className="space-y-4">
+                <motion.button
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handlePaymentMethodSelect("qr")}
+                  disabled={loading}
+                  className="group relative w-full backdrop-blur-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white p-6 rounded-2xl hover:shadow-[0_20px_60px_rgba(139,92,246,0.5)] transition-all duration-500 border border-white/30 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <motion.div
+                    animate={{
+                      x: ["-100%", "100%"],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatDelay: 3,
+                      ease: "easeInOut"
+                    }}
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                  />
+                  <div className="relative z-10 flex items-center gap-4">
+                    <div className="backdrop-blur-xl bg-white/20 p-3 rounded-xl">
+                      {loading ? (
+                        <Loader className="animate-spin" size={28} />
+                      ) : (
+                        <Smartphone size={28} />
+                      )}
+                    </div>
+                    <div className="text-left flex-1">
+                      <h4 className="font-bold text-lg">
+                        {loading ? "Processing..." : "Pay with QR Code"}
+                      </h4>
+                      <p className="text-sm text-white/80 mt-1">
+                        Scan and pay using ABA Mobile
+                      </p>
+                    </div>
+                    {!loading && <div className="text-2xl">→</div>}
                   </div>
-                  <div className="text-left flex-1">
-                    <h4 className="font-bold text-lg">
-                      {loading ? "Processing..." : "Pay with QR Code"}
-                    </h4>
-                    <p className="text-sm text-white/80 mt-1">
-                      Scan and pay using ABA Mobile
-                    </p>
-                  </div>
-                  {!loading && <div className="text-2xl">→</div>}
-                </div>
-              </button>
+                </motion.button>
 
-              <button
-                onClick={() => handlePaymentMethodSelect("later")}
-                disabled={loading}
-                className="group relative w-full backdrop-blur-xl bg-white/60 border-2 border-white/60 text-gray-800 p-6 rounded-2xl hover:bg-white/80 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                <div className="relative z-10 flex items-center gap-4">
-                  <div className="backdrop-blur-xl bg-gradient-to-br from-gray-500/20 to-gray-600/20 p-3 rounded-xl border border-white/40">
-                    <DollarSign size={28} className="text-gray-700" />
+                <motion.button
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handlePaymentMethodSelect("later")}
+                  disabled={loading}
+                  className="group relative w-full backdrop-blur-xl bg-white/60 border-2 border-white/60 text-gray-800 p-6 rounded-2xl hover:bg-white/80 hover:shadow-xl transition-all duration-300 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <motion.div
+                    animate={{
+                      x: ["-100%", "100%"],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatDelay: 3,
+                      ease: "easeInOut"
+                    }}
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                  />
+                  <div className="relative z-10 flex items-center gap-4">
+                    <div className="backdrop-blur-xl bg-gradient-to-br from-gray-500/20 to-gray-600/20 p-3 rounded-xl border border-white/40">
+                      <DollarSign size={28} className="text-gray-700" />
+                    </div>
+                    <div className="text-left flex-1">
+                      <h4 className="font-bold text-lg">Pay Later</h4>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Submit and pay at campus
+                      </p>
+                    </div>
+                    <div className="text-2xl text-gray-400">→</div>
                   </div>
-                  <div className="text-left flex-1">
-                    <h4 className="font-bold text-lg">Pay Later</h4>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Submit and pay at campus
-                    </p>
-                  </div>
-                  <div className="text-2xl text-gray-400">→</div>
-                </div>
-              </button>
-            </div>
+                </motion.button>
+              </div>
 
-            <div className="mt-6 backdrop-blur-xl bg-blue-50/60 border border-blue-200/40 rounded-xl p-4 flex items-start gap-3">
-              <AlertTriangle
-                size={20}
-                className="text-blue-600 flex-shrink-0 mt-0.5"
-              />
-              <p className="text-xs text-gray-700">
-                <span className="font-semibold">Note:</span> If you choose "Pay
-                Later", please complete payment within 7 days.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+              <div className="mt-6 backdrop-blur-xl bg-blue-50/60 border border-blue-200/40 rounded-xl p-4 flex items-start gap-3">
+                <AlertTriangle
+                  size={20}
+                  className="text-blue-600 flex-shrink-0 mt-0.5"
+                />
+                <p className="text-xs text-gray-700">
+                  <span className="font-semibold">Note:</span> If you choose "Pay
+                  Later", please complete payment within 7 days.
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* QR Payment Modal */}
-      {showQr && registrationData && (
-        <div className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 px-4">
-          <PaymentForm
-            registrationId={registrationData.data?.registration_id}
-            yearFee={selectedMajorFee}
-            payPlan={payPlan}
-            amount={payAmount}
-            registrationData={registrationData}
-            onClose={() => {
-              setShowQr(false);
-              setShowPaymentChoice(true);
-            }}
-            onSuccess={handlePaymentSuccess}
-          />
-        </div>
-      )}
+      <AnimatePresence>
+        {showQr && registrationData && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 px-4"
+          >
+            <PaymentForm
+              registrationId={registrationData.data?.registration_id}
+              yearFee={selectedMajorFee}
+              payPlan={payPlan}
+              amount={payAmount}
+              registrationData={registrationData}
+              onClose={() => {
+                setShowQr(false);
+                setShowPaymentChoice(true);
+              }}
+              onSuccess={handlePaymentSuccess}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Error Toast */}
-      {error && (
-        <div className="fixed top-4 right-4 z-50 backdrop-blur-2xl bg-red-500/90 text-white px-6 py-4 rounded-2xl shadow-[0_20px_60px_rgba(239,68,68,0.4)] border-2 border-red-400/30 max-w-md animate-slide-in">
-          <div className="flex items-start gap-3">
-            <div className="backdrop-blur-xl bg-white/20 p-2 rounded-lg flex-shrink-0">
-              <AlertTriangle size={20} />
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="fixed top-4 right-4 z-50 backdrop-blur-2xl bg-red-500/90 text-white px-6 py-4 rounded-2xl shadow-[0_20px_60px_rgba(239,68,68,0.4)] border-2 border-red-400/30 max-w-md"
+          >
+            <div className="flex items-start gap-3">
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 0.5 }}
+                className="backdrop-blur-xl bg-white/20 p-2 rounded-lg flex-shrink-0"
+              >
+                <AlertTriangle size={20} />
+              </motion.div>
+              <div className="flex-1">
+                <p className="font-medium whitespace-pre-line">{error}</p>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setError(null)}
+                className="hover:bg-red-600/50 rounded-full p-1.5 transition-colors duration-300 flex-shrink-0"
+              >
+                <X size={16} />
+              </motion.button>
             </div>
-            <div className="flex-1">
-              <p className="font-medium whitespace-pre-line">{error}</p>
-            </div>
-            <button
-              onClick={() => setError(null)}
-              className="hover:bg-red-600/50 rounded-full p-1.5 transition-colors duration-300 flex-shrink-0"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-12">
         {/* Header */}
@@ -1417,6 +1562,7 @@ const Registration = () => {
               icon={User}
               gradientBar="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
               iconGradient="bg-gradient-to-br from-blue-500 to-purple-600"
+              index={0}
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {personalFields.map((f) => (
@@ -1449,6 +1595,7 @@ const Registration = () => {
               icon={User}
               gradientBar="bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500"
               iconGradient="bg-gradient-to-br from-purple-500 to-pink-600"
+              index={1}
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {familyFieldsFather.map((f) => (
@@ -1485,6 +1632,7 @@ const Registration = () => {
               icon={Shield}
               gradientBar="bg-gradient-to-r from-green-500 via-teal-500 to-cyan-500"
               iconGradient="bg-gradient-to-br from-green-500 to-teal-600"
+              index={2}
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {guardianFields.map((f) => (
@@ -1507,6 +1655,7 @@ const Registration = () => {
               icon={University}
               gradientBar="bg-gradient-to-r from-orange-500 via-pink-500 to-rose-500"
               iconGradient="bg-gradient-to-br from-orange-500 to-pink-600"
+              index={3}
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {schoolFields.map((f) => (
@@ -1530,6 +1679,7 @@ const Registration = () => {
               icon={School}
               gradientBar="bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500"
               iconGradient="bg-gradient-to-br from-blue-500 to-cyan-600"
+              index={4}
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {academicFields.map((f) => (
@@ -1594,16 +1744,46 @@ const Registration = () => {
 
             {/* Submit Button */}
             <div className="flex justify-center pt-6 pb-20">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
                 type="submit"
                 disabled={loading || (quotaInfo.checked && quotaInfo.available === false)}
-                className="group relative backdrop-blur-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white py-5 px-16 rounded-3xl font-bold text-lg shadow-[0_20px_60px_rgba(99,102,241,0.4)] hover:shadow-[0_30px_80px_rgba(99,102,241,0.6)] hover:scale-105 transition-all duration-500 overflow-hidden border-2 border-white/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="group relative backdrop-blur-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white py-5 px-16 rounded-3xl font-bold text-lg shadow-[0_20px_60px_rgba(99,102,241,0.4)] hover:shadow-[0_30px_80px_rgba(99,102,241,0.6)] transition-all duration-500 overflow-hidden border-2 border-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <span className="relative flex items-center gap-3">
+                <motion.div
+                  animate={{
+                    backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "linear"
+                  }}
+                  className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 opacity-0 group-hover:opacity-100"
+                  style={{ backgroundSize: "200% 100%" }}
+                />
+                <motion.div
+                  animate={{
+                    x: ["-100%", "100%"],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatDelay: 3,
+                    ease: "easeInOut"
+                  }}
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                />
+                <span className="relative z-10 flex items-center gap-3">
                   {loading ? (
                     <>
-                      <Loader className="animate-spin" size={22} />
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      >
+                        <Loader size={22} />
+                      </motion.div>
                       Processing...
                     </>
                   ) : (
@@ -1612,7 +1792,7 @@ const Registration = () => {
                     </>
                   )}
                 </span>
-              </button>
+              </motion.button>
             </div>
           </form>
         )}

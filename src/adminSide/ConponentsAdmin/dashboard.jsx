@@ -847,26 +847,30 @@ const Dashboard = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full md:w-auto">
-            <div className="px-4 py-3 rounded-2xl bg-white/70 border border-white shadow-sm">
-              <p className="text-xs text-gray-600">Total Subjects</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {systemOverview.subjectsTotal}
-              </p>
-            </div>
-
-            <div className="px-4 py-3 rounded-2xl bg-white/70 border border-white shadow-sm">
-              <p className="text-xs text-gray-600">Total Registrations</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {systemOverview.registrationsTotal}
-              </p>
-            </div>
-
-            <div className="px-4 py-3 rounded-2xl bg-white/70 border border-white shadow-sm">
-              <p className="text-xs text-gray-600">Completed Payments</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {systemOverview.completedPayments}
-              </p>
-            </div>
+            {[
+              { label: "Total Subjects", value: systemOverview.subjectsTotal, delay: 0.4 },
+              { label: "Total Registrations", value: systemOverview.registrationsTotal, delay: 0.45 },
+              { label: "Completed Payments", value: systemOverview.completedPayments, delay: 0.5 },
+            ].map((item, i) => (
+              <motion.div
+                key={item.label}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: item.delay }}
+                whileHover={{ scale: 1.05, y: -3 }}
+                className="px-4 py-3 rounded-2xl bg-white/70 border border-white shadow-sm cursor-pointer"
+              >
+                <p className="text-xs text-gray-600">{item.label}</p>
+                <motion.p
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: item.delay + 0.1, type: "spring" }}
+                  className="text-2xl font-bold text-gray-900"
+                >
+                  {item.value}
+                </motion.p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </motion.div>

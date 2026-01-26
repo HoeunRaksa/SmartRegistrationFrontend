@@ -182,19 +182,25 @@ const CoursesPage = () => {
       <AnimatePresence>
         {message.text && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
             className={`backdrop-blur-xl rounded-2xl p-4 border shadow-lg flex items-center gap-3 ${message.type === 'success'
                 ? 'border-green-200/50 bg-green-50/50'
                 : 'border-red-200/50 bg-red-50/50'
               }`}
           >
-            {message.type === 'success' ? (
-              <CheckCircle className="w-5 h-5 text-green-600" />
-            ) : (
-              <AlertCircle className="w-5 h-5 text-red-600" />
-            )}
+            <motion.div
+              animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 0.5 }}
+            >
+              {message.type === 'success' ? (
+                <CheckCircle className="w-5 h-5 text-green-600" />
+              ) : (
+                <AlertCircle className="w-5 h-5 text-red-600" />
+              )}
+            </motion.div>
             <p className={`font-medium ${message.type === 'success' ? 'text-green-700' : 'text-red-700'}`}>
               {message.text}
             </p>
@@ -207,16 +213,28 @@ const CoursesPage = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="backdrop-blur-xl bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-6 border border-white/20 shadow-lg"
+          whileHover={{ scale: 1.05, y: -5 }}
+          className="backdrop-blur-xl bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-6 border border-white/20 shadow-lg cursor-pointer"
         >
           <div className="flex items-center justify-between">
             <div className="text-white">
               <p className="text-sm opacity-90 mb-1">Enrolled Courses</p>
-              <p className="text-3xl font-bold">{enrolledCourses.length}</p>
+              <motion.p
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring" }}
+                className="text-3xl font-bold"
+              >
+                {enrolledCourses.length}
+              </motion.p>
             </div>
-            <div className="p-3 bg-white/20 rounded-xl">
+            <motion.div
+              whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+              transition={{ duration: 0.5 }}
+              className="p-3 bg-white/20 rounded-xl"
+            >
               <BookOpen className="w-8 h-8 text-white" />
-            </div>
+            </motion.div>
           </div>
         </motion.div>
 
@@ -224,18 +242,28 @@ const CoursesPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="backdrop-blur-xl bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-6 border border-white/20 shadow-lg"
+          whileHover={{ scale: 1.05, y: -5 }}
+          className="backdrop-blur-xl bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-6 border border-white/20 shadow-lg cursor-pointer"
         >
           <div className="flex items-center justify-between">
             <div className="text-white">
               <p className="text-sm opacity-90 mb-1">Total Credits</p>
-              <p className="text-3xl font-bold">
+              <motion.p
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.3, type: "spring" }}
+                className="text-3xl font-bold"
+              >
                 {enrolledCourses.reduce((sum, course) => sum + (course.credits || 0), 0)}
-              </p>
+              </motion.p>
             </div>
-            <div className="p-3 bg-white/20 rounded-xl">
+            <motion.div
+              whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+              transition={{ duration: 0.5 }}
+              className="p-3 bg-white/20 rounded-xl"
+            >
               <Award className="w-8 h-8 text-white" />
-            </div>
+            </motion.div>
           </div>
         </motion.div>
 
@@ -243,16 +271,28 @@ const CoursesPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="backdrop-blur-xl bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl p-6 border border-white/20 shadow-lg"
+          whileHover={{ scale: 1.05, y: -5 }}
+          className="backdrop-blur-xl bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl p-6 border border-white/20 shadow-lg cursor-pointer"
         >
           <div className="flex items-center justify-between">
             <div className="text-white">
               <p className="text-sm opacity-90 mb-1">Available to Enroll</p>
-              <p className="text-3xl font-bold">{availableCourses.length}</p>
+              <motion.p
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.4, type: "spring" }}
+                className="text-3xl font-bold"
+              >
+                {availableCourses.length}
+              </motion.p>
             </div>
-            <div className="p-3 bg-white/20 rounded-xl">
+            <motion.div
+              whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+              transition={{ duration: 0.5 }}
+              className="p-3 bg-white/20 rounded-xl"
+            >
               <BookMarked className="w-8 h-8 text-white" />
-            </div>
+            </motion.div>
           </div>
         </motion.div>
       </div>
@@ -260,7 +300,9 @@ const CoursesPage = () => {
       {/* Search and Tabs */}
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
         <div className="flex gap-2 w-full sm:w-auto">
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setActiveTab('enrolled')}
             className={`px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === 'enrolled'
                 ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
@@ -268,8 +310,10 @@ const CoursesPage = () => {
               }`}
           >
             My Courses ({enrolledCourses.length})
-          </button>
-          <button
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setActiveTab('available')}
             className={`px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === 'available'
                 ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
@@ -277,19 +321,27 @@ const CoursesPage = () => {
               }`}
           >
             Enroll ({availableCourses.length})
-          </button>
+          </motion.button>
         </div>
 
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          className="relative w-full sm:w-80"
+        >
+          <motion.div
+            animate={{ rotate: [0, 10, -10, 0] }}
+            transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+          >
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+          </motion.div>
           <input
             type="text"
             placeholder="Search courses..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-xl backdrop-blur-xl bg-white/60 border border-white/40 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            className="w-full pl-10 pr-4 py-3 rounded-xl backdrop-blur-xl bg-white/60 border border-white/40 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
           />
-        </div>
+        </motion.div>
       </div>
 
       {/* Course Grid */}
@@ -315,7 +367,8 @@ const CoursesPage = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="backdrop-blur-xl bg-white/60 rounded-2xl p-6 border border-white/40 shadow-lg hover:shadow-xl transition-all"
+                  whileHover={{ scale: 1.03, y: -5 }}
+                  className="backdrop-blur-xl bg-white/60 rounded-2xl p-6 border border-white/40 shadow-lg hover:shadow-xl transition-all cursor-pointer"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
@@ -353,29 +406,55 @@ const CoursesPage = () => {
                   <div className="mb-4">
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-gray-600">Progress</span>
-                      <span className="font-semibold text-blue-600">{course.progress}%</span>
+                      <motion.span
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: index * 0.1 + 0.5 }}
+                        className="font-semibold text-blue-600"
+                      >
+                        {course.progress}%
+                      </motion.span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${course.progress}%` }}
-                        transition={{ duration: 1, delay: index * 0.1 }}
-                        className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full"
-                      />
+                        transition={{ duration: 1, delay: index * 0.1, ease: "easeOut" }}
+                        className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full relative"
+                      >
+                        <motion.div
+                          animate={{
+                            backgroundPosition: ["0% 50%", "100% 50%"],
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "linear"
+                          }}
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                          style={{ backgroundSize: "200% 100%" }}
+                        />
+                      </motion.div>
                     </div>
                   </div>
 
                   <div className="flex gap-2">
-                    <button className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                    >
                       View Details
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
+                      whileTap={{ scale: 0.9 }}
                       onClick={() => handleDrop(course.id)}
                       disabled={enrolling}
                       className="px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all disabled:opacity-50"
                     >
                       <Trash2 className="w-5 h-5" />
-                    </button>
+                    </motion.button>
                   </div>
                 </motion.div>
               ))
@@ -402,7 +481,8 @@ const CoursesPage = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="backdrop-blur-xl bg-white/60 rounded-2xl p-6 border border-white/40 shadow-lg hover:shadow-xl transition-all"
+                  whileHover={{ scale: 1.03, y: -5 }}
+                  className="backdrop-blur-xl bg-white/60 rounded-2xl p-6 border border-white/40 shadow-lg hover:shadow-xl transition-all cursor-pointer"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
@@ -443,22 +523,34 @@ const CoursesPage = () => {
                     </div>
                   )}
 
-                  <button
+                  <motion.button
+                    whileHover={!enrolling && !(course.max_students > 0 && course.enrolled_students >= course.max_students) ? { scale: 1.05, y: -2 } : {}}
+                    whileTap={!enrolling && !(course.max_students > 0 && course.enrolled_students >= course.max_students) ? { scale: 0.95 } : {}}
                     onClick={() => handleEnroll(course.id)}
                     disabled={enrolling || (course.max_students > 0 && course.enrolled_students >= course.max_students)}
                     className="w-full px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {enrolling ? (
-                      <Loader className="w-5 h-5 animate-spin" />
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      >
+                        <Loader className="w-5 h-5" />
+                      </motion.div>
                     ) : (course.max_students > 0 && course.enrolled_students >= course.max_students) ? (
                       'Course Full'
                     ) : (
                       <>
-                        <Plus className="w-5 h-5" />
+                        <motion.div
+                          whileHover={{ rotate: 90 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <Plus className="w-5 h-5" />
+                        </motion.div>
                         Enroll Now
                       </>
                     )}
-                  </button>
+                  </motion.button>
                 </motion.div>
               ))
             )}

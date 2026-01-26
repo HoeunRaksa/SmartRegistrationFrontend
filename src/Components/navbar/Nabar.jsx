@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { ToastContainer, showSuccess } from "../ui/Toast.jsx";
 import { logoutApi } from "../../api/auth";
+import { motion, AnimatePresence } from "framer-motion";
 
 const NAV_LINKS = [
   { path: "/", label: "Home" },
@@ -54,27 +55,59 @@ function Navbar() {
       {/* Navbar Content */}
       <div className="flex items-center justify-between px-6 py-4">
         {/* Logo */}
-        <Link
-          to="/"
-          className="font-extrabold text-2xl sm:text-3xl md:text-4xl tracking-wide"
-          onClick={closeMenu}
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
-          <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent uppercase drop-shadow-lg">
-            NovaTech
-          </span>
-        </Link>
+          <Link
+            to="/"
+            className="font-extrabold text-2xl sm:text-3xl md:text-4xl tracking-wide"
+            onClick={closeMenu}
+          >
+            <motion.span
+              animate={{
+                backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+              }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+              style={{ backgroundSize: "200% 100%" }}
+              className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent uppercase drop-shadow-lg inline-block"
+            >
+              NovaTech
+            </motion.span>
+          </Link>
+        </motion.div>
 
         {/* Desktop Links */}
         <div className="hidden md:flex lg:space-x-8 md:space-x-6">
-          {NAV_LINKS.map(({ path, label }) => (
-            <Link
+          {NAV_LINKS.map(({ path, label }, index) => (
+            <motion.div
               key={path}
-              to={path}
-              className="relative text-sm lg:text-base font-semibold uppercase text-gray-700 hover:text-transparent hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:bg-clip-text transition-all duration-300 group"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
             >
-              {label}
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300" />
-            </Link>
+              <Link
+                to={path}
+                className="relative text-sm lg:text-base font-semibold uppercase text-gray-700 hover:text-transparent hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:bg-clip-text transition-all duration-300 group"
+              >
+                <motion.span
+                  whileHover={{ scale: 1.1 }}
+                  className="relative z-10"
+                >
+                  {label}
+                </motion.span>
+                <motion.span
+                  initial={{ width: 0 }}
+                  whileHover={{ width: "100%" }}
+                  className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600"
+                  transition={{ duration: 0.3 }}
+                />
+              </Link>
+            </motion.div>
           ))}
         </div>
 
@@ -87,58 +120,108 @@ function Navbar() {
                   {user.name}
                 </span>
               </div>
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={handleLogout}
-                className="relative backdrop-blur-xl bg-gradient-to-r from-red-500 to-pink-500 text-white px-6 py-2.5 rounded-full shadow-lg hover:shadow-[0_10px_30px_rgba(239,68,68,0.4)] hover:scale-105 transition-all duration-300 font-semibold border border-white/30 overflow-hidden group"
+                className="relative backdrop-blur-xl bg-gradient-to-r from-red-500 to-pink-500 text-white px-6 py-2.5 rounded-full shadow-lg hover:shadow-[0_10px_30px_rgba(239,68,68,0.4)] transition-all duration-300 font-semibold border border-white/30 overflow-hidden group"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                <motion.div
+                  animate={{
+                    x: ["-100%", "100%"],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatDelay: 3,
+                    ease: "easeInOut"
+                  }}
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                />
                 <span className="relative z-10">Logout</span>
-              </button>
+              </motion.button>
             </div>
           ) : (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/login")}
-              className="hidden md:inline-flex relative backdrop-blur-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-2.5 rounded-full shadow-lg hover:shadow-[0_10px_30px_rgba(139,92,246,0.4)] hover:scale-105 transition-all duration-300 font-semibold border border-white/30 overflow-hidden group"
+              className="hidden md:inline-flex relative backdrop-blur-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-2.5 rounded-full shadow-lg hover:shadow-[0_10px_30px_rgba(139,92,246,0.4)] transition-all duration-300 font-semibold border border-white/30 overflow-hidden group"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+              <motion.div
+                animate={{
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatDelay: 3,
+                  ease: "easeInOut"
+                }}
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+              />
               <span className="relative z-10">Login</span>
-            </button>
+            </motion.button>
           )}
 
           {/* Mobile Menu Toggle */}
-          <button
-            className="md:hidden backdrop-blur-xl bg-white/60 p-2.5 rounded-full border-2 border-white/60 shadow-lg hover:scale-105 transition-all duration-300"
+          <motion.button
+            whileHover={{ scale: 1.1, rotate: 90 }}
+            whileTap={{ scale: 0.9 }}
+            className="md:hidden backdrop-blur-xl bg-white/60 p-2.5 rounded-full border-2 border-white/60 shadow-lg transition-all duration-300"
             onClick={() => setIsMenuOpen((v) => !v)}
             aria-label="Toggle menu"
           >
-            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <motion.svg
+              animate={{ rotate: isMenuOpen ? 180 : 0 }}
+              transition={{ duration: 0.3 }}
+              className="w-6 h-6 text-gray-700"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               {isMenuOpen ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               ) : (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               )}
-            </svg>
-          </button>
+            </motion.svg>
+          </motion.button>
         </div>
       </div>
 
       {/* Mobile Menu */}
-      <div
-        className={`md:hidden overflow-hidden transition-all duration-300 ${
-          isMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-        }`}
-      >
-        <div className="backdrop-blur-xl bg-white/40 border-t-2 border-white/40 p-4 space-y-2 rounded-b-3xl">
-          {NAV_LINKS.map(({ path, label }) => (
-            <Link
-              key={path}
-              to={path}
-              onClick={closeMenu}
-              className="block backdrop-blur-xl bg-white/60 p-3 rounded-xl text-gray-700 font-semibold hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 border border-white/60"
-            >
-              {label}
-            </Link>
-          ))}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="md:hidden overflow-hidden"
+          >
+            <div className="backdrop-blur-xl bg-white/40 border-t-2 border-white/40 p-4 space-y-2 rounded-b-3xl">
+              {NAV_LINKS.map(({ path, label }, index) => (
+                <motion.div
+                  key={path}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Link
+                    to={path}
+                    onClick={closeMenu}
+                    className="block backdrop-blur-xl bg-white/60 p-3 rounded-xl text-gray-700 font-semibold hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 border border-white/60"
+                  >
+                    <motion.span
+                      whileHover={{ x: 5 }}
+                      className="inline-block"
+                    >
+                      {label}
+                    </motion.span>
+                  </Link>
+                </motion.div>
+              ))}
 
           {user ? (
             <div className="space-y-2 pt-2 border-t-2 border-white/40">
@@ -165,8 +248,10 @@ function Navbar() {
               Login
             </button>
           )}
-        </div>
-      </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }

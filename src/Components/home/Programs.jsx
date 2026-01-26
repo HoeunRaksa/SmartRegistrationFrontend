@@ -134,32 +134,55 @@ const ProgramCard = ({ department, index }) => {
 
           {/* Actions */}
           <div className="mt-auto space-y-2.5">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => setShowDetails(!showDetails)}
-              className="w-full relative inline-flex items-center justify-center gap-2 font-semibold text-white backdrop-blur-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 px-5 py-3 rounded-xl hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-300 shadow-[0_10px_40px_rgba(139,92,246,0.3)] hover:shadow-[0_15px_50px_rgba(139,92,246,0.5)] border border-white/30 overflow-hidden group"
+              className="w-full relative inline-flex items-center justify-center gap-2 font-semibold text-white backdrop-blur-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 px-5 py-3 rounded-xl transition-all duration-300 shadow-[0_10px_40px_rgba(139,92,246,0.3)] hover:shadow-[0_15px_50px_rgba(139,92,246,0.5)] border border-white/30 overflow-hidden group"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+              <motion.div
+                animate={{
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatDelay: 3,
+                  ease: "easeInOut"
+                }}
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+              />
               <span className="relative z-10 text-sm">{showDetails ? "Hide Details" : "View Contact Info"}</span>
-              <span className={`relative z-10 transition-transform duration-300 ${showDetails ? 'rotate-180' : ''}`}>
+              <motion.span
+                animate={{ rotate: showDetails ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+                className="relative z-10"
+              >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
-              </span>
-            </button>
+              </motion.span>
+            </motion.button>
 
-            <a
+            <motion.a
+              whileHover={{ scale: 1.02, x: 5 }}
+              whileTap={{ scale: 0.98 }}
               href={`/departments/${department.id}`}
-              className="w-full inline-flex items-center justify-center gap-2 font-semibold backdrop-blur-xl bg-white/60 px-5 py-3 rounded-xl hover:bg-white/80 hover:scale-[1.02] transition-all duration-300 border-2 border-white/60 shadow-lg group"
+              className="w-full inline-flex items-center justify-center gap-2 font-semibold backdrop-blur-xl bg-white/60 px-5 py-3 rounded-xl hover:bg-white/80 transition-all duration-300 border-2 border-white/60 shadow-lg group"
             >
               <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent text-sm">
                 Explore Department
               </span>
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent transition-transform group-hover:translate-x-1 duration-300">
+              <motion.span
+                animate={{ x: [0, 3, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent"
+              >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
-              </span>
-            </a>
+              </motion.span>
+            </motion.a>
           </div>
         </div>
       </div>

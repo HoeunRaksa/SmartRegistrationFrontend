@@ -202,11 +202,49 @@ const StudentDashboard = () => {
             {/* ================= BACKGROUND SYSTEM ================= */}
             <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/30" />
 
-            {/* Static orbs */}
+            {/* Animated orbs */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-20 left-10 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl" />
-                <div className="absolute top-1/3 right-10 w-[500px] h-[500px] bg-purple-400/20 rounded-full blur-3xl" />
-                <div className="absolute bottom-20 left-1/4 w-80 h-80 bg-pink-400/20 rounded-full blur-3xl" />
+                <motion.div
+                    animate={{
+                        x: [0, 50, 0],
+                        y: [0, 30, 0],
+                        scale: [1, 1.1, 1],
+                    }}
+                    transition={{
+                        duration: 20,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                    }}
+                    className="absolute top-20 left-10 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl"
+                />
+                <motion.div
+                    animate={{
+                        x: [0, -40, 0],
+                        y: [0, 50, 0],
+                        scale: [1, 1.15, 1],
+                    }}
+                    transition={{
+                        duration: 25,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: 0.5
+                    }}
+                    className="absolute top-1/3 right-10 w-[500px] h-[500px] bg-purple-400/20 rounded-full blur-3xl"
+                />
+                <motion.div
+                    animate={{
+                        x: [0, 30, 0],
+                        y: [0, -40, 0],
+                        scale: [1, 1.08, 1],
+                    }}
+                    transition={{
+                        duration: 18,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: 1
+                    }}
+                    className="absolute bottom-20 left-1/4 w-80 h-80 bg-pink-400/20 rounded-full blur-3xl"
+                />
             </div>
 
             {/* Grid pattern */}
@@ -231,50 +269,85 @@ const StudentDashboard = () => {
                                 <p className="text-xs text-gray-600 mt-0.5">Student Portal</p>
                             </div>
                         )}
-                        <button
+                        <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
                             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
                             className="p-2 rounded-xl backdrop-blur-xl bg-white/40 hover:bg-white/60 transition-all border border-white/30 shadow-sm"
                         >
-                            {sidebarCollapsed ? <ChevronRight size={20} className="text-gray-700" /> : <ChevronLeft size={20} className="text-gray-700" />}
-                        </button>
+                            <motion.div
+                                animate={{ rotate: sidebarCollapsed ? 0 : 180 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                {sidebarCollapsed ? <ChevronRight size={20} className="text-gray-700" /> : <ChevronLeft size={20} className="text-gray-700" />}
+                            </motion.div>
+                        </motion.button>
                     </div>
 
                     {/* Menu Items */}
                     <nav className="flex-1 space-y-2 overflow-y-auto scrollbar-hide">
-                        {menuItems.map((item) => {
+                        {menuItems.map((item, index) => {
                             const Icon = item.icon;
                             const isActive = activeSection === item.id;
                             return (
-                                <button
+                                <motion.button
                                     key={item.id}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: index * 0.05 }}
+                                    whileHover={{ scale: 1.02, x: 4 }}
+                                    whileTap={{ scale: 0.98 }}
                                     onClick={() => handleSectionChange(item.id)}
                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
                                         ? 'backdrop-blur-xl bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
                                         : 'backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40'
                                         } border border-white/30`}
                                 >
-                                    <Icon size={20} className={isActive ? "drop-shadow-sm" : ""} />
+                                    <motion.div
+                                        animate={isActive ? { rotate: [0, -10, 10, 0] } : {}}
+                                        transition={{ duration: 0.5 }}
+                                    >
+                                        <Icon size={20} className={isActive ? "drop-shadow-sm" : ""} />
+                                    </motion.div>
                                     {!sidebarCollapsed && (
-                                        <span className="font-medium text-sm">{item.label}</span>
+                                        <motion.span
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            transition={{ delay: 0.1 }}
+                                            className="font-medium text-sm"
+                                        >
+                                            {item.label}
+                                        </motion.span>
                                     )}
                                     {isActive && !sidebarCollapsed && (
-                                        <div className="ml-auto w-2 h-2 rounded-full bg-white shadow-lg" />
+                                        <motion.div
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            className="ml-auto w-2 h-2 rounded-full bg-white shadow-lg"
+                                        />
                                     )}
-                                </button>
+                                </motion.button>
                             );
                         })}
                     </nav>
 
                     {/* Logout Button */}
-                    <button
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-4 py-2 rounded-2xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-5"
                     >
-                        <LogOut size={20} />
+                        <motion.div
+                            whileHover={{ rotate: [0, -15, 15, 0] }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <LogOut size={20} />
+                        </motion.div>
                         {!sidebarCollapsed && (
                             <span className="font-medium text-sm">Logout</span>
                         )}
-                    </button>
+                    </motion.button>
                 </div>
             </motion.aside>
 
@@ -314,12 +387,17 @@ const StudentDashboard = () => {
                                 </div>
 
                                 <nav className="flex-1 space-y-2 overflow-y-auto">
-                                    {menuItems.map((item) => {
+                                    {menuItems.map((item, index) => {
                                         const Icon = item.icon;
                                         const isActive = activeSection === item.id;
                                         return (
-                                            <button
+                                            <motion.button
                                                 key={item.id}
+                                                initial={{ opacity: 0, x: -20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: index * 0.05 }}
+                                                whileHover={{ scale: 1.02, x: 4 }}
+                                                whileTap={{ scale: 0.98 }}
                                                 onClick={() => {
                                                     handleSectionChange(item.id);
                                                     setMobileMenuOpen(false);
@@ -329,20 +407,32 @@ const StudentDashboard = () => {
                                                     : 'backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40'
                                                     } border border-white/30`}
                                             >
-                                                <Icon size={20} />
+                                                <motion.div
+                                                    animate={isActive ? { rotate: [0, -10, 10, 0] } : {}}
+                                                    transition={{ duration: 0.5 }}
+                                                >
+                                                    <Icon size={20} />
+                                                </motion.div>
                                                 <span className="font-medium text-sm">{item.label}</span>
-                                            </button>
+                                            </motion.button>
                                         );
                                     })}
                                 </nav>
 
-                                <button
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
                                     onClick={handleLogout}
                                     className="w-full flex items-center gap-3 px-4 py-2 rounded-2xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-5"
                                 >
-                                    <LogOut size={20} />
+                                    <motion.div
+                                        whileHover={{ rotate: [0, -15, 15, 0] }}
+                                        transition={{ duration: 0.3 }}
+                                    >
+                                        <LogOut size={20} />
+                                    </motion.div>
                                     <span className="font-medium text-sm">Logout</span>
-                                </button>
+                                </motion.button>
 
                                 {/* Mobile User Profile */}
                                 <div className="mt-auto pt-4 border-t border-white/20">
@@ -387,21 +477,33 @@ const StudentDashboard = () => {
                         {/* Left Section */}
                         <div className="flex items-center gap-3">
                             {/* Mobile Menu Button */}
-                            <button
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={() => setMobileMenuOpen(true)}
                                 className="md:hidden p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md"
                             >
                                 <Menu size={20} className="text-gray-700" />
-                            </button>
+                            </motion.button>
 
                             {/* Page Title */}
-                            <div className="flex items-center gap-3">
-                                <div className="hidden sm:flex p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-md">
+                            <motion.div
+                                key={activeSection}
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="flex items-center gap-3"
+                            >
+                                <motion.div
+                                    animate={{ rotate: [0, 10, -10, 0] }}
+                                    transition={{ duration: 0.5, delay: 0.2 }}
+                                    className="hidden sm:flex p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-md"
+                                >
                                     {React.createElement(menuItems.find(item => item.id === activeSection)?.icon || LayoutDashboard, {
                                         size: 20,
                                         className: "text-white"
                                     })}
-                                </div>
+                                </motion.div>
                                 <div>
                                     <h2 className="text-lg md:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                                         {menuItems.find(item => item.id === activeSection)?.label || 'Dashboard'}
@@ -410,55 +512,101 @@ const StudentDashboard = () => {
                                         Welcome back, {user?.name?.split(' ')[0] || 'Student'}
                                     </p>
                                 </div>
-                            </div>
+                            </motion.div>
                         </div>
 
                         {/* Right Section */}
                         <div className="flex items-center gap-2">
                             {/* Search Bar */}
-                            <div className="hidden lg:flex items-center gap-2 backdrop-blur-xl bg-white/50 rounded-xl px-4 py-2.5 border border-white/40 shadow-sm hover:shadow-md hover:bg-white/60 transition-all min-w-[280px]">
-                                <Search size={16} className="text-gray-500" />
+                            <motion.div
+                                whileHover={{ scale: 1.02 }}
+                                whileFocus={{ scale: 1.02 }}
+                                className="hidden lg:flex items-center gap-2 backdrop-blur-xl bg-white/50 rounded-xl px-4 py-2.5 border border-white/40 shadow-sm hover:shadow-md hover:bg-white/60 transition-all min-w-[280px]"
+                            >
+                                <motion.div
+                                    animate={{ rotate: [0, 15, -15, 0] }}
+                                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                                >
+                                    <Search size={16} className="text-gray-500" />
+                                </motion.div>
                                 <input
                                     type="text"
                                     placeholder="Search courses, assignments..."
                                     className="bg-transparent outline-none text-sm placeholder-gray-400 w-full text-gray-700 font-medium"
                                 />
-                            </div>
+                            </motion.div>
 
-                            {/* Mobile Search Button */}
-                            <button className="lg:hidden p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md">
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="lg:hidden p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md"
+                            >
                                 <Search size={18} className="text-gray-700" />
-                            </button>
+                            </motion.button>
 
                             {/* Fullscreen Toggle */}
-                            <button
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={toggleFullscreen}
                                 className="hidden md:flex p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md group"
                             >
-                                {isFullscreen ? (
-                                    <Minimize2 size={18} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
-                                ) : (
-                                    <Maximize2 size={18} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
-                                )}
-                            </button>
+                                <motion.div
+                                    animate={{ rotate: isFullscreen ? 180 : 0 }}
+                                    transition={{ duration: 0.3 }}
+                                >
+                                    {isFullscreen ? (
+                                        <Minimize2 size={18} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
+                                    ) : (
+                                        <Maximize2 size={18} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
+                                    )}
+                                </motion.div>
+                            </motion.button>
 
                             {/* Notifications */}
-                            <button className="relative p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md group">
-                                <Bell size={18} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="relative p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md group"
+                            >
+                                <motion.div
+                                    animate={notifications > 0 ? {
+                                        rotate: [0, -10, 10, -10, 10, 0],
+                                    } : {}}
+                                    transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
+                                >
+                                    <Bell size={18} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
+                                </motion.div>
                                 {notifications > 0 && (
                                     <>
-                                        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-[10px] font-bold text-white shadow-lg border-2 border-white">
+                                        <motion.span
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-[10px] font-bold text-white shadow-lg border-2 border-white"
+                                        >
                                             {notifications}
-                                        </span>
-                                        <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-400 animate-ping opacity-75"></span>
+                                        </motion.span>
+                                        <motion.span
+                                            animate={{
+                                                scale: [1, 1.2, 1],
+                                                opacity: [0.75, 0, 0.75]
+                                            }}
+                                            transition={{ duration: 1.5, repeat: Infinity }}
+                                            className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-400"
+                                        />
                                     </>
                                 )}
-                            </button>
+                            </motion.button>
 
                             {/* Profile Dropdown */}
-                            <div className="hidden sm:flex items-center gap-2 pl-2 pr-3 py-2 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md cursor-pointer group">
+                            <motion.div
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                className="hidden sm:flex items-center gap-2 pl-2 pr-3 py-2 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md cursor-pointer group"
+                            >
                                 {user?.profile_picture_url ? (
-                                    <img
+                                    <motion.img
+                                        whileHover={{ scale: 1.1 }}
                                         src={user.profile_picture_url}
                                         alt="Profile"
                                         className="w-8 h-8 rounded-lg object-cover ring-2 ring-white/60 group-hover:ring-blue-400 transition-all"
@@ -467,9 +615,13 @@ const StudentDashboard = () => {
                                         }}
                                     />
                                 ) : (
-                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md ring-2 ring-white/60 group-hover:ring-blue-400 transition-all">
+                                    <motion.div
+                                        whileHover={{ scale: 1.1, rotate: [0, 5, -5, 0] }}
+                                        transition={{ duration: 0.3 }}
+                                        className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md ring-2 ring-white/60 group-hover:ring-blue-400 transition-all"
+                                    >
                                         {user?.name?.charAt(0).toUpperCase() || 'S'}
-                                    </div>
+                                    </motion.div>
                                 )}
                                 <div className="hidden lg:block">
                                     <p className="text-sm font-semibold text-gray-800 leading-tight">
@@ -479,8 +631,13 @@ const StudentDashboard = () => {
                                         Student
                                     </p>
                                 </div>
-                                <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors hidden lg:block" />
-                            </div>
+                                <motion.div
+                                    animate={{ x: [0, 3, 0] }}
+                                    transition={{ duration: 1.5, repeat: Infinity }}
+                                >
+                                    <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors hidden lg:block" />
+                                </motion.div>
+                            </motion.div>
                         </div>
                     </div>
 
@@ -496,7 +653,17 @@ const StudentDashboard = () => {
 
                 {/* Dynamic Content Area */}
                 <main className="min-h-screen pt-6 relative z-10 w-full">
-                    {renderSection()}
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={activeSection}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            {renderSection()}
+                        </motion.div>
+                    </AnimatePresence>
                 </main>
             </div>
 

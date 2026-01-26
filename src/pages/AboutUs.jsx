@@ -31,9 +31,47 @@ const AbouteUs = () => {
     <div className="min-h-screen  relative overflow-hidden">
       {/* Animated background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-40 right-20 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl animate-pulse animation-delay-2000" />
-        <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-pink-400/20 rounded-full blur-3xl animate-pulse animation-delay-4000" />
+        <motion.div
+          animate={{
+            x: [0, 50, 0],
+            y: [0, 30, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute top-20 left-10 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{
+            x: [0, -40, 0],
+            y: [0, 50, 0],
+            scale: [1, 1.15, 1],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 0.5
+          }}
+          className="absolute top-40 right-20 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{
+            x: [0, 30, 0],
+            y: [0, -40, 0],
+            scale: [1, 1.08, 1],
+          }}
+          transition={{
+            duration: 18,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1
+          }}
+          className="absolute bottom-20 left-1/3 w-80 h-80 bg-pink-400/20 rounded-full blur-3xl"
+        />
       </div>
 
       <div className="relative z-10 px-4 py-8 max-w-7xl mx-auto">
@@ -61,19 +99,28 @@ const AbouteUs = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <Card className="h-full hover:scale-[1.02] transition-transform duration-300">
-                <CardContent className="p-8">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mb-6 shadow-lg">
-                    <span className="text-4xl">🎯</span>
-                  </div>
-                  <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-                    Our Mission
-                  </h2>
-                  <p className="text-gray-700 leading-relaxed text-lg font-light">
-                    To provide world-class education that nurtures critical thinking, fosters innovation, and prepares students to become leaders and change-makers in their communities and beyond.
-                  </p>
-                </CardContent>
-              </Card>
+              <motion.div
+                whileHover={{ scale: 1.02, y: -5 }}
+                className="h-full"
+              >
+                <Card className="h-full transition-transform duration-300">
+                  <CardContent className="p-8">
+                    <motion.div
+                      whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+                      transition={{ duration: 0.5 }}
+                      className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mb-6 shadow-lg"
+                    >
+                      <span className="text-4xl">🎯</span>
+                    </motion.div>
+                    <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+                      Our Mission
+                    </h2>
+                    <p className="text-gray-700 leading-relaxed text-lg font-light">
+                      To provide world-class education that nurtures critical thinking, fosters innovation, and prepares students to become leaders and change-makers in their communities and beyond.
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
             </motion.div>
 
             <motion.div
@@ -82,19 +129,28 @@ const AbouteUs = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <Card className="h-full hover:scale-[1.02] transition-transform duration-300">
-                <CardContent className="p-8">
-                  <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mb-6 shadow-lg">
-                    <span className="text-4xl">👁️</span>
-                  </div>
-                  <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
-                    Our Vision
-                  </h2>
-                  <p className="text-gray-700 leading-relaxed text-lg font-light">
-                    To be a globally recognized institution of higher learning, renowned for academic excellence and producing graduates who contribute meaningfully to solving the world's most pressing challenges.
-                  </p>
-                </CardContent>
-              </Card>
+              <motion.div
+                whileHover={{ scale: 1.02, y: -5 }}
+                className="h-full"
+              >
+                <Card className="h-full transition-transform duration-300">
+                  <CardContent className="p-8">
+                    <motion.div
+                      whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+                      transition={{ duration: 0.5 }}
+                      className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mb-6 shadow-lg"
+                    >
+                      <span className="text-4xl">👁️</span>
+                    </motion.div>
+                    <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+                      Our Vision
+                    </h2>
+                    <p className="text-gray-700 leading-relaxed text-lg font-light">
+                      To be a globally recognized institution of higher learning, renowned for academic excellence and producing graduates who contribute meaningfully to solving the world's most pressing challenges.
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
             </motion.div>
           </div>
         </section>

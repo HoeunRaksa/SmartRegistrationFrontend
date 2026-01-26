@@ -81,17 +81,25 @@ const CoursesList = ({ loading, courses, onEdit, onDelete, onRefresh }) => {
 
         <div className="flex items-center gap-2">
           {/* Search */}
-          <div className="relative">
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileFocus={{ scale: 1.02 }}
+            className="relative"
+          >
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10"
+            >
               <Search className="w-4 h-4" />
-            </div>
+            </motion.div>
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search courses..."
               className="w-full md:w-64 rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
             />
-          </div>
+          </motion.div>
 
           {/* Refresh Button */}
           <motion.button
@@ -185,7 +193,8 @@ const CoursesList = ({ loading, courses, onEdit, onDelete, onRefresh }) => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="hover:bg-blue-50/30 transition-colors"
+                  whileHover={{ scale: 1.01, x: 4 }}
+                  className="hover:bg-blue-50/30 transition-colors cursor-pointer"
                 >
                   {/* ID */}
                   <td className="px-6 py-4 whitespace-nowrap">
