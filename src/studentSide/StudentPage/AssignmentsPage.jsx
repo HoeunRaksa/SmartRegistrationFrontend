@@ -16,7 +16,7 @@ import {
   BookOpen,
   Award
 } from 'lucide-react';
-import { fetchStudentAssignments, submitAssignment,  } from '../../api/assignment_api';
+import { fetchStudentAssignments, submitAssignment, } from '../../api/assignment_api';
 
 const AssignmentsPage = () => {
   const [assignments, setAssignments] = useState([]);
@@ -145,11 +145,10 @@ const AssignmentsPage = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className={`backdrop-blur-xl rounded-2xl p-4 border shadow-lg flex items-center gap-3 ${
-              message.type === 'success'
+            className={`backdrop-blur-xl rounded-2xl p-4 border shadow-lg flex items-center gap-3 ${message.type === 'success'
                 ? 'border-green-200/50 bg-green-50/50'
                 : 'border-red-200/50 bg-red-50/50'
-            }`}
+              }`}
           >
             {message.type === 'success' ? (
               <CheckCircle className="w-5 h-5 text-green-600" />
@@ -233,35 +232,47 @@ const AssignmentsPage = () => {
         </motion.div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <div className="flex gap-2 flex-wrap">
-          {['all', 'pending', 'submitted', 'graded'].map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilterStatus(status)}
-              className={`px-4 py-2 rounded-xl font-semibold transition-all capitalize ${
-                filterStatus === status
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
-                  : 'backdrop-blur-xl bg-white/60 border border-white/40 text-gray-700 hover:bg-white/80'
-              }`}
-            >
-              {status}
-            </button>
-          ))}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col md:flex-row justify-between items-end gap-4"
+      >
+        <div>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-600 via-rose-600 to-red-600 bg-clip-text text-transparent flex items-center gap-3">
+            <FileText className="w-8 h-8 text-pink-600" />
+            Coursework & Assignments
+          </h2>
+          <p className="text-gray-600 mt-1 font-medium">Track your pending tasks and submissions</p>
         </div>
 
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search assignments..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-xl backdrop-blur-xl bg-white/60 border border-white/40 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-          />
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
+          <div className="flex gap-2 flex-wrap">
+            {['all', 'pending', 'submitted', 'graded'].map((status) => (
+              <button
+                key={status}
+                onClick={() => setFilterStatus(status)}
+                className={`px-4 py-2 rounded-xl font-bold text-sm transition-all capitalize ${filterStatus === status
+                    ? 'bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-lg'
+                    : 'backdrop-blur-xl bg-white/60 border border-white/40 text-gray-600 hover:bg-white/80'
+                  }`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl backdrop-blur-xl bg-white/60 border border-white/40 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm transition-all shadow-sm focus:bg-white"
+            />
+          </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Assignments List */}
       <div className="space-y-4">

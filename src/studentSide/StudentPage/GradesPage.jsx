@@ -162,17 +162,23 @@ const GradesPage = () => {
         </motion.div>
       </div>
 
-      {/* Controls */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row justify-between items-end gap-4"
+      >
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Academic Transcript</h2>
-          <p className="text-gray-600">View your grades and academic performance</p>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 bg-clip-text text-transparent flex items-center gap-3">
+            <Award className="w-8 h-8 text-amber-600" />
+            Academic Record
+          </h2>
+          <p className="text-gray-600 mt-1 font-medium">View your grades and download transcripts</p>
         </div>
         <div className="flex gap-2">
           <select
             value={selectedSemester}
             onChange={(e) => setSelectedSemester(e.target.value)}
-            className="px-4 py-2 rounded-xl backdrop-blur-xl bg-white/60 border border-white/40 focus:ring-2 focus:ring-blue-500 outline-none"
+            className="px-4 py-2.5 rounded-xl backdrop-blur-xl bg-white/60 border border-white/40 focus:ring-2 focus:ring-amber-500 outline-none font-medium text-gray-700 cursor-pointer hover:bg-white/80 transition-all shadow-sm"
           >
             {semesters.map(sem => (
               <option key={sem} value={sem}>
@@ -180,15 +186,17 @@ const GradesPage = () => {
               </option>
             ))}
           </select>
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={handleDownloadTranscript}
-            className="px-4 py-2 rounded-xl backdrop-blur-xl bg-white/60 border border-white/40 text-gray-700 hover:bg-white/80 transition-all flex items-center gap-2"
+            className="px-5 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 font-bold hover:border-blue-300 hover:text-blue-600 transition-all shadow-sm flex items-center gap-2 group"
           >
-            <Download className="w-5 h-5" />
-            Download
-          </button>
+            <Download className="w-5 h-5 group-hover:text-blue-500" />
+            Transcript
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Grades Table */}
       <motion.div

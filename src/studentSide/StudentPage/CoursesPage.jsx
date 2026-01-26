@@ -187,8 +187,8 @@ const CoursesPage = () => {
             exit={{ opacity: 0, y: -20, scale: 0.9 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
             className={`backdrop-blur-xl rounded-2xl p-4 border shadow-lg flex items-center gap-3 ${message.type === 'success'
-                ? 'border-green-200/50 bg-green-50/50'
-                : 'border-red-200/50 bg-red-50/50'
+              ? 'border-green-200/50 bg-green-50/50'
+              : 'border-red-200/50 bg-red-50/50'
               }`}
           >
             <motion.div
@@ -208,105 +208,27 @@ const CoursesPage = () => {
         )}
       </AnimatePresence>
 
-      {/* Header Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          whileHover={{ scale: 1.05, y: -5 }}
-          className="backdrop-blur-xl bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-6 border border-white/20 shadow-lg cursor-pointer"
-        >
-          <div className="flex items-center justify-between">
-            <div className="text-white">
-              <p className="text-sm opacity-90 mb-1">Enrolled Courses</p>
-              <motion.p
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: "spring" }}
-                className="text-3xl font-bold"
-              >
-                {enrolledCourses.length}
-              </motion.p>
-            </div>
-            <motion.div
-              whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
-              transition={{ duration: 0.5 }}
-              className="p-3 bg-white/20 rounded-xl"
-            >
-              <BookOpen className="w-8 h-8 text-white" />
-            </motion.div>
-          </div>
-        </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row justify-between items-end gap-4"
+      >
+        <div>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700 bg-clip-text text-transparent flex items-center gap-3">
+            <BookOpen className="w-8 h-8 text-blue-600" />
+            Course Management
+          </h2>
+          <p className="text-gray-600 mt-1 font-medium">Browse and manage your academic curriculum</p>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          whileHover={{ scale: 1.05, y: -5 }}
-          className="backdrop-blur-xl bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-6 border border-white/20 shadow-lg cursor-pointer"
-        >
-          <div className="flex items-center justify-between">
-            <div className="text-white">
-              <p className="text-sm opacity-90 mb-1">Total Credits</p>
-              <motion.p
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.3, type: "spring" }}
-                className="text-3xl font-bold"
-              >
-                {enrolledCourses.reduce((sum, course) => sum + (course.credits || 0), 0)}
-              </motion.p>
-            </div>
-            <motion.div
-              whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
-              transition={{ duration: 0.5 }}
-              className="p-3 bg-white/20 rounded-xl"
-            >
-              <Award className="w-8 h-8 text-white" />
-            </motion.div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          whileHover={{ scale: 1.05, y: -5 }}
-          className="backdrop-blur-xl bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl p-6 border border-white/20 shadow-lg cursor-pointer"
-        >
-          <div className="flex items-center justify-between">
-            <div className="text-white">
-              <p className="text-sm opacity-90 mb-1">Available to Enroll</p>
-              <motion.p
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.4, type: "spring" }}
-                className="text-3xl font-bold"
-              >
-                {availableCourses.length}
-              </motion.p>
-            </div>
-            <motion.div
-              whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
-              transition={{ duration: 0.5 }}
-              className="p-3 bg-white/20 rounded-xl"
-            >
-              <BookMarked className="w-8 h-8 text-white" />
-            </motion.div>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Search and Tabs */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
         <div className="flex gap-2 w-full sm:w-auto">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setActiveTab('enrolled')}
-            className={`px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === 'enrolled'
-                ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
-                : 'backdrop-blur-xl bg-white/60 border border-white/40 text-gray-700 hover:bg-white/80'
+            className={`px-6 py-2.5 rounded-xl font-bold transition-all ${activeTab === 'enrolled'
+              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30'
+              : 'backdrop-blur-xl bg-white/60 border border-white/40 text-gray-600 hover:bg-white/80'
               }`}
           >
             My Courses ({enrolledCourses.length})
@@ -315,34 +237,36 @@ const CoursesPage = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setActiveTab('available')}
-            className={`px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === 'available'
-                ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
-                : 'backdrop-blur-xl bg-white/60 border border-white/40 text-gray-700 hover:bg-white/80'
+            className={`px-6 py-2.5 rounded-xl font-bold transition-all ${activeTab === 'available'
+              ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/30'
+              : 'backdrop-blur-xl bg-white/60 border border-white/40 text-gray-600 hover:bg-white/80'
               }`}
           >
             Enroll ({availableCourses.length})
           </motion.button>
         </div>
+      </motion.div>
 
+      {/* Header Stats */}
+
+      <motion.div
+        whileHover={{ scale: 1.02 }}
+        className="relative w-full sm:w-80"
+      >
         <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="relative w-full sm:w-80"
+          whileHover={{ scale: 1.1, rotate: 10 }}
+          whileTap={{ scale: 0.9 }}
         >
-          <motion.div
-            animate={{ rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-          >
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
-          </motion.div>
-          <input
-            type="text"
-            placeholder="Search courses..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-xl backdrop-blur-xl bg-white/60 border border-white/40 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-          />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
         </motion.div>
-      </div>
+        <input
+          type="text"
+          placeholder="Search courses..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-4 py-3 rounded-xl backdrop-blur-xl bg-white/60 border border-white/40 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+        />
+      </motion.div>
 
       {/* Course Grid */}
       <AnimatePresence mode="wait">
@@ -557,8 +481,9 @@ const CoursesPage = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </div >
   );
 };
 
 export default CoursesPage;
+
