@@ -33,112 +33,8 @@ const AttendancePage = () => {
         fetchAttendanceStats().catch(() => ({ data: null }))
       ]);
 
-      // Mock data
-      const mockAttendance = [
-        {
-          id: 1,
-          course_code: 'CS101',
-          course_name: 'Introduction to Computer Science',
-          date: '2026-01-15',
-          status: 'present',
-          session_type: 'Lecture',
-          instructor: 'Dr. Sarah Johnson'
-        },
-        {
-          id: 2,
-          course_code: 'CS101',
-          course_name: 'Introduction to Computer Science',
-          date: '2026-01-13',
-          status: 'present',
-          session_type: 'Lecture',
-          instructor: 'Dr. Sarah Johnson'
-        },
-        {
-          id: 3,
-          course_code: 'MATH201',
-          course_name: 'Calculus II',
-          date: '2026-01-14',
-          status: 'present',
-          session_type: 'Lecture',
-          instructor: 'Prof. Michael Chen'
-        },
-        {
-          id: 4,
-          course_code: 'MATH201',
-          course_name: 'Calculus II',
-          date: '2026-01-16',
-          status: 'absent',
-          session_type: 'Lecture',
-          instructor: 'Prof. Michael Chen'
-        },
-        {
-          id: 5,
-          course_code: 'ENG102',
-          course_name: 'Academic Writing',
-          date: '2026-01-15',
-          status: 'present',
-          session_type: 'Seminar',
-          instructor: 'Dr. Emily White'
-        },
-        {
-          id: 6,
-          course_code: 'ENG102',
-          course_name: 'Academic Writing',
-          date: '2026-01-13',
-          status: 'late',
-          session_type: 'Seminar',
-          instructor: 'Dr. Emily White'
-        },
-        {
-          id: 7,
-          course_code: 'CS101',
-          course_name: 'Introduction to Computer Science',
-          date: '2026-01-17',
-          status: 'present',
-          session_type: 'Lab',
-          instructor: 'Dr. Sarah Johnson'
-        }
-      ];
-
-      const mockStats = {
-        overall_percentage: 85.7,
-        total_sessions: 28,
-        present: 24,
-        absent: 2,
-        late: 2,
-        courses: [
-          {
-            course_code: 'CS101',
-            course_name: 'Introduction to Computer Science',
-            total_sessions: 10,
-            present: 9,
-            absent: 0,
-            late: 1,
-            percentage: 90.0
-          },
-          {
-            course_code: 'MATH201',
-            course_name: 'Calculus II',
-            total_sessions: 8,
-            present: 6,
-            absent: 2,
-            late: 0,
-            percentage: 75.0
-          },
-          {
-            course_code: 'ENG102',
-            course_name: 'Academic Writing',
-            total_sessions: 10,
-            present: 9,
-            absent: 0,
-            late: 1,
-            percentage: 90.0
-          }
-        ]
-      };
-
-      setAttendance(attendanceRes.data?.data?.length > 0 ? attendanceRes.data.data : mockAttendance);
-      setStats(statsRes.data || mockStats);
+      setAttendance(attendanceRes.data?.data?.length > 0 ? attendanceRes.data.data : []);
+      setStats(statsRes.data || null);
     } catch (error) {
       console.error('Failed to load attendance:', error);
     } finally {
@@ -295,11 +191,10 @@ const AttendancePage = () => {
             <button
               key={mode}
               onClick={() => setViewMode(mode)}
-              className={`px-4 py-2 rounded-xl font-semibold transition-all capitalize ${
-                viewMode === mode
+              className={`px-4 py-2 rounded-xl font-semibold transition-all capitalize ${viewMode === mode
                   ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
                   : 'backdrop-blur-xl bg-white/60 border border-white/40 text-gray-700 hover:bg-white/80'
-              }`}
+                }`}
             >
               {mode}
             </button>
@@ -395,11 +290,10 @@ const AttendancePage = () => {
               <button
                 key={course}
                 onClick={() => setSelectedCourse(course)}
-                className={`px-4 py-2 rounded-xl font-semibold transition-all ${
-                  selectedCourse === course
+                className={`px-4 py-2 rounded-xl font-semibold transition-all ${selectedCourse === course
                     ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
                     : 'backdrop-blur-xl bg-white/60 border border-white/40 text-gray-700 hover:bg-white/80'
-                }`}
+                  }`}
               >
                 {course === 'all' ? 'All Courses' : course}
               </button>

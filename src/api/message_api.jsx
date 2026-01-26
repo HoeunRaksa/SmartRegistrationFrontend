@@ -50,14 +50,14 @@ export const fetchMessages = async (userId) => {
 
     const mapped = Array.isArray(data)
       ? data.map((m) => ({
-          id: m.id,
-          sender_id: m.s_id ?? m.sender_id,
-          sender_name: m.sender_name, // may be undefined unless backend provides it
-          message: m.content ?? m.message,
-          created_at: m.created_at,
-          is_mine: (m.s_id ?? m.sender_id) === currentUser.id,
-          attachments: m.attachments || [],
-        }))
+        id: m.id,
+        sender_id: m.s_id ?? m.sender_id,
+        sender_name: m.sender_name, // may be undefined unless backend provides it
+        message: m.content ?? m.message,
+        created_at: m.created_at,
+        is_mine: (m.s_id ?? m.sender_id) === currentUser.id,
+        attachments: m.attachments || [],
+      }))
       : [];
 
     return {
@@ -117,8 +117,15 @@ export const deleteConversation = async () => {
   throw new Error("deleteConversation is not supported: you don't have conversations table/API.");
 };
 
+// GET: Fetch unread count
 export const fetchUnreadCount = async () => {
-  throw new Error("fetchUnreadCount is not supported unless you build an API for it.");
+  try {
+    const response = await API.get("/student/messages/unread-count");
+    return extractData(response);
+  } catch (error) {
+    console.error("fetchUnreadCount error:", error);
+    return { unread_count: 0 };
+  }
 };
 
 export const searchMessages = async () => {

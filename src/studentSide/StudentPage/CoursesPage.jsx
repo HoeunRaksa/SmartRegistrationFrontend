@@ -41,13 +41,15 @@ const CoursesPage = () => {
   };
 
   const buildScheduleText = (courseOrEnrollment) => {
-    // backend may send schedules on course: course.class_schedules
+    // backend may send schedules on course: course.class_schedules or course.schedule (array)
     const course = courseOrEnrollment?.course || courseOrEnrollment;
 
-    const schedules = course?.class_schedules || course?.schedules || [];
+    // Check all possible schedule keys
+    const schedules = course?.class_schedules || course?.schedules || (Array.isArray(course?.schedule) ? course.schedule : []) || [];
+
     if (!Array.isArray(schedules) || schedules.length === 0) {
-      // maybe enrollment sends schedule string already
-      return courseOrEnrollment?.schedule || course?.schedule || '—';
+      // maybe enrollment sends schedule string already, or it's empty
+      return typeof course?.schedule === 'string' ? course.schedule : '—';
     }
 
     // Example output: "Mon 10:00-11:30, Wed 10:00-11:30"
@@ -65,28 +67,30 @@ const CoursesPage = () => {
     };
 
     return schedules
-      .map((s) => `${dayShort(s.day_of_week)} ${s.start_time}-${s.end_time}`)
+      .map((s) => `${dayShort(s.day || s.day_of_week)} ${s.start_time?.slice(0, 5)}-${s.end_time?.slice(0, 5)}`)
       .join(', ');
   };
 
   const normalizeCourse = (item) => {
     // item may be:
     // 1) enrollment: { course: {...}, progress, status ... }
-    // 2) course: {...}
+    // 2) course: {...} (available courses)
     const course = item?.course || item;
 
     return {
-      id: course?.id,
+      id: course?.id || course?.course_id, // backend sometimes sends course_id in wrapper
       course_code: course?.course_code || course?.code || '—',
       course_name: course?.course_name || course?.name || course?.title || '—',
-      instructor: course?.instructor || course?.instructor_name || '—',
+      // Backend returns instructor as object { id, name }
+      instructor: course?.instructor?.name || course?.instructor_name || (typeof course?.instructor === 'string' ? course.instructor : '—'),
       credits: Number(course?.credits || 0),
       schedule: buildScheduleText(item),
-      enrolled_students: Number(course?.enrolled_students || course?.current_students || 0),
+      enrolled_students: Number(course?.enrolled_students || course?.enrolled_count || 0),
       max_students: Number(course?.max_students || course?.capacity || 0),
       room:
         course?.room ||
         (Array.isArray(course?.class_schedules) && course.class_schedules[0]?.room) ||
+        (Array.isArray(course?.schedule) && course.schedule[0]?.room) ||
         '—',
       prerequisites: Array.isArray(course?.prerequisites) ? course.prerequisites : [],
       progress: Number(item?.progress ?? course?.progress ?? 0),
@@ -181,11 +185,10 @@ const CoursesPage = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className={`backdrop-blur-xl rounded-2xl p-4 border shadow-lg flex items-center gap-3 ${
-              message.type === 'success'
+            className={`backdrop-blur-xl rounded-2xl p-4 border shadow-lg flex items-center gap-3 ${message.type === 'success'
                 ? 'border-green-200/50 bg-green-50/50'
                 : 'border-red-200/50 bg-red-50/50'
-            }`}
+              }`}
           >
             {message.type === 'success' ? (
               <CheckCircle className="w-5 h-5 text-green-600" />
@@ -259,21 +262,19 @@ const CoursesPage = () => {
         <div className="flex gap-2 w-full sm:w-auto">
           <button
             onClick={() => setActiveTab('enrolled')}
-            className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-              activeTab === 'enrolled'
+            className={`px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === 'enrolled'
                 ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
                 : 'backdrop-blur-xl bg-white/60 border border-white/40 text-gray-700 hover:bg-white/80'
-            }`}
+              }`}
           >
             My Courses ({enrolledCourses.length})
           </button>
           <button
             onClick={() => setActiveTab('available')}
-            className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-              activeTab === 'available'
+            className={`px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === 'available'
                 ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
                 : 'backdrop-blur-xl bg-white/60 border border-white/40 text-gray-700 hover:bg-white/80'
-            }`}
+              }`}
           >
             Enroll ({availableCourses.length})
           </button>

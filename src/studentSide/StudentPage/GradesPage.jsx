@@ -31,50 +31,8 @@ const GradesPage = () => {
         fetchGPA().catch(() => ({ data: null }))
       ]);
 
-      // Mock data
-      const mockGrades = [
-        {
-          id: 1,
-          course_code: 'CS101',
-          course_name: 'Introduction to Computer Science',
-          credits: 3,
-          grade: 'A',
-          grade_point: 4.0,
-          semester: 'Fall 2023',
-          instructor: 'Dr. Sarah Johnson'
-        },
-        {
-          id: 2,
-          course_code: 'MATH201',
-          course_name: 'Calculus II',
-          credits: 4,
-          grade: 'B+',
-          grade_point: 3.5,
-          semester: 'Fall 2023',
-          instructor: 'Prof. Michael Chen'
-        },
-        {
-          id: 3,
-          course_code: 'ENG102',
-          course_name: 'Academic Writing',
-          credits: 3,
-          grade: 'A-',
-          grade_point: 3.7,
-          semester: 'Fall 2023',
-          instructor: 'Dr. Emily White'
-        }
-      ];
-
-      const mockGPA = {
-        current_gpa: 3.75,
-        cumulative_gpa: 3.68,
-        total_credits: 45,
-        credits_earned: 45,
-        semester_gpa: 3.75
-      };
-
-      setGrades(gradesRes.data?.data?.length > 0 ? gradesRes.data.data : mockGrades);
-      setGpaData(gpaRes.data || mockGPA);
+      setGrades(gradesRes.data?.data?.length > 0 ? gradesRes.data.data : []);
+      setGpaData(gpaRes.data || null);
     } catch (error) {
       console.error('Failed to load grades:', error);
     } finally {

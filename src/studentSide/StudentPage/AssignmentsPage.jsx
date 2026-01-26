@@ -38,91 +38,7 @@ const AssignmentsPage = () => {
       setLoading(true);
       const response = await fetchStudentAssignments().catch(() => ({ data: { data: [] } }));
 
-      // Mock data
-      const mockAssignments = [
-        {
-          id: 1,
-          title: 'Programming Assignment 1: Variables and Data Types',
-          course_code: 'CS101',
-          course_name: 'Introduction to Computer Science',
-          description: 'Write a Python program that demonstrates understanding of variables, data types, and basic operations.',
-          due_date: '2026-01-25',
-          due_time: '23:59',
-          points: 100,
-          status: 'pending',
-          submitted_at: null,
-          grade: null,
-          feedback: null,
-          attachment_url: null,
-          submission_file: null
-        },
-        {
-          id: 2,
-          title: 'Essay: The Impact of Technology on Society',
-          course_code: 'ENG102',
-          course_name: 'Academic Writing',
-          description: 'Write a 1500-word essay discussing the positive and negative impacts of modern technology on society.',
-          due_date: '2026-01-22',
-          due_time: '17:00',
-          points: 50,
-          status: 'submitted',
-          submitted_at: '2026-01-20 14:30',
-          grade: null,
-          feedback: null,
-          attachment_url: null,
-          submission_file: 'technology_essay.pdf'
-        },
-        {
-          id: 3,
-          title: 'Problem Set 3: Integration Techniques',
-          course_code: 'MATH201',
-          course_name: 'Calculus II',
-          description: 'Solve problems 1-15 from Chapter 7. Show all work and steps.',
-          due_date: '2026-01-20',
-          due_time: '23:59',
-          points: 75,
-          status: 'graded',
-          submitted_at: '2026-01-19 20:15',
-          grade: 68,
-          feedback: 'Good work overall. Watch your integration by parts technique in problem 8. Some sign errors in problem 12.',
-          attachment_url: null,
-          submission_file: 'math_problemset3.pdf'
-        },
-        {
-          id: 4,
-          title: 'Lab Report: Basic Circuits',
-          course_code: 'PHY101',
-          course_name: 'General Physics I',
-          description: 'Write a detailed lab report on the basic circuits experiment conducted in class.',
-          due_date: '2026-01-18',
-          due_time: '12:00',
-          points: 40,
-          status: 'graded',
-          submitted_at: '2026-01-18 10:45',
-          grade: 38,
-          feedback: 'Excellent report! Clear methodology and accurate results.',
-          attachment_url: null,
-          submission_file: 'circuits_lab.pdf'
-        },
-        {
-          id: 5,
-          title: 'Project Proposal: Database Design',
-          course_code: 'CS202',
-          course_name: 'Database Systems',
-          description: 'Submit a 3-page proposal for your semester project including ER diagrams.',
-          due_date: '2026-01-28',
-          due_time: '23:59',
-          points: 60,
-          status: 'pending',
-          submitted_at: null,
-          grade: null,
-          feedback: null,
-          attachment_url: null,
-          submission_file: null
-        }
-      ];
-
-      setAssignments(response.data?.data?.length > 0 ? response.data.data : mockAssignments);
+      setAssignments(response.data?.data?.length > 0 ? response.data.data : []);
     } catch (error) {
       console.error('Failed to load assignments:', error);
       showMessage('error', 'Failed to load assignments');
@@ -155,14 +71,7 @@ const AssignmentsPage = () => {
 
     try {
       setSubmitting(true);
-      await submitAssignment(assignmentId, uploadedFile).catch(() => {
-        // Mock submission
-        setAssignments(assignments.map(a =>
-          a.id === assignmentId
-            ? { ...a, status: 'submitted', submitted_at: new Date().toISOString(), submission_file: uploadedFile.name }
-            : a
-        ));
-      });
+      await submitAssignment(assignmentId, uploadedFile);
       showMessage('success', 'Assignment submitted successfully!');
       setSelectedAssignment(null);
       setUploadedFile(null);

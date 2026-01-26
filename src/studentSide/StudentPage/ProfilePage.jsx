@@ -89,7 +89,7 @@ const ProfilePage = () => {
         course_code: c.course_code ?? c.code ?? c.course?.course_code ?? c.course?.code ?? "--",
         course_name: c.course_name ?? c.name ?? c.course?.course_name ?? c.course?.name ?? "--",
         credits: c.credits ?? c.course?.credits ?? 0,
-        instructor: c.instructor ?? c.teacher ?? c.course?.instructor ?? "--",
+        instructor: c.instructor?.name || c.instructor || c.teacher?.name || c.teacher || c.course?.instructor?.name || c.course?.instructor || "--",
       }));
 
       const mergedStudent = {
@@ -358,10 +358,10 @@ const ProfilePage = () => {
                 <div className="font-semibold text-gray-900">
                   {student?.date_of_birth
                     ? new Date(student.date_of_birth).toLocaleDateString("en-US", {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                      })
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })
                     : "--"}
                 </div>
               </div>
@@ -427,10 +427,10 @@ const ProfilePage = () => {
                 <div className="font-semibold text-gray-900">
                   {student?.enrollment_date
                     ? new Date(student.enrollment_date).toLocaleDateString("en-US", {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                      })
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })
                     : "--"}
                 </div>
               </div>
@@ -443,9 +443,9 @@ const ProfilePage = () => {
                 <div className="font-semibold text-gray-900">
                   {student?.expected_graduation
                     ? new Date(student.expected_graduation).toLocaleDateString("en-US", {
-                        month: "long",
-                        year: "numeric",
-                      })
+                      month: "long",
+                      year: "numeric",
+                    })
                     : "--"}
                 </div>
               </div>

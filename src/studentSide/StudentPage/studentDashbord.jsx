@@ -50,7 +50,8 @@ const StudentDashboard = () => {
     const menuItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, gradient: 'from-blue-500 to-cyan-500' },
         { id: 'courses', label: 'My Courses', icon: BookOpen, gradient: 'from-green-500 to-emerald-500' },
-        { id: 'schedule', label: 'Schedule', icon: Calendar, gradient: 'from-purple-500 to-pink-500' },
+        { id: 'schedule', label: 'Schedule', icon: Clock, gradient: 'from-purple-500 to-pink-500' }, // Changed Icon to Clock to differentiate
+        { id: 'calendar', label: 'Calendar', icon: Calendar, gradient: 'from-orange-400 to-amber-500' }, // NEW
         { id: 'grades', label: 'Grades', icon: Award, gradient: 'from-orange-500 to-red-500' },
         { id: 'assignments', label: 'Assignments', icon: FileText, gradient: 'from-indigo-500 to-blue-500' },
         { id: 'attendance', label: 'Attendance', icon: Clock, gradient: 'from-teal-500 to-cyan-500' },
@@ -171,30 +172,30 @@ const StudentDashboard = () => {
         </motion.div>
     );
 
-const renderSection = () => {
-  switch (activeSection) {
-    case 'dashboard':
-      return <DashboardHome />;
-    case 'courses':
-      return <CoursesPage />;
-    case 'schedule':
-      return <SchedulePage />;
-    case 'grades':
-      return <GradesPage />;
-    case 'assignments':
-      return <AssignmentsPage />;
-    case 'attendance':
-      return <AttendancePage />;
-    case 'messages':
-      return <MessagesPage />;
-    case 'profile':
-      return <ProfilePage />;
-    case 'settings':
-      return <SettingPage />;
-    default:
-      return <DashboardHome />;
-  }
-};
+    const renderSection = () => {
+        switch (activeSection) {
+            case 'dashboard':
+                return <DashboardHome />;
+            case 'courses':
+                return <CoursesPage />;
+            case 'schedule':
+                return <SchedulePage />;
+            case 'grades':
+                return <GradesPage />;
+            case 'assignments':
+                return <AssignmentsPage />;
+            case 'attendance':
+                return <AttendancePage />;
+            case 'messages':
+                return <MessagesPage />;
+            case 'profile':
+                return <ProfilePage />;
+            case 'settings':
+                return <SettingPage />;
+            default:
+                return <DashboardHome />;
+        }
+    };
 
     return (
         <div className="min-h-screen w-full relative overflow-hidden">
@@ -248,8 +249,8 @@ const renderSection = () => {
                                     key={item.id}
                                     onClick={() => handleSectionChange(item.id)}
                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
-                                            ? 'backdrop-blur-xl bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
-                                            : 'backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40'
+                                        ? 'backdrop-blur-xl bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
+                                        : 'backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40'
                                         } border border-white/30`}
                                 >
                                     <Icon size={20} className={isActive ? "drop-shadow-sm" : ""} />
@@ -324,8 +325,8 @@ const renderSection = () => {
                                                     setMobileMenuOpen(false);
                                                 }}
                                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
-                                                        ? 'backdrop-blur-xl bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
-                                                        : 'backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40'
+                                                    ? 'backdrop-blur-xl bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
+                                                    : 'backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40'
                                                     } border border-white/30`}
                                             >
                                                 <Icon size={20} />

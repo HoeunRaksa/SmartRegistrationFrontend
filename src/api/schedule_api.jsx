@@ -48,9 +48,13 @@ export const downloadSchedule = async () => {
   return await API.get("/student/schedule/download", { responseType: "blob" });
 };
 
-// GET: Fetch academic calendar events
-export const fetchAcademicCalendar = async () => {
-  const response = await API.get("/student/calendar");
+// GET: Fetch academic calendar events (supports optional month/year)
+export const fetchAcademicCalendar = async (month, year) => {
+  const params = {};
+  if (month) params.month = month;
+  if (year) params.year = year;
+
+  const response = await API.get("/student/calendar", { params });
   const data = extractData(response);
   return { data: { data: Array.isArray(data) ? data : [] } };
 };
