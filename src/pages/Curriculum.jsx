@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { fetchDepartments, fetchDepartmentStatistics } from "../api/department_api";
+import { fetchDepartments } from "../api/department_api";
 
 const headerImage = "/assets/images/curriculum.png";
 
@@ -94,41 +94,32 @@ const Curriculum = () => {
   const [stats, setStats] = useState({ total_departments: 0, total_majors: 0 });
 
   useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const response = await fetchDepartmentStatistics();
-        if (response.data?.success) {
-          setStats(response.data.data);
-        }
-      } catch (err) {
-        console.error("Error loading stats:", err);
-      }
-    };
-    loadStats();
-  }, []);
-
-  useEffect(() => {
     const loadDepartments = async () => {
       try {
         setLoading(true);
         setError(null);
         const response = await fetchDepartments();
-        
+
         // Handle the response structure from your Laravel API
-        // The API should return { success: true, data: [...departments] }
+        let deptList = [];
         if (response.data && Array.isArray(response.data)) {
-          // If response.data is directly the array of departments
-          setDepartments(response.data);
+          deptList = response.data;
         } else if (response.data.success && response.data.data) {
-          // If response has a success wrapper
-          setDepartments(response.data.data);
+          deptList = response.data.data;
         } else if (response.data.data) {
-          // Alternative structure
-          setDepartments(response.data.data);
+          deptList = response.data.data;
         } else {
-          // Fallback
-          setDepartments(response.data || []);
+          deptList = response.data || [];
         }
+
+        setDepartments(deptList);
+
+        // Calculate stats from loaded departments
+        const totalMajors = deptList.reduce((sum, dept) => sum + (dept.majors_count || dept.majors?.length || 0), 0);
+        setStats({
+          total_departments: deptList.length,
+          total_majors: totalMajors || deptList.length * 4
+        });
       } catch (err) {
         console.error("Error fetching departments:", err);
         setError(err.response?.data?.message || "Failed to load departments. Please try again later.");

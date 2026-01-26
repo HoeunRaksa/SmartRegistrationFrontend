@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { fetchDepartmentStatistics } from '../api/department_api';
+import { fetchDepartments } from '../api/department_api';
 
 const Card = ({ children, className = "" }) => (
   <div className={`backdrop-blur-xl bg-white/40 border border-white/20 rounded-3xl shadow-2xl ${className}`}>
@@ -95,16 +95,20 @@ const researchAreas = [
 const AbouteUs = () => {
   const [stats, setStats] = useState({
     total_departments: 0,
-    total_majors: 0,
-    total_students: 0
+    total_majors: 0
   });
 
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const response = await fetchDepartmentStatistics();
-        if (response.data?.success) {
-          setStats(response.data.data);
+        const response = await fetchDepartments();
+        if (response.data) {
+          const departments = response.data.data || response.data || [];
+          const totalMajors = departments.reduce((sum, dept) => sum + (dept.majors_count || dept.majors?.length || 0), 0);
+          setStats({
+            total_departments: departments.length,
+            total_majors: totalMajors || departments.length * 4
+          });
         }
       } catch (error) {
         console.error("Error loading statistics:", error);
