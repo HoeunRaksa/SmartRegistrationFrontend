@@ -1,25 +1,7 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
-import DepartmentsPage from "../pageAdmin/Departmentspage.jsx";
-import MajorsPage from "../pageAdmin/Majospage.jsx";
-import SubjectsPage from "../pageAdmin/Subjectpage.jsx";
-import StudentPage from "../pageAdmin/Studentpage.jsx";
-import RegistrationsPage from "../pageAdmin/Registrationspage.jsx";
-import StaffPage from "../pageAdmin/Staffpage.jsx";
-import SettingPage from "../../gobalConponent/Settingpage.jsx";
-import EnrollmentsPage from "../pageAdmin/EnrollmentsPage.jsx";
-import GradesPage from "../pageAdmin/GradesPage.jsx";
-import AssignmentsPage from "../pageAdmin/AssignmentsPage.jsx";
-import AttendancePage from "../pageAdmin/AttendancePage.jsx";
-import SchedulesPage from "../pageAdmin/SchedulesPage.jsx";
-import CoursesPage from "../pageAdmin/CoursesPage.jsx";
-import MajorSubjectsPage from "../pageAdmin/MajorSubjectsPage.jsx";
-import TeacherPage from "../pageAdmin/TeacherPage.jsx";
-import ClassGroupsPage from "../pageAdmin/ClassGroupsPage.jsx";
-import RoomsPage from '../pageAdmin/RoomsPage.jsx'
-import BuildingsPage from "./BuildingsPage.jsx";
 import { logoutApi } from "../../api/auth.jsx";
 import {
   LayoutDashboard,
@@ -48,26 +30,57 @@ import {
   University
 } from "lucide-react";
 
-import Dashboard from "../../adminSide/ConponentsAdmin/dashboard.jsx";
-import MajorQuotasPage from "./MajorQuotasPage.jsx";
-
 const profileFallback = "/assets/images/profile-fallback.png";
 
 /* =========================
-   PERMANENT FAST CONSTANTS
-   (no re-create every render)
+   LAZY LOADED COMPONENTS
+   (Only load when needed)
 ========================= */
+const Dashboard = lazy(() => import("../../adminSide/ConponentsAdmin/dashboard.jsx"));
+const DepartmentsPage = lazy(() => import("../pageAdmin/Departmentspage.jsx"));
+const MajorsPage = lazy(() => import("../pageAdmin/Majospage.jsx"));
+const SubjectsPage = lazy(() => import("../pageAdmin/Subjectpage.jsx"));
+const StudentPage = lazy(() => import("../pageAdmin/Studentpage.jsx"));
+const RegistrationsPage = lazy(() => import("../pageAdmin/Registrationspage.jsx"));
+const StaffPage = lazy(() => import("../pageAdmin/Staffpage.jsx"));
+const SettingPage = lazy(() => import("../../gobalConponent/Settingpage.jsx"));
+const EnrollmentsPage = lazy(() => import("../pageAdmin/EnrollmentsPage.jsx"));
+const GradesPage = lazy(() => import("../pageAdmin/GradesPage.jsx"));
+const AssignmentsPage = lazy(() => import("../pageAdmin/AssignmentsPage.jsx"));
+const AttendancePage = lazy(() => import("../pageAdmin/AttendancePage.jsx"));
+const SchedulesPage = lazy(() => import("../pageAdmin/SchedulesPage.jsx"));
+const CoursesPage = lazy(() => import("../pageAdmin/CoursesPage.jsx"));
+const MajorSubjectsPage = lazy(() => import("../pageAdmin/MajorSubjectsPage.jsx"));
+const TeacherPage = lazy(() => import("../pageAdmin/TeacherPage.jsx"));
+const ClassGroupsPage = lazy(() => import("../pageAdmin/ClassGroupsPage.jsx"));
+const RoomsPage = lazy(() => import('../pageAdmin/RoomsPage.jsx'));
+const BuildingsPage = lazy(() => import("./BuildingsPage.jsx"));
+const MajorQuotasPage = lazy(() => import("./MajorQuotasPage.jsx"));
 
+/* =========================
+   LOADING COMPONENT
+========================= */
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[400px]">
+    <div className="relative">
+      <div className="w-16 h-16 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin" />
+      <div className="mt-4 text-center">
+        <p className="text-sm font-medium text-gray-600">Loading...</p>
+      </div>
+    </div>
+  </div>
+);
+
+/* =========================
+   PERMANENT FAST CONSTANTS
+========================= */
 const MENU_ITEMS = [
-  // Dashboard
   {
     id: "dashboard",
     label: "Dashboard",
     icon: LayoutDashboard,
     gradient: "from-blue-500 to-cyan-500",
   },
-
-  // Academic setup (order: Department → Major → Subject → MajorSubject)
   {
     id: "departments",
     label: "Departments",
@@ -80,19 +93,19 @@ const MENU_ITEMS = [
     icon: GraduationCap,
     gradient: "from-orange-500 to-red-500",
   },
-    {
+  {
     id: "class",
     label: "ClassSession",
     icon: GraduationCap,
     gradient: "from-orange-500 to-red-500",
   },
-    {
-    id: "buidings",
-    label: "Buidings",
+  {
+    id: "buildings",
+    label: "Buildings",
     icon: Building,
     gradient: "from-green-500 to-emerald-500",
   },
-     {
+  {
     id: "rooms",
     label: "Rooms",
     icon: University,
@@ -116,8 +129,6 @@ const MENU_ITEMS = [
     icon: Building2,
     gradient: "from-purple-500 to-pink-500",
   },
-
-  // Course flow
   {
     id: "courses",
     label: "Courses",
@@ -148,17 +159,15 @@ const MENU_ITEMS = [
     icon: Award,
     gradient: "from-purple-500 to-pink-500",
   },
-
-  // Student management
   {
     id: "students",
     label: "Students",
     icon: Users,
     gradient: "from-indigo-500 to-blue-500",
   },
-    {
+  {
     id: "majors-quotas",
-    label: "majors-quotas",
+    label: "Major Quotas",
     icon: FileText,
     gradient: "from-purple-500 to-pink-500",
   },
@@ -174,8 +183,6 @@ const MENU_ITEMS = [
     icon: BookOpen,
     gradient: "from-blue-500 to-purple-500",
   },
-
-  // Staff
   {
     id: "teachers",
     label: "Teachers",
@@ -188,8 +195,6 @@ const MENU_ITEMS = [
     icon: User2Icon,
     gradient: "from-indigo-500 to-blue-500",
   },
-
-  // System
   {
     id: "settings",
     label: "Settings",
@@ -199,43 +204,10 @@ const MENU_ITEMS = [
 ];
 
 const VALID_SECTIONS = new Set(MENU_ITEMS.map((i) => i.id));
-const MENU_BY_ID = (() => {
-  const m = new Map();
-  for (const it of MENU_ITEMS) m.set(it.id, it);
-  return m;
-})();
-
-/* Mount-all sections ONCE, then only toggle display.
-   This is faster than recreating the tree each render. */
-const SECTIONS = [
-  { id: "dashboard", el: <Dashboard /> },
-  { id: "departments", el: <DepartmentsPage /> },
-  { id: "majors", el: <MajorsPage /> },
-  { id: "buidings", el: <BuildingsPage /> },
-  { id: "rooms", el: <RoomsPage /> },
-   { id: "class", el: <RoomsPage /> },
-  { id: "subjects", el: <SubjectsPage /> },
-  { id: "major-subjects", el: <MajorSubjectsPage /> },
-  { id: "students", el: <StudentPage /> },
-  { id: "staff", el: <StaffPage /> },
-  { id: "majors-quotas", el: <MajorQuotasPage /> },
-  { id: "registrations", el: <RegistrationsPage /> },
-  { id: "settings", el: <SettingPage /> },
-  { id: "enrollments", el: <EnrollmentsPage /> },
-  { id: "grades", el: <GradesPage /> },
-  { id: "assignments", el: <AssignmentsPage /> },
-  { id: "attendance", el: <AttendancePage /> },
-  { id: "schedules", el: <SchedulesPage /> },
-  { id: "courses", el: <CoursesPage /> },
-  { id: "teachers", el: <TeacherPage /> },
-  { id: "class-groups", el: <ClassGroupsPage /> },
-];
+const MENU_BY_ID = new Map(MENU_ITEMS.map(item => [item.id, item]));
 
 /* =========================
    PURE MEMO SIDEBAR BUTTON
-   (prevents re-render of ALL
-    sidebar buttons when only
-    active section changes)
 ========================= */
 const SidebarItem = React.memo(function SidebarItem({
   item,
@@ -268,6 +240,69 @@ const SidebarItem = React.memo(function SidebarItem({
   );
 });
 
+/* =========================
+   ACTIVE PAGE COMPONENT
+   (Only renders current page)
+========================= */
+const ActivePage = React.memo(({ section }) => {
+  const renderPage = () => {
+    switch (section) {
+      case "dashboard":
+        return <Dashboard />;
+      case "departments":
+        return <DepartmentsPage />;
+      case "majors":
+        return <MajorsPage />;
+      case "buildings":
+        return <BuildingsPage />;
+      case "rooms":
+      case "class":
+        return <RoomsPage />;
+      case "subjects":
+        return <SubjectsPage />;
+      case "major-subjects":
+        return <MajorSubjectsPage />;
+      case "students":
+        return <StudentPage />;
+      case "staff":
+        return <StaffPage />;
+      case "majors-quotas":
+        return <MajorQuotasPage />;
+      case "registrations":
+        return <RegistrationsPage />;
+      case "settings":
+        return <SettingPage />;
+      case "enrollments":
+        return <EnrollmentsPage />;
+      case "grades":
+        return <GradesPage />;
+      case "assignments":
+        return <AssignmentsPage />;
+      case "attendance":
+        return <AttendancePage />;
+      case "schedules":
+        return <SchedulesPage />;
+      case "courses":
+        return <CoursesPage />;
+      case "teachers":
+        return <TeacherPage />;
+      case "class-groups":
+        return <ClassGroupsPage />;
+      default:
+        return <Dashboard />;
+    }
+  };
+
+  return (
+    <Suspense fallback={<PageLoader />}>
+      {renderPage()}
+    </Suspense>
+  );
+});
+
+/* =========================
+   MAIN COMPONENT
+========================= */
 const AdminDashboard = () => {
   const { section } = useParams();
   const navigate = useNavigate();
@@ -279,12 +314,6 @@ const AdminDashboard = () => {
   const [notifications] = useState(3);
 
   const activeSection = section || "dashboard";
-
-  // avoid new function identity for each menu item
-  const onSectionClickRef = useRef((id) => {});
-  onSectionClickRef.current = (sectionId) => {
-    navigate(`/admin/${sectionId}`);
-  };
 
   const handleLogout = useCallback(async () => {
     try {
@@ -322,6 +351,7 @@ const AdminDashboard = () => {
   const handleSectionChange = useCallback(
     (sectionId) => {
       navigate(`/admin/${sectionId}`);
+      setMobileMenuOpen(false);
     },
     [navigate]
   );
@@ -340,23 +370,6 @@ const AdminDashboard = () => {
     document.addEventListener("fullscreenchange", onFsChange);
     return () => document.removeEventListener("fullscreenchange", onFsChange);
   }, []);
-
-  // Render all sections but hide inactive ones - NO REMOUNTING!
-  // NOW memoized so it doesn't rebuild the whole tree each render.
-  const allSections = useMemo(() => {
-    return (
-      <>
-        {SECTIONS.map((s) => (
-          <div
-            key={s.id}
-            style={{ display: activeSection === s.id ? "block" : "none" }}
-          >
-            {s.el}
-          </div>
-        ))}
-      </>
-    );
-  }, [activeSection]);
 
   return (
     <div className="min-h-screen w-full relative overflow-hidden">
@@ -398,7 +411,6 @@ const AdminDashboard = () => {
             </button>
           </div>
 
-          {/* ✅ smaller menu to reduce height: smaller padding + smaller icon */}
           <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-hide">
             {MENU_ITEMS.map((item) => (
               <SidebarItem
@@ -458,7 +470,6 @@ const AdminDashboard = () => {
                   </button>
                 </div>
 
-                {/* ✅ smaller menu for mobile too */}
                 <nav className="flex-1 space-y-1 overflow-y-auto">
                   {MENU_ITEMS.map((item) => {
                     const Icon = item.icon;
@@ -467,10 +478,7 @@ const AdminDashboard = () => {
                     return (
                       <button
                         key={item.id}
-                        onClick={() => {
-                          handleSectionChange(item.id);
-                          setMobileMenuOpen(false);
-                        }}
+                        onClick={() => handleSectionChange(item.id)}
                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all ${
                           isActive
                             ? "backdrop-blur-xl bg-gradient-to-r " +
@@ -668,7 +676,7 @@ const AdminDashboard = () => {
         </header>
 
         <main className="min-h-screen pt-6 relative z-10 w-full">
-          {allSections}
+          <ActivePage section={activeSection} />
         </main>
       </div>
 
