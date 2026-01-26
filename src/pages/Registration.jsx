@@ -1465,6 +1465,91 @@ const Registration = () => {
           </div>
         </div>
 
+        {/* Registration Information Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border-2 border-white/60 mb-8"
+        >
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-green-500 via-teal-500 to-cyan-500 rounded-t-3xl" />
+
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4 flex items-center gap-2">
+                <Info size={20} /> Registration Requirements
+              </h3>
+              <ul className="space-y-2 text-sm text-gray-700">
+                <li className="flex items-start gap-2">
+                  <CheckCircle size={16} className="text-green-600 mt-0.5 shrink-0" />
+                  <span>Valid government-issued ID or passport</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle size={16} className="text-green-600 mt-0.5 shrink-0" />
+                  <span>High school diploma or equivalent certificate</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle size={16} className="text-green-600 mt-0.5 shrink-0" />
+                  <span>Official academic transcripts</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle size={16} className="text-green-600 mt-0.5 shrink-0" />
+                  <span>Passport-sized photo (for profile)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle size={16} className="text-green-600 mt-0.5 shrink-0" />
+                  <span>Parent/Guardian contact information</span>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4 flex items-center gap-2">
+                <School size={20} /> Registration Steps
+              </h3>
+              <ol className="space-y-2 text-sm text-gray-700">
+                <li className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs flex items-center justify-center shrink-0 font-bold">1</span>
+                  <span>Select your academic year and program</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs flex items-center justify-center shrink-0 font-bold">2</span>
+                  <span>Fill in your personal information</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-gradient-to-r from-pink-500 to-orange-500 text-white text-xs flex items-center justify-center shrink-0 font-bold">3</span>
+                  <span>Provide family and guardian details</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs flex items-center justify-center shrink-0 font-bold">4</span>
+                  <span>Upload required documents</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-gradient-to-r from-green-500 to-teal-500 text-white text-xs flex items-center justify-center shrink-0 font-bold">5</span>
+                  <span>Complete payment and receive confirmation</span>
+                </li>
+              </ol>
+            </div>
+          </div>
+
+          <div className="mt-6 pt-6 border-t-2 border-white/40">
+            <div className="flex flex-wrap justify-center gap-6 text-center">
+              <div className="backdrop-blur-xl bg-blue-50/60 px-6 py-3 rounded-xl border border-blue-200/50">
+                <p className="text-xs text-gray-600">Application Deadline</p>
+                <p className="font-bold text-blue-600">May 15, 2025</p>
+              </div>
+              <div className="backdrop-blur-xl bg-purple-50/60 px-6 py-3 rounded-xl border border-purple-200/50">
+                <p className="text-xs text-gray-600">Classes Begin</p>
+                <p className="font-bold text-purple-600">Aug 20, 2025</p>
+              </div>
+              <div className="backdrop-blur-xl bg-green-50/60 px-6 py-3 rounded-xl border border-green-200/50">
+                <p className="text-xs text-gray-600">Support Hotline</p>
+                <p className="font-bold text-green-600">+1 (555) 123-4567</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         {/* ✅ GATE SCREEN: show ONLY selection + quota before full form */}
         {!gateAllowed && (
           <div className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border-2 border-white/60 relative">

@@ -1,9 +1,44 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { fetchDepartments } from "../api/department_api";
+import { fetchDepartments, fetchDepartmentStatistics } from "../api/department_api";
 
 const headerImage = "/assets/images/curriculum.png";
+
+// Degree levels info
+const degreeLevels = [
+  {
+    level: "Bachelor's Degree",
+    duration: "4 Years",
+    credits: "120-140 Credits",
+    description: "Foundation programs preparing students for professional careers or advanced studies.",
+    icon: "🎓"
+  },
+  {
+    level: "Master's Degree",
+    duration: "2 Years",
+    credits: "36-48 Credits",
+    description: "Advanced specialization with research opportunities and industry connections.",
+    icon: "📚"
+  },
+  {
+    level: "Doctoral Degree",
+    duration: "3-5 Years",
+    credits: "72+ Credits",
+    description: "Research-intensive programs for future scholars and industry leaders.",
+    icon: "🔬"
+  }
+];
+
+// Academic features
+const academicFeatures = [
+  { title: "Small Class Sizes", description: "Average 25 students per class for personalized attention", icon: "👥" },
+  { title: "Industry Internships", description: "Mandatory internship programs with top companies", icon: "💼" },
+  { title: "Research Opportunities", description: "Work alongside faculty on cutting-edge research", icon: "🔬" },
+  { title: "Global Exchange", description: "Study abroad at 50+ partner universities worldwide", icon: "🌍" },
+  { title: "Modern Labs", description: "State-of-the-art facilities and equipment", icon: "💻" },
+  { title: "Career Support", description: "Dedicated career services and job placement", icon: "🎯" }
+];
 
 const cardVariants = {
   hidden: { opacity: 0, y: 50 },
@@ -56,6 +91,21 @@ const Curriculum = () => {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [stats, setStats] = useState({ total_departments: 0, total_majors: 0 });
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const response = await fetchDepartmentStatistics();
+        if (response.data?.success) {
+          setStats(response.data.data);
+        }
+      } catch (err) {
+        console.error("Error loading stats:", err);
+      }
+    };
+    loadStats();
+  }, []);
 
   useEffect(() => {
     const loadDepartments = async () => {
@@ -416,6 +466,176 @@ const Curriculum = () => {
               </div>
             )}
           </div>
+        </section>
+
+        {/* Degree Levels Section */}
+        <section className="py-16 max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <motion.h2
+              initial={{ opacity: 0, y: -20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6 drop-shadow-lg"
+            >
+              Degree Programs
+            </motion.h2>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="backdrop-blur-2xl bg-gradient-to-br from-white/60 to-white/40 p-6 rounded-3xl border border-white/60 shadow-xl max-w-4xl mx-auto"
+            >
+              <p className="text-lg text-gray-800 leading-relaxed font-light">
+                Choose from undergraduate, graduate, and doctoral programs designed to prepare you
+                for leadership roles in your chosen field.
+              </p>
+            </motion.div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {degreeLevels.map((degree, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.15 }}
+                whileHover={{ scale: 1.03, y: -5 }}
+                className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 rounded-3xl p-8 border-2 border-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.15)] hover:shadow-[0_30px_80px_rgba(139,92,246,0.3)] transition-all duration-500 text-center"
+              >
+                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mb-6 shadow-xl text-4xl">
+                  {degree.icon}
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-4">{degree.level}</h3>
+
+                <div className="flex justify-center gap-4 mb-4">
+                  <div className="backdrop-blur-xl bg-blue-50/60 px-4 py-2 rounded-xl border border-blue-200/50">
+                    <p className="text-sm font-bold text-blue-600">{degree.duration}</p>
+                  </div>
+                  <div className="backdrop-blur-xl bg-purple-50/60 px-4 py-2 rounded-xl border border-purple-200/50">
+                    <p className="text-sm font-bold text-purple-600">{degree.credits}</p>
+                  </div>
+                </div>
+
+                <p className="text-gray-600 font-light">{degree.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* Academic Features Section */}
+        <section className="py-16 max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="backdrop-blur-2xl bg-gradient-to-br from-blue-600/90 via-purple-600/90 to-pink-600/90 rounded-3xl p-10 md:p-16 border-2 border-white/30 shadow-[0_30px_80px_rgba(139,92,246,0.4)]"
+          >
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+                Why Study at NovaTech?
+              </h2>
+              <p className="text-white/90 text-lg max-w-2xl mx-auto">
+                Experience world-class education with features designed for your success
+              </p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {academicFeatures.map((feature, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ scale: 1.05 }}
+                  className="backdrop-blur-xl bg-white/20 rounded-2xl p-6 border border-white/30 text-center hover:bg-white/30 transition-all duration-300"
+                >
+                  <span className="text-4xl mb-4 block">{feature.icon}</span>
+                  <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
+                  <p className="text-white/80 text-sm">{feature.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </section>
+
+        {/* Statistics Section */}
+        <section className="py-16 max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-4 gap-6">
+            {[
+              { number: stats.total_departments > 0 ? `${stats.total_departments}+` : "50+", label: "Academic Departments", icon: "🏛️" },
+              { number: stats.total_majors > 0 ? `${stats.total_majors}+` : "200+", label: "Degree Programs", icon: "📚" },
+              { number: "95%", label: "Graduate Employment", icon: "💼" },
+              { number: "50+", label: "Partner Universities", icon: "🌍" }
+            ].map((stat, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="backdrop-blur-2xl bg-gradient-to-br from-white/80 to-white/60 rounded-2xl p-6 text-center border-2 border-white/60 shadow-xl hover:shadow-[0_20px_60px_rgba(139,92,246,0.3)] transition-all duration-300"
+              >
+                <span className="text-4xl mb-3 block">{stat.icon}</span>
+                <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">{stat.number}</p>
+                <p className="text-gray-600 text-sm font-medium mt-1">{stat.label}</p>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* Call to Action Section */}
+        <section className="py-16 max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 rounded-3xl p-10 md:p-16 border-2 border-white/60 shadow-[0_30px_80px_rgba(0,0,0,0.15)] text-center"
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">
+              Ready to Start Your Academic Journey?
+            </h2>
+            <p className="text-gray-700 text-lg mb-8 max-w-2xl mx-auto font-light">
+              Take the first step towards your future. Apply now and join our community of scholars, innovators, and leaders.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                to="/registration"
+                className="relative backdrop-blur-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-semibold px-10 py-4 rounded-2xl shadow-[0_10px_40px_rgba(139,92,246,0.4)] hover:shadow-[0_20px_60px_rgba(139,92,246,0.6)] hover:scale-105 transition-all duration-500 border border-white/30 overflow-hidden group"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                <span className="relative z-10">Apply Now</span>
+              </Link>
+              <Link
+                to="/aboutus"
+                className="backdrop-blur-xl bg-white/60 text-gray-800 font-semibold px-10 py-4 rounded-2xl hover:bg-white/80 hover:scale-105 transition-all duration-300 border-2 border-white/60 shadow-lg"
+              >
+                Learn More
+              </Link>
+            </div>
+
+            <div className="mt-10 flex flex-wrap justify-center gap-8">
+              <div className="text-center">
+                <p className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Fall 2025</p>
+                <p className="text-sm text-gray-600">Now Accepting Applications</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">$50M+</p>
+                <p className="text-sm text-gray-600">Scholarships Available</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xl font-bold bg-gradient-to-r from-pink-600 to-orange-600 bg-clip-text text-transparent">100%</p>
+                <p className="text-sm text-gray-600">Need-Based Aid</p>
+              </div>
+            </div>
+          </motion.div>
         </section>
       </div>
     </div>
