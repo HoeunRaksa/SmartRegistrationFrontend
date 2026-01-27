@@ -120,27 +120,40 @@ const AdminDashboard = () => {
 
   return (
     <div className="p-8 space-y-10 preserve-3d">
-      {/* 1. Dynamic Hero Header */}
+      {/* 1. Dynamic Hero Header - Improved 3D with no rotation */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 rounded-[2.5rem] p-12 border border-white/10 shadow-3xl card-3d overflow-hidden"
+        initial={{ opacity: 0, y: -20, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 rounded-[3rem] p-12 border border-white/10 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)] relative overflow-hidden group"
       >
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="depth-layer-1">
-            <h1 className="text-6xl font-black text-white mb-4 tracking-tighter leading-none">
-              Nexus <span className="text-blue-400">Intelligence</span>
-            </h1>
+            <motion.h1
+              initial={{ x: -20 }}
+              animate={{ x: 0 }}
+              className="text-7xl font-black text-white mb-4 tracking-tighter leading-none"
+            >
+              Nexus <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">Intelligence</span>
+            </motion.h1>
             <p className="text-blue-100/70 text-xl font-medium max-w-xl leading-relaxed">
               Global system analytics and financial forensics for NovaTech Academic Hub.
             </p>
           </div>
-          <div className="bg-white/10 backdrop-blur-2xl rounded-3xl p-6 border border-white/20 depth-layer-2 animate-float-3d">
-            <div className="text-blue-400 text-xs font-black uppercase mb-1 tracking-widest">System Pulse</div>
-            <div className="text-3xl font-black text-white tabular-nums">99.9% Uptime</div>
-          </div>
+          <motion.div
+            whileHover={{ scale: 1.05, rotateZ: 2 }}
+            className="bg-white/10 backdrop-blur-3xl rounded-3xl p-8 border border-white/20 depth-layer-2 shadow-2xl animate-float-3d"
+          >
+            <div className="text-blue-400 text-xs font-black uppercase mb-2 tracking-[0.3em]">System Health</div>
+            <div className="text-4xl font-black text-white tabular-nums drop-shadow-lg">99.9% Uptime</div>
+            <div className="mt-4 flex gap-1">
+              {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-1 w-8 bg-blue-500/30 rounded-full overflow-hidden"><motion.div animate={{ x: [-32, 32] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="h-full w-4 bg-blue-400" /></div>)}
+            </div>
+          </motion.div>
         </div>
-        <div className="absolute -top-20 -right-20 w-96 h-96 bg-blue-500/20 rounded-full blur-[120px]" />
+
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-600/10 to-transparent pointer-events-none" />
+        <div className="absolute -top-20 -right-20 w-96 h-96 bg-blue-500/20 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-purple-500/10 rounded-full blur-[100px]" />
       </motion.div>
 
@@ -152,21 +165,21 @@ const AdminDashboard = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            whileHover={{ y: -8, rotateX: 2, rotateY: 2 }}
-            className="glass-3d rounded-3xl p-8 card-3d group cursor-pointer"
+            whileHover={{ y: -12, rotateX: 5, rotateY: 5, scale: 1.02 }}
+            className="glass-3d rounded-[2rem] p-8 card-3d group cursor-pointer shadow-xl hover:shadow-2xl transition-all duration-500"
           >
             <div className="flex items-start justify-between mb-8">
-              <div className={`p-5 rounded-2xl bg-gradient-to-br ${stat.gradient} shadow-2xl transform-gpu group-hover:scale-110 group-hover:rotate-6 transition-all depth-layer-1`}>
+              <div className={`p-5 rounded-2xl bg-gradient-to-br ${stat.gradient} shadow-2xl transform-gpu group-hover:scale-110 group-hover:rotate-12 transition-all depth-layer-2`}>
                 <stat.icon className="w-10 h-10 text-white" />
               </div>
-              <div className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest backdrop-blur-md depth-layer-1 ${stat.trend === 'up' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
+              <div className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest backdrop-blur-md depth-layer-2 ${stat.trend === 'up' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
                 }`}>
                 {stat.change}
               </div>
             </div>
-            <div className="depth-layer-2">
-              <h3 className="text-slate-400 text-sm font-bold uppercase tracking-[0.2em] mb-2">{stat.title}</h3>
-              <p className="text-5xl font-black text-slate-800 tracking-tighter">
+            <div className="depth-layer-1">
+              <h3 className="text-slate-400 text-xs font-black uppercase tracking-[0.3em] mb-3">{stat.title}</h3>
+              <p className="text-5xl font-black text-slate-800 tracking-tighter group-hover:text-blue-600 transition-colors">
                 {stat.value.toLocaleString()}
               </p>
             </div>
@@ -178,45 +191,66 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         {/* Revenue Analytics */}
         <motion.div
-          className="xl:col-span-2 glass-3d rounded-[2rem] p-8 card-3d"
-          whileHover={{ rotateY: -1 }}
+          className="xl:col-span-2 glass-3d rounded-[2.5rem] p-10 card-3d shadow-2xl"
+          whileHover={{ rotateY: -2, rotateX: 1 }}
         >
-          <div className="flex items-center justify-between mb-8 depth-layer-1">
-            <h3 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-3">
-              <DollarSign className="w-8 h-8 text-emerald-500" />
-              Financial Liquidity
+          <div className="flex items-center justify-between mb-10 depth-layer-1 text-3d">
+            <h3 className="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-4">
+              <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-500">
+                <DollarSign className="w-8 h-8" />
+              </div>
+              Financial Forensics
             </h3>
-            <div className="flex gap-2">
-              <span className="px-3 py-1 bg-slate-100 rounded-lg text-xs font-bold text-slate-500 uppercase">Monthly</span>
+            <div className="flex items-center gap-3">
+              <div className="flex -space-x-2">
+                {[1, 2, 3].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 shadow-sm" />)}
+              </div>
+              <span className="px-4 py-2 bg-slate-800 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg">Live Feed</span>
             </div>
           </div>
-          <ComparisonBarChart
-            data={charts.revenueByDept}
-            xAxisKey="name"
-            dataKeys={['total_revenue']}
-            colors={['#10b981']}
-          />
+          <div className="depth-layer-2">
+            <ComparisonBarChart
+              data={charts.revenueByDept}
+              xAxisKey="name"
+              dataKeys={['total_revenue']}
+              colors={['#10b981']}
+            />
+          </div>
         </motion.div>
 
         {/* Gender Demographics */}
         <motion.div
-          className="glass-3d rounded-[2rem] p-8 card-3d"
-          whileHover={{ rotateY: 1 }}
+          className="glass-3d rounded-[2.5rem] p-10 card-3d shadow-2xl bg-white/40"
+          whileHover={{ rotateY: 2, rotateX: 1 }}
         >
-          <h3 className="text-2xl font-black text-slate-800 tracking-tight mb-8 flex items-center gap-3 depth-layer-1">
-            <Users className="w-8 h-8 text-indigo-500" />
-            Gender Matrix
-          </h3>
-          <DistributionPieChart
-            data={charts.genderDistribution}
-            height={300}
-          />
-          <div className="mt-6 flex justify-center gap-6 depth-layer-1">
-            {charts.genderDistribution?.map(gender => (
-              <div key={gender.name} className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${gender.name === 'Male' ? 'bg-blue-500' : 'bg-pink-500'}`} />
-                <span className="text-sm font-bold text-slate-600">{gender.name}: {gender.value}</span>
-              </div>
+          <div className="flex items-center gap-4 mb-10 depth-layer-1">
+            <div className="p-3 bg-indigo-500/10 rounded-xl text-indigo-500">
+              <Users className="w-8 h-8" />
+            </div>
+            <h3 className="text-3xl font-black text-slate-800 tracking-tight">Identity Matrix</h3>
+          </div>
+
+          <div className="depth-layer-2 relative">
+            <DistributionPieChart
+              data={charts.genderDistribution}
+              height={300}
+            />
+            {/* Overlay stats in center of pie if possible - or just below */}
+          </div>
+
+          <div className="mt-10 grid grid-cols-2 gap-4 depth-layer-1">
+            {charts.genderDistribution?.map((gender, idx) => (
+              <motion.div
+                key={`${gender.name}-${idx}`}
+                whileHover={{ scale: 1.05 }}
+                className="bg-white/60 p-4 rounded-2xl border border-white/80 shadow-sm"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <div className={`w-3 h-3 rounded-full ${gender.name === 'Male' ? 'bg-blue-500' : 'bg-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.5)]'}`} />
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{gender.name}</span>
+                </div>
+                <div className="text-2xl font-black text-slate-800 tracking-tight">{gender.value}</div>
+              </motion.div>
             ))}
           </div>
         </motion.div>
