@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, BookOpen, GraduationCap, DollarSign, TrendingUp, TrendingDown,
-  Activity, Calendar, Award, AlertCircle, CheckCircle, Clock, Building
+  Activity, Calendar, Award, AlertCircle, CheckCircle, Clock, Building,
+  Maximize2, Minimize2, ZoomIn, ZoomOut, Play, Pause,
+  Orbit, Layers, Sparkles, Zap, Eye, Grid3x3, Box, Database
 } from 'lucide-react';
+
 import { TrendChart, ComparisonBarChart, DistributionPieChart, MultiLineChart } from '../../Components/ui/Charts';
 import AdminDashboardAPI from '../../api/admin_dashboard_api';
-import ThreeDChart from './ThreeDChart';
+import University3DHub from './University3DHub';
 
 const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -27,6 +30,10 @@ const AdminDashboard = () => {
   const [activities, setActivities] = useState([]);
   const [systemStatus, setSystemStatus] = useState([]);
   const [advancedStats, setAdvancedStats] = useState([]);
+  const [extendedStats, setExtendedStats] = useState({});
+
+  // 3D State
+  const [view3D, setView3D] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -44,6 +51,11 @@ const AdminDashboard = () => {
         setActivities(data.activities);
         setSystemStatus(data.systemStatus);
         setAdvancedStats(res.data.data.advancedStats || []);
+        setExtendedStats({
+          academicStats: res.data.data.academicStats,
+          attendanceStats: res.data.data.attendanceStats,
+          campusStats: res.data.data.campusStats
+        });
       }
     } catch (error) {
       console.error('Dashboard load error:', error);
@@ -59,7 +71,7 @@ const AdminDashboard = () => {
       change: stats.studentGrowth || '0%',
       trend: stats.studentGrowth?.startsWith('-') ? 'down' : 'up',
       icon: Users,
-      gradient: 'from-blue-500 to-cyan-500',
+      gradient: 'from-blue-500 via-cyan-500 to-teal-500',
       color: 'blue',
     },
     {
@@ -68,7 +80,7 @@ const AdminDashboard = () => {
       change: '+4%',
       trend: 'up',
       icon: BookOpen,
-      gradient: 'from-purple-500 to-pink-500',
+      gradient: 'from-purple-500 via-pink-500 to-rose-500',
       color: 'purple',
     },
     {
@@ -77,7 +89,7 @@ const AdminDashboard = () => {
       change: 'Active',
       trend: 'up',
       icon: Building,
-      gradient: 'from-green-500 to-emerald-500',
+      gradient: 'from-green-500 via-emerald-500 to-teal-500',
       color: 'emerald',
     },
     {
@@ -86,87 +98,190 @@ const AdminDashboard = () => {
       change: stats.pendingRegistrations > 0 ? 'Urgent' : 'Clear',
       trend: stats.pendingRegistrations > 0 ? 'down' : 'up',
       icon: GraduationCap,
-      gradient: 'from-orange-500 to-amber-500',
+      gradient: 'from-orange-500 via-amber-500 to-yellow-500',
       color: 'orange',
     },
   ];
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          initial={{ scale: 0.9, opacity: 0.6 }}
+          animate={{ scale: [0.9, 1, 0.9], opacity: [0.6, 1, 0.6] }}
+          transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
           className="w-20 h-20 rounded-full border-4 border-blue-100 border-t-blue-600"
         />
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 1, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="mt-8 text-xl font-bold text-gray-900"
+        >
+          Loading University Digital Twin...
+        </motion.p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen space-y-6 p-6">
-
-
-      {/* Hero Header */}
+    <div className="min-h-screen w-full space-y-6">
+      {/* Epic Hero Header */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="bg-white/60 backdrop-blur-sm rounded-2xl p-8 border border-white/40 shadow-sm hover:shadow-md transition-all"
+        transition={{ duration: 0.8, type: 'spring' }}
+        className="relative bg-white/60 backdrop-blur-sm rounded-2xl p-8 border border-white/40 shadow-sm hover:shadow-md transition-all overflow-hidden"
       >
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div>
-            <motion.h1
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="text-5xl md:text-6xl font-black text-gray-900 mb-3 tracking-tight"
-            >
-              Nexus{' '}
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Intelligence
-              </span>
-            </motion.h1>
-            <p className="text-gray-600 text-lg font-medium max-w-2xl">
-              Global system analytics and financial forensics for NovaTech Academic Hub.
-            </p>
+        {/* Animated background */}
+        <div className="absolute inset-0 opacity-20 ">
+          {[...Array(15)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 bg-blue-400 rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                scale: [1, 1.5, 1],
+                opacity: [0.2, 0.6, 0.2],
+              }}
+              transition={{
+                duration: 3 + Math.random() * 2,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="relative z-10">
+          <div className="flex flex-col md:flex-row  items-start md:items-center justify-between gap-6 mb-6">
+            <div>
+              <motion.h1
+                initial={{ x: -50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.3, type: 'spring' }}
+                className="text-5xl md:text-6xl font-black text-gray-900 mb-3 tracking-tight"
+              >
+                University Digital Twin
+              </motion.h1>
+              <motion.p
+                initial={{ x: -50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="text-gray-600 text-lg font-medium max-w-2xl"
+              >
+                Real-time Campus Command Center
+              </motion.p>
+            </div>
+
+            <div className="flex items-center gap-4">
+              {/* 3D Toggle */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setView3D(!view3D)}
+                className={`px-6 py-3 rounded-xl font-bold shadow-lg transition-all ${view3D
+                  ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white'
+                  : 'bg-white text-gray-900 border-2 border-purple-200'
+                  }`}
+              >
+                {view3D ? '📊 2D View' : '🎯 3D Digital Twin'}
+              </motion.button>
+
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                whileHover={{ scale: 1.05 }}
+                className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-purple-200/60 shadow-sm"
+              >
+                <div className="text-blue-600 text-xs font-bold uppercase mb-2 tracking-widest">
+                  System Health
+                </div>
+                <div className="text-4xl md:text-5xl font-black text-gray-900 mb-3">
+                  99.9%
+                </div>
+                <div className="flex gap-1.5">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div
+                      key={i}
+                      className="h-1.5 w-8 bg-blue-200/50 rounded-full overflow-hidden"
+                    >
+                      <motion.div
+                        animate={{ x: [-32, 32] }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          delay: i * 0.2,
+                          ease: 'linear',
+                        }}
+                        className="h-full w-4 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
           </div>
 
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            whileHover={{ scale: 1.05 }}
-            className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-purple-200/60 shadow-sm"
-          >
-            <div className="text-blue-600 text-xs font-bold uppercase mb-2 tracking-widest">
-              System Health
-            </div>
-            <div className="text-4xl md:text-5xl font-black text-gray-900 mb-3">
-              99.9% Uptime
-            </div>
-            <div className="flex gap-1.5">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div
-                  key={i}
-                  className="h-1.5 w-8 bg-blue-200/50 rounded-full overflow-hidden"
-                >
-                  <motion.div
-                    animate={{ x: [-32, 32] }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      delay: i * 0.2,
-                      ease: 'linear',
-                    }}
-                    className="h-full w-4 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
-                  />
-                </div>
-              ))}
-            </div>
-          </motion.div>
+          {/* Command Center Tabs */}
+          <div className="flex flex-wrap gap-3">
+            <motion.div
+              whileHover={{ scale: 1.05, y: -2 }}
+              className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl shadow-lg cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-white" />
+                <span className="text-white font-bold">Finance</span>
+              </div>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ scale: 1.05, y: -2 }}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-lg cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-white" />
+                <span className="text-white font-bold">Academics</span>
+              </div>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ scale: 1.05, y: -2 }}
+              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <Building className="w-5 h-5 text-white" />
+                <span className="text-white font-bold">Campus Ops</span>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </motion.div>
+
+      {/* 3D UNIVERSE */}
+      <AnimatePresence>
+        {view3D && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 50 }}
+            transition={{ duration: 0.6, type: 'spring' }}
+            className="mb-8"
+          >
+            <University3DHub
+              stats={stats}
+              charts={charts}
+              extendedStats={extendedStats}
+              activities={activities}
+              systemStatus={systemStatus}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -182,9 +297,7 @@ const AdminDashboard = () => {
               className="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-white/40 shadow-sm hover:shadow-md transition-all cursor-pointer"
             >
               <div className="flex items-start justify-between mb-4">
-                <div
-                  className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}
-                >
+                <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}>
                   <Icon className="w-6 h-6 text-white" />
                 </div>
                 <div
@@ -209,16 +322,7 @@ const AdminDashboard = () => {
         })}
       </div>
 
-      {/* 3D Analytics Section */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.4 }}
-      >
-        <ThreeDChart data={advancedStats} />
-      </motion.div>
-
-      {/* Primary Charts Section */}
+      {/* Advanced Charts Section */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         {/* Revenue Analytics */}
         <motion.div
@@ -299,7 +403,7 @@ const AdminDashboard = () => {
         </motion.div>
       </div>
 
-      {/* Secondary Section */}
+      {/* Popular Majors & Activity Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Popular Majors */}
         <motion.div
@@ -314,7 +418,7 @@ const AdminDashboard = () => {
             Major Popularity Index
           </h3>
           <div className="space-y-3">
-            {charts.popularMajors?.map((major, i) => (
+            {charts.popularMajors?.slice(0, 5).map((major, i) => (
               <motion.div
                 key={major.id || major.name || `major-${i}`}
                 initial={{ opacity: 0, x: -20 }}
@@ -403,10 +507,8 @@ const AdminDashboard = () => {
           {systemStatus.map((item, i) => (
             <div key={item.label || `status-${i}`} className="flex flex-col items-center text-center">
               <div
-                className={`w-4 h-4 rounded-full bg-green-500 mb-3 animate-pulse shadow-lg`}
-                style={{
-                  boxShadow: `0 0 20px rgba(34, 197, 94, 0.6)`,
-                }}
+                className="w-4 h-4 rounded-full bg-green-500 mb-3 animate-pulse shadow-lg"
+                style={{ boxShadow: `0 0 20px rgba(34, 197, 94, 0.6)` }}
               />
               <h4 className="text-gray-600 text-xs font-semibold uppercase tracking-wider mb-1">
                 {item.label}
@@ -416,6 +518,23 @@ const AdminDashboard = () => {
           ))}
         </div>
       </motion.div>
+
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(100, 116, 139, 0.1);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: linear-gradient(to bottom, #a855f7, #ec4899);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(to bottom, #9333ea, #db2777);
+        }
+      `}</style>
     </div>
   );
 };

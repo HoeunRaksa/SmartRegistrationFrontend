@@ -307,8 +307,6 @@ const ActivePage = React.memo(({ section }) => {
         return <TeacherPage />;
       case "class-groups":
         return <ClassGroupsPage />;
-      case "academic-sessions":
-        return <AcademicSessionsPage />;
       default:
         return <Dashboard />;
     }
