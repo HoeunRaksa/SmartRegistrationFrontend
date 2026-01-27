@@ -121,22 +121,10 @@ const AdminDashboard = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Welcome Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="backdrop-blur-xl bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl p-8 border border-white/20 shadow-2xl relative overflow-hidden preserve-3d card-3d"
-      >
-        <motion.div
-          animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
-          transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-          style={{ backgroundSize: '200% 100%' }}
-        />
-        <div className="relative z-10">
-          <h1 className="text-4xl font-bold text-white mb-2">University Overview Dashboard</h1>
-          <p className="text-white/90 text-lg">Real-time insights into everything happening at NovaTech University</p>
-        </div>
-      </motion.div>
+      <div className="bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl p-8 border border-white/20 shadow-xl">
+        <h1 className="text-4xl font-bold text-white mb-2">University Overview Dashboard</h1>
+        <p className="text-white/90 text-lg">Real-time insights into everything happening at NovaTech University</p>
+      </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -146,8 +134,8 @@ const AdminDashboard = () => {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ delay: index * 0.1 }}
-            whileHover={{ scale: 1.05, rotateY: 5, z: 50 }}
-            className="backdrop-blur-xl bg-white/60 rounded-2xl p-6 border border-white/40 shadow-lg hover:shadow-2xl transition-all preserve-3d"
+            whileHover={{ scale: 1.02 }}
+            className="bg-white/80 rounded-2xl p-6 border border-gray-100 shadow-md hover:shadow-lg transition-all"
           >
             <div className="flex items-center justify-between mb-4">
               <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}>
