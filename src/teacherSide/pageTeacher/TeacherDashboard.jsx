@@ -8,7 +8,7 @@ import GradesPage from './GradesPage.jsx';
 import AttendancePage from './AttendancePage.jsx';
 import AssignmentsPage from './AssignmentsPage.jsx';
 import SchedulePage from './SchedulePage.jsx';
-import MessagesPage from './MessagesPage.jsx';
+import MessagesPage from '../../gobalConponent/MessagesPage.jsx';
 import ProfilePage from './ProfilePage.jsx';
 import SettingPage from '../../gobalConponent/Settingpage.jsx';
 import { logoutApi } from '../../api/auth.jsx';
@@ -89,7 +89,7 @@ const TeacherDashboard = () => {
   );
 
   const handleLogout = async () => {
-    await logoutApi().catch(() => {});
+    await logoutApi().catch(() => { });
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     navigate('/login');
@@ -195,11 +195,10 @@ const TeacherDashboard = () => {
                 <button
                   key={item.id}
                   onClick={() => handleSectionChange(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
-                    isActive
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
                       ? "backdrop-blur-xl bg-gradient-to-r " + item.gradient + " text-white shadow-lg"
                       : "backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40"
-                  } border border-white/30`}
+                    } border border-white/30`}
                   type="button"
                 >
                   <Icon size={20} className={isActive ? "drop-shadow-sm" : ""} />
@@ -270,11 +269,10 @@ const TeacherDashboard = () => {
                           handleSectionChange(item.id);
                           setMobileMenuOpen(false);
                         }}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
-                          isActive
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
                             ? "backdrop-blur-xl bg-gradient-to-r " + item.gradient + " text-white shadow-lg"
                             : "backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40"
-                        } border border-white/30`}
+                          } border border-white/30`}
                         type="button"
                       >
                         <Icon size={20} />
