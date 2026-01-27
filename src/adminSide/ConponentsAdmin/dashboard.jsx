@@ -295,7 +295,7 @@ const AdminDashboard = () => {
           <div className="space-y-4 depth-layer-1 overflow-y-auto max-h-[460px] pr-2 custom-scrollbar">
             {activities.length > 0 ? activities.map((activity, i) => (
               <motion.div
-                key={activity.id}
+                key={activity.id || `activity-${i}`}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.05 }}
@@ -324,8 +324,8 @@ const AdminDashboard = () => {
         whileHover={{ scale: 1.005 }}
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 depth-layer-1">
-          {systemStatus.map((item) => (
-            <div key={item.label} className="flex flex-col items-center text-center">
+          {systemStatus.map((item, i) => (
+            <div key={item.label || `status-${i}`} className="flex flex-col items-center text-center">
               <div className={`w-4 h-4 rounded-full bg-${item.color}-500 mb-4 shadow-[0_0_20px_#22c55e] animate-pulse`} />
               <h4 className="text-slate-400 text-xs font-black uppercase tracking-widest mb-1">{item.label}</h4>
               <p className="text-2xl font-black text-slate-800">{item.status}</p>
