@@ -102,12 +102,7 @@ const MENU_ITEMS = [
     icon: GraduationCap,
     gradient: "from-orange-500 to-red-500",
   },
-  {
-    id: "class",
-    label: "ClassSession",
-    icon: GraduationCap,
-    gradient: "from-orange-500 to-red-500",
-  },
+
   {
     id: "buildings",
     label: "Buildings",
