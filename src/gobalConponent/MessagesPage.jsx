@@ -87,9 +87,8 @@ const MessagesPage = () => {
 
     const channel = echo.private(channelName);
 
-    // 🔥 THIS IS NEW AND IMPORTANT
     channel.subscription.bind("pusher:subscription_succeeded", () => {
-      console.log("🔓 PRIVATE CHANNEL AUTHORIZED");
+      console.log("🔓 PRIVATE CHANNEL AUTHORIZED:", channelName);
     });
 
     channel.subscription.bind("pusher:subscription_error", (status) => {
@@ -98,13 +97,36 @@ const MessagesPage = () => {
 
     channel.listen(".message.sent", (event) => {
       console.log("🔥 MESSAGE EVENT RECEIVED", event);
-      setMessages((prev) => [...prev, mapServerMessageToUI(event)]);
+
+      // Map the event payload to our UI format
+      const incomingMessage = {
+        id: event.id,
+        sender_id: event.s_id,
+        sender_name: event.s_id === currentUser.id ? currentUser.name : selectedConversation.name,
+        message: event.content,
+        created_at: event.created_at,
+        is_mine: event.s_id === currentUser.id,
+        attachments: event.attachments || [],
+        _status: "sent",
+      };
+
+      // Only add if not already in messages (prevent duplicates from optimistic update)
+      setMessages((prev) => {
+        const exists = prev.some(m => m.id === event.id);
+        if (exists) {
+          console.log("⚠️ Message already exists, skipping");
+          return prev;
+        }
+        console.log("✅ Adding new message to list");
+        return [...prev, incomingMessage];
+      });
     });
 
     return () => {
+      console.log("🔌 Leaving channel:", channelName);
       echo.leave(channelName);
     };
-  }, [currentUser?.id, selectedConversation?.id]);
+  }, [currentUser?.id, selectedConversation?.id, selectedConversation?.name]);
 
 
   useEffect(() => {
