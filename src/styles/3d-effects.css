@@ -1,42 +1,192 @@
-/* Global 3D CSS utilities - Simplified animations */
+/* Professional Animation Utilities - Real-World Style */
 
-/* Basic perspective */
-.perspective-1000 {
-    perspective: 1000px;
+/* Smooth transitions for all interactive elements */
+* {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.preserve-3d {
-    transform-style: preserve-3d;
-}
-
-/* Simple Card Hover - subtle effect */
-.card-3d {
+/* Card hover - subtle lift with shadow */
+.card-hover {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.card-3d:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+.card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
+        0 8px 10px -6px rgba(0, 0, 0, 0.1);
 }
 
-/* Subtle shadow */
-.shadow-3d {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+/* Button press effect */
+.btn-press:active {
+    transform: scale(0.98);
 }
 
-/* Simple lift effect */
-.lift-3d {
-    transition: transform 0.2s ease;
+/* Fade in animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
-.lift-3d:hover {
-    transform: translateY(-4px);
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
 }
 
-/* Glassmorphism - simplified */
-.glass-3d {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+/* Slide up animation */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slide-up {
+    animation: slideUp 0.4s ease-out;
+}
+
+/* Subtle pulse for notifications */
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.pulse {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Loading spinner */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Skeleton loading shimmer */
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+/* Focus ring for accessibility */
+.focus-ring:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* Smooth page transitions */
+.page-enter {
+    opacity: 0;
+    transform: translateX(10px);
+}
+
+.page-enter-active {
+    opacity: 1;
+    transform: translateX(0);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Glass card effect */
+.glass {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Professional shadows */
+.shadow-sm {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.shadow-md {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-lg {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+/* Hover scale for icons */
+.icon-hover:hover {
+    transform: scale(1.1);
+    transition: transform 0.15s ease;
+}
+
+/* Status indicator dot */
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.status-online {
+    animation: blink 2s ease-in-out infinite;
+}
+
+/* Smooth number counter effect */
+.counter {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Table row hover */
+.table-row-hover:hover {
+    background-color: rgba(59, 130, 246, 0.04);
+}
+
+/* Gradient text */
+.gradient-text {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Chart animation */
+@keyframes growWidth {
+    from {
+        width: 0;
+    }
+}
+
+.animate-bar {
+    animation: growWidth 0.8s ease-out;
 }
