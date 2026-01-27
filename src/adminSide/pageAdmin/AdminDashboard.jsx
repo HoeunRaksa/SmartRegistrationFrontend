@@ -151,18 +151,7 @@ const MENU_ITEMS = [
     icon: Calendar,
     gradient: "from-blue-600 to-indigo-600",
   },
-  {
-    id: "assignments",
-    label: "Assignments",
-    icon: ClipboardList,
-    gradient: "from-orange-500 to-amber-500",
-  },
-  {
-    id: "attendance",
-    label: "Attendance",
-    icon: CheckSquare,
-    gradient: "from-green-500 to-teal-500",
-  },
+
   {
     id: "grades",
     label: "Grades",
@@ -245,7 +234,6 @@ const SidebarItem = React.memo(function SidebarItem({
       type="button"
     >
       <motion.div
-        animate={isActive ? { rotate: [0, -10, 10, 0] } : {}}
         transition={{ duration: 0.5 }}
       >
         <Icon size={18} className={isActive ? "drop-shadow-sm" : ""} />

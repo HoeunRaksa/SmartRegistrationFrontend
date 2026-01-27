@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { TrendChart, ComparisonBarChart, DistributionPieChart, MultiLineChart } from '../../Components/ui/Charts';
 import AdminDashboardAPI from '../../api/admin_dashboard_api';
+import ThreeDChart from './ThreeDChart';
 
 const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -25,6 +26,7 @@ const AdminDashboard = () => {
   });
   const [activities, setActivities] = useState([]);
   const [systemStatus, setSystemStatus] = useState([]);
+  const [advancedStats, setAdvancedStats] = useState([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -41,6 +43,7 @@ const AdminDashboard = () => {
         setCharts(data.charts);
         setActivities(data.activities);
         setSystemStatus(data.systemStatus);
+        setAdvancedStats(res.data.data.advancedStats || []);
       }
     } catch (error) {
       console.error('Dashboard load error:', error);
@@ -186,8 +189,8 @@ const AdminDashboard = () => {
                 </div>
                 <div
                   className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wide ${stat.trend === 'up'
-                      ? 'bg-green-100 text-green-600 border border-green-200'
-                      : 'bg-red-100 text-red-600 border border-red-200'
+                    ? 'bg-green-100 text-green-600 border border-green-200'
+                    : 'bg-red-100 text-red-600 border border-red-200'
                     }`}
                 >
                   {stat.change}
@@ -205,6 +208,15 @@ const AdminDashboard = () => {
           );
         })}
       </div>
+
+      {/* 3D Analytics Section */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.4 }}
+      >
+        <ThreeDChart data={advancedStats} />
+      </motion.div>
 
       {/* Primary Charts Section */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
