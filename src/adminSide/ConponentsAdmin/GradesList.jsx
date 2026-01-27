@@ -150,8 +150,12 @@ const GradeRow = ({ grade, index, onEdit, onDelete }) => {
       {/* Student */}
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center gap-2">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-blue-100 to-purple-100">
-            <User className="w-4 h-4 text-blue-600" />
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-purple-100 overflow-hidden flex items-center justify-center border border-white/40">
+            {grade.student_avatar ? (
+              <img src={grade.student_avatar} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-4 h-4 text-blue-600" />
+            )}
           </div>
           <div>
             <div className="text-sm font-semibold text-gray-900">
