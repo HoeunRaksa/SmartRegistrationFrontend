@@ -224,6 +224,13 @@ export const updateSchedule = async (scheduleId, scheduleData) => {
 export const deleteSchedule = async (scheduleId) => {
   return await requestOnce("delete", `/admin/schedules/${scheduleId}`);
 };
+// GET: Fetch all class sessions
+export const fetchAllSessions = async () => {
+  const response = await requestOnce("get", "/admin/class-sessions");
+  const data = extractData(response);
+  return { data: { data: Array.isArray(data) ? data : [] } };
+};
+
 export const lookupClassGroups = (params) =>
   axios.get("/enrollment-lookup/class-groups", { params });
 

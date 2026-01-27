@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import AttendanceForm from "../ConponentsAdmin/AttendanceForm.jsx";
 import AttendanceList from "../ConponentsAdmin/AttendanceList.jsx";
-import { fetchAllAttendance } from "../../api/admin_course_api.jsx";
+import { fetchAllAttendance, fetchAllSessions } from "../../api/admin_course_api.jsx";
 import { fetchStudents } from "../../api/student_api.jsx";
 import { fetchCourses } from "../../api/course_api.jsx";
 import { getCachedStudents, getCachedCourses } from "../../utils/dataCache";
@@ -16,6 +16,7 @@ const AttendancePage = () => {
   const [attendance, setAttendance] = useState([]);
   const [students, setStudents] = useState([]);
   const [courses, setCourses] = useState([]);
+  const [sessions, setSessions] = useState([]);
   const [editingRecord, setEditingRecord] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -24,6 +25,7 @@ const AttendancePage = () => {
     loadAttendance();
     setTimeout(() => loadStudents(), 150); // 150ms delay
     setTimeout(() => loadCourses(), 300);  // 300ms delay
+    setTimeout(() => loadSessions(), 450); // 450ms delay
   }, []);
 
   // ================= LOAD ATTENDANCE =================
@@ -38,6 +40,23 @@ const AttendancePage = () => {
       setAttendance([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ================= LOAD SESSIONS =================
+  const loadSessions = async () => {
+    try {
+      const res = await fetchAllSessions();
+      const data = res.data?.data || res.data || [];
+      // Map to include name for select option
+      const mapped = (Array.isArray(data) ? data : []).map(s => ({
+        ...s,
+        name: `${s.course?.major_subject?.subject?.subject_name ?? 'Session'} - ${s.session_date} (${s.start_time})`
+      }));
+      setSessions(mapped);
+    } catch (error) {
+      console.error("Failed to load sessions:", error);
+      setSessions([]);
     }
   };
 
@@ -147,6 +166,7 @@ const AttendancePage = () => {
         onUpdate={loadAttendance}
         students={students}
         courses={courses}
+        sessions={sessions}
       />
 
       {/* ================= ATTENDANCE LIST ================= */}

@@ -12,11 +12,12 @@ import {
   BarChart3,
   Award
 } from 'lucide-react';
-import { fetchStudentAttendance, fetchAttendanceStats } from '../../api/attendance_api';
+import { fetchStudentAttendance, fetchAttendanceStats, fetchAttendanceSummary } from '../../api/attendance_api';
 
 const AttendancePage = () => {
   const [attendance, setAttendance] = useState([]);
   const [stats, setStats] = useState(null);
+  const [courseSummary, setCourseSummary] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState('all');
   const [viewMode, setViewMode] = useState('summary'); // summary, calendar, details
@@ -28,13 +29,15 @@ const AttendancePage = () => {
   const loadAttendance = async () => {
     try {
       setLoading(true);
-      const [attendanceRes, statsRes] = await Promise.all([
+      const [attendanceRes, statsRes, summaryRes] = await Promise.all([
         fetchStudentAttendance().catch(() => ({ data: { data: [] } })),
-        fetchAttendanceStats().catch(() => ({ data: null }))
+        fetchAttendanceStats().catch(() => ({ data: null })),
+        fetchAttendanceSummary().catch(() => ({ data: { data: [] } }))
       ]);
 
-      setAttendance(attendanceRes.data?.data?.length > 0 ? attendanceRes.data.data : []);
-      setStats(statsRes.data || null);
+      setAttendance(attendanceRes.data?.data || []);
+      setStats(statsRes?.data?.data || statsRes?.data || null);
+      setCourseSummary(summaryRes.data?.data || []);
     } catch (error) {
       console.error('Failed to load attendance:', error);
     } finally {
@@ -95,7 +98,7 @@ const AttendancePage = () => {
           <div className="flex items-center justify-between">
             <div className="text-white">
               <p className="text-sm opacity-90 mb-1">Overall Attendance</p>
-              <p className="text-3xl font-bold">{stats?.overall_percentage?.toFixed(1)}%</p>
+              <p className="text-3xl font-bold">{stats?.attendance_rate?.toFixed(1)}%</p>
             </div>
             <div className="p-3 bg-white/20 rounded-xl">
               <TrendingUp className="w-8 h-8 text-white" />
@@ -113,7 +116,7 @@ const AttendancePage = () => {
             <div className="text-white">
               <p className="text-sm opacity-90 mb-1">Present</p>
               <p className="text-3xl font-bold">{stats?.present}</p>
-              <p className="text-xs opacity-80">out of {stats?.total_sessions} sessions</p>
+              <p className="text-xs opacity-80">out of {stats?.total} sessions</p>
             </div>
             <div className="p-3 bg-white/20 rounded-xl">
               <CheckCircle className="w-8 h-8 text-white" />
@@ -159,7 +162,7 @@ const AttendancePage = () => {
       </div>
 
       {/* Attendance Warning */}
-      {stats?.overall_percentage < 75 && (
+      {stats?.attendance_rate < 75 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -173,7 +176,7 @@ const AttendancePage = () => {
               <h3 className="text-lg font-bold text-red-900 mb-2">Attendance Warning</h3>
               <p className="text-red-800">
                 Your attendance is below the required 75% threshold. Please ensure you attend classes regularly
-                to avoid academic penalties. Current attendance: <strong>{stats?.overall_percentage?.toFixed(1)}%</strong>
+                to avoid academic penalties. Current attendance: <strong>{stats?.attendance_rate?.toFixed(1)}%</strong>
               </p>
             </div>
           </div>
@@ -205,7 +208,7 @@ const AttendancePage = () => {
       {/* Summary View - Course-wise Breakdown */}
       {viewMode === 'summary' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {stats?.courses?.map((course, index) => (
+          {courseSummary.map((course, index) => (
             <motion.div
               key={course.course_code}
               initial={{ opacity: 0, y: 20 }}
@@ -243,15 +246,15 @@ const AttendancePage = () => {
                       strokeWidth="8"
                       fill="transparent"
                       strokeDasharray={`${2 * Math.PI * 56}`}
-                      strokeDashoffset={`${2 * Math.PI * 56 * (1 - course.percentage / 100)}`}
-                      className={course.percentage >= 75 ? 'text-green-500' : 'text-red-500'}
+                      strokeDashoffset={`${2 * Math.PI * 56 * (1 - course.attendance_rate / 100)}`}
+                      className={course.attendance_rate >= 75 ? 'text-green-500' : 'text-red-500'}
                       strokeLinecap="round"
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
-                      <div className={`text-2xl font-bold ${course.percentage >= 75 ? 'text-green-600' : 'text-red-600'}`}>
-                        {course.percentage.toFixed(0)}%
+                      <div className={`text-2xl font-bold ${course.attendance_rate >= 75 ? 'text-green-600' : 'text-red-600'}`}>
+                        {course.attendance_rate.toFixed(0)}%
                       </div>
                     </div>
                   </div>
@@ -322,7 +325,7 @@ const AttendancePage = () => {
                     </tr>
                   ) : (
                     filteredAttendance
-                      .sort((a, b) => new Date(b.date) - new Date(a.date))
+                      .sort((a, b) => new Date(b.session_date) - new Date(a.session_date))
                       .map((record, index) => {
                         const StatusIcon = getStatusIcon(record.status);
                         return (
@@ -337,7 +340,7 @@ const AttendancePage = () => {
                               <div className="flex items-center gap-2">
                                 <Calendar className="w-4 h-4 text-gray-600" />
                                 <span className="font-medium text-gray-900">
-                                  {new Date(record.date).toLocaleDateString('en-US', {
+                                  {new Date(record.session_date).toLocaleDateString('en-US', {
                                     month: 'short',
                                     day: 'numeric',
                                     year: 'numeric'

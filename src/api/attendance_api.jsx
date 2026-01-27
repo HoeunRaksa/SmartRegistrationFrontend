@@ -74,7 +74,7 @@ export const markAttendance = async (sessionId, data = {}) => {
 // GET: Fetch attendance statistics
 export const fetchAttendanceStats = async () => {
   try {
-    const response = await API.get("/student/attendance/statistics");
+    const response = await API.get("/student/attendance/stats");
     return response;
   } catch (error) {
     console.error("fetchAttendanceStats error:", error);
