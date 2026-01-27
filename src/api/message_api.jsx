@@ -78,6 +78,17 @@ export const deleteMessage = async (messageId) => {
   }
 };
 
+// DELETE: Clear all messages in a conversation
+export const clearConversation = async (conversationId) => {
+  try {
+    const response = await API.delete(`/conversations/${conversationId}/messages`);
+    return extractData(response);
+  } catch (error) {
+    console.error(`clearConversation(${conversationId}) error:`, error);
+    throw error;
+  }
+};
+
 // PUT/POST: Add participants to group
 export const addParticipants = async (conversationId, userIds) => {
   try {
