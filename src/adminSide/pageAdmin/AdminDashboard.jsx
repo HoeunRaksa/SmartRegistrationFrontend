@@ -56,6 +56,7 @@ const ClassGroupsPage = lazy(() => import("../pageAdmin/ClassGroupsPage.jsx"));
 const RoomsPage = lazy(() => import('../pageAdmin/RoomsPage.jsx'));
 const BuildingsPage = lazy(() => import("./BuildingsPage.jsx"));
 const MajorQuotasPage = lazy(() => import("./MajorQuotasPage.jsx"));
+const AcademicSessionsPage = lazy(() => import("./AcademicSessionsPage.jsx"));
 
 /* =========================
    LOADING COMPONENT
@@ -150,6 +151,12 @@ const MENU_ITEMS = [
     gradient: "from-cyan-500 to-blue-500",
   },
   {
+    id: "academic-sessions",
+    label: "Academic Sessions",
+    icon: Calendar,
+    gradient: "from-blue-600 to-indigo-600",
+  },
+  {
     id: "assignments",
     label: "Assignments",
     icon: ClipboardList,
@@ -234,13 +241,12 @@ const SidebarItem = React.memo(function SidebarItem({
       whileHover={{ scale: 1.02, x: 4 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
-        isActive
-          ? "backdrop-blur-xl bg-gradient-to-r " +
-            item.gradient +
-            " text-white shadow-lg"
-          : "backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40"
-      } border border-white/30`}
+      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${isActive
+        ? "backdrop-blur-xl bg-gradient-to-r " +
+        item.gradient +
+        " text-white shadow-lg"
+        : "backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40"
+        } border border-white/30`}
       type="button"
     >
       <motion.div
@@ -318,6 +324,8 @@ const ActivePage = React.memo(({ section }) => {
         return <TeacherPage />;
       case "class-groups":
         return <ClassGroupsPage />;
+      case "academic-sessions":
+        return <AcademicSessionsPage />;
       default:
         return <Dashboard />;
     }
@@ -567,13 +575,12 @@ const AdminDashboard = () => {
                         whileHover={{ scale: 1.02, x: 4 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleSectionChange(item.id)}
-                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all ${
-                          isActive
-                            ? "backdrop-blur-xl bg-gradient-to-r " +
-                              item.gradient +
-                              " text-white shadow-lg"
-                            : "backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40"
-                        } border border-white/30`}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all ${isActive
+                          ? "backdrop-blur-xl bg-gradient-to-r " +
+                          item.gradient +
+                          " text-white shadow-lg"
+                          : "backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40"
+                          } border border-white/30`}
                         type="button"
                       >
                         <motion.div
@@ -635,9 +642,8 @@ const AdminDashboard = () => {
 
       {/* ================= MAIN CONTENT ================= */}
       <div
-        className={`transition-all duration-200 ${
-          sidebarCollapsed ? "md:ml-20" : "md:ml-72"
-        }`}
+        className={`transition-all duration-200 ${sidebarCollapsed ? "md:ml-20" : "md:ml-72"
+          }`}
       >
         <header className="sticky top-0 z-30 backdrop-blur-2xl bg-white/40 border-b border-white/20 shadow-sm">
           <div className="flex items-center justify-between px-4 md:px-6 py-3">
