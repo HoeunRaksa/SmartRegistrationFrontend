@@ -143,7 +143,7 @@ export const DistributionPieChart = ({ data, title }) => {
                         dataKey="value"
                         animationDuration={1500}
                     >
-                        {data.map((entry, index) => (
+                        {data?.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="white" strokeWidth={2} />
                         ))}
                     </Pie>
