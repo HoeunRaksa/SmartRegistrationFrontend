@@ -427,52 +427,102 @@ const MessagesPage = () => {
 
                     return (
                       <motion.div
-                        key={m.id}
+                        key={msg.id}
                         initial={{ opacity: 0, y: 6, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         transition={{ duration: 0.2, type: "spring", stiffness: 300 }}
                         whileHover={{ scale: 1.02 }}
-                        className={`flex ${m.is_mine ? "justify-end" : "justify-start"}`}
                       >
-                        <div className="max-w-[78%] md:max-w-[70%]">
-                          <div
-                            className={`rounded-2xl px-4 py-2.5 shadow-sm border ${m.is_mine
-                              ? "bg-blue-600 text-white border-blue-600 rounded-br-md"
-                              : "bg-white text-slate-900 border-slate-200 rounded-bl-md"
+                        <div className={`flex ${msg.is_mine ? "justify-end" : "justify-start"}`}>
+                          <motion.div
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 300,
+                              damping: 20,
+                              delay: idx * 0.02,
+                            }}
+                            whileHover={{
+                              scale: 1.02,
+                              rotateY: msg.is_mine ? -2 : 2,
+                              z: 50,
+                              transition: { duration: 0.2 }
+                            }}
+                            style={{ transformStyle: "preserve-3d" }}
+                            className={`max-w-[75%] md:max-w-[60%] px-4 py-2.5 rounded-2xl shadow-sm relative group ${msg.is_mine
+                              ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-br-sm"
+                              : "bg-white text-slate-900 rounded-bl-sm border border-slate-200"
                               }`}
                           >
-                            {showName && (
-                              <div className="text-[11px] font-semibold text-slate-500 mb-1">
-                                {m.sender_name}
+                            {msg.message && (
+                              <p className="text-[15px] break-words whitespace-pre-wrap">
+                                {msg.message}
+                              </p>
+                            )}
+
+                            {/* Render image attachments */}
+                            {msg.attachments && msg.attachments.length > 0 && (
+                              <div className="mt-2 space-y-2">
+                                {msg.attachments.map((att, attIndex) => {
+                                  if (att.type === 'image') {
+                                    const imageUrl = att.file_path.startsWith('http')
+                                      ? att.file_path
+                                      : `${import.meta.env.VITE_API_URL || 'https://study.learner-teach.online'}/${att.file_path}`;
+
+                                    return (
+                                      <motion.div
+                                        key={attIndex}
+                                        whileHover={{ scale: 1.05, rotateZ: 1 }}
+                                        className="rounded-xl overflow-hidden cursor-pointer"
+                                      >
+                                        <img
+                                          src={imageUrl}
+                                          alt={att.original_name || 'Image'}
+                                          className="max-w-full h-auto max-h-64 object-cover rounded-lg"
+                                          onClick={() => window.open(imageUrl, '_blank')}
+                                          onError={(e) => {
+                                            e.target.src = '/placeholder-image.png';
+                                            e.target.onerror = null;
+                                          }}
+                                        />
+                                      </motion.div>
+                                    );
+                                  }
+                                  return null;
+                                })}
                               </div>
                             )}
 
-                            <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                              {m.message}
-                            </div>
-
                             <div
-                              className={`mt-1 flex items-center gap-1 justify-end text-[11px] ${m.is_mine ? "text-white/80" : "text-slate-500"
+                              className={`text-xs mt-1 flex items-center gap-1 ${msg.is_mine ? "text-blue-100" : "text-slate-400"
                                 }`}
                             >
-                              <span>{formatTime(m.created_at)}</span>
-                              {m.is_mine && (
-                                <>
-                                  {m._status === "sending" && (
-                                    <Loader className="w-3.5 h-3.5 animate-spin" />
+                              {formatTime(msg.created_at)}
+                              {msg.is_mine && (
+                                <span className="ml-1">
+                                  {msg._status === "sending" ? (
+                                    <Loader className="w-3 h-3 animate-spin" />
+                                  ) : msg._status === "failed" ? (
+                                    <span className="text-red-300">!</span>
+                                  ) : (
+                                    <CheckCheck className="w-3.5 h-3.5" />
                                   )}
-                                  {m._status === "failed" && (
-                                    <span className="text-[11px] font-semibold text-red-200">
-                                      Failed
-                                    </span>
-                                  )}
-                                  {(!m._status || m._status === "sent") && (
-                                    <CheckCheck className="w-4 h-4" />
-                                  )}
-                                </>
+                                </span>
                               )}
                             </div>
-                          </div>
+
+                            {/* 3D shadow effect */}
+                            <div className="absolute inset-0 -z-10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                              style={{
+                                background: msg.is_mine
+                                  ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(99, 102, 241, 0.3))'
+                                  : 'rgba(0, 0, 0, 0.1)',
+                                filter: 'blur(10px)',
+                                transform: 'translateZ(-10px)'
+                              }}
+                            />
+                          </motion.div>
                         </div>
                       </motion.div>
                     );
