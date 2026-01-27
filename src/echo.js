@@ -5,7 +5,7 @@ window.Pusher = Pusher;
 
 let echoInstance = null;
 
-export function makeEcho(currentUserId, otherUserId) {
+export function getEcho() {
   if (echoInstance) return echoInstance;
 
   const token = localStorage.getItem("token");
@@ -30,4 +30,9 @@ export function makeEcho(currentUserId, otherUserId) {
   });
 
   return echoInstance;
+}
+
+// Backward compatibility
+export function makeEcho() {
+  return getEcho();
 }

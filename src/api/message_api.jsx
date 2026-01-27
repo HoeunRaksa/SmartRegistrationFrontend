@@ -1,120 +1,101 @@
 import API from "./index";
 
-/**
- * Helper function to safely extract data from API response
- */
 const extractData = (response) => {
   if (response?.data?.data !== undefined) return response.data.data;
   if (response?.data !== undefined) return response.data;
   return null;
 };
 
-// ==============================
-// REAL CHAT API (matches your Laravel)
-// Routes:
-//   GET  /conversations
-//   GET  /chat/{userId}
-//   POST /chat/{userId}
-//   POST /chat/{userId}/read   (optional if you add it)
-// ==============================
-
-// GET: Fetch all conversations (partners list)
+// GET: Fetch all conversations (partners + groups)
 export const fetchConversations = async () => {
   try {
     const response = await API.get("/conversations");
     const data = extractData(response);
-
-    console.log(data);
-    return {
-      data: {
-        data: Array.isArray(data) ? data : []
-      }
-    };
+    return { data: { data: Array.isArray(data) ? data : [] } };
   } catch (error) {
     console.error("fetchConversations error:", error);
     throw error;
   }
 };
 
-// GET: Fetch messages with a specific userId
-// NOTE: your UI uses "conversationId", but in your backend it is actually "userId"
-export const fetchMessages = async (userId) => {
+// GET: Fetch messages for a conversation OR user (backward compat)
+export const fetchMessages = async (id, isConversation = true) => {
   try {
-    const response = await API.get(`/chat/${userId}`);
+    const url = isConversation ? `/conversations/${id}/messages` : `/chat/${id}`;
+    const response = await API.get(url);
     const data = extractData(response);
-
-    // Backend returns Message model fields: {id, s_id, r_id, content, created_at, attachments...}
-    // Your UI expects: {id, sender_id, sender_name, message, created_at, is_mine}
-    // If your backend already maps this shape, remove this mapping.
-    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
-
-    const mapped = Array.isArray(data)
-      ? data.map((m) => ({
-        id: m.id,
-        sender_id: m.s_id ?? m.sender_id,
-        sender_name: m.sender_name, // may be undefined unless backend provides it
-        message: m.content ?? m.message,
-        created_at: m.created_at,
-        is_mine: (m.s_id ?? m.sender_id) === currentUser.id,
-        attachments: m.attachments || [],
-      }))
-      : [];
 
     return {
       data: {
-        data: mapped
+        data: Array.isArray(data) ? data : []
       }
     };
   } catch (error) {
-    console.error(`fetchMessages(${userId}) error:`, error);
+    console.error(`fetchMessages(${id}) error:`, error);
     throw error;
   }
 };
 
-// POST: Send a message to userId
-// Backend expects: content + files[]  (your controller validates files.*)
-export const sendMessage = async (userId, content, attachments = []) => {
+// POST: Send a message (handles files)
+export const sendMessage = async (id, content, attachments = [], isConversation = true) => {
   try {
+    const url = isConversation ? `/conversations/${id}/messages` : `/chat/${id}`;
     const formData = new FormData();
-    if (content !== undefined && content !== null) formData.append("content", content);
+    if (content) formData.append("content", content);
 
-    // IMPORTANT: must be files[] because backend validates `files.*`
     attachments.forEach((file) => {
       formData.append("files[]", file);
     });
 
-    const response = await API.post(`/chat/${userId}`, formData, {
+    return await API.post(url, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-
-    return response;
   } catch (error) {
-    console.error(`sendMessage(${userId}) error:`, error);
+    console.error(`sendMessage(${id}) error:`, error);
     throw error;
   }
 };
 
-// OPTIONAL: Mark messages as read (only if you add this route in Laravel)
-// Route suggestion: POST /chat/{userId}/read
-export const markAsRead = async (userId) => {
+// POST: Create a group conversation
+export const createGroup = async (title, userIds) => {
   try {
-    const response = await API.post(`/chat/${userId}/read`);
-    return response;
+    const response = await API.post("/conversations/groups", { title, user_ids: userIds });
+    return extractData(response);
   } catch (error) {
-    console.error(`markAsRead(${userId}) error:`, error);
+    console.error("createGroup error:", error);
     throw error;
   }
 };
 
-// --- These endpoints do NOT exist in your current Laravel code ---
-// Keep them only if you have them on backend. Otherwise remove or leave as stubs.
-
-export const createConversation = async () => {
-  throw new Error("createConversation is not supported: you don't have conversations table/API. A 'conversation' is just a userId in your current design.");
+// DELETE: Deletes a message (soft delete)
+export const deleteMessage = async (messageId) => {
+  try {
+    const response = await API.delete(`/messages/${messageId}`);
+    return extractData(response);
+  } catch (error) {
+    console.error(`deleteMessage(${messageId}) error:`, error);
+    throw error;
+  }
 };
 
-export const deleteConversation = async () => {
-  throw new Error("deleteConversation is not supported: you don't have conversations table/API.");
+// PUT/POST: Add participants to group
+export const addParticipants = async (conversationId, userIds) => {
+  try {
+    return await API.post(`/conversations/${conversationId}/participants`, { user_ids: userIds });
+  } catch (error) {
+    console.error("addParticipants error:", error);
+    throw error;
+  }
+};
+
+// DELETE: Remove participant
+export const removeParticipant = async (conversationId, userId) => {
+  try {
+    return await API.delete(`/conversations/${conversationId}/participants/${userId}`);
+  } catch (error) {
+    console.error("removeParticipant error:", error);
+    throw error;
+  }
 };
 
 // GET: Fetch unread count
@@ -126,12 +107,4 @@ export const fetchUnreadCount = async () => {
     console.error("fetchUnreadCount error:", error);
     return { unread_count: 0 };
   }
-};
-
-export const searchMessages = async () => {
-  throw new Error("searchMessages is not supported unless you build an API for it.");
-};
-
-export const fetchAvailableRecipients = async () => {
-  throw new Error("fetchAvailableRecipients is not supported unless you build an API for it.");
 };
