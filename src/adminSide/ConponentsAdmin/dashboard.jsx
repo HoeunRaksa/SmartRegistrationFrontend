@@ -103,27 +103,6 @@ const AdminDashboard = () => {
     },
   ];
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0.6 }}
-          animate={{ scale: [0.9, 1, 0.9], opacity: [0.6, 1, 0.6] }}
-          transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
-          className="w-20 h-20 rounded-full border-4 border-blue-100 border-t-blue-600"
-        />
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 1, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="mt-8 text-xl font-bold text-gray-900"
-        >
-          Loading University Digital Twin...
-        </motion.p>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen w-full space-y-6">
       {/* Epic Hero Header */}
