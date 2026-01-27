@@ -421,9 +421,9 @@ const MessagesPage = () => {
 
               <div className="flex-1 overflow-y-auto px-3 md:px-6 py-4 bg-slate-50">
                 <div className="space-y-2">
-                  {messages.map((m, idx) => {
+                  {messages.map((msg, idx) => {
                     const prev = messages[idx - 1];
-                    const showName = !m.is_mine && (!prev || prev.sender_id !== m.sender_id);
+                    const showName = !msg.is_mine && (!prev || prev.sender_id !== msg.sender_id);
 
                     return (
                       <motion.div
