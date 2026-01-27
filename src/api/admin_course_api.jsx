@@ -129,8 +129,9 @@ export const deleteGrade = async (gradeId) => {
 // ==============================
 
 // GET: Fetch all assignments
-export const fetchAllAssignments = async () => {
-  const response = await requestOnce("get", "/admin/assignments");
+export const fetchAllAssignments = async (courseId = "") => {
+  const url = courseId ? `/admin/assignments?course_id=${courseId}` : "/admin/assignments";
+  const response = await requestOnce("get", url);
   const data = extractData(response);
   return { data: { data: Array.isArray(data) ? data : [] } };
 };
