@@ -5,10 +5,7 @@ import {
   Activity, Calendar, Award, AlertCircle, CheckCircle, Clock, Building
 } from 'lucide-react';
 import { TrendChart, ComparisonBarChart, DistributionPieChart, MultiLineChart } from '../../Components/ui/Charts';
-import { fetchStudents } from '../../api/student_api';
-import { fetchRegistrations } from '../../api/registration_api';
-import { fetchDepartments } from '../../api/department_api';
-import { fetchCourses } from '../../api/course_api';
+import AdminDashboardAPI from '../../api/admin_dashboard_api';
 
 const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -17,10 +14,14 @@ const AdminDashboard = () => {
     totalCourses: 0,
     totalDepartments: 0,
     pendingRegistrations: 0,
-    totalRevenue: 0,
-    activeEnrollments: 0,
+  });
+  const [charts, setCharts] = useState({
+    enrollmentTrend: [],
+    departmentDistribution: [],
+    performanceData: [],
   });
   const [activities, setActivities] = useState([]);
+  const [systemStatus, setSystemStatus] = useState([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -29,34 +30,15 @@ const AdminDashboard = () => {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [studentsRes, regsRes, deptsRes, coursesRes] = await Promise.all([
-        fetchStudents().catch(() => ({ data: { data: [] } })),
-        fetchRegistrations().catch(() => ({ data: { data: [] } })),
-        fetchDepartments().catch(() => ({ data: { data: [] } })),
-        fetchCourses().catch(() => ({ data: { data: [] } })),
-      ]);
+      const res = await AdminDashboardAPI.getStats();
+      const data = AdminDashboardAPI.processStats(res);
 
-      const students = studentsRes?.data?.data || [];
-      const registrations = regsRes?.data?.data || [];
-      const departments = deptsRes?.data?.data || [];
-      const courses = coursesRes?.data?.data || [];
-
-      setStats({
-        totalStudents: students.length,
-        totalCourses: courses.length,
-        totalDepartments: departments.length,
-        pendingRegistrations: registrations.filter(r => r.status === 'pending').length,
-        totalRevenue: registrations.reduce((sum, r) => sum + (r.tuition_fee || 0), 0),
-        activeEnrollments: students.filter(s => s.status === 'active').length,
-      });
-
-      // Generate recent activities
-      const recentActivities = [
-        { id: 1, type: 'registration', message: `${registrations.length} new registrations this month`, time: 'Today', icon: Users },
-        { id: 2, type: 'enrollment', message: `${students.length} students enrolled`, time: '2 hours ago', icon: GraduationCap },
-        { id: 3, type: 'course', message: `${courses.length} courses available`, time: 'Today', icon: BookOpen },
-      ];
-      setActivities(recentActivities);
+      if (data) {
+        setStats(data.stats);
+        setCharts(data.charts);
+        setActivities(data.activities);
+        setSystemStatus(data.systemStatus);
+      }
     } catch (error) {
       console.error('Dashboard load error:', error);
     } finally {
@@ -195,13 +177,13 @@ const AdminDashboard = () => {
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <TrendChart
-          data={enrollmentTrendData}
+          data={charts.enrollmentTrend}
           dataKey="students"
           title="📈 Student Enrollment Trend"
           color="#3b82f6"
         />
         <DistributionPieChart
-          data={departmentDistribution}
+          data={charts.departmentDistribution}
           title="🏛️ Students by Department"
         />
       </div>
@@ -209,7 +191,7 @@ const AdminDashboard = () => {
       {/* Charts Row 2 */}
       <div className="grid grid-cols-1 gap-6">
         <MultiLineChart
-          data={performanceData}
+          data={charts.performanceData}
           dataKeys={['attendance', 'grades']}
           title="📊 Attendance & Performance Overview"
           colors={['#10b981', '#8b5cf6']}
@@ -229,21 +211,24 @@ const AdminDashboard = () => {
             Recent Activity
           </h3>
           <div className="space-y-3">
-            {activities.map((activity) => (
-              <motion.div
-                key={activity.id}
-                whileHover={{ x: 4 }}
-                className="flex items-start gap-3 p-4 rounded-xl bg-white/50 border border-white/60 hover:bg-white/70 transition-all"
-              >
-                <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500">
-                  <activity.icon className="w-4 h-4 text-white" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-800">{activity.message}</p>
-                  <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
-                </div>
-              </motion.div>
-            ))}
+            {activities.map((activity) => {
+              const Icon = activity.icon === 'Users' ? Users : GraduationCap;
+              return (
+                <motion.div
+                  key={activity.id}
+                  whileHover={{ x: 4 }}
+                  className="flex items-start gap-3 p-4 rounded-xl bg-white/50 border border-white/60 hover:bg-white/70 transition-all"
+                >
+                  <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500">
+                    <Icon className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-800">{activity.message}</p>
+                    <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </motion.div>
 
@@ -258,12 +243,7 @@ const AdminDashboard = () => {
             System Status
           </h3>
           <div className="space-y-3">
-            {[
-              { label: 'Database', status: 'Operational', color: 'green' },
-              { label: 'API Services', status: 'Operational', color: 'green' },
-              { label: 'Payment Gateway', status: 'Operational', color: 'green' },
-              { label: 'Email Service', status: 'Operational', color: 'green' },
-            ].map((item, index) => (
+            {systemStatus.map((item, index) => (
               <motion.div
                 key={item.label}
                 initial={{ opacity: 0, y: 10 }}
