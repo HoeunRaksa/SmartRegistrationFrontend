@@ -11,6 +11,17 @@ export const fetchAcademicSessions = async () => {
     }
 };
 
+// GET: Current Session
+export const fetchCurrentSession = async () => {
+    try {
+        const response = await API.get("/academic-sessions/current");
+        return extractData(response);
+    } catch (error) {
+        console.error("Error fetching current session:", error);
+        return null; // Return null safely
+    }
+};
+
 // POST: Create
 export const createAcademicSession = async (data) => {
     try {

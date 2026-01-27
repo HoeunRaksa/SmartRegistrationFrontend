@@ -161,4 +161,6 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
+export const extractData = (res) => res?.data?.data || res?.data;
+
 export default API;

@@ -13,6 +13,7 @@ import ProfilePage from './ProfilePage.jsx';
 import ProjectGroupsPage from './ProjectGroupsPage.jsx';
 import SettingPage from '../../gobalConponent/Settingpage.jsx';
 import { logoutApi } from '../../api/auth.jsx';
+import { fetchCurrentSession } from '../../api/admin_session_api.jsx';
 import {
   LayoutDashboard,
   BookOpen,
@@ -82,6 +83,11 @@ const TeacherDashboard = () => {
       navigate("/teacher/dashboard", { replace: true });
     }
   }, [section, navigate]);
+
+  const [currentSession, setCurrentSession] = useState(null);
+  useEffect(() => {
+    fetchCurrentSession().then(setCurrentSession).catch(console.error);
+  }, []);
 
   const handleSectionChange = useCallback(
     (sectionId) => {
@@ -175,6 +181,13 @@ const TeacherDashboard = () => {
                   NovaTech
                 </h1>
                 <p className="text-xs text-gray-600 mt-0.5">Teacher Portal</p>
+                {currentSession && (
+                  <div className="mt-2 px-3 py-2 bg-blue-50/50 rounded-lg border border-blue-100">
+                    <div className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mb-0.5">Current Session</div>
+                    <div className="text-xs font-bold text-slate-700">{currentSession.name}</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">{new Date(currentSession.start_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - {new Date(currentSession.end_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
+                  </div>
+                )}
               </div>
             )}
             <button
