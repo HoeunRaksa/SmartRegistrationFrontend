@@ -119,50 +119,6 @@ const AbouteUs = () => {
 
   return (
     <div className="min-h-screen  relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          animate={{
-            x: [0, 50, 0],
-            y: [0, 30, 0],
-            scale: [1, 1.1, 1],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="absolute top-20 left-10 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            x: [0, -40, 0],
-            y: [0, 50, 0],
-            scale: [1, 1.15, 1],
-          }}
-          transition={{
-            duration: 25,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 0.5
-          }}
-          className="absolute top-40 right-20 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            x: [0, 30, 0],
-            y: [0, -40, 0],
-            scale: [1, 1.08, 1],
-          }}
-          transition={{
-            duration: 18,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 1
-          }}
-          className="absolute bottom-20 left-1/3 w-80 h-80 bg-pink-400/20 rounded-full blur-3xl"
-        />
-      </div>
 
       <div className="relative z-10 px-4 py-8 max-w-7xl mx-auto">
         {/* Hero Section */}
@@ -172,7 +128,7 @@ const AbouteUs = () => {
           transition={{ duration: 0.8 }}
           className="text-center mb-16 mt-8"
         >
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent mb-6">
             About Our University
           </h1>
           <p className="text-xl sm:text-2xl text-gray-700 max-w-4xl mx-auto leading-relaxed font-light">
@@ -198,11 +154,11 @@ const AbouteUs = () => {
                     <motion.div
                       whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
                       transition={{ duration: 0.5 }}
-                      className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mb-6 shadow-lg"
+                      className="w-20 h-20 backdrop-blur-xl bg-white/60 rounded-full flex items-center justify-center mb-6 shadow-xl border-2 border-white/80"
                     >
-                      <span className="text-4xl">🎯</span>
+                      <span className="text-4xl text-blue-600">🎯</span>
                     </motion.div>
-                    <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+                    <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent mb-4">
                       Our Mission
                     </h2>
                     <p className="text-gray-700 leading-relaxed text-lg font-light">
@@ -228,11 +184,11 @@ const AbouteUs = () => {
                     <motion.div
                       whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
                       transition={{ duration: 0.5 }}
-                      className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mb-6 shadow-lg"
+                      className="w-20 h-20 backdrop-blur-xl bg-white/60 rounded-full flex items-center justify-center mb-6 shadow-xl border-2 border-white/80"
                     >
-                      <span className="text-4xl">👁️</span>
+                      <span className="text-4xl text-indigo-600">👁️</span>
                     </motion.div>
-                    <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+                    <h2 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-700 bg-clip-text text-transparent mb-4">
                       Our Vision
                     </h2>
                     <p className="text-gray-700 leading-relaxed text-lg font-light">
@@ -254,7 +210,7 @@ const AbouteUs = () => {
           className="mb-16"
         >
           <div className="text-center mb-10">
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent mb-4">
               Our History
             </h2>
             <p className="text-lg text-gray-600 font-light">
@@ -288,7 +244,7 @@ const AbouteUs = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-10"
           >
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent mb-4">
               Our Core Values
             </h2>
             <p className="text-lg text-gray-600 font-light">
@@ -314,7 +270,7 @@ const AbouteUs = () => {
               >
                 <Card className="h-full hover:scale-[1.05] transition-all duration-300 group">
                   <CardContent className="p-8">
-                    <div className={`w-16 h-16 bg-gradient-to-br ${value.gradient} rounded-2xl flex items-center justify-center mb-6 shadow-xl group-hover:scale-110 transition-transform duration-300`}>
+                    <div className="w-16 h-16 backdrop-blur-xl bg-white/60 rounded-2xl flex items-center justify-center mb-6 shadow-xl group-hover:scale-110 transition-transform duration-300 border-2 border-white/80">
                       <span className="text-3xl">{value.icon}</span>
                     </div>
                     <h3 className="text-2xl font-bold text-gray-800 mb-3">{value.title}</h3>
@@ -335,7 +291,7 @@ const AbouteUs = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-10"
           >
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent mb-4">
               Our Journey Through Time
             </h2>
             <p className="text-lg text-gray-600 font-light">
@@ -344,7 +300,7 @@ const AbouteUs = () => {
           </motion.div>
 
           <div className="relative">
-            <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gradient-to-b from-blue-500 via-purple-500 to-pink-500 rounded-full hidden md:block" />
+            <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gradient-to-b from-blue-600 via-indigo-600 to-purple-700 rounded-full hidden md:block" />
 
             <div className="space-y-8">
               {timeline.map((item, index) => (
@@ -366,7 +322,7 @@ const AbouteUs = () => {
                     </Card>
                   </div>
 
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-lg z-10 shrink-0">
+                  <div className="w-12 h-12 rounded-full backdrop-blur-xl bg-white/60 flex items-center justify-center text-purple-600 font-bold shadow-lg z-10 shrink-0 border-2 border-white/80">
                     {item.year.slice(-2)}
                   </div>
 
@@ -386,7 +342,7 @@ const AbouteUs = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-10"
           >
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent mb-4">
               Our Leadership Team
             </h2>
             <p className="text-lg text-gray-600 font-light">
@@ -407,12 +363,12 @@ const AbouteUs = () => {
                   <CardContent className="p-6">
                     <motion.div
                       whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
-                      className="w-20 h-20 mx-auto bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mb-4 shadow-xl"
+                      className="w-20 h-20 mx-auto backdrop-blur-xl bg-white/60 rounded-full flex items-center justify-center mb-4 shadow-xl border-2 border-white/80"
                     >
                       <span className="text-4xl">{leader.avatar}</span>
                     </motion.div>
                     <h3 className="text-lg font-bold text-gray-800 mb-1">{leader.name}</h3>
-                    <p className="text-sm font-semibold text-purple-600 mb-3">{leader.role}</p>
+                    <p className="text-sm font-semibold text-blue-600 mb-3">{leader.role}</p>
                     <p className="text-sm text-gray-600 font-light">{leader.description}</p>
                   </CardContent>
                 </Card>
@@ -430,7 +386,7 @@ const AbouteUs = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-10"
           >
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent mb-4">
               Research Excellence
             </h2>
             <p className="text-lg text-gray-600 font-light">
@@ -450,7 +406,7 @@ const AbouteUs = () => {
                 <Card className="h-full hover:scale-[1.05] transition-all duration-300 group">
                   <CardContent className="p-6">
                     <div className="flex items-center gap-4 mb-4">
-                      <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform">
+                      <div className="w-14 h-14 backdrop-blur-xl bg-white/60 rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform border-2 border-white/80">
                         {area.icon}
                       </div>
                       <h3 className="text-xl font-bold text-gray-800">{area.name}</h3>
@@ -461,7 +417,7 @@ const AbouteUs = () => {
                         <p className="text-xs text-gray-600">Active Projects</p>
                       </div>
                       <div className="backdrop-blur-xl bg-purple-500/10 rounded-xl p-3 text-center">
-                        <p className="text-2xl font-bold text-purple-600">{area.funding}</p>
+                        <p className="text-2xl font-bold text-indigo-600">{area.funding}</p>
                         <p className="text-xs text-gray-600">Annual Funding</p>
                       </div>
                     </div>
@@ -488,7 +444,7 @@ const AbouteUs = () => {
                     <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
                       <span className="text-2xl">✓</span>
                     </div>
-                    <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent">
                       Accreditations
                     </h3>
                   </div>
@@ -526,10 +482,10 @@ const AbouteUs = () => {
               <Card className="h-full">
                 <CardContent className="p-8">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
-                      <span className="text-2xl">🏆</span>
+                    <div className="w-12 h-12 backdrop-blur-xl bg-white/60 rounded-xl flex items-center justify-center shadow-lg border-2 border-white/80">
+                      <span className="text-2xl text-green-600">✓</span>
                     </div>
-                    <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent">
                       Rankings & Recognition
                     </h3>
                   </div>
@@ -566,13 +522,15 @@ const AbouteUs = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="backdrop-blur-2xl bg-gradient-to-br from-blue-600/90 via-purple-600/90 to-pink-600/90 rounded-3xl p-10 border-2 border-white/30 shadow-[0_30px_80px_rgba(139,92,246,0.4)]"
+            className="backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/70 to-white/50 rounded-3xl p-10 border-2 border-white/80 shadow-[0_20px_60px_rgba(0,0,0,0.1)] relative overflow-hidden"
           >
-            <div className="text-center mb-8">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
+            {/* Top accent line */}
+            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700" />
+            <div className="text-center mb-8 relative z-10">
+              <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent mb-2">
                 NovaTech University at a Glance
               </h2>
-              <p className="text-white/80">Our impact in numbers</p>
+              <p className="text-gray-700 font-light">Our impact in numbers</p>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -593,11 +551,11 @@ const AbouteUs = () => {
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ scale: 1.1 }}
-                  className="backdrop-blur-xl bg-white/20 rounded-2xl p-6 text-center border border-white/30"
+                  className="backdrop-blur-xl bg-white/60 rounded-2xl p-6 text-center border border-white/80 hover:bg-white/80 transition-all duration-300 shadow-lg"
                 >
                   <span className="text-3xl mb-2 block">{stat.icon}</span>
-                  <p className="text-3xl font-bold text-white">{stat.number}</p>
-                  <p className="text-white/80 text-sm">{stat.label}</p>
+                  <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent">{stat.number}</p>
+                  <p className="text-gray-600 text-sm font-medium">{stat.label}</p>
                 </motion.div>
               ))}
             </div>
@@ -615,7 +573,7 @@ const AbouteUs = () => {
           >
             <Card className="inline-block">
               <CardContent className="p-10">
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent mb-4">
                   Join Our Community
                 </h2>
                 <p className="text-gray-700 mb-6 max-w-xl mx-auto font-light">
@@ -624,7 +582,7 @@ const AbouteUs = () => {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link
                     to="/registration"
-                    className="backdrop-blur-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-semibold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+                    className="backdrop-blur-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 text-white font-semibold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
                   >
                     Apply Now
                   </Link>

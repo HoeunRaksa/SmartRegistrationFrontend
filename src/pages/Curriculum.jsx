@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { fetchDepartments } from "../api/department_api";
+import { Card, Card3D, FloatingCard3D } from "../Components/ui/Card";
+import "../styles/3d-effects.css";
 
 const headerImage = "/assets/images/curriculum.png";
 
@@ -52,28 +54,28 @@ const cardVariants = {
 // Icon mapping based on department name/faculty
 const getDepartmentIcon = (dept) => {
   const name = (dept.faculty?.toLowerCase() || dept.name?.toLowerCase() || '');
-  
+
   const iconMap = {
     'science': { emoji: '🧪', color: 'from-blue-600 to-purple-600' },
     'engineering': { emoji: '⚙️', color: 'from-blue-600 to-purple-600' },
     'technology': { emoji: '🖥️', color: 'from-indigo-500 to-blue-500' },
-    'business': { emoji: '💼', color: 'from-yellow-500 to-orange-500' },
-    'economics': { emoji: '📊', color: 'from-yellow-500 to-orange-500' },
-    'finance': { emoji: '💰', color: 'from-yellow-500 to-orange-500' },
-    'art': { emoji: '🎨', color: 'from-pink-500 to-rose-500' },
-    'humanities': { emoji: '📚', color: 'from-pink-500 to-rose-500' },
-    'literature': { emoji: '✍️', color: 'from-pink-500 to-rose-500' },
-    'medical': { emoji: '🏥', color: 'from-red-500 to-pink-500' },
-    'health': { emoji: '❤️', color: 'from-red-500 to-pink-500' },
-    'nursing': { emoji: '⚕️', color: 'from-red-500 to-pink-500' },
+    'business': { emoji: '💼', color: 'from-blue-500 to-indigo-500' },
+    'economics': { emoji: '📊', color: 'from-indigo-600 to-purple-600' },
+    'finance': { emoji: '💰', color: 'from-blue-700 to-indigo-700' },
+    'art': { emoji: '🎨', color: 'from-purple-500 to-indigo-500' },
+    'humanities': { emoji: '📚', color: 'from-indigo-400 to-blue-400' },
+    'literature': { emoji: '✍️', color: 'from-blue-500 to-purple-500' },
+    'medical': { emoji: '🏥', color: 'from-blue-600 to-indigo-600' },
+    'health': { emoji: '❤️', color: 'from-indigo-500 to-purple-500' },
+    'nursing': { emoji: '⚕️', color: 'from-purple-600 to-indigo-600' },
     'law': { emoji: '⚖️', color: 'from-purple-500 to-indigo-500' },
     'legal': { emoji: '⚖️', color: 'from-purple-500 to-indigo-500' },
-    'environment': { emoji: '🌿', color: 'from-green-500 to-emerald-500' },
-    'biology': { emoji: '🧬', color: 'from-green-500 to-emerald-500' },
-    'tourism': { emoji: '✈️', color: 'from-sky-500 to-blue-500' },
-    'hospitality': { emoji: '🏨', color: 'from-sky-500 to-blue-500' },
-    'ai': { emoji: '🤖', color: 'from-teal-500 to-cyan-500' },
-    'artificial': { emoji: '🤖', color: 'from-teal-500 to-cyan-500' },
+    'environment': { emoji: '🌿', color: 'from-blue-400 to-indigo-400' },
+    'biology': { emoji: '🧬', color: 'from-indigo-500 to-purple-500' },
+    'tourism': { emoji: '✈️', color: 'from-blue-500 to-indigo-500' },
+    'hospitality': { emoji: '🏨', color: 'from-indigo-600 to-blue-600' },
+    'ai': { emoji: '🤖', color: 'from-blue-700 to-purple-700' },
+    'artificial': { emoji: '🤖', color: 'from-blue-700 to-purple-700' },
     'computer': { emoji: '💻', color: 'from-indigo-500 to-blue-500' },
     'social': { emoji: '👥', color: 'from-purple-500 to-indigo-500' },
   };
@@ -133,54 +135,10 @@ const Curriculum = () => {
 
   return (
     <div className="relative min-h-screen">
-      {/* Animated background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          animate={{
-            x: [0, 50, 0],
-            y: [0, 30, 0],
-            scale: [1, 1.1, 1],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-blue-400 to-cyan-400 opacity-30 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            x: [0, -40, 0],
-            y: [0, 50, 0],
-            scale: [1, 1.15, 1],
-          }}
-          transition={{
-            duration: 25,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 0.5
-          }}
-          className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-purple-400 to-pink-400 opacity-30 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            x: [0, 30, 0],
-            y: [0, -40, 0],
-            scale: [1, 1.08, 1],
-          }}
-          transition={{
-            duration: 18,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 1
-          }}
-          className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-r from-pink-400 to-orange-400 opacity-30 rounded-full blur-3xl"
-        />
-      </div>
 
       <div className="relative z-10 px-4 py-10">
         {/* Hero Section */}
-        <motion.section 
+        <motion.section
           className="relative mt-5 rounded-3xl overflow-hidden max-w-7xl mx-auto"
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -188,8 +146,8 @@ const Curriculum = () => {
         >
           <div className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 border-2 border-white/60 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] p-6 sm:p-10">
             {/* Gradient top accent */}
-            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
-            
+            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700" />
+
             <div className="container mx-auto flex flex-col-reverse md:flex-row items-center md:justify-between gap-8">
               <div className="text-center md:text-left md:w-1/2">
                 <motion.div
@@ -198,15 +156,15 @@ const Curriculum = () => {
                   transition={{ duration: 0.6, delay: 0.2 }}
                   className="inline-block mb-4"
                 >
-                  <div className="backdrop-blur-xl bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 px-4 py-2 rounded-full border border-white/50">
-                    <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  <div className="backdrop-blur-xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 px-4 py-2 rounded-full border border-white/50">
+                    <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent">
                       Academic Programs
                     </span>
                   </div>
                 </motion.div>
 
-                <motion.h1 
-                  className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6 drop-shadow-lg"
+                <motion.h1
+                  className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent mb-6 drop-shadow-lg"
                   initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.6, delay: 0.3 }}
@@ -230,34 +188,25 @@ const Curriculum = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.5 }}
                 >
-                  <a
-                    href="#programs"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      document.getElementById('programs')?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="relative inline-block backdrop-blur-xl bg-gradient-to-br from-blue-600 to-purple-600 text-white px-8 py-4 rounded-2xl shadow-[0_10px_40px_rgba(139,92,246,0.4)] hover:shadow-[0_20px_60px_rgba(139,92,246,0.6)] transition-all duration-500 hover:scale-105 border border-white/30 font-semibold overflow-hidden group"
+                  <Button3D
+                    onClick={() => document.getElementById('programs')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="px-10 py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 text-white font-bold rounded-2xl shadow-xl"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                    <span className="relative z-10">Explore Programs</span>
-                  </a>
+                    Explore Programs
+                  </Button3D>
                 </motion.div>
               </div>
 
               <div className="md:w-1/2 flex justify-center">
-                <motion.div
-                  className="backdrop-blur-2xl bg-gradient-to-br from-white/70 via-white/50 to-white/30 p-6 rounded-3xl border-2 border-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.15)] hover:shadow-[0_30px_80px_rgba(139,92,246,0.4)] transition-all duration-700"
-                  initial={{ scale: 0.95, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.8, delay: 0.3 }}
-                  whileHover={{ scale: 1.02 }}
+                <FloatingCard3D
+                  className="backdrop-blur-2xl bg-gradient-to-br from-white/70 via-white/50 to-white/30 p-6 rounded-3xl border-2 border-white/60 shadow-2xl"
                 >
                   <img
                     src={headerImage}
                     alt="Education Hero"
                     className="w-full rounded-2xl"
                   />
-                </motion.div>
+                </FloatingCard3D>
               </div>
             </div>
           </div>
@@ -268,16 +217,16 @@ const Curriculum = () => {
           <div className="mx-auto">
             {/* Header */}
             <div className="text-center mb-12">
-              <motion.h2 
+              <motion.h2
                 initial={{ opacity: 0, y: -20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
-                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6 drop-shadow-lg"
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent mb-6 drop-shadow-lg"
               >
                 World-Class Academic Programs
               </motion.h2>
-              
+
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -300,7 +249,7 @@ const Curriculum = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  <p className="text-xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  <p className="text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent">
                     Loading Programs...
                   </p>
                 </div>
@@ -318,7 +267,7 @@ const Curriculum = () => {
                   </div>
                   <h3 className="text-xl font-bold text-gray-800 mb-2">Error Loading Programs</h3>
                   <p className="text-red-700 font-medium mb-6">{error}</p>
-                  <button 
+                  <button
                     onClick={() => window.location.reload()}
                     className="backdrop-blur-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold px-8 py-3.5 rounded-xl hover:scale-105 transition-all duration-300 shadow-lg"
                   >
@@ -333,110 +282,110 @@ const Curriculum = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 lg:gap-8 p-4">
                 {departments.map((dept, i) => {
                   const iconData = getDepartmentIcon(dept);
-                  
+
                   return (
-                    <motion.div
+                    <Card3D
                       key={dept.id}
                       custom={i}
+                      variants={cardVariants}
                       initial="hidden"
                       whileInView="visible"
                       viewport={{ once: true, amount: 0.2 }}
-                      variants={cardVariants}
+                      className="relative flex flex-col h-full rounded-3xl overflow-hidden backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 border-2 border-white/60 shadow-xl transition-all duration-500 group"
+                      hover3D={true}
                     >
-                      <div className="relative flex flex-col h-full rounded-3xl overflow-hidden backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 border-2 border-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.15)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_30px_80px_rgba(139,92,246,0.4)] hover:scale-[1.02] group">
-                        
-                        {/* Gradient top accent */}
-                        <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${iconData.color}`} />
-                        
-                        {/* Hover glow */}
-                        <div className="absolute -inset-1 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl blur-2xl bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20" />
 
-                        <div className="relative flex flex-col h-full p-6 lg:p-8">
-                          {/* Icon or Image */}
-                          <div className="mb-4 flex items-center gap-4">
-                            {dept.image_url ? (
-                              <img 
-                                src={dept.image_url} 
-                                alt={dept.name}
-                                className="w-16 h-16 object-cover rounded-2xl shadow-lg"
-                                onError={(e) => {
-                                  // Fallback to emoji icon if image fails to load
-                                  e.target.style.display = 'none';
-                                  e.target.nextElementSibling?.classList.remove('hidden');
-                                }}
-                              />
-                            ) : null}
-                            <div className={`text-4xl flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br ${iconData.color} shadow-lg ${dept.image_url ? 'hidden' : ''}`}>
-                              {iconData.emoji}
+                      {/* Gradient top accent */}
+                      <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700`} />
+
+                      {/* Hover glow */}
+                      <div className="absolute -inset-1 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl blur-2xl bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20" />
+
+                      <div className="relative flex flex-col h-full p-6 lg:p-8">
+                        {/* Icon or Image */}
+                        <div className="mb-4 flex items-center gap-4">
+                          {dept.image_url ? (
+                            <img
+                              src={dept.image_url}
+                              alt={dept.name}
+                              className="w-16 h-16 object-cover rounded-2xl shadow-lg"
+                              onError={(e) => {
+                                // Fallback to emoji icon if image fails to load
+                                e.target.style.display = 'none';
+                                e.target.nextElementSibling?.classList.remove('hidden');
+                              }}
+                            />
+                          ) : null}
+                          <div className={`text-4xl flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg ${dept.image_url ? 'hidden' : ''}`}>
+                            {iconData.emoji}
+                          </div>
+
+                          {/* Code Badge */}
+                          {dept.code && (
+                            <div className="backdrop-blur-xl bg-white/60 px-3 py-1.5 rounded-full border border-white/70 shadow-sm">
+                              <span className="text-xs font-bold text-gray-700">{dept.code}</span>
                             </div>
-                            
-                            {/* Code Badge */}
-                            {dept.code && (
-                              <div className="backdrop-blur-xl bg-white/60 px-3 py-1.5 rounded-full border border-white/70 shadow-sm">
-                                <span className="text-xs font-bold text-gray-700">{dept.code}</span>
+                          )}
+                        </div>
+
+                        {/* Title */}
+                        <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent mb-3">
+                          {dept.title || dept.name}
+                        </h3>
+
+                        {/* Faculty */}
+                        {dept.faculty && (
+                          <div className="mb-3 flex items-center gap-2">
+                            <div className="backdrop-blur-xl bg-purple-500/10 p-1.5 rounded-lg">
+                              <svg className="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                              </svg>
+                            </div>
+                            <span className="text-sm font-medium text-gray-700">{dept.faculty}</span>
+                          </div>
+                        )}
+
+                        {/* Description */}
+                        {dept.description && (
+                          <div className="backdrop-blur-xl bg-white/40 p-4 rounded-2xl border border-white/50 mb-4 flex-grow">
+                            <p className="text-gray-800 lg:text-base text-sm leading-relaxed font-light line-clamp-3">
+                              {dept.description}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Contact Info Preview */}
+                        {(dept.contact_email || dept.phone_number) && (
+                          <div className="mb-6 space-y-2 text-sm">
+                            {dept.contact_email && (
+                              <div className="flex items-center gap-2 text-gray-600">
+                                <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                <span className="font-medium truncate">{dept.contact_email}</span>
+                              </div>
+                            )}
+                            {dept.phone_number && (
+                              <div className="flex items-center gap-2 text-gray-600">
+                                <svg className="w-4 h-4 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                                <span className="font-medium">{dept.phone_number}</span>
                               </div>
                             )}
                           </div>
+                        )}
 
-                          {/* Title */}
-                          <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-3">
-                            {dept.title || dept.name}
-                          </h3>
-
-                          {/* Faculty */}
-                          {dept.faculty && (
-                            <div className="mb-3 flex items-center gap-2">
-                              <div className="backdrop-blur-xl bg-purple-500/10 p-1.5 rounded-lg">
-                                <svg className="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                </svg>
-                              </div>
-                              <span className="text-sm font-medium text-gray-700">{dept.faculty}</span>
-                            </div>
-                          )}
-
-                          {/* Description */}
-                          {dept.description && (
-                            <div className="backdrop-blur-xl bg-white/40 p-4 rounded-2xl border border-white/50 mb-4 flex-grow">
-                              <p className="text-gray-800 lg:text-base text-sm leading-relaxed font-light line-clamp-3">
-                                {dept.description}
-                              </p>
-                            </div>
-                          )}
-
-                          {/* Contact Info Preview */}
-                          {(dept.contact_email || dept.phone_number) && (
-                            <div className="mb-6 space-y-2 text-sm">
-                              {dept.contact_email && (
-                                <div className="flex items-center gap-2 text-gray-600">
-                                  <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                  </svg>
-                                  <span className="font-medium truncate">{dept.contact_email}</span>
-                                </div>
-                              )}
-                              {dept.phone_number && (
-                                <div className="flex items-center gap-2 text-gray-600">
-                                  <svg className="w-4 h-4 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                  </svg>
-                                  <span className="font-medium">{dept.phone_number}</span>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Learn More */}
-                          <Link
-                            to={`/departments/${dept.id}`}
-                            className="mt-auto inline-flex items-center gap-2 font-semibold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent hover:gap-4 transition-all duration-300 text-sm sm:text-base lg:text-lg group-hover:scale-105"
-                          >
-                            Learn More 
-                            <span className="transition-transform group-hover:translate-x-1">→</span>
-                          </Link>
-                        </div>
+                        {/* Learn More */}
+                        <Link
+                          to={`/registration`}
+                          className="mt-auto inline-flex items-center gap-2 font-semibold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent hover:gap-4 transition-all duration-300 text-sm sm:text-base lg:text-lg group-hover:scale-105"
+                        >
+                          Learn More
+                          <span className="transition-transform group-hover:translate-x-1">→</span>
+                        </Link>
                       </div>
-                    </motion.div>
+                    </Card3D>
                   );
                 })}
               </div>
@@ -467,7 +416,7 @@ const Curriculum = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6 drop-shadow-lg"
+              className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent mb-6 drop-shadow-lg"
             >
               Degree Programs
             </motion.h2>
@@ -488,16 +437,16 @@ const Curriculum = () => {
 
           <div className="grid md:grid-cols-3 gap-6">
             {degreeLevels.map((degree, index) => (
-              <motion.div
+              <Card3D
                 key={index}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.15 }}
-                whileHover={{ scale: 1.03, y: -5 }}
-                className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 rounded-3xl p-8 border-2 border-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.15)] hover:shadow-[0_30px_80px_rgba(139,92,246,0.3)] transition-all duration-500 text-center"
+                className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 rounded-3xl p-8 border-2 border-white/60 shadow-xl transition-all duration-500 text-center"
+                hover3D={true}
               >
-                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mb-6 shadow-xl text-4xl">
+                <div className="w-20 h-20 mx-auto backdrop-blur-xl bg-white/60 rounded-2xl flex items-center justify-center mb-6 shadow-xl text-4xl border-2 border-white/80">
                   {degree.icon}
                 </div>
                 <h3 className="text-2xl font-bold text-gray-800 mb-4">{degree.level}</h3>
@@ -512,7 +461,7 @@ const Curriculum = () => {
                 </div>
 
                 <p className="text-gray-600 font-light">{degree.description}</p>
-              </motion.div>
+              </Card3D>
             ))}
           </div>
         </section>
@@ -524,18 +473,20 @@ const Curriculum = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="backdrop-blur-2xl bg-gradient-to-br from-blue-600/90 via-purple-600/90 to-pink-600/90 rounded-3xl p-10 md:p-16 border-2 border-white/30 shadow-[0_30px_80px_rgba(139,92,246,0.4)]"
+            className="backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/70 to-white/50 rounded-3xl p-10 md:p-16 border-2 border-white/80 shadow-[0_20px_60px_rgba(0,0,0,0.1)] relative overflow-hidden"
           >
-            <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+            {/* Top accent line */}
+            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700" />
+            <div className="text-center mb-12 relative z-10">
+              <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent mb-4">
                 Why Study at NovaTech?
               </h2>
-              <p className="text-white/90 text-lg max-w-2xl mx-auto">
+              <p className="text-gray-700 text-lg max-w-2xl mx-auto font-light">
                 Experience world-class education with features designed for your success
               </p>
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
               {academicFeatures.map((feature, index) => (
                 <motion.div
                   key={index}
@@ -544,11 +495,11 @@ const Curriculum = () => {
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ scale: 1.05 }}
-                  className="backdrop-blur-xl bg-white/20 rounded-2xl p-6 border border-white/30 text-center hover:bg-white/30 transition-all duration-300"
+                  className="backdrop-blur-xl bg-white/60 rounded-2xl p-6 border border-white/80 text-center hover:bg-white/80 transition-all duration-300 shadow-lg"
                 >
                   <span className="text-4xl mb-4 block">{feature.icon}</span>
-                  <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
-                  <p className="text-white/80 text-sm">{feature.description}</p>
+                  <h3 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">{feature.title}</h3>
+                  <p className="text-gray-600 text-sm font-light">{feature.description}</p>
                 </motion.div>
               ))}
             </div>
@@ -588,9 +539,11 @@ const Curriculum = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 rounded-3xl p-10 md:p-16 border-2 border-white/60 shadow-[0_30px_80px_rgba(0,0,0,0.15)] text-center"
+            className="backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/70 to-white/50 rounded-3xl p-10 md:p-16 border-2 border-white/80 shadow-[0_20px_60px_rgba(0,0,0,0.1)] text-center relative overflow-hidden"
           >
-            <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">
+            {/* Top accent line */}
+            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700" />
+            <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent mb-6">
               Ready to Start Your Academic Journey?
             </h2>
             <p className="text-gray-700 text-lg mb-8 max-w-2xl mx-auto font-light">
@@ -599,7 +552,7 @@ const Curriculum = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/registration"
-                className="relative backdrop-blur-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-semibold px-10 py-4 rounded-2xl shadow-[0_10px_40px_rgba(139,92,246,0.4)] hover:shadow-[0_20px_60px_rgba(139,92,246,0.6)] hover:scale-105 transition-all duration-500 border border-white/30 overflow-hidden group"
+                className="relative backdrop-blur-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 text-white font-semibold px-10 py-4 rounded-2xl shadow-[0_10px_40px_rgba(139,92,246,0.4)] hover:shadow-[0_20px_60px_rgba(139,92,246,0.6)] hover:scale-105 transition-all duration-500 border border-white/30 overflow-hidden group"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                 <span className="relative z-10">Apply Now</span>
@@ -614,22 +567,22 @@ const Curriculum = () => {
 
             <div className="mt-10 flex flex-wrap justify-center gap-8">
               <div className="text-center">
-                <p className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Fall 2025</p>
+                <p className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Fall 2025</p>
                 <p className="text-sm text-gray-600">Now Accepting Applications</p>
               </div>
               <div className="text-center">
-                <p className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">$50M+</p>
+                <p className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">$50M+</p>
                 <p className="text-sm text-gray-600">Scholarships Available</p>
               </div>
               <div className="text-center">
-                <p className="text-xl font-bold bg-gradient-to-r from-pink-600 to-orange-600 bg-clip-text text-transparent">100%</p>
+                <p className="text-xl font-bold bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">100%</p>
                 <p className="text-sm text-gray-600">Need-Based Aid</p>
               </div>
             </div>
           </motion.div>
         </section>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 

@@ -5,6 +5,9 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { fetchDepartments } from "../api/department_api";
+import { Card, Card3D, FloatingCard3D } from "../Components/ui/Card";
+import { Button, Button3D } from "../Components/ui/Button";
+import "../styles/3d-effects.css";
 
 // Direct imports for better performance
 import academic from "@/assets/images/academic.png";
@@ -26,25 +29,25 @@ const whyChooseUs = [
     icon: "🎓",
     title: "World-Class Faculty",
     description: "Learn from distinguished professors and industry experts with decades of experience in their fields.",
-    gradient: "from-blue-500 to-cyan-500"
+    gradient: "from-blue-500 to-indigo-500"
   },
   {
     icon: "🔬",
     title: "Cutting-Edge Research",
     description: "Access state-of-the-art laboratories and participate in groundbreaking research projects.",
-    gradient: "from-purple-500 to-pink-500"
+    gradient: "from-indigo-500 to-purple-500"
   },
   {
     icon: "🌍",
     title: "Global Network",
     description: "Join our international community with partnerships across 50+ countries worldwide.",
-    gradient: "from-green-500 to-emerald-500"
+    gradient: "from-blue-500 to-indigo-500"
   },
   {
     icon: "💼",
     title: "Career Success",
     description: "95% employment rate within 6 months of graduation with top global companies.",
-    gradient: "from-orange-500 to-red-500"
+    gradient: "from-indigo-500 to-purple-500"
   },
   {
     icon: "🏛️",
@@ -56,7 +59,7 @@ const whyChooseUs = [
     icon: "🤝",
     title: "Industry Partnerships",
     description: "Benefit from internship and job opportunities with 500+ partner companies.",
-    gradient: "from-pink-500 to-rose-500"
+    gradient: "from-blue-500 to-purple-500"
   }
 ];
 
@@ -145,13 +148,6 @@ const Home = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden ">
-      {/* Animated background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-blue-400 to-cyan-400 opacity-30 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-purple-400 to-pink-400 opacity-30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
-        <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-r from-pink-400 to-orange-400 opacity-30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
-        <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-gradient-to-r from-indigo-400 to-blue-400 opacity-20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-      </div>
 
       <section className="relative z-10 min-h-screen sm:pt-20 px-4">
         {/* Hero Section */}
@@ -171,7 +167,7 @@ const Home = () => {
             >
               <span className="text-gray-800">Welcome </span>
               <span className="text-gray-700">To </span>
-              <span className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-600 bg-clip-text text-transparent drop-shadow-lg">
+              <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent drop-shadow-lg">
                 NovaTech
               </span>
               <span className="text-gray-800"> University</span>
@@ -202,19 +198,25 @@ const Home = () => {
             </motion.div>
 
             <motion.div
-              className="flex flex-col sm:flex-row justify-center sm:justify-start gap-4 mt-4"
+              className="flex flex-col sm:flex-row justify-center sm:justify-start gap-6 mt-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.8 }}
             >
-              <button className="relative backdrop-blur-2xl bg-gradient-to-br from-blue-500/90 to-purple-600/90 text-white py-4 px-8 rounded-2xl shadow-2xl hover:shadow-[0_20px_50px_rgba(139,92,246,0.5)] transition-all duration-500 hover:scale-105 border border-white/30 overflow-hidden group">
-                <span className="relative z-10 font-semibold">Get Started</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-              </button>
-              <button className="relative backdrop-blur-2xl bg-white/60 text-gray-800 py-4 px-8 rounded-2xl shadow-2xl hover:shadow-[0_20px_50px_rgba(139,92,246,0.3)] transition-all duration-500 hover:scale-105 border border-white/60 overflow-hidden group">
-                <span className="relative z-10 font-semibold">Learn More</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-              </button>
+              <Button
+                variant="primary"
+                onClick={() => document.getElementById('programs')?.scrollIntoView({ behavior: 'smooth' })}
+                className="px-12 py-5 text-lg"
+              >
+                Get Started
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate('/aboutus')}
+                className="px-12 py-5 text-lg"
+              >
+                Learn More
+              </Button>
             </motion.div>
 
             <motion.div
@@ -228,18 +230,17 @@ const Home = () => {
                 { number: "200+", label: "Programs" },
                 { number: "95%", label: "Satisfaction" }
               ].map((stat, index) => (
-                <motion.div
+                <Card3D
                   key={index}
-                  className="backdrop-blur-2xl bg-gradient-to-br from-white/70 to-white/40 px-4 sm:px-6 py-4 rounded-2xl border border-white/50 text-center shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-110 hover:-translate-y-2 cursor-pointer"
-                  whileHover={{ y: -5 }}
+                  className="backdrop-blur-2xl bg-gradient-to-br from-white/70 to-white/40 px-4 sm:px-6 py-4 rounded-2xl border border-white/50 text-center shadow-xl hover:shadow-2xl transition-all duration-500"
                 >
-                  <p className="font-bold text-xl sm:text-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  <p className="font-bold text-xl sm:text-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent">
                     {stat.number}
                   </p>
                   <span className="text-xs sm:text-sm font-medium text-gray-700">
                     {stat.label}
                   </span>
-                </motion.div>
+                </Card3D>
               ))}
             </motion.div>
           </div>
@@ -251,15 +252,15 @@ const Home = () => {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            <div className="group relative backdrop-blur-2xl bg-gradient-to-br from-white/70 via-white/50 to-white/30 p-6 rounded-full border-2 border-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.15)] hover:shadow-[0_30px_80px_rgba(139,92,246,0.4)] transition-all duration-700">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            <FloatingCard3D className="group relative backdrop-blur-2xl bg-gradient-to-br from-white/70 via-white/50 to-white/30 p-8 rounded-full border-2 border-white/60 shadow-2xl">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
               <img
                 src={character}
-                alt="University Campus"
-                className="relative z-10 w-full max-w-sm sm:max-w-md md:max-w-lg rounded-full transition-transform duration-700 group-hover:scale-105"
+                alt="University Character"
+                className="relative z-10 w-full max-w-sm sm:max-w-md md:max-w-xl transition-transform duration-700 group-hover:scale-105"
                 loading="eager"
               />
-            </div>
+            </FloatingCard3D>
           </motion.div>
         </motion.div>
 
@@ -281,7 +282,7 @@ const Home = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
               >
-                <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent drop-shadow-lg">
+                <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent drop-shadow-lg">
                   Academic Excellence
                 </span>
               </motion.h2>
@@ -306,21 +307,18 @@ const Home = () => {
 
             {/* Image */}
             <div className="sm:w-1/2 max-w-xs sm:max-w-sm md:max-w-md transform scale-x-[-1]">
-              <motion.div
-                className="group relative backdrop-blur-2xl bg-gradient-to-br from-white/70 via-white/50 to-white/30 p-6 rounded-full border-2 border-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.15)] hover:shadow-[0_30px_80px_rgba(59,130,246,0.4)] transition-all duration-700 hover:scale-105"
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.8 }}
+              <Card3D
+                className="group relative backdrop-blur-2xl bg-gradient-to-br from-white/70 via-white/50 to-white/30 p-6 rounded-full border-2 border-white/60 shadow-2xl"
+                hover3D={true}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                 <img
                   src={academic}
                   alt="Academic"
                   className="relative z-10 w-full h-auto rounded-full"
                   loading="lazy"
                 />
-              </motion.div>
+              </Card3D>
             </div>
           </motion.div>
         </section>
@@ -335,7 +333,7 @@ const Home = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent drop-shadow-lg">
+              <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent drop-shadow-lg">
                 Our Achievements
               </span>
             </motion.h2>
@@ -359,18 +357,18 @@ const Home = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 lg:gap-8">
             {milestone.achievements.map((achievement, index) => (
-              <motion.div
+              <Card3D
                 key={index}
                 initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ delay: index * 0.15, type: "spring", stiffness: 120 }}
-                whileHover={{ scale: 1.05, y: -10 }}
-                className="group cursor-pointer"
+                className="group cursor-pointer h-full"
+                hover3D={true}
               >
-                <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 border-2 border-white/60 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] hover:shadow-[0_30px_80px_rgba(139,92,246,0.4)] transition-all duration-500 overflow-hidden h-full">
+                <div className="relative h-full backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 border-2 border-white/60 rounded-3xl shadow-xl overflow-hidden">
                   {/* Hover gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-purple-500/0 to-pink-500/0 group-hover:from-blue-500/10 group-hover:via-purple-500/10 group-hover:to-pink-500/10 transition-all duration-500 pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-indigo-500/0 to-purple-500/0 group-hover:from-blue-500/10 group-hover:via-indigo-500/10 group-hover:to-purple-500/10 transition-all duration-500 pointer-events-none" />
 
                   {/* Image container */}
                   <div className="relative aspect-video overflow-hidden rounded-t-3xl">
@@ -386,7 +384,7 @@ const Home = () => {
                   {/* Content */}
                   <div className="relative p-6 flex flex-col gap-3">
                     <div className="backdrop-blur-xl bg-white/50 p-3 rounded-2xl border border-white/60 inline-flex items-center justify-center w-fit shadow-lg">
-                      <span className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      <span className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent">
                         {achievement.count}
                       </span>
                     </div>
@@ -402,7 +400,7 @@ const Home = () => {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </Card3D>
             ))}
           </div>
         </section>
@@ -419,8 +417,8 @@ const Home = () => {
               transition={{ duration: 0.6 }}
               className="inline-block mb-4"
             >
-              <div className="backdrop-blur-xl bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 px-4 py-2 rounded-full border border-white/50">
-                <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <div className="backdrop-blur-xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 px-4 py-2 rounded-full border border-white/50">
+                <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent">
                   Why NovaTech University
                 </span>
               </div>
@@ -433,7 +431,7 @@ const Home = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent drop-shadow-lg">
+              <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent drop-shadow-lg">
                 Why Choose Us?
               </span>
             </motion.h2>
@@ -454,47 +452,47 @@ const Home = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {whyChooseUs.map((item, index) => (
-              <motion.div
+              <Card3D
                 key={index}
                 initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ delay: index * 0.1, type: "spring", stiffness: 120 }}
-                whileHover={{ scale: 1.05, y: -10 }}
-                className="group cursor-pointer"
+                className="group cursor-pointer h-full"
+                hover3D={true}
               >
-                <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 border-2 border-white/60 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] hover:shadow-[0_30px_80px_rgba(139,92,246,0.4)] transition-all duration-500 overflow-hidden h-full p-6">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-purple-500/0 to-pink-500/0 group-hover:from-blue-500/10 group-hover:via-purple-500/10 group-hover:to-pink-500/10 transition-all duration-500 pointer-events-none" />
+                <div className="relative h-full backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 border-2 border-white/60 rounded-3xl shadow-xl overflow-hidden p-6">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-indigo-500/0 to-purple-500/0 group-hover:from-blue-500/10 group-hover:via-indigo-500/10 group-hover:to-purple-500/10 transition-all duration-500 pointer-events-none" />
 
-                  <div className={`w-16 h-16 bg-gradient-to-br ${item.gradient} rounded-2xl flex items-center justify-center mb-4 shadow-xl group-hover:scale-110 transition-transform duration-300`}>
+                  <div className="w-16 h-16 backdrop-blur-xl bg-white/60 rounded-2xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300 border-2 border-white/80">
                     <span className="text-3xl">{item.icon}</span>
                   </div>
 
                   <h3 className="text-xl font-bold text-gray-800 mb-3">{item.title}</h3>
                   <p className="text-gray-600 leading-relaxed font-light">{item.description}</p>
                 </div>
-              </motion.div>
+              </Card3D>
             ))}
           </div>
         </section>
 
-        {/* University Statistics Section */}
         <section className="py-20 max-w-7xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="backdrop-blur-2xl bg-gradient-to-br from-blue-600/90 via-purple-600/90 to-pink-600/90 rounded-3xl p-10 md:p-16 border-2 border-white/30 shadow-[0_30px_80px_rgba(139,92,246,0.4)] relative overflow-hidden"
+            className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 rounded-3xl p-10 md:p-16 border-2 border-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.1)] relative overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse" />
+            {/* Top accent line */}
+            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700" />
 
             <div className="relative z-10">
               <div className="text-center mb-12">
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 drop-shadow-lg">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent mb-4 drop-shadow-sm">
                   University at a Glance
                 </h2>
-                <p className="text-white/90 text-lg max-w-2xl mx-auto">
+                <p className="text-gray-700 text-lg max-w-2xl mx-auto font-light">
                   Our numbers speak for themselves - decades of excellence in education and research
                 </p>
               </div>
@@ -510,19 +508,21 @@ const Home = () => {
                   { number: "1000+", label: "Faculty Members", icon: "👨‍🏫" },
                   { number: "$500M+", label: "Research Funding", icon: "💰" }
                 ].map((stat, index) => (
-                  <motion.div
+                  <Card3D
                     key={index}
                     initial={{ opacity: 0, scale: 0.9 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.1 }}
-                    whileHover={{ scale: 1.1, y: -5 }}
-                    className="backdrop-blur-xl bg-white/20 rounded-2xl p-6 text-center border border-white/30 hover:bg-white/30 transition-all duration-300 cursor-pointer"
+                    className="backdrop-blur-xl bg-white/60 rounded-2xl p-6 text-center border border-white/80 hover:bg-white/80 transition-all duration-300 cursor-pointer shadow-lg"
+                    hover3D={true}
                   >
                     <span className="text-3xl mb-2 block">{stat.icon}</span>
-                    <p className="text-3xl md:text-4xl font-bold text-white mb-1">{stat.number}</p>
-                    <p className="text-white/80 text-sm font-medium">{stat.label}</p>
-                  </motion.div>
+                    <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-1">
+                      {stat.number}
+                    </p>
+                    <p className="text-gray-600 text-sm font-medium">{stat.label}</p>
+                  </Card3D>
                 ))}
               </div>
             </div>
@@ -539,7 +539,7 @@ const Home = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent drop-shadow-lg">
+              <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent drop-shadow-lg">
                 World-Class Facilities
               </span>
             </motion.h2>
@@ -560,19 +560,19 @@ const Home = () => {
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {campusFacilities.map((facility, index) => (
-              <motion.div
+              <Card3D
                 key={index}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                whileHover={{ scale: 1.1, y: -5 }}
-                className="backdrop-blur-2xl bg-gradient-to-br from-white/80 to-white/60 rounded-2xl p-6 text-center border-2 border-white/60 shadow-xl hover:shadow-[0_20px_60px_rgba(139,92,246,0.3)] transition-all duration-300 cursor-pointer"
+                className="backdrop-blur-2xl bg-gradient-to-br from-white/80 to-white/60 rounded-2xl p-6 text-center border-2 border-white/60 shadow-xl transition-all duration-300 cursor-pointer"
+                hover3D={true}
               >
                 <span className="text-4xl mb-3 block">{facility.icon}</span>
                 <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-1">{facility.count}</p>
                 <p className="text-gray-700 text-sm font-medium">{facility.name}</p>
-              </motion.div>
+              </Card3D>
             ))}
           </div>
         </section>
@@ -587,7 +587,7 @@ const Home = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent drop-shadow-lg">
+              <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent drop-shadow-lg">
                 What Our Community Says
               </span>
             </motion.h2>
@@ -595,28 +595,28 @@ const Home = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {testimonials.map((testimonial, index) => (
-              <motion.div
+              <Card3D
                 key={index}
                 initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.15 }}
-                whileHover={{ scale: 1.02, y: -5 }}
-                className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 rounded-3xl p-8 border-2 border-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.15)] hover:shadow-[0_30px_80px_rgba(139,92,246,0.3)] transition-all duration-500"
+                className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 rounded-3xl p-8 border-2 border-white/60 shadow-xl transition-all duration-500"
+                hover3D={true}
               >
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-3xl shadow-lg">
+                  <div className="w-16 h-16 rounded-full backdrop-blur-xl bg-white/60 flex items-center justify-center text-3xl shadow-lg border-2 border-white/80">
                     {testimonial.avatar}
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-800">{testimonial.name}</h4>
                     <p className="text-sm text-gray-600">{testimonial.role}</p>
-                    <p className="text-xs text-purple-600 font-medium">{testimonial.company}</p>
+                    <p className="text-xs font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{testimonial.company}</p>
                   </div>
                 </div>
 
                 <p className="text-gray-700 italic leading-relaxed">"{testimonial.quote}"</p>
-              </motion.div>
+              </Card3D>
             ))}
           </div>
         </section>
@@ -631,7 +631,7 @@ const Home = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent drop-shadow-lg">
+              <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent drop-shadow-lg">
                 News & Events
               </span>
             </motion.h2>
@@ -639,30 +639,30 @@ const Home = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {newsEvents.map((item, index) => (
-              <motion.div
+              <Card3D
                 key={index}
                 initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.15 }}
-                whileHover={{ scale: 1.02, y: -5 }}
-                className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 rounded-3xl overflow-hidden border-2 border-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.15)] hover:shadow-[0_30px_80px_rgba(139,92,246,0.3)] transition-all duration-500 group cursor-pointer"
+                className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 rounded-3xl overflow-hidden border-2 border-white/60 shadow-xl transition-all duration-500 group cursor-pointer h-full"
+                hover3D={true}
               >
-                <div className={`h-2 ${item.type === 'event' ? 'bg-gradient-to-r from-blue-500 to-cyan-500' : 'bg-gradient-to-r from-purple-500 to-pink-500'}`} />
+                <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700" />
 
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${item.type === 'event' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-xl border border-white/60 shadow-sm ${item.type === 'event' ? 'bg-blue-50/50 text-blue-700' : 'bg-indigo-50/50 text-indigo-700'}`}>
                       {item.type === 'event' ? 'Event' : 'News'}
                     </span>
                     <span className="text-sm text-gray-500">{item.date}</span>
                   </div>
 
-                  <h3 className="text-xl font-bold text-gray-800 mb-3 group-hover:text-purple-600 transition-colors">{item.title}</h3>
+                  <h3 className="text-xl font-bold text-gray-800 mb-3 group-hover:text-blue-600 transition-colors">{item.title}</h3>
                   <p className="text-gray-600 leading-relaxed">{item.description}</p>
 
                   <motion.span
-                    className="inline-flex items-center gap-2 mt-4 text-purple-600 font-semibold text-sm"
+                    className="inline-flex items-center gap-2 mt-4 font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent text-sm"
                     whileHover={{ x: 5 }}
                   >
                     Learn More
@@ -671,7 +671,7 @@ const Home = () => {
                     </svg>
                   </motion.span>
                 </div>
-              </motion.div>
+              </Card3D>
             ))}
           </div>
         </section>
@@ -685,7 +685,7 @@ const Home = () => {
             transition={{ duration: 0.6 }}
             className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 rounded-3xl p-10 md:p-16 border-2 border-white/60 shadow-[0_30px_80px_rgba(0,0,0,0.15)] text-center relative overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5" />
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5" />
 
             <div className="relative z-10">
               <motion.h2
@@ -695,7 +695,7 @@ const Home = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
-                <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent">
                   Ready to Begin Your Journey?
                 </span>
               </motion.h2>
@@ -712,25 +712,22 @@ const Home = () => {
               </motion.p>
 
               <motion.div
-                className="flex flex-col sm:flex-row gap-4 justify-center"
+                className="flex flex-col sm:flex-row gap-6 justify-center"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.4 }}
               >
-                <Link
-                  to="/registration"
-                  className="relative backdrop-blur-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-semibold px-10 py-4 rounded-2xl shadow-[0_10px_40px_rgba(139,92,246,0.4)] hover:shadow-[0_20px_60px_rgba(139,92,246,0.6)] hover:scale-105 transition-all duration-500 border border-white/30 overflow-hidden group"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                  <span className="relative z-10">Apply Now</span>
+                <Link to="/registration">
+                  <Button variant="default" className="px-12 py-5 text-lg w-full sm:w-auto">
+                    Apply Now
+                  </Button>
                 </Link>
 
-                <Link
-                  to="/aboutus"
-                  className="backdrop-blur-xl bg-white/60 text-gray-800 font-semibold px-10 py-4 rounded-2xl hover:bg-white/80 hover:scale-105 transition-all duration-300 border-2 border-white/60 shadow-lg"
-                >
-                  Learn More About Us
+                <Link to="/aboutus">
+                  <Button variant="outline" className="px-12 py-5 text-lg w-full sm:w-auto">
+                    Learn More About Us
+                  </Button>
                 </Link>
               </motion.div>
 
@@ -742,15 +739,15 @@ const Home = () => {
                 transition={{ duration: 0.6, delay: 0.5 }}
               >
                 <div className="text-center">
-                  <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">March 1</p>
+                  <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">March 1</p>
                   <p className="text-sm text-gray-600">Early Decision Deadline</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">May 15</p>
+                  <p className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">May 15</p>
                   <p className="text-sm text-gray-600">Regular Decision Deadline</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-orange-600 bg-clip-text text-transparent">Aug 20</p>
+                  <p className="text-2xl font-bold bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">Aug 20</p>
                   <p className="text-sm text-gray-600">Fall Semester Begins</p>
                 </div>
               </motion.div>
@@ -758,7 +755,7 @@ const Home = () => {
           </motion.div>
         </section>
       </section>
-    </div>
+    </div >
   );
 };
 

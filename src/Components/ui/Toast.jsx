@@ -1,52 +1,46 @@
-// Toast.jsx
+// Toast.jsx - Standardized Glassmorphic Notifications
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 const toastStyle = {
-  background: "rgba(255, 255, 255, 0.3)",
-  color: "#000",
+  background: "rgba(255, 255, 255, 0.7)",
+  color: "#1f2937",
   backdropFilter: "blur(20px) saturate(180%)",
   WebkitBackdropFilter: "blur(20px) saturate(180%)",
-  border: "0.5px solid rgba(255, 255, 255, 0.3)",
-  boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
-  borderRadius: "8px",
-};
-const showSuccess = (message, customClass = "") => {
-  toast.success(message, {
-    position: "top-right",
-    autoClose: 3000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-    theme: "light",
-    className: `glass ${customClass}`,
-    style: toastStyle,
-  });
-};
-const showError = (message, customClass = "") => {
-  toast.error(message, {
-    position: "top-right",
-    autoClose: 3000,
-    className: `glass ${customClass}`,
-    style: toastStyle,
-  });
+  border: "2px solid rgba(255, 255, 255, 0.6)",
+  boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+  borderRadius: "16px",
+  padding: "16px",
+  fontWeight: "600",
+  fontSize: "14px",
 };
 
-const showInfo = (message, customClass = "") => {
-  toast.info(message, {
-    position: "top-right",
-    autoClose: 3000,
-    className: `glass ${customClass}`,
-    style: toastStyle,
-  });
+const options = {
+  position: "top-right",
+  autoClose: 4000,
+  hideProgressBar: false,
+  closeOnClick: true,
+  pauseOnHover: true,
+  draggable: true,
+  progressStyle: {
+    background: "linear-gradient(to right, #2563eb, #7c3aed)",
+  }
 };
 
-const showWarning = (message, customClass = "") => {
-  toast.warning(message, {
-    position: "top-right",
-    autoClose: 3000,
-    className: `glass ${customClass}`,
-    style: toastStyle,
-  });
+const showSuccess = (message) => {
+  toast.success(message, { ...options, style: { ...toastStyle, borderLeft: "6px solid #10b981" } });
 };
+
+const showError = (message) => {
+  toast.error(message, { ...options, style: { ...toastStyle, borderLeft: "6px solid #ef4444" } });
+};
+
+const showInfo = (message) => {
+  toast.info(message, { ...options, style: { ...toastStyle, borderLeft: "6px solid #3b82f6" } });
+};
+
+const showWarning = (message) => {
+  toast.warning(message, { ...options, style: { ...toastStyle, borderLeft: "6px solid #f59e0b" } });
+};
+
 export { showSuccess, showError, showInfo, showWarning, ToastContainer };

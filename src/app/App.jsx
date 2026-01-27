@@ -79,7 +79,7 @@ function AppContent() {
     isAdminRoute || isTeacherRoute || isStudentRoute || pathname === "/registration" || pathname === "/login";
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col bg-slate-50">
+    <div className="relative min-h-screen w-full flex flex-col bg-white">
       {/* Navbar */}
       <AnimatePresence>
         {!shouldHideNavbar && (
@@ -104,9 +104,8 @@ function AppContent() {
 
       {/* Main Content */}
       <main
-        className={`relative w-full flex-1 flex flex-col ${
-          shouldHideNavbar ? "pt-0" : "pt-24"
-        }`}
+        className={`relative w-full flex-1 flex flex-col ${shouldHideNavbar ? "pt-0" : "pt-24"
+          }`}
       >
         <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="min-h-[calc(100vh-200px)]">
@@ -150,6 +149,11 @@ function AppContent() {
           </motion.footer>
         )}
       </AnimatePresence>
+      {/* Subtle global background accents */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-50/50 rounded-full blur-[120px] -mr-64 -mt-64" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-50/50 rounded-full blur-[120px] -ml-64 -mb-64" />
+      </div>
     </div>
   );
 }

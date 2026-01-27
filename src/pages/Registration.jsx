@@ -1452,10 +1452,10 @@ const Registration = () => {
       <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center p-5 backdrop-blur-2xl bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl mb-6 shadow-[0_20px_60px_rgba(99,102,241,0.3)] border-2 border-white/30">
-            <GraduationCap size={48} className="text-white" />
+          <div className="inline-flex items-center justify-center p-5 backdrop-blur-2xl bg-white/60 rounded-3xl mb-6 shadow-[0_20px_60px_rgba(99,102,241,0.1)] border-2 border-white/80">
+            <GraduationCap size={48} className="text-blue-600" />
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4 drop-shadow-lg">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4 drop-shadow-sm">
             NovaTech University
           </h1>
           <div className="backdrop-blur-xl bg-white/50 inline-block px-6 py-3 rounded-full border-2 border-white/60 shadow-lg">
@@ -1552,13 +1552,11 @@ const Registration = () => {
 
         {/* ✅ GATE SCREEN: show ONLY selection + quota before full form */}
         {!gateAllowed && (
-          <div className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border-2 border-white/60 relative">
+          <div className="backdrop-blur-2xl bg-white/80 p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.1)] border-2 border-white/80 relative">
             <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-t-3xl" />
 
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-white/40">
-              <div className="p-3 backdrop-blur-xl bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl text-white shadow-lg">
-                <Lock size={24} />
-              </div>
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-white/40 font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <Lock size={24} className="text-blue-600" />
               <div className="flex-1">
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   Check Registration Availability

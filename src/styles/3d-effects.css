@@ -116,12 +116,12 @@
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-/* Glass card effect */
-.glass {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+/* Glass effect - fallback/utilities */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Professional shadows */
@@ -174,7 +174,7 @@
 
 /* Gradient text */
 .gradient-text {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #2563eb 0%, #4f46e5 50%, #7e22ce 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -189,4 +189,89 @@
 
 .animate-bar {
     animation: growWidth 0.8s ease-out;
+}
+
+/* ==========================================================================
+   ADVANCED 3D EFFECTS SYSTEM
+   ========================================================================== */
+
+/* Container context for 3D transforms */
+.preserve-3d {
+    transform-style: preserve-3d;
+    perspective: 1000px;
+}
+
+/* Base class for 3D interactive cards */
+.card-3d {
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.6s ease;
+    will-change: transform;
+}
+
+/* Hover tilt effect - combined with Framer Motion or JS for dynamic tilt */
+.card-3d:hover {
+    transform: rotateX(4deg) rotateY(-4deg) translateY(-5px);
+    box-shadow:
+        20px 20px 60px rgba(0, 0, 0, 0.05),
+        -20px -20px 60px rgba(255, 255, 255, 0.8);
+}
+
+/* Adding depth layers within cards */
+.depth-layer-1 {
+    transform: translateZ(20px);
+}
+
+.depth-layer-2 {
+    transform: translateZ(40px);
+}
+
+.depth-layer-3 {
+    transform: translateZ(60px);
+}
+
+/* Floating 3D Animation */
+@keyframes float3d {
+
+    0%,
+    100% {
+        transform: translateZ(30px) translateY(0);
+    }
+
+    50% {
+        transform: translateZ(50px) translateY(-10px);
+    }
+}
+
+.animate-float-3d {
+    animation: float3d 4s ease-in-out infinite;
+    transform-style: preserve-3d;
+}
+
+/* Glassmorphism 3D */
+.glass-3d {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    transform-style: preserve-3d;
+}
+
+/* 3D Reflection effect */
+.card-3d::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.3) 0%,
+            rgba(255, 255, 255, 0) 50%,
+            rgba(255, 255, 255, 0.1) 100%);
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+.card-3d:hover::after {
+    opacity: 1;
 }
