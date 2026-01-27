@@ -240,11 +240,10 @@ const DepartmentsPage = () => {
           <button
             type="button"
             onClick={() => setShowFilters((v) => !v)}
-            className={`px-4 py-2.5 rounded-xl border transition-all font-medium text-sm flex items-center gap-2 ${
-              showFilters || hasActiveFilters
+            className={`px-4 py-2.5 rounded-xl border transition-all font-medium text-sm flex items-center gap-2 ${showFilters || hasActiveFilters
                 ? "bg-blue-500 text-white border-blue-500"
                 : "bg-white/80 text-gray-700 border-gray-200 hover:bg-gray-50"
-            }`}
+              }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
             <span>Filters</span>
@@ -531,7 +530,7 @@ const DepartmentModal = ({ department, onClose }) => {
               <h2 className="text-3xl font-bold text-white mb-2">{department?.name || "Department"}</h2>
               <span className="inline-flex items-center gap-1 text-sm bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full">
                 <Code className="w-4 h-4" />
-                {department?.code || "N/A"}
+                {department?.code || ""}
               </span>
             </div>
           </div>

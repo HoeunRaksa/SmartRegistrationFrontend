@@ -368,10 +368,10 @@ const RegistrationPage = () => {
         filter === "all"
           ? true
           : filter === "paid"
-          ? isPaidStatus(status)
-          : filter === "pending"
-          ? isPendingStatus(status) && !isPaidStatus(status)
-          : true;
+            ? isPaidStatus(status)
+            : filter === "pending"
+              ? isPendingStatus(status) && !isPaidStatus(status)
+              : true;
 
       const searchMatch = s ? reg._search.includes(s) : true;
 
@@ -588,22 +588,20 @@ const RegistrationPage = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => setFilter("all")}
-                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
-                  filter === "all"
+                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${filter === "all"
                     ? "bg-blue-500 text-white shadow-lg"
                     : "bg-white/60 text-gray-700 hover:bg-white/80"
-                }`}
+                  }`}
               >
                 All ({registrations.length})
               </button>
 
               <button
                 onClick={() => setFilter("paid")}
-                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${
-                  filter === "paid"
+                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${filter === "paid"
                     ? "bg-green-500 text-white shadow-lg"
                     : "bg-white/60 text-gray-700 hover:bg-white/80"
-                }`}
+                  }`}
               >
                 <CheckCircle className="w-4 h-4" />
                 Paid
@@ -611,11 +609,10 @@ const RegistrationPage = () => {
 
               <button
                 onClick={() => setFilter("pending")}
-                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${
-                  filter === "pending"
+                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${filter === "pending"
                     ? "bg-orange-500 text-white shadow-lg"
                     : "bg-white/60 text-gray-700 hover:bg-white/80"
-                }`}
+                  }`}
               >
                 <Clock className="w-4 h-4" />
                 Pending
@@ -627,19 +624,19 @@ const RegistrationPage = () => {
               selectedDepartment !== "all" ||
               selectedMajor !== "all" ||
               filter !== "all") && (
-              <button
-                onClick={() => {
-                  setSearchTerm("");
-                  setSelectedDepartment("all");
-                  setSelectedMajor("all");
-                  setFilter("all");
-                }}
-                className="px-4 py-2 rounded-xl font-medium text-sm bg-gray-500 text-white hover:bg-gray-600 shadow-lg transition-all flex items-center gap-2"
-              >
-                <XCircle className="w-4 h-4" />
-                Clear Filters
-              </button>
-            )}
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setSelectedDepartment("all");
+                    setSelectedMajor("all");
+                    setFilter("all");
+                  }}
+                  className="px-4 py-2 rounded-xl font-medium text-sm bg-gray-500 text-white hover:bg-gray-600 shadow-lg transition-all flex items-center gap-2"
+                >
+                  <XCircle className="w-4 h-4" />
+                  Clear Filters
+                </button>
+              )}
           </div>
         </div>
       </div>
@@ -660,8 +657,8 @@ const RegistrationPage = () => {
             registrationId={adminQrReg.id}
             yearFee={safeNum(
               adminQrReg?.registration_fee ??
-                adminQrReg?.period_tuition_amount ??
-                0,
+              adminQrReg?.period_tuition_amount ??
+              0,
               0
             )}
             amount={safeNum(getAmount(adminQrReg), 0)}
@@ -946,7 +943,7 @@ const RegistrationRow = React.memo(function RegistrationRow({
             </span>
           </div>
         ) : (
-          <span className="text-sm text-gray-400">N/A</span>
+          <span className="text-sm text-gray-400"></span>
         )}
       </td>
 
@@ -959,7 +956,7 @@ const RegistrationRow = React.memo(function RegistrationRow({
             </span>
           </div>
         ) : (
-          <span className="text-sm text-gray-400">N/A</span>
+          <span className="text-sm text-gray-400"></span>
         )}
       </td>
 
@@ -1059,11 +1056,10 @@ const RegistrationModal = ({
         >
           {/* Header */}
           <div
-            className={`sticky top-0 p-6 z-10 ${
-              isPaid
+            className={`sticky top-0 p-6 z-10 ${isPaid
                 ? "bg-gradient-to-br from-green-500 to-emerald-600"
                 : "bg-gradient-to-br from-orange-500 to-red-600"
-            }`}
+              }`}
           >
             <button
               onClick={onClose}
@@ -1124,8 +1120,8 @@ const RegistrationModal = ({
 
                 <p className="text-xs text-white/80 mt-2">
                   Showing status for:{" "}
-                  <span className="font-semibold">{year || "N/A"}</span> •{" "}
-                  <span className="font-semibold">Sem {sem}</span>
+                  <span className="font-semibold">{year || ""}</span> •{" "}
+                  <span className="font-semibold">Sem {sem || ""}</span>
                 </p>
               </div>
             </div>
@@ -1223,18 +1219,16 @@ const RegistrationModal = ({
 
             <Section title="Payment Information">
               <div
-                className={`p-4 rounded-2xl border ${
-                  isPaid
+                className={`p-4 rounded-2xl border ${isPaid
                     ? "bg-green-50 border-green-200"
                     : "bg-orange-50 border-orange-200"
-                }`}
+                  }`}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
                     <div
-                      className={`p-2 rounded-full ${
-                        isPaid ? "bg-green-500" : "bg-orange-500"
-                      }`}
+                      className={`p-2 rounded-full ${isPaid ? "bg-green-500" : "bg-orange-500"
+                        }`}
                     >
                       {isPaid ? (
                         <CheckCircle className="w-5 h-5 text-white" />
@@ -1245,9 +1239,8 @@ const RegistrationModal = ({
 
                     <div>
                       <p
-                        className={`font-semibold ${
-                          isPaid ? "text-green-700" : "text-orange-700"
-                        }`}
+                        className={`font-semibold ${isPaid ? "text-green-700" : "text-orange-700"
+                          }`}
                       >
                         {isPaid ? "Payment Completed" : "Payment Pending"}
                       </p>
@@ -1261,9 +1254,9 @@ const RegistrationModal = ({
 
                       <p className="text-xs text-gray-500 mt-1">
                         Academic Year:{" "}
-                        <span className="font-semibold">{year || "N/A"}</span> •
+                        <span className="font-semibold">{year || ""}</span> •
                         Semester:{" "}
-                        <span className="font-semibold">{sem || "N/A"}</span>
+                        <span className="font-semibold">{sem || ""}</span>
                       </p>
                     </div>
                   </div>
@@ -1299,9 +1292,8 @@ const RegistrationModal = ({
                           const err = extractAxiosError(e);
                           console.log("GenerateQR FULL:", err);
                           toast?.error?.(
-                            `${err.status ?? "NO-HTTP"} ${err.msg}${
-                              err.details ? " • " + err.details : ""
-                            }`.trim()
+                            `${err.status ?? "NO-HTTP"} ${err.msg}${err.details ? " • " + err.details : ""
+                              }`.trim()
                           );
 
                           // if already paid, refresh so it becomes PAID
@@ -1314,11 +1306,10 @@ const RegistrationModal = ({
                           qrLockRef.current = false;
                         }
                       }}
-                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white transition-colors ${
-                        generatingQr
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white transition-colors ${generatingQr
                           ? "bg-blue-400 cursor-not-allowed"
                           : "bg-blue-600 hover:bg-blue-700"
-                      }`}
+                        }`}
                     >
                       <QrCode className="w-4 h-4" />
                       {generatingQr ? "Generating..." : "Generate QR"}
@@ -1332,11 +1323,10 @@ const RegistrationModal = ({
                         setCashOption(selectedSemester === 2 ? "SEM2" : "SEM1");
                         setShowCashOption(true);
                       }}
-                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white transition-colors ${
-                        payingCash
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white transition-colors ${payingCash
                           ? "bg-green-400 cursor-not-allowed"
                           : "bg-green-600 hover:bg-green-700"
-                      }`}
+                        }`}
                     >
                       <CheckCircle className="w-4 h-4" />
                       Mark Paid (Cash)
@@ -1387,9 +1377,8 @@ const RegistrationModal = ({
 
                   console.error("Mark paid cash error:", e.status, e.raw);
                   toast?.error?.(
-                    `${e.status || ""} ${e.msg}${
-                      e.details ? " • " + e.details : ""
-                    }`.trim()
+                    `${e.status || ""} ${e.msg}${e.details ? " • " + e.details : ""
+                      }`.trim()
                   );
                 } finally {
                   setPayingCash(false);
@@ -1439,7 +1428,7 @@ const CashPayOptionModal = ({
               </h3>
               <p className="text-xs text-gray-500 mt-1">
                 Choose payment type for{" "}
-                <span className="font-semibold">{year || "N/A"}</span>. <br />
+                <span className="font-semibold">{year || ""}</span>. <br />
                 (No endpoint change — Year option will call Semester 1 and 2.)
               </p>
               <p className="text-xs text-gray-500 mt-2">
@@ -1468,18 +1457,16 @@ const CashPayOptionModal = ({
                 key={it.key}
                 type="button"
                 onClick={() => setChoice(it.key)}
-                className={`w-full text-left p-4 rounded-2xl border transition-all ${
-                  active
+                className={`w-full text-left p-4 rounded-2xl border transition-all ${active
                     ? "border-blue-500 bg-blue-50 shadow-sm"
                     : "border-gray-200 bg-white hover:bg-gray-50"
-                }`}
+                  }`}
                 disabled={busy}
               >
                 <div className="flex items-start gap-3">
                   <div
-                    className={`p-2.5 rounded-xl ${
-                      active ? "bg-blue-600" : "bg-gray-200"
-                    }`}
+                    className={`p-2.5 rounded-xl ${active ? "bg-blue-600" : "bg-gray-200"
+                      }`}
                   >
                     <Icon className={`w-5 h-5 ${active ? "text-white" : "text-gray-700"}`} />
                   </div>
@@ -1490,11 +1477,10 @@ const CashPayOptionModal = ({
                         {it.title}
                       </p>
                       <span
-                        className={`text-xs px-2.5 py-1 rounded-full border ${
-                          active
+                        className={`text-xs px-2.5 py-1 rounded-full border ${active
                             ? "bg-blue-100 text-blue-700 border-blue-200"
                             : "bg-gray-100 text-gray-600 border-gray-200"
-                        }`}
+                          }`}
                       >
                         {active ? "Selected" : "Select"}
                       </span>
@@ -1519,9 +1505,8 @@ const CashPayOptionModal = ({
           <button
             onClick={() => onSubmit(choice)}
             disabled={busy}
-            className={`px-4 py-2 rounded-xl text-white transition-colors ${
-              busy ? "bg-green-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
-            }`}
+            className={`px-4 py-2 rounded-xl text-white transition-colors ${busy ? "bg-green-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+              }`}
           >
             {busy ? "Processing..." : "Confirm Mark Paid"}
           </button>
@@ -1549,7 +1534,7 @@ const InfoGrid = ({ children }) => (
 const InfoField = ({ label, value, fullWidth = false }) => (
   <div className={fullWidth ? "sm:col-span-2" : ""}>
     <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">{label}</p>
-    <p className="text-sm font-semibold text-gray-800">{value || "N/A"}</p>
+    <p className="text-sm font-semibold text-gray-800">{value || ""}</p>
   </div>
 );
 

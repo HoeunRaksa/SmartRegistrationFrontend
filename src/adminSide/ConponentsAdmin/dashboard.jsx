@@ -396,7 +396,7 @@ const Dashboard = () => {
       const deptName =
         mj?.department?.name ||
         deptNameById.get(mj?.department_id) ||
-        "N/A";
+        "";
       m.set(mj.id, deptName);
     }
     return m;
@@ -500,14 +500,13 @@ const Dashboard = () => {
         value: pendingRegistrations.length,
         change:
           pendingRegistrations.length > 0
-            ? `Sem 1: ${pendingBySemester.sem1} • Sem 2: ${pendingBySemester.sem2}${
-                pendingBySemester.unknown > 0
-                  ? ` • Unknown: ${pendingBySemester.unknown}`
-                  : ""
-              }`
+            ? `Sem 1: ${pendingBySemester.sem1} • Sem 2: ${pendingBySemester.sem2}${pendingBySemester.unknown > 0
+              ? ` • Unknown: ${pendingBySemester.unknown}`
+              : ""
+            }`
             : recentRegistrationsCount > 0
-            ? `+${recentRegistrationsCount} this week`
-            : "No pending",
+              ? `+${recentRegistrationsCount} this week`
+              : "No pending",
         gradient: "from-green-500 to-emerald-500",
         icon: UserCheck,
       },
@@ -581,7 +580,7 @@ const Dashboard = () => {
           id: major.id,
           name: major.major_name || "Unknown Major",
           students: count,
-          departmentName: majorDeptNameById.get(major.id) || "N/A",
+          departmentName: majorDeptNameById.get(major.id) || "",
         };
       })
       .filter((m) => m.students > 0)
@@ -631,7 +630,7 @@ const Dashboard = () => {
           major: majorName,
           date: reg.created_at
             ? new Date(reg.created_at).toLocaleDateString()
-            : "N/A",
+            : "",
           status: reg._status,
           semester: reg._semester,
           academic_year: reg._academicYear || "",
@@ -755,9 +754,8 @@ const Dashboard = () => {
                 whileTap={{ scale: 0.97 }}
                 onClick={loadAllData}
                 disabled={inFlightRef.current}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/70 border border-white shadow-sm text-sm font-semibold text-gray-800 hover:bg-white transition ${
-                  inFlightRef.current ? "opacity-60 cursor-not-allowed" : ""
-                }`}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/70 border border-white shadow-sm text-sm font-semibold text-gray-800 hover:bg-white transition ${inFlightRef.current ? "opacity-60 cursor-not-allowed" : ""
+                  }`}
                 title={inFlightRef.current ? "Loading..." : "Refresh"}
               >
                 <ArrowUp className="w-4 h-4" />
@@ -1010,13 +1008,12 @@ const Dashboard = () => {
                         <span className="mx-1">•</span>
 
                         <span
-                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            isPaidStatus(reg.status)
+                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${isPaidStatus(reg.status)
                               ? "bg-green-100 text-green-700"
                               : reg.status === "FAILED"
-                              ? "bg-red-100 text-red-700"
-                              : "bg-yellow-100 text-yellow-700"
-                          }`}
+                                ? "bg-red-100 text-red-700"
+                                : "bg-yellow-100 text-yellow-700"
+                            }`}
                         >
                           {reg.statusLabel}
                         </span>
@@ -1120,64 +1117,64 @@ const Dashboard = () => {
         </motion.div>
 
         {/* MODALS */}
-{/* MODALS (PORTAL CENTER FIX) */}
-{createPortal(
-  <AnimatePresence>
-    {["departments", "majors", "subjects", "students"].map((view) => {
-      const FormComponent = {
-        departments: DepartmentsForm,
-        majors: MajorsForm,
-        subjects: SubjectsForm,
-        students: StudentsForm,
-      }[view];
+        {/* MODALS (PORTAL CENTER FIX) */}
+        {createPortal(
+          <AnimatePresence>
+            {["departments", "majors", "subjects", "students"].map((view) => {
+              const FormComponent = {
+                departments: DepartmentsForm,
+                majors: MajorsForm,
+                subjects: SubjectsForm,
+                students: StudentsForm,
+              }[view];
 
-      const borderColors = {
-        departments: "border-blue-200/50",
-        majors: "border-purple-200/50",
-        subjects: "border-green-200/50",
-        students: "border-indigo-200/50",
-      };
+              const borderColors = {
+                departments: "border-blue-200/50",
+                majors: "border-purple-200/50",
+                subjects: "border-green-200/50",
+                students: "border-indigo-200/50",
+              };
 
-      return (
-        activeView === view && (
-          <motion.div
-            key={view}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[9999] bg-gray-900/20 backdrop-blur-sm"
-            onClick={() => setActiveView("admin/dashboard")}
-          >
-            {/* center */}
-            <div className="absolute inset-0 grid place-items-center p-4">
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                onClick={(e) => e.stopPropagation()}
-                className={`relative w-full max-w-7xl h-[90vh] overflow-y-auto rounded-3xl p-8 bg-white/95 backdrop-blur-3xl border ${borderColors[view]} shadow-2xl`}
-              >
-                <motion.button
-                  whileHover={{ scale: 1.1, rotate: 90 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setActiveView("admin/dashboard")}
-                  className="absolute top-4 right-4 w-10 h-10 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-lg flex items-center justify-center font-bold z-10"
-                >
-                  ✕
-                </motion.button>
+              return (
+                activeView === view && (
+                  <motion.div
+                    key={view}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="fixed inset-0 z-[9999] bg-gray-900/20 backdrop-blur-sm"
+                    onClick={() => setActiveView("admin/dashboard")}
+                  >
+                    {/* center */}
+                    <div className="absolute inset-0 grid place-items-center p-4">
+                      <motion.div
+                        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        onClick={(e) => e.stopPropagation()}
+                        className={`relative w-full max-w-7xl h-[90vh] overflow-y-auto rounded-3xl p-8 bg-white/95 backdrop-blur-3xl border ${borderColors[view]} shadow-2xl`}
+                      >
+                        <motion.button
+                          whileHover={{ scale: 1.1, rotate: 90 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => setActiveView("admin/dashboard")}
+                          className="absolute top-4 right-4 w-10 h-10 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-lg flex items-center justify-center font-bold z-10"
+                        >
+                          ✕
+                        </motion.button>
 
-                <FormComponent onUpdate={loadAllData} />
-              </motion.div>
-            </div>
-          </motion.div>
-        )
-      );
-    })}
-  </AnimatePresence>,
-  document.body
-)}
+                        <FormComponent onUpdate={loadAllData} />
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                )
+              );
+            })}
+          </AnimatePresence>,
+          document.body
+        )}
 
       </div>
 
@@ -1436,9 +1433,8 @@ const Dashboard = () => {
                             duration: 1,
                             ease: "easeOut",
                           }}
-                          className={`h-full rounded-full bg-gradient-to-r ${
-                            colors[i % colors.length]
-                          } shadow-sm`}
+                          className={`h-full rounded-full bg-gradient-to-r ${colors[i % colors.length]
+                            } shadow-sm`}
                         />
                       </div>
                       <span className="text-xs font-semibold text-gray-600 min-w-[45px] text-right">

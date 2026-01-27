@@ -251,7 +251,7 @@ const StaffRow = ({ staff, onEdit, onView, onDelete }) => {
       <td className="px-6 py-4">
         <div className="flex items-center gap-1.5">
           <Briefcase className="w-4 h-4 text-purple-500 flex-shrink-0" />
-          <span className="text-sm text-gray-700">{staff.position || 'N/A'}</span>
+          <span className="text-sm text-gray-700">{staff.position || ""}</span>
         </div>
       </td>
 
@@ -281,7 +281,7 @@ const StaffRow = ({ staff, onEdit, onView, onDelete }) => {
             <span className="text-sm text-gray-700">{staff.department_name || staff.department?.name}</span>
           </div>
         ) : (
-          <span className="text-sm text-gray-400">N/A</span>
+          <span className="text-sm text-gray-400"></span>
         )}
       </td>
 
@@ -380,7 +380,7 @@ const StaffModal = ({ staff, onClose }) => {
               <div className="flex items-center gap-2 mt-2">
                 <span className="inline-flex items-center gap-1 text-sm bg-purple-100 text-purple-600 px-3 py-1 rounded-full font-medium">
                   <Briefcase className="w-4 h-4" />
-                  {staff.position || 'N/A'}
+                  {staff.position || ""}
                 </span>
                 {staff.user?.role === 'admin' && (
                   <span className="text-sm bg-blue-100 text-blue-600 px-3 py-1 rounded-full font-medium">
@@ -391,57 +391,57 @@ const StaffModal = ({ staff, onClose }) => {
             </div>
 
             <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-              <InfoField 
-                icon={Mail} 
-                label="Email" 
-                value={staff.email || staff.user?.email || "N/A"} 
-                iconColor="text-purple-500" 
+              <InfoField
+                icon={Mail}
+                label="Email"
+                value={staff.email || staff.user?.email || ""}
+                iconColor="text-purple-500"
               />
-              <InfoField 
-                icon={Phone} 
-                label="Phone" 
-                value={staff.phone_number || "N/A"} 
-                iconColor="text-green-500" 
+              <InfoField
+                icon={Phone}
+                label="Phone"
+                value={staff.phone_number || ""}
+                iconColor="text-green-500"
               />
-              <InfoField 
-                icon={Building2} 
-                label="Department" 
-                value={staff.department_name || staff.department?.name || "N/A"} 
-                iconColor="text-blue-500" 
+              <InfoField
+                icon={Building2}
+                label="Department"
+                value={staff.department_name || staff.department?.name || ""}
+                iconColor="text-blue-500"
               />
-              <InfoField 
-                icon={UserCircle} 
-                label="Username" 
-                value={staff.user?.name || staff.user_name || "N/A"} 
-                iconColor="text-orange-500" 
+              <InfoField
+                icon={UserCircle}
+                label="Username"
+                value={staff.user?.name || staff.user_name || ""}
+                iconColor="text-orange-500"
               />
 
               {staff.gender && (
-                <InfoField 
-                  icon={UserCircle} 
-                  label="Gender" 
-                  value={staff.gender} 
-                  iconColor="text-pink-500" 
+                <InfoField
+                  icon={UserCircle}
+                  label="Gender"
+                  value={staff.gender}
+                  iconColor="text-pink-500"
                 />
               )}
               {staff.date_of_birth && (
-                <InfoField 
-                  icon={Calendar} 
-                  label="Date of Birth" 
-                  value={staff.date_of_birth} 
-                  iconColor="text-indigo-500" 
+                <InfoField
+                  icon={Calendar}
+                  label="Date of Birth"
+                  value={staff.date_of_birth}
+                  iconColor="text-indigo-500"
                 />
               )}
             </div>
 
             {staff.address && (
               <div className="pt-4 border-t">
-                <InfoField 
-                  icon={MapPin} 
-                  label="Address" 
-                  value={staff.address} 
-                  iconColor="text-red-500" 
-                  fullWidth 
+                <InfoField
+                  icon={MapPin}
+                  label="Address"
+                  value={staff.address}
+                  iconColor="text-red-500"
+                  fullWidth
                 />
               </div>
             )}

@@ -26,8 +26,8 @@ const StudentProfile = ({ student, onClose }) => {
 
   const fullNameEn = student.full_name_en || student.student_name || student.full_name || "Student";
   const fullNameKh = student.full_name_kh || student.student_name_kh || "";
-  const studentCode = student.student_code || "N/A";
-  const generation = student.generation ?? "N/A";
+  const studentCode = student.student_code || "";
+  const generation = student.generation ?? "";
 
   // ✅ accept multiple possible image fields
   const rawProfile =
@@ -281,7 +281,7 @@ const InfoItem = ({ icon: Icon, label, value, className = "" }) => (
 const MetaBlock = ({ label, value }) => (
   <div>
     <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">{label}</p>
-    <p className="text-sm font-semibold text-gray-800">{value || "N/A"}</p>
+    <p className="text-sm font-semibold text-gray-800">{value || ""}</p>
   </div>
 );
 

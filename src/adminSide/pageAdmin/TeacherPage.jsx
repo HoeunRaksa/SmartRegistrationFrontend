@@ -248,7 +248,7 @@ const TeacherRow = ({ teacher, onEdit, onView, onDelete }) => {
             <span className="text-sm text-gray-700">{teacher.department.name}</span>
           </div>
         ) : (
-          <span className="text-sm text-gray-400">N/A</span>
+          <span className="text-sm text-gray-400"></span>
         )}
       </td>
 
@@ -330,10 +330,10 @@ const TeacherModal = ({ teacher, onClose }) => {
             </div>
 
             <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-              <InfoField icon={Mail} label="Email" value={teacher.user?.email || "N/A"} iconColor="text-purple-500" />
-              <InfoField icon={Phone} label="Phone" value={teacher.phone_number || "N/A"} iconColor="text-green-500" />
-              <InfoField icon={Building2} label="Department" value={teacher.department?.name || "N/A"} iconColor="text-blue-500" />
-              <InfoField icon={UserCircle} label="Account Name" value={teacher.user?.name || "N/A"} iconColor="text-orange-500" />
+              <InfoField icon={Mail} label="Email" value={teacher.user?.email || ""} iconColor="text-purple-500" />
+              <InfoField icon={Phone} label="Phone" value={teacher.phone_number || ""} iconColor="text-green-500" />
+              <InfoField icon={Building2} label="Department" value={teacher.department?.name || ""} iconColor="text-blue-500" />
+              <InfoField icon={UserCircle} label="Account Name" value={teacher.user?.name || ""} iconColor="text-orange-500" />
 
               {teacher.gender && (
                 <InfoField icon={UserCircle} label="Gender" value={teacher.gender} iconColor="text-pink-500" />

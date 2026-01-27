@@ -74,10 +74,10 @@ const MajorsList = ({ majors, onEdit, onRefresh }) => {
           className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
         >
           {majors.map((major) => (
-            <MajorCard 
-              key={major.id} 
-              major={major} 
-              onEdit={onEdit} 
+            <MajorCard
+              key={major.id}
+              major={major}
+              onEdit={onEdit}
               onDelete={handleDelete}
             />
           ))}
@@ -102,8 +102,8 @@ const EmptyState = () => (
 const MajorCard = ({ major, onEdit, onDelete }) => {
   // Use the same API URL as your API configuration
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-  
-  const imageUrl = major.image 
+
+  const imageUrl = major.image
     ? `${API_BASE_URL}/${major.image}`
     : null;
 
@@ -114,11 +114,11 @@ const MajorCard = ({ major, onEdit, onDelete }) => {
       whileTap={{ scale: 0.98 }}
       className="group relative overflow-hidden rounded-xl bg-white/60 border border-white/50 shadow-md hover:shadow-xl transition-all duration-300"
     >
-      <MajorCardHeader 
-        major={major} 
+      <MajorCardHeader
+        major={major}
         imageUrl={imageUrl}
-        onEdit={onEdit} 
-        onDelete={onDelete} 
+        onEdit={onEdit}
+        onDelete={onDelete}
       />
       <MajorCardContent major={major} />
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
@@ -140,8 +140,8 @@ const MajorCardHeader = ({ major, imageUrl, onEdit, onDelete }) => (
         }}
       />
     ) : null}
-    
-    <div 
+
+    <div
       className="w-full h-full flex items-center justify-center"
       style={{ display: imageUrl ? 'none' : 'flex' }}
     >
@@ -187,7 +187,7 @@ const MajorCardContent = ({ major }) => (
     <div className="flex items-center gap-2 mb-3">
       <span className="inline-flex items-center gap-1 text-xs bg-blue-100 text-blue-600 px-2.5 py-1 rounded-full font-medium">
         <Building2 className="w-3 h-3" />
-        {major.department?.name || "N/A"}
+        {major.department?.name || ""}
       </span>
     </div>
 
@@ -198,7 +198,7 @@ const MajorCardContent = ({ major }) => (
     <div className="pt-3 border-t border-gray-200">
       <div className="flex items-center gap-2 text-xs text-gray-500">
         <BookOpen className="w-3.5 h-3.5 text-purple-500" />
-        <span>Department: {major.department?.code || "N/A"}</span>
+        <span>Department: {major.department?.code || ""}</span>
       </div>
     </div>
   </div>
