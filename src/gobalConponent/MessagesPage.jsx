@@ -440,10 +440,10 @@ const MessagesPage = () => {
                         </div>
                       </div>
 
-                      {msg.is_mine && !msg.is_deleted && (
+                      {(msg.is_mine || (currentUser.role === 'teacher' || currentUser.role === 'admin')) && !msg.is_deleted && (
                         <button
                           onClick={() => handleDelete(msg.id)}
-                          className="absolute -left-10 top-1/2 -translate-y-1/2 p-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50 rounded-full"
+                          className={`absolute ${msg.is_mine ? "-left-10" : "-right-10"} top-1/2 -translate-y-1/2 p-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50 rounded-full`}
                           title="Delete message"
                         >
                           <Trash2 className="w-4 h-4" />
