@@ -72,13 +72,13 @@ const SchedulePage = () => {
       return {
         id: item.id,
         course_id: course.id,
-        course_code: course.course_code || course.code || "N/A",
-        course_name: course.course_name || course.title || "N/A",
-        instructor: course.instructor || course.instructor_name || "N/A",
+        course_code: course.course_code || course.code || "",
+        course_name: course.course_name || course.title || "",
+        instructor: course.instructor || course.instructor_name || "",
         day: item.day_of_week || item.day,
         start_time: item.start_time?.slice(0, 5), // HH:MM
         end_time: item.end_time?.slice(0, 5),
-        room: item.room || "N/A",
+        room: item.room || "",
         session_type: item.session_type || "Class",
         color: colors[colorIndex],
         raw_date: item.date, // for today/upcoming
@@ -300,21 +300,19 @@ const SchedulePage = () => {
             <div className="flex rounded-2xl bg-white/60 border border-white/60 shadow-sm p-1">
               <button
                 onClick={() => setViewMode("week")}
-                className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
-                  viewMode === "week"
+                className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${viewMode === "week"
                     ? "bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white shadow-md"
                     : "text-gray-700 hover:bg-white/60"
-                }`}
+                  }`}
               >
                 Week
               </button>
               <button
                 onClick={() => setViewMode("day")}
-                className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
-                  viewMode === "day"
+                className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${viewMode === "day"
                     ? "bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white shadow-md"
                     : "text-gray-700 hover:bg-white/60"
-                }`}
+                  }`}
               >
                 Day
               </button>
@@ -374,9 +372,8 @@ const SchedulePage = () => {
                       </span>
                       <span className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
                         <span
-                          className={`w-2 h-2 rounded-full ${
-                            classItem.session_type === "Lab" ? "bg-purple-500" : "bg-green-500"
-                          }`}
+                          className={`w-2 h-2 rounded-full ${classItem.session_type === "Lab" ? "bg-purple-500" : "bg-green-500"
+                            }`}
                         />
                         {classItem.session_type}
                       </span>
@@ -436,11 +433,10 @@ const SchedulePage = () => {
                   return (
                     <div
                       key={day}
-                      className={`text-center p-2 rounded-2xl transition-colors border ${
-                        isToday
+                      className={`text-center p-2 rounded-2xl transition-colors border ${isToday
                           ? "bg-blue-50/80 border-blue-200/70"
                           : "bg-white/50 border-white/60"
-                      }`}
+                        }`}
                     >
                       <div className={`text-sm font-extrabold ${isToday ? "text-blue-700" : "text-gray-900"}`}>
                         {day.substring(0, 3)}
