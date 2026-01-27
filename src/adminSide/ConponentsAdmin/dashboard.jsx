@@ -266,7 +266,7 @@ const AdminDashboard = () => {
           </h3>
           <div className="space-y-4 depth-layer-1">
             {charts.popularMajors?.map((major, i) => (
-              <div key={major.name} className="flex items-center gap-4 bg-white/40 p-5 rounded-2xl border border-white/60 hover:bg-white/60 transition-all hover:translate-x-3 cursor-default">
+              <div key={major.id || major.name || `major-${i}`} className="flex items-center gap-4 bg-white/40 p-5 rounded-2xl border border-white/60 hover:bg-white/60 transition-all hover:translate-x-3 cursor-default">
                 <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-black text-slate-400">
                   #{i + 1}
                 </div>
