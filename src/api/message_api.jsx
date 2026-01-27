@@ -119,3 +119,25 @@ export const fetchUnreadCount = async () => {
     return { unread_count: 0 };
   }
 };
+
+// GET: Fetch classmates/peers (student discovery)
+export const fetchClassmates = async () => {
+  try {
+    const response = await API.get("/chat/classmates");
+    return extractData(response);
+  } catch (error) {
+    console.error("fetchClassmates error:", error);
+    throw error;
+  }
+};
+
+// DELETE: Delete a conversation
+export const deleteConversation = async (id) => {
+  try {
+    const response = await API.delete(`/conversations/${id}`);
+    return extractData(response);
+  } catch (error) {
+    console.error(`deleteConversation(${id}) error:`, error);
+    throw error;
+  }
+};

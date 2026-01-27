@@ -20,7 +20,7 @@ import {
   Users,
   UserPlus,
 } from "lucide-react";
-import { fetchConversations, fetchMessages, sendMessage, createGroup, deleteMessage, clearConversation } from "../api/message_api";
+import { fetchConversations, fetchMessages, sendMessage, createGroup, deleteMessage, clearConversation, fetchClassmates, deleteConversation } from "../api/message_api";
 import { getEcho } from "../echo";
 
 const MessagesPage = () => {
@@ -32,6 +32,10 @@ const MessagesPage = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [activeTab, setActiveTab] = useState("chats"); // "chats" or "classmates"
+
+  // Discovery state
+  const [classmates, setClassmates] = useState([]);
 
   // Group creation state
   const [showCreateGroup, setShowCreateGroup] = useState(false);
@@ -73,6 +77,9 @@ const MessagesPage = () => {
 
   useEffect(() => {
     loadConversations();
+    if (currentUser.role === 'student') {
+      loadClassmates();
+    }
   }, []);
 
   useEffect(() => {
@@ -175,6 +182,15 @@ const MessagesPage = () => {
     }
   };
 
+  const loadClassmates = async () => {
+    try {
+      const res = await fetchClassmates();
+      setClassmates(res?.data || []);
+    } catch (e) {
+      console.error("Failed to load classmates:", e);
+    }
+  };
+
   const loadMessages = async (id) => {
     try {
       const res = await fetchMessages(id);
@@ -257,6 +273,39 @@ const MessagesPage = () => {
     }
   };
 
+  const handleDeleteGroup = async () => {
+    if (!selectedConversation?.id) return;
+    if (!window.confirm("Are you sure you want to delete this group? This will remove it for everyone.")) return;
+
+    try {
+      await deleteConversation(selectedConversation.id);
+      setSelectedConversation(null);
+      loadConversations();
+    } catch (e) {
+      alert("Failed to delete group");
+    }
+  };
+
+  const startPrivateChat = async (userId) => {
+    const existing = conversations.find(c => c.type === 'private' && (c.other_user_id === userId || c.id === userId));
+    if (existing) {
+      setSelectedConversation(existing);
+      setActiveTab("chats");
+      return;
+    }
+
+    try {
+      // Fetch messages for this user ID (backend will create/fetch private convo)
+      const res = await fetchMessages(userId);
+      const data = res?.data?.data || [];
+      // We need to reload to get the new conversation in list
+      await loadConversations();
+      setActiveTab("chats");
+    } catch (e) {
+      console.error("Failed to start chat:", e);
+    }
+  };
+
   const handleCreateGroup = async () => {
     if (!groupTitle.trim() || selectedUsers.length === 0) return;
     try {
@@ -276,6 +325,11 @@ const MessagesPage = () => {
     return conversations.filter((conv) => (conv.name || "").toLowerCase().includes(q));
   }, [conversations, searchQuery]);
 
+  const filteredClassmates = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    return classmates.filter((u) => (u.name || "").toLowerCase().includes(q));
+  }, [classmates, searchQuery]);
+
   const initials = (name) => {
     const n = (name || "").trim();
     if (!n) return "U";
@@ -287,9 +341,9 @@ const MessagesPage = () => {
       <div className="h-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm flex">
         {/* Sidebar */}
         <div className={`w-full md:w-[360px] border-r border-slate-200 flex flex-col ${showChat ? "hidden md:flex" : "flex"}`}>
-          <div className="px-4 pt-4 pb-3 border-b border-slate-200">
+          <div className="px-4 pt-4 pb-0 border-b border-slate-200">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-slate-900">Chats</h2>
+              <h2 className="text-xl font-bold text-slate-900">Messages</h2>
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
@@ -300,11 +354,29 @@ const MessagesPage = () => {
                 <Users className="w-5 h-5" />
               </motion.button>
             </div>
-            <div className="relative">
+
+            {currentUser.role === 'student' && (
+              <div className="flex gap-4 mb-3">
+                <button
+                  onClick={() => setActiveTab("chats")}
+                  className={`text-sm font-bold pb-2 border-b-2 transition-colors ${activeTab === 'chats' ? "border-blue-600 text-blue-600" : "border-transparent text-slate-400 hover:text-slate-600"}`}
+                >
+                  Chats
+                </button>
+                <button
+                  onClick={() => setActiveTab("classmates")}
+                  className={`text-sm font-bold pb-2 border-b-2 transition-colors ${activeTab === 'classmates' ? "border-blue-600 text-blue-600" : "border-transparent text-slate-400 hover:text-slate-600"}`}
+                >
+                  Classmates
+                </button>
+              </div>
+            )}
+
+            <div className="relative mb-3">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search chats..."
+                placeholder={activeTab === 'chats' ? "Search chats..." : "Search classmates..."}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
@@ -313,28 +385,55 @@ const MessagesPage = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto">
-            {filteredConversations.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => setSelectedConversation(c)}
-                className={`w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 border-b border-slate-50 ${selectedConversation?.id === c.id ? "bg-blue-50" : ""}`}
-              >
-                <div className={`h-12 w-12 rounded-full flex items-center justify-center font-bold text-white overflow-hidden bg-gradient-to-br ${c.type === 'group' ? "from-indigo-600 to-purple-600" : "from-blue-600 to-indigo-600"}`}>
-                  {c.avatar ? (
-                    <img src={c.avatar} className="w-full h-full object-cover" alt="" />
-                  ) : (
-                    initials(c.name)
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-baseline">
-                    <span className="font-semibold text-slate-900 truncate">{c.name}</span>
-                    <span className="text-[10px] text-slate-500">{c.last_message_time ? new Date(c.last_message_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}</span>
+            {activeTab === 'chats' ? (
+              filteredConversations.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setSelectedConversation(c)}
+                  className={`w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 border-b border-slate-50 ${selectedConversation?.id === c.id ? "bg-blue-50" : ""}`}
+                >
+                  <div className={`h-12 w-12 rounded-full flex items-center justify-center font-bold text-white overflow-hidden bg-gradient-to-br ${c.type === 'course_group' ? "from-emerald-500 to-teal-600" :
+                    c.type === 'group' ? "from-indigo-600 to-purple-600" :
+                      "from-blue-600 to-indigo-600"
+                    }`}>
+                    {c.avatar ? (
+                      <img src={c.avatar} className="w-full h-full object-cover" alt="" />
+                    ) : (
+                      initials(c.name)
+                    )}
                   </div>
-                  <p className="text-sm text-slate-500 truncate">{c.last_message || "No messages yet"}</p>
-                </div>
-              </button>
-            ))}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-baseline">
+                      <span className="font-semibold text-slate-900 truncate flex items-center gap-1.5">
+                        {c.type === 'course_group' && <span className="p-1 bg-emerald-100 text-emerald-600 rounded text-[8px] uppercase font-black">Class</span>}
+                        {c.name}
+                      </span>
+                      <span className="text-[10px] text-slate-500">{c.last_message_time ? new Date(c.last_message_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}</span>
+                    </div>
+                    <p className="text-sm text-slate-500 truncate">{c.last_message || "No messages yet"}</p>
+                  </div>
+                </button>
+              ))
+            ) : (
+              <div className="p-2 space-y-1">
+                {filteredClassmates.map((u) => (
+                  <button
+                    key={u.id}
+                    onClick={() => startPrivateChat(u.id)}
+                    className="w-full p-3 rounded-xl hover:bg-slate-50 flex items-center gap-3 transition-colors group"
+                  >
+                    <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold overflow-hidden border border-white shadow-sm transition-transform group-hover:scale-105">
+                      {u.avatar ? <img src={u.avatar} className="w-full h-full object-cover" /> : initials(u.name)}
+                    </div>
+                    <div className="text-left flex-1">
+                      <div className="text-sm font-bold text-slate-900 leading-tight">{u.name}</div>
+                      <div className="text-[10px] text-slate-400 font-medium">{u.student_id ? `#${u.student_id}` : "Classmate"}</div>
+                    </div>
+                    <MessageCircle className="w-4 h-4 text-slate-300 group-hover:text-blue-500 transition-colors" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -345,7 +444,10 @@ const MessagesPage = () => {
               <div className="h-16 border-b border-slate-200 px-4 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10">
                 <div className="flex items-center gap-3">
                   <button className="md:hidden p-2" onClick={() => setShowChat(false)}><ArrowLeft /></button>
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm text-white overflow-hidden bg-gradient-to-br ${selectedConversation.type === 'group' ? "from-indigo-600 to-purple-600" : "from-blue-600 to-indigo-600"}`}>
+                  <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm text-white overflow-hidden bg-gradient-to-br ${selectedConversation.type === 'course_group' ? "from-emerald-500 to-teal-600" :
+                      selectedConversation.type === 'group' ? "from-indigo-600 to-purple-600" :
+                        "from-blue-600 to-indigo-600"
+                    }`}>
                     {selectedConversation.avatar ? (
                       <img src={selectedConversation.avatar} className="w-full h-full object-cover" alt="" />
                     ) : (
@@ -353,18 +455,32 @@ const MessagesPage = () => {
                     )}
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-900 leading-tight">{selectedConversation.name}</h3>
-                    <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{selectedConversation.type}</p>
+                    <h3 className="font-bold text-slate-900 leading-tight flex items-center gap-2">
+                      {selectedConversation.name}
+                      {selectedConversation.type === 'course_group' && <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[9px] uppercase font-black border border-emerald-100">Course Group</span>}
+                    </h3>
+                    <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{selectedConversation.type.replace('_', ' ')} • {selectedConversation.participants_count} members</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={handleClearChat}
-                    className="p-2 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-600 transition-colors"
+                    className="p-2 hover:bg-amber-50 rounded-lg text-slate-400 hover:text-amber-600 transition-colors"
                     title="Clear Chat History"
                   >
-                    <Trash2 className="w-5 h-5" />
+                    <CheckCheck className="w-5 h-5" />
                   </button>
+
+                  {(selectedConversation.creator_id === currentUser.id || currentUser.role === 'admin') && selectedConversation.type !== 'course_group' && (
+                    <button
+                      onClick={handleDeleteGroup}
+                      className="p-2 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-600 transition-colors"
+                      title="Delete Group"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  )}
+
                   <button className="p-2 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-blue-600 transition-colors"><Phone className="w-5 h-5" /></button>
                   <button className="p-2 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"><MoreVertical className="w-5 h-5" /></button>
                 </div>
