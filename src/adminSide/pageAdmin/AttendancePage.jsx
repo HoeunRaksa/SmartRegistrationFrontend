@@ -155,7 +155,7 @@ const AttendancePage = () => {
             <option value="">All Courses</option>
             {courses.map((course) => (
               <option key={course.id} value={course.id}>
-                {course.course_name} ({course.course_code})
+                {course.display_name || course.course_name || `${course.course_code || 'Course'} - ${course.id}`}
               </option>
             ))}
           </select>

@@ -168,8 +168,8 @@ const Alert = ({ type, message, onClose }) => (
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, scale: 0.95 }}
     className={`flex items-center gap-3 p-4 rounded-2xl border shadow-sm ${type === "success"
-        ? "bg-green-50 border-green-200"
-        : "bg-red-50 border-red-200"
+      ? "bg-green-50 border-green-200"
+      : "bg-red-50 border-red-200"
       }`}
   >
     {type === "success" ? (
@@ -272,7 +272,7 @@ const InputField = ({ field, form, setForm, courses }) => {
           <option value="">{field.placeholder}</option>
           {options.map((opt) => (
             <option key={opt.id} value={opt.id}>
-              {opt.course_name || opt.name || opt.title || opt.id}
+              {opt.display_name || opt.course_name || opt.name || opt.title || opt.id}
             </option>
           ))}
         </select>
