@@ -81,10 +81,10 @@ const getStudentMajorId = (st) =>
 /* ================== COURSE HELPERS ================== */
 const getCourseMajorId = (c) => {
   return safeStr(
-    c?.major_id ?? 
-    c?.majorSubject?.major_id ?? 
-    c?.majorSubject?.major?.id ?? 
-    c?.classGroup?.major_id ?? 
+    c?.major_id ??
+    c?.majorSubject?.major_id ??
+    c?.majorSubject?.major?.id ??
+    c?.classGroup?.major_id ??
     ""
   );
 };
@@ -759,9 +759,8 @@ const FormSection = ({
 
             {!isEditMode && form.student_ids.length > 0 && (
               <InfoBox
-                message={`You have selected ${form.student_ids.length} student${
-                  form.student_ids.length > 1 ? "s" : ""
-                }. All selected students must be from the same major to enroll in a course.`}
+                message={`You have selected ${form.student_ids.length} student${form.student_ids.length > 1 ? "s" : ""
+                  }. All selected students must be from the same major to enroll in a course.`}
               />
             )}
           </div>
@@ -782,23 +781,7 @@ const FormSection = ({
       </motion.form>
     </GlassCard>
 
-    {/* Scrollbar Styles */}
-    <style jsx>{`
-      .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-track {
-        background: rgba(0, 0, 0, 0.05);
-        border-radius: 10px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(59, 130, 246, 0.5);
-        border-radius: 10px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(59, 130, 246, 0.7);
-      }
-    `}</style>
+
   </motion.div>
 );
 
@@ -892,7 +875,7 @@ const EnrollmentForm = ({
 
   useEffect(() => {
     if (isEditMode) return;
-    
+
     const { majorId } = selectedMajorInfo;
     if (!majorId) return;
 

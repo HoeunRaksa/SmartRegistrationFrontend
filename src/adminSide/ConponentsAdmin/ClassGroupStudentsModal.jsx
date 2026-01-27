@@ -22,30 +22,30 @@ const animations = {
   },
   modal: {
     hidden: { opacity: 0, scale: 0.95, y: 20 },
-    show: { 
-      opacity: 1, 
-      scale: 1, 
+    show: {
+      opacity: 1,
+      scale: 1,
       y: 0,
       transition: { type: "spring", duration: 0.4, bounce: 0.3 }
     },
-    exit: { 
-      opacity: 0, 
-      scale: 0.95, 
+    exit: {
+      opacity: 0,
+      scale: 0.95,
       y: 20,
       transition: { duration: 0.2 }
     },
   },
   list: {
     hidden: { opacity: 0 },
-    show: { 
+    show: {
       opacity: 1,
       transition: { staggerChildren: 0.05 }
     },
   },
   item: {
     hidden: { opacity: 0, x: -10 },
-    show: { 
-      opacity: 1, 
+    show: {
+      opacity: 1,
       x: 0,
       transition: { type: "spring", stiffness: 300, damping: 24 }
     },
@@ -113,14 +113,14 @@ const Alert = ({ type = "error", message }) => {
   );
 };
 
-const Button = ({ 
-  children, 
-  onClick, 
-  disabled, 
-  loading, 
-  variant = "primary", 
+const Button = ({
+  children,
+  onClick,
+  disabled,
+  loading,
+  variant = "primary",
   icon: Icon,
-  className = "" 
+  className = ""
 }) => {
   const variants = {
     primary: "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:scale-[1.02]",
@@ -286,7 +286,7 @@ const ClassGroupStudentsModal = ({ open, group, onClose }) => {
   // ✅ LOAD DEPARTMENTS
   useEffect(() => {
     if (!open) return;
-    
+
     const loadDepts = async () => {
       try {
         const res = await fetchDepartments();
@@ -396,9 +396,9 @@ const ClassGroupStudentsModal = ({ open, group, onClose }) => {
       console.error(e);
       setError(
         e?.response?.data?.message ||
-          (e?.response?.data?.errors
-            ? Object.values(e.response.data.errors).flat().join(", ")
-            : "Failed to add student to this class.")
+        (e?.response?.data?.errors
+          ? Object.values(e.response.data.errors).flat().join(", ")
+          : "Failed to add student to this class.")
       );
     }
   };
@@ -406,12 +406,12 @@ const ClassGroupStudentsModal = ({ open, group, onClose }) => {
   const handleFilterChange = (key, value) => {
     setFilters((prev) => {
       const next = { ...prev, [key]: value };
-      
+
       // Clear major when department changes
       if (key === "department_id") {
         next.major_id = "";
       }
-      
+
       return next;
     });
   };
@@ -456,13 +456,13 @@ const ClassGroupStudentsModal = ({ open, group, onClose }) => {
           {/* ========================= HEADER ========================= */}
           <div className="relative overflow-hidden px-6 py-5 border-b-2 border-white/60 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 flex-shrink-0">
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-200/30 to-purple-200/30 rounded-full blur-3xl" />
-            
+
             <div className="relative flex items-start justify-between gap-4">
               <div className="flex items-start gap-4">
                 <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg">
                   <Users className="w-6 h-6 text-white" />
                 </div>
-                
+
                 <div>
                   <h3 className="text-xl font-black text-gray-900 mb-1">
                     {group.class_name}
@@ -691,23 +691,7 @@ const ClassGroupStudentsModal = ({ open, group, onClose }) => {
           </div>
         </motion.div>
 
-        {/* Custom Scrollbar Styles */}
-        <style jsx>{`
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.05);
-            border-radius: 10px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(0, 0, 0, 0.3);
-          }
-        `}</style>
+
       </motion.div>
     </AnimatePresence>
   );

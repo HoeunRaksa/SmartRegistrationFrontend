@@ -102,22 +102,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen space-y-6 p-6">
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(148, 163, 184, 0.1);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(148, 163, 184, 0.3);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(148, 163, 184, 0.5);
-        }
-      `}</style>
+
 
       {/* Hero Header */}
       <motion.div
@@ -200,11 +185,10 @@ const AdminDashboard = () => {
                   <Icon className="w-6 h-6 text-white" />
                 </div>
                 <div
-                  className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wide ${
-                    stat.trend === 'up'
+                  className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wide ${stat.trend === 'up'
                       ? 'bg-green-100 text-green-600 border border-green-200'
                       : 'bg-red-100 text-red-600 border border-red-200'
-                  }`}
+                    }`}
                 >
                   {stat.change}
                 </div>
@@ -289,9 +273,8 @@ const AdminDashboard = () => {
               >
                 <div className="flex items-center gap-2 mb-1">
                   <div
-                    className={`w-3 h-3 rounded-full ${
-                      gender.name === 'Male' ? 'bg-blue-500' : 'bg-pink-500'
-                    }`}
+                    className={`w-3 h-3 rounded-full ${gender.name === 'Male' ? 'bg-blue-500' : 'bg-pink-500'
+                      }`}
                   />
                   <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
                     {gender.name}
