@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { motion } from "framer-motion";
 import StudentsForm from "../ConponentsAdmin/StudentsForm.jsx";
 import StudentsTable from "../ConponentsAdmin/Studentstable.jsx";
 import StudentProfile from "../../gobalConponent/Studentprofile.jsx";
