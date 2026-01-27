@@ -42,14 +42,14 @@ export const createTeacher = async (teacherData) => {
     Object.entries(teacherData || {}).forEach(([key, value]) => {
       if (value === null || value === undefined) return;
 
-      // keep file
-      if (key === "profile_image" && value instanceof File) {
+      // ✅ Generic file support (handles 'image' or 'profile_image')
+      if (value instanceof File) {
         formData.append(key, value);
         return;
       }
 
-      // support arrays/  objects safely
-      if (typeof value === "object" && !(value instanceof File)) {
+      // support arrays/objects safely
+      if (typeof value === "object") {
         formData.append(key, JSON.stringify(value));
         return;
       }
@@ -74,12 +74,13 @@ export const updateTeacher = async (id, teacherData) => {
     Object.entries(teacherData || {}).forEach(([key, value]) => {
       if (value === null || value === undefined) return;
 
-      if (key === "profile_image" && value instanceof File) {
+      // ✅ Generic file support
+      if (value instanceof File) {
         formData.append(key, value);
         return;
       }
 
-      if (typeof value === "object" && !(value instanceof File)) {
+      if (typeof value === "object") {
         formData.append(key, JSON.stringify(value));
         return;
       }
