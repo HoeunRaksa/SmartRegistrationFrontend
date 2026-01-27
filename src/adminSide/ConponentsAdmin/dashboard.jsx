@@ -430,20 +430,23 @@ const AdminDashboard = () => {
                 <div className="w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center font-bold text-gray-600 shadow-sm text-sm">
                   #{i + 1}
                 </div>
-                <div className="flex-1">
-                  <div className="font-semibold text-gray-900 text-sm mb-1.5">{major.name}</div>
-                  <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-gray-900 text-sm mb-1 truncate">{major.name || 'Unknown Major'}</div>
+                  <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden shadow-inner">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{
                         width: `${(major.count / (charts.popularMajors[0]?.count || 1)) * 100}%`,
                       }}
-                      transition={{ duration: 0.8, ease: 'easeOut' }}
-                      className="h-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-full"
+                      transition={{ duration: 1, ease: 'easeOut' }}
+                      className="h-full bg-gradient-to-r from-orange-400 to-amber-500 rounded-full"
                     />
                   </div>
                 </div>
-                <div className="text-xl font-black text-gray-900">{major.count}</div>
+                <div className="text-right">
+                  <div className="text-lg font-black text-gray-900 leading-none">{major.count}</div>
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Students</div>
+                </div>
               </motion.div>
             ))}
           </div>
