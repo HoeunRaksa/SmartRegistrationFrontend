@@ -140,8 +140,8 @@ const AdminDashboard = () => {
             </p>
           </div>
           <motion.div
-            whileHover={{ scale: 1.05, rotateZ: 2 }}
-            className="bg-white/10 backdrop-blur-3xl rounded-3xl p-8 border border-white/20 depth-layer-2 shadow-2xl animate-float-3d"
+            whileHover={{ scale: 1.02 }}
+            className="bg-white/10 backdrop-blur-3xl rounded-3xl p-8 border border-white/20 depth-layer-2 shadow-2xl"
           >
             <div className="text-blue-400 text-xs font-black uppercase mb-2 tracking-[0.3em]">System Health</div>
             <div className="text-4xl font-black text-white tabular-nums drop-shadow-lg">99.9% Uptime</div>
