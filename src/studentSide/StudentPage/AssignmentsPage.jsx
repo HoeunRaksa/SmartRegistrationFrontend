@@ -120,7 +120,7 @@ const AssignmentsPage = () => {
     pending: assignments.filter(a => a.status === 'pending').length,
     submitted: assignments.filter(a => a.status === 'submitted').length,
     graded: assignments.filter(a => a.status === 'graded').length,
-    avgGrade: assignments.filter(a => a.grade !== null).reduce((sum, a) => sum + (a.grade / a.points * 100), 0) / assignments.filter(a => a.grade !== null).length || 0
+    avgGrade: assignments.filter(a => a.submission?.score !== null && a.submission?.score !== undefined).reduce((sum, a) => sum + (a.submission.score / a.points * 100), 0) / assignments.filter(a => a.submission?.score !== null && a.submission?.score !== undefined).length || 0
   };
 
   if (loading) {
@@ -334,11 +334,11 @@ const AssignmentsPage = () => {
                     <div>
                       <div className="text-gray-600">Points</div>
                       <div className="font-semibold text-gray-900">
-                        {assignment.grade !== null ? `${assignment.grade}/${assignment.points}` : assignment.points}
+                        {assignment.submission?.score !== null && assignment.submission?.score !== undefined ? `${assignment.submission.score}/${assignment.points}` : assignment.points}
                       </div>
-                      {assignment.grade !== null && (
+                      {assignment.submission?.score !== null && assignment.submission?.score !== undefined && (
                         <div className="text-xs text-gray-600">
-                          {((assignment.grade / assignment.points) * 100).toFixed(1)}%
+                          {((assignment.submission.score / assignment.points) * 100).toFixed(1)}%
                         </div>
                       )}
                     </div>

@@ -52,7 +52,7 @@ export const fetchCourseGrades = async (courseId) => {
 // GET: Fetch grade summary/transcript
 export const fetchTranscript = async () => {
   try {
-    const response = await API.get("/student/transcript");
+    const response = await API.get("/student/grades/transcript");
     return response;
   } catch (error) {
     console.error("fetchTranscript error:", error);
@@ -77,7 +77,8 @@ export const fetchStudentGpa = fetchGPA;
 // GET: Download transcript as PDF
 export const downloadTranscript = async () => {
   try {
-    const response = await API.get("/student/transcript/download", {
+    const response = await API.get("/student/grades/transcript", {
+      params: { download: 'pdf' },
       responseType: 'blob'
     });
     return response;

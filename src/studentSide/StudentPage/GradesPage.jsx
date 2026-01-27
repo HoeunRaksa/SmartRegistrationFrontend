@@ -102,7 +102,7 @@ const GradesPage = () => {
           <div className="flex items-center justify-between">
             <div className="text-white">
               <p className="text-sm opacity-90 mb-1">Current GPA</p>
-              <p className="text-3xl font-bold">{gpaData?.current_gpa?.toFixed(2)}</p>
+              <p className="text-3xl font-bold">{gpaData?.gpa?.toFixed(2)}</p>
             </div>
             <div className="p-3 bg-white/20 rounded-xl">
               <Award className="w-8 h-8 text-white" />
@@ -248,8 +248,8 @@ const GradesPage = () => {
                       <div className="font-semibold text-gray-900">{grade.credits}</div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <div className={`inline-flex items-center justify-center px-3 py-1 rounded-lg bg-gradient-to-r ${getGradeColor(grade.grade)} text-white font-bold shadow-md`}>
-                        {grade.grade}
+                      <div className={`inline-flex items-center justify-center px-3 py-1 rounded-lg bg-gradient-to-r ${getGradeColor(grade.letter_grade)} text-white font-bold shadow-md`}>
+                        {grade.letter_grade}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
@@ -279,7 +279,7 @@ const GradesPage = () => {
           <h3 className="text-lg font-bold text-gray-900 mb-4">Grade Distribution</h3>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {['A', 'B+', 'B', 'C+', 'C'].map((gradeLevel) => {
-              const count = filteredGrades.filter(g => g.grade?.startsWith(gradeLevel)).length;
+              const count = filteredGrades.filter(g => g.letter_grade?.startsWith(gradeLevel)).length;
               const percentage = (count / filteredGrades.length) * 100;
               return (
                 <div key={gradeLevel} className="text-center">

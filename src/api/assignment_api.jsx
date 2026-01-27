@@ -107,9 +107,31 @@ export const deleteAssignmentSubmission = async (assignmentId, submissionId) => 
 };
 
 // GET: Fetch student's submissions
+// NOTE: Backend doesn't have a direct /submissions endpoint, 
+// usually submissions are bundled with assignments. 
+// If specific submission list is needed, we could fetch all assignments and filter.
 export const fetchStudentSubmissions = async () => {
   try {
-    const response = await API.get("/student/submissions");
+    const response = await API.get("/student/assignments");
+    const data = extractData(response);
+    const submissions = Array.isArray(data)
+      ? data.filter(a => a.is_submitted).map(a => a.submission)
+      : [];
+    return {
+      data: {
+        data: submissions
+      }
+    };
+  } catch (error) {
+    console.error("fetchStudentSubmissions error:", error);
+    throw error;
+  }
+};
+
+// GET: Fetch pending assignments
+export const fetchPendingAssignments = async () => {
+  try {
+    const response = await API.get("/student/assignments/pending");
     const data = extractData(response);
     return {
       data: {
@@ -117,7 +139,18 @@ export const fetchStudentSubmissions = async () => {
       }
     };
   } catch (error) {
-    console.error("fetchStudentSubmissions error:", error);
+    console.error("fetchPendingAssignments error:", error);
+    throw error;
+  }
+};
+
+// GET: Fetch assignment summary/stats
+export const fetchAssignmentSummary = async () => {
+  try {
+    const response = await API.get("/student/assignments/summary");
+    return response;
+  } catch (error) {
+    console.error("fetchAssignmentSummary error:", error);
     throw error;
   }
 };
