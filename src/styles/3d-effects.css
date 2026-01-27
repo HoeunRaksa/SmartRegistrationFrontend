@@ -1,0 +1,199 @@
+// Global 3D CSS utilities and animations
+@layer utilities {
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .perspective-1500 {
+    perspective: 1500px;
+  }
+
+  .perspective-2000 {
+    perspective: 2000px;
+  }
+
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+
+  .transform-3d {
+    transform-style: preserve-3d;
+    perspective: 1000px;
+  }
+
+  /* 3D Card Hover Effects */
+  .card-3d {
+    transform-style: preserve-3d;
+    transition: transform 0.3s ease;
+  }
+
+  .card-3d:hover {
+    transform: rotateX(2deg) rotateY(5deg) translateZ(10px);
+  }
+
+  /* Floating Animation */
+  @keyframes float-3d {
+    0%, 100% {
+      transform: translateY(0px) rotateX(0deg) rotateY(0deg);
+    }
+    50% {
+      transform: translateY(-20px) rotateX(5deg) rotateY(5deg);
+    }
+  }
+
+  .float-3d {
+    animation: float-3d 6s ease-in-out infinite;
+  }
+
+  /* Rotating Card */
+  @keyframes rotate-3d {
+    from {
+      transform: rotateY(0deg);
+    }
+    to {
+      transform: rotateY(360deg);
+    }
+  }
+
+  .rotate-3d {
+    animation: rotate-3d 20s linear infinite;
+    transform-style: preserve-3d;
+  }
+
+  /* Depth Shadow */
+  .shadow-3d {
+    box-shadow: 
+      0 1px 3px rgba(0,0,0,0.12),
+      0 10px 20px rgba(0,0,0,0.08),
+      0 20px 40px rgba(59, 130, 246, 0.1);
+  }
+
+  .shadow-3d-lg {
+    box-shadow: 
+      0 2px 8px rgba(0,0,0,0.12),
+      0 20px 40px rgba(0,0,0,0.1),
+      0 40px 80px rgba(59, 130, 246, 0.15);
+  }
+
+  /* Lift effect */
+  .lift-3d {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .lift-3d:hover {
+    transform: translateY(-8px) rotateX(5deg) scale(1.02);
+    box-shadow: 
+      0 20px 40px rgba(0,0,0,0.1),
+      0 40px 80px rgba(59, 130, 246, 0.2);
+  }
+
+  /* Tilt on hover */
+  .tilt-3d {
+    transform-style: preserve-3d;
+    transition: transform 0.3s ease;
+  }
+
+  .tilt-3d:hover {
+    transform: perspective(1000px) rotateX(-10deg) rotateY(10deg);
+  }
+
+  /* Pop effect */
+  @keyframes pop-3d {
+    0% {
+      transform: scale(1) translateZ(0);
+    }
+    50% {
+      transform: scale(1.1) translateZ(50px) rotateX(10deg);
+    }
+    100% {
+      transform: scale(1) translateZ(0);
+    }
+  }
+
+  .pop-3d:active {
+    animation: pop-3d 0.3s ease;
+  }
+
+  /* Layered cards */
+  .layer-1 {
+    transform: translateZ(10px);
+  }
+
+  .layer-2 {
+    transform: translateZ(20px);
+  }
+
+  .layer-3 {
+    transform: translateZ(30px);
+  }
+
+  .layer-4 {
+    transform: translateZ(40px);
+  }
+
+  /* Depth borders */
+  .border-3d {
+    position: relative;
+  }
+
+  .border-3d::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border-radius: inherit;
+    z-index: -1;
+    transform: translateZ(-1px);
+    opacity: 0.5;
+  }
+
+  /* Perspective container */
+  .container-3d {
+    perspective: 1500px;
+    perspective-origin: center;
+  }
+
+  /* Flip card */
+  .flip-card {
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+  }
+
+  .flip-card.flipped {
+    transform: rotateY(180deg);
+  }
+
+  .flip-card-front,
+  .flip-card-back {
+    backface-visibility: hidden;
+    position: absolute;
+    inset: 0;
+  }
+
+  .flip-card-back {
+    transform: rotateY(180deg);
+  }
+}
+
+/* Glassmorphism with 3D depth */
+.glass-3d {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transform-style: preserve-3d;
+  box-shadow: 
+    0 8px 32px 0 rgba(31, 38, 135, 0.15),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.glass-3d:hover {
+  transform: translateZ(10px);
+  box-shadow: 
+    0 12px 48px 0 rgba(31, 38, 135, 0.25),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
