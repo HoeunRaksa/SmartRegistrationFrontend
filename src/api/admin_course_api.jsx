@@ -102,8 +102,9 @@ export const updateEnrollmentStatus = async (enrollmentId, payload) => {
 // ==============================
 
 // GET: Fetch all grades
-export const fetchAllGrades = async () => {
-  const response = await requestOnce("get", "/admin/grades");
+export const fetchAllGrades = async (courseId = "") => {
+  const url = courseId ? `/admin/grades?course_id=${courseId}` : "/admin/grades";
+  const response = await requestOnce("get", url);
   const data = extractData(response);
   return { data: { data: Array.isArray(data) ? data : [] } };
 };
@@ -177,8 +178,9 @@ export const gradeSubmission = async (submissionId, gradeData) => {
 // ==============================
 
 // GET: Fetch all attendance records
-export const fetchAllAttendance = async () => {
-  const response = await requestOnce("get", "/admin/attendance");
+export const fetchAllAttendance = async (courseId = "") => {
+  const url = courseId ? `/admin/attendance?course_id=${courseId}` : "/admin/attendance";
+  const response = await requestOnce("get", url);
   const data = extractData(response);
   return { data: { data: Array.isArray(data) ? data : [] } };
 };

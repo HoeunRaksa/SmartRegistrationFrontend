@@ -17,6 +17,7 @@ const GradesPage = () => {
   const [students, setStudents] = useState([]);
   const [courses, setCourses] = useState([]);
   const [editingGrade, setEditingGrade] = useState(null);
+  const [selectedCourse, setSelectedCourse] = useState("");
   const [loading, setLoading] = useState(false);
 
   // ✅ FIXED: Staggered loading to prevent 429 errors
@@ -26,11 +27,16 @@ const GradesPage = () => {
     setTimeout(() => loadCourses(), 300);  // 300ms delay
   }, []);
 
+  // Update when filter changes
+  useEffect(() => {
+    loadGrades(selectedCourse);
+  }, [selectedCourse]);
+
   // ================= LOAD GRADES =================
-  const loadGrades = async () => {
+  const loadGrades = async (courseId = "") => {
     try {
       setLoading(true);
-      const res = await fetchAllGrades();
+      const res = await fetchAllGrades(courseId);
       const data = res.data?.data || res.data || [];
       setGrades(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -111,6 +117,29 @@ const GradesPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
+      {/* ================= FILTER ================= */}
+      <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/40 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+        <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+          <Award className="w-6 h-6 text-purple-600" />
+          Grades Management
+        </h2>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <span className="text-sm font-medium text-gray-600">Filter Course:</span>
+          <select
+            value={selectedCourse}
+            onChange={(e) => setSelectedCourse(e.target.value)}
+            className="flex-1 sm:w-64 bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all cursor-pointer"
+          >
+            <option value="">All Courses</option>
+            {courses.map((course) => (
+              <option key={course.id} value={course.id}>
+                {course.course_name} ({course.course_code})
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       {/* ================= QUICK STATS ================= */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {quickStats.map((stat, i) => {

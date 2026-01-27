@@ -12,6 +12,7 @@ import AssignmentsPage from './AssignmentsPage.jsx';
 import AttendancePage from './AttendancePage.jsx';
 import MessagesPage from '../../gobalConponent/MessagesPage.jsx';
 import ProfilePage from './ProfilePage.jsx';
+import FriendsPage from './FriendsPage.jsx';
 import CertificatePage from './CertificatePage.jsx';
 import {
     LayoutDashboard,
@@ -57,6 +58,7 @@ const StudentDashboard = () => {
         { id: 'grades', label: 'Grades', icon: Award, gradient: 'from-orange-500 to-red-500' },
         { id: 'assignments', label: 'Assignments', icon: FileText, gradient: 'from-indigo-500 to-blue-500' },
         { id: 'attendance', label: 'Attendance', icon: Clock, gradient: 'from-teal-500 to-cyan-500' },
+        { id: 'friends', label: 'Social', icon: Users, gradient: 'from-indigo-600 to-purple-600' },
         { id: 'messages', label: 'Messages', icon: MessageSquare, gradient: 'from-pink-500 to-rose-500' },
         { id: 'profile', label: 'Profile', icon: User, gradient: 'from-violet-500 to-purple-500' },
         { id: 'certificates', label: 'Certificates', icon: FileText, gradient: 'from-blue-600 to-indigo-600' },
@@ -191,6 +193,8 @@ const StudentDashboard = () => {
                 return <AssignmentsPage />;
             case 'attendance':
                 return <AttendancePage />;
+            case 'friends':
+                return <FriendsPage />;
             case 'messages':
                 return <MessagesPage />;
             case 'profile':
