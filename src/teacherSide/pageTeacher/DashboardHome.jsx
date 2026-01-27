@@ -13,52 +13,65 @@ import {
   Loader
 } from 'lucide-react';
 
+import { fetchTeacherDashboardStats } from '../../api/teacher_api';
+
 const DashboardHome = () => {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(null);
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      setLoading(true);
+      const res = await fetchTeacherDashboardStats();
+      setData(res.data?.data || null);
+    } catch (error) {
+      console.error('Failed to load dashboard stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const stats = [
     {
       title: 'Total Courses',
-      value: '8',
+      value: data?.total_courses || '0',
       icon: BookOpen,
       gradient: 'from-blue-500 to-cyan-500',
-      change: '+2 this semester'
+      change: 'Active courses'
     },
     {
       title: 'Total Students',
-      value: '156',
+      value: data?.total_students || '0',
       icon: Users,
       gradient: 'from-purple-500 to-pink-500',
-      change: '+12 this week'
+      change: 'Across all courses'
     },
     {
-      title: 'Pending Assignments',
-      value: '24',
+      title: 'Pending Grades',
+      value: 'Check',
       icon: ClipboardList,
       gradient: 'from-orange-500 to-red-500',
-      change: '6 need grading'
+      change: 'Review submissions'
     },
     {
-      title: 'Attendance Rate',
-      value: '89%',
-      icon: CheckSquare,
+      title: 'Experience',
+      value: data?.years_teaching || '4',
+      icon: Award,
       gradient: 'from-green-500 to-emerald-500',
-      change: '+3% vs last month'
+      change: 'Years teaching'
     }
   ];
 
-  const upcomingClasses = [
-    { id: 1, course: 'Web Development', time: '09:00 AM', room: 'Room 301', students: 28 },
-    { id: 2, course: 'Database Systems', time: '11:00 AM', room: 'Room 205', students: 32 },
-    { id: 3, course: 'Software Engineering', time: '02:00 PM', room: 'Room 401', students: 24 },
-  ];
+  const upcomingClasses = data?.upcoming_sessions || [];
 
   const recentActivities = [
-    { id: 1, action: 'Graded Assignment #5', course: 'Web Development', time: '2h ago' },
-    { id: 2, action: 'Posted new lecture notes', course: 'Database Systems', time: '5h ago' },
-    { id: 3, action: 'Updated attendance', course: 'Software Engineering', time: '1d ago' },
+    { id: 1, action: 'System Ready', course: 'Integration complete', time: 'Just now' },
   ];
 
   return (

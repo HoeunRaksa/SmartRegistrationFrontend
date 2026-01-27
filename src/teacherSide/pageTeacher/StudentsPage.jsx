@@ -1,25 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Search, Filter, Mail, Phone, BookOpen } from 'lucide-react';
+import { Users, Search, Filter, Mail, Phone, BookOpen, Loader } from 'lucide-react';
+import { fetchTeacherStudents } from '../../api/teacher_api';
 
 const StudentsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCourse, setSelectedCourse] = useState('all');
+  const [selectedDepartment, setSelectedDepartment] = useState('all');
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const students = [
-    { id: 1, name: 'John Doe', studentId: 'ST001', email: 'john@novatech.edu', phone: '123-456-7890', course: 'Web Development', gpa: 3.8 },
-    { id: 2, name: 'Jane Smith', studentId: 'ST002', email: 'jane@novatech.edu', phone: '123-456-7891', course: 'Database Systems', gpa: 3.9 },
-    { id: 3, name: 'Mike Johnson', studentId: 'ST003', email: 'mike@novatech.edu', phone: '123-456-7892', course: 'Web Development', gpa: 3.5 },
-    { id: 4, name: 'Sarah Williams', studentId: 'ST004', email: 'sarah@novatech.edu', phone: '123-456-7893', course: 'Software Engineering', gpa: 4.0 },
-  ];
+  useEffect(() => {
+    loadStudents();
+  }, []);
 
-  const courses = ['All Courses', 'Web Development', 'Database Systems', 'Software Engineering'];
+  const loadStudents = async () => {
+    try {
+      setLoading(true);
+      const res = await fetchTeacherStudents();
+      setStudents(res.data?.data || []);
+    } catch (error) {
+      console.error('Failed to load students:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const departments = ['all', ...new Set(students.map(s => s.department).filter(Boolean))];
 
   const filteredStudents = students.filter(student => {
-    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         student.studentId.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCourse = selectedCourse === 'all' || student.course === selectedCourse;
-    return matchesSearch && matchesCourse;
+    const matchesSearch = (student.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (student.student_id_card || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesDept = selectedDepartment === 'all' || student.department === selectedDepartment;
+    return matchesSearch && matchesDept;
   });
 
   return (
@@ -51,13 +63,12 @@ const StudentsPage = () => {
           />
         </div>
         <select
-          value={selectedCourse}
-          onChange={(e) => setSelectedCourse(e.target.value)}
+          value={selectedDepartment}
+          onChange={(e) => setSelectedDepartment(e.target.value)}
           className="px-6 py-3 rounded-xl backdrop-blur-xl bg-white/60 border border-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
         >
-          <option value="all">All Courses</option>
-          {courses.slice(1).map(course => (
-            <option key={course} value={course}>{course}</option>
+          {departments.map(dept => (
+            <option key={dept} value={dept}>{dept === 'all' ? 'All Departments' : dept}</option>
           ))}
         </select>
       </motion.div>
@@ -69,75 +80,71 @@ const StudentsPage = () => {
         transition={{ delay: 0.2 }}
         className="backdrop-blur-xl bg-white/60 rounded-2xl border border-white/40 shadow-lg overflow-hidden"
       >
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-white/40 border-b border-white/40">
-              <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Student</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Student ID</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Course</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">GPA</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Contact</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/40">
-              {filteredStudents.map((student) => (
-                <tr key={student.id} className="hover:bg-white/30 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                        {student.name.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-800">{student.name}</p>
-                        <p className="text-sm text-gray-600">{student.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-gray-700">{student.studentId}</td>
-                  <td className="px-6 py-4">
-                    <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
-                      {student.course}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`font-semibold ${student.gpa >= 3.5 ? 'text-green-600' : 'text-orange-600'}`}>
-                      {student.gpa.toFixed(1)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex gap-2">
-                      <button className="p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors">
-                        <Mail className="w-4 h-4" />
-                      </button>
-                      <button className="p-2 rounded-lg bg-green-100 text-green-600 hover:bg-green-200 transition-colors">
-                        <Phone className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <button className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm font-medium hover:shadow-lg transition-all">
-                      View Profile
-                    </button>
-                  </td>
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <Loader className="w-10 h-10 animate-spin text-blue-600" />
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-white/40 border-b border-white/40">
+                <tr>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Student</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Student ID</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Department</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Contact</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-white/40">
+                {filteredStudents.map((student) => (
+                  <tr key={student.id} className="hover:bg-white/30 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold overflow-hidden">
+                          {student.profile_picture_url ? (
+                            <img src={student.profile_picture_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            (student.full_name || 'S').charAt(0)
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-800">{student.full_name}</p>
+                          <p className="text-sm text-gray-600">{student.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-gray-700">{student.student_id_card}</td>
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
+                        {student.department}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2">
+                        <a href={`mailto:${student.email}`} className="p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors">
+                          <Mail className="w-4 h-4" />
+                        </a>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <button className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm font-medium hover:shadow-lg transition-all">
+                        View Profile
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {filteredStudents.length === 0 && (
+              <div className="text-center py-12">
+                <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">No students found</p>
+              </div>
+            )}
+          </div>
+        )}
       </motion.div>
-
-      {filteredStudents.length === 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center py-12"
-        >
-          <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600">No students found</p>
-        </motion.div>
-      )}
     </div>
   );
 };

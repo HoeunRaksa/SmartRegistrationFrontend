@@ -2,51 +2,28 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { BookOpen, Users, Calendar, Clock, Search, Filter } from 'lucide-react';
 
+import { fetchTeacherCourses } from '../../api/teacher_api';
+
 const CoursesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const courses = [
-    {
-      id: 1,
-      name: 'Web Development',
-      code: 'CS301',
-      students: 28,
-      schedule: 'Mon, Wed, Fri - 09:00 AM',
-      room: 'Room 301',
-      semester: 'Spring 2024',
-      color: 'from-blue-500 to-cyan-500'
-    },
-    {
-      id: 2,
-      name: 'Database Systems',
-      code: 'CS402',
-      students: 32,
-      schedule: 'Tue, Thu - 11:00 AM',
-      room: 'Room 205',
-      semester: 'Spring 2024',
-      color: 'from-purple-500 to-pink-500'
-    },
-    {
-      id: 3,
-      name: 'Software Engineering',
-      code: 'CS501',
-      students: 24,
-      schedule: 'Mon, Wed - 02:00 PM',
-      room: 'Room 401',
-      semester: 'Spring 2024',
-      color: 'from-green-500 to-emerald-500'
-    },
-    {
-      id: 4,
-      name: 'Computer Networks',
-      code: 'CS403',
-      students: 30,
-      schedule: 'Tue, Thu - 03:00 PM',
-      room: 'Room 302',
-      semester: 'Spring 2024',
-      color: 'from-orange-500 to-red-500'
-    },
-  ];
+  useEffect(() => {
+    loadCourses();
+  }, []);
+
+  const loadCourses = async () => {
+    try {
+      setLoading(true);
+      const res = await fetchTeacherCourses();
+      setCourses(res.data?.data || []);
+    } catch (error) {
+      console.error('Failed to load courses:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredCourses = courses.filter(course =>
     course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -87,54 +64,66 @@ const CoursesPage = () => {
         </button>
       </motion.div>
 
-      {/* Courses Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCourses.map((course, index) => (
-          <motion.div
-            key={course.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="backdrop-blur-xl bg-white/60 rounded-2xl border border-white/40 shadow-lg hover:shadow-xl transition-all overflow-hidden group"
-          >
-            <div className={`h-2 bg-gradient-to-r ${course.color}`} />
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className={`p-3 rounded-xl bg-gradient-to-br ${course.color}`}>
-                  <BookOpen className="w-6 h-6 text-white" />
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredCourses.map((course, index) => (
+            <motion.div
+              key={course.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="backdrop-blur-xl bg-white/60 rounded-2xl border border-white/40 shadow-lg hover:shadow-xl transition-all overflow-hidden group"
+            >
+              <div className={`h-2 bg-gradient-to-r ${course.color}`} />
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`p-3 rounded-xl bg-gradient-to-br ${course.color}`}>
+                    <BookOpen className="w-6 h-6 text-white" />
+                  </div>
+                  <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
+                    {course.academic_year || '2024'}
+                  </span>
                 </div>
-                <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
-                  {course.semester}
-                </span>
+
+                <h3 className="text-xl font-bold text-gray-800 mb-1">{course.name}</h3>
+                <p className="text-sm text-gray-600 mb-4">{course.code} - {course.class_group}</p>
+
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <Users className="w-4 h-4 text-gray-500" />
+                    <span>{course.students} Students</span>
+                  </div>
+                  {course.schedules?.slice(0, 1).map((s, idx) => (
+                    <React.Fragment key={idx}>
+                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <Clock className="w-4 h-4 text-gray-500" />
+                        <span>{s.day_of_week}: {s.time}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <Calendar className="w-4 h-4 text-gray-500" />
+                        <span>{s.room}</span>
+                      </div>
+                    </React.Fragment>
+                  ))}
+                  {!course.schedules?.length && (
+                    <div className="text-sm text-gray-400 italic">No schedule set</div>
+                  )}
+                </div>
+
+                <button className={`w-full py-2 rounded-xl bg-gradient-to-r ${course.color} text-white font-medium hover:shadow-lg transition-all`}>
+                  View Details
+                </button>
               </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
-              <h3 className="text-xl font-bold text-gray-800 mb-1">{course.name}</h3>
-              <p className="text-sm text-gray-600 mb-4">{course.code}</p>
-
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <Users className="w-4 h-4 text-gray-500" />
-                  <span>{course.students} Students</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <Clock className="w-4 h-4 text-gray-500" />
-                  <span>{course.schedule}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <Calendar className="w-4 h-4 text-gray-500" />
-                  <span>{course.room}</span>
-                </div>
-              </div>
-
-              <button className={`w-full py-2 rounded-xl bg-gradient-to-r ${course.color} text-white font-medium hover:shadow-lg transition-all`}>
-                View Details
-              </button>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {filteredCourses.length === 0 && (
+      {!loading && filteredCourses.length === 0 && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

@@ -243,13 +243,26 @@ export const gradeTeacherSubmission = async (submissionId, gradeData) => {
 // TEACHER ATTENDANCE API
 // ==============================
 
-export const fetchTeacherAttendance = async () => {
+// GET: Fetch attendance statistics for teacher
+export const fetchTeacherAttendanceStats = async () => {
   try {
-    const response = await API.get("/teacher/attendance");
+    const response = await API.get("/teacher/attendance/stats");
+    const data = extractData(response);
+    return { data: { data: data || {} } };
+  } catch (error) {
+    console.error("fetchTeacherAttendanceStats error:", error);
+    throw error;
+  }
+};
+
+// GET: Fetch attendance sessions for teacher
+export const fetchTeacherAttendanceSessions = async () => {
+  try {
+    const response = await API.get("/teacher/attendance/sessions");
     const data = extractData(response);
     return { data: { data: Array.isArray(data) ? data : [] } };
   } catch (error) {
-    console.error("fetchTeacherAttendance error:", error);
+    console.error("fetchTeacherAttendanceSessions error:", error);
     throw error;
   }
 };
@@ -263,11 +276,12 @@ export const createTeacherClassSession = async (sessionData) => {
   }
 };
 
-export const markTeacherAttendance = async (attendanceData) => {
+// POST: Mark attendance (bulk)
+export const markTeacherAttendanceBulk = async (attendanceData) => {
   try {
-    return await API.post("/teacher/attendance", attendanceData);
+    return await API.post("/teacher/attendance/mark", attendanceData);
   } catch (error) {
-    console.error("markTeacherAttendance error:", error);
+    console.error("markTeacherAttendanceBulk error:", error);
     throw error;
   }
 };
@@ -285,13 +299,13 @@ export const updateTeacherAttendance = async (attendanceId, status) => {
 // TEACHER SCHEDULES API
 // ==============================
 
-export const fetchTeacherSchedules = async () => {
+export const fetchTeacherSchedule = async () => {
   try {
-    const response = await API.get("/teacher/schedules");
+    const response = await API.get("/teacher/schedule");
     const data = extractData(response);
     return { data: { data: Array.isArray(data) ? data : [] } };
   } catch (error) {
-    console.error("fetchTeacherSchedules error:", error);
+    console.error("fetchTeacherSchedule error:", error);
     throw error;
   }
 };
