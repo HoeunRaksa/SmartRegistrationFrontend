@@ -244,7 +244,7 @@ const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
         nationality: form.nationality,
         phone_number: form.phone_number,
         address: form.address,
-       generation: form.generation != null ? String(form.generation) : "",
+        generation: form.generation != null ? String(form.generation) : "",
         parent_name: form.parent_name,
         parent_phone: form.parent_phone,
 
@@ -328,7 +328,7 @@ const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
         )}
       </AnimatePresence>
 
-      <motion.div variants={animations.fadeUp} initial="hidden" animate="show" className="rounded-2xl bg-white/90 border border-white shadow-lg p-5">
+      <motion.div className="rounded-2xl bg-white/90 border border-white shadow-lg p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-purple-600" />
@@ -530,9 +530,8 @@ const Alert = ({ type, message, onClose }) => (
     initial={{ opacity: 0, y: -10, scale: 0.95 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, scale: 0.95 }}
-    className={`flex items-center gap-3 p-4 rounded-2xl border shadow-sm ${
-      type === "success" ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
-    }`}
+    className={`flex items-center gap-3 p-4 rounded-2xl border shadow-sm ${type === "success" ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+      }`}
   >
     {type === "success" ? (
       <CheckCircle2 className="w-5 h-5 text-green-600" />

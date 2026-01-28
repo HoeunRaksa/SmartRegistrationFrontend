@@ -1,7 +1,9 @@
 // SchedulesPage.jsx
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import ScheduleForm from "../ConponentsAdmin/ScheduleForm.jsx";
 import SchedulesList from "../ConponentsAdmin/SchedulesList.jsx";
+import FormModal from "../../Components/FormModal.jsx";
 import { fetchAllSchedules } from "../../api/admin_course_api.jsx";
 import { fetchCourseOptions } from "../../api/course_api.jsx";
 import { Calendar, Clock, BookOpen } from "lucide-react";
@@ -12,6 +14,7 @@ const SchedulesPage = () => {
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [loadingSchedules, setLoadingSchedules] = useState(false);
   const [loadingCourses, setLoadingCourses] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   // ✅ staggered loading to reduce 429 risk
   useEffect(() => {
@@ -40,11 +43,11 @@ const SchedulesPage = () => {
     try {
       setLoadingCourses(true);
       const res = await fetchCourseOptions();
-      
+
       // ✅ Handle different response structures safely
       const data = res.data?.data || res.data || res || [];
       const coursesArray = Array.isArray(data) ? data : [];
-      
+
       console.log('✅ Loaded courses:', coursesArray.length, coursesArray);
       setCourses(coursesArray);
     } catch (error) {
@@ -58,7 +61,7 @@ const SchedulesPage = () => {
   // ================= HANDLE EDIT =================
   const handleEdit = (schedule) => {
     setEditingSchedule(schedule);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setIsFormOpen(true);
   };
 
   // ================= HANDLE SUCCESS =================
@@ -101,6 +104,25 @@ const SchedulesPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Schedules</h1>
+          <p className="text-sm text-gray-600 font-medium">Manage academic session timings and course scheduling.</p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => {
+            setEditingSchedule(null);
+            setIsFormOpen(true);
+          }}
+          className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-sm shadow-lg shadow-blue-500/25 flex items-center gap-2"
+        >
+          <Calendar className="w-4 h-4" />
+          Add Schedule
+        </motion.button>
+      </div>
+
       {/* ================= QUICK STATS ================= */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {quickStats.map((stat, i) => {
@@ -126,14 +148,29 @@ const SchedulesPage = () => {
         })}
       </div>
 
-      {/* ================= FORM ================= */}
-      <ScheduleForm
-        editingSchedule={editingSchedule}
-        onSuccess={handleSuccess}
-        onCancel={handleCancel}
-        onUpdate={loadSchedules}
-        courses={courses}
-      />
+      {/* Form Modal */}
+      <FormModal
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingSchedule(null);
+        }}
+        maxWidth="max-w-4xl"
+      >
+        <ScheduleForm
+          editingSchedule={editingSchedule}
+          onSuccess={() => {
+            handleSuccess();
+            setIsFormOpen(false);
+          }}
+          onCancel={() => {
+            handleCancel();
+            setIsFormOpen(false);
+          }}
+          onUpdate={loadSchedules}
+          courses={courses}
+        />
+      </FormModal>
 
       {/* ================= SCHEDULES LIST ================= */}
       <SchedulesList

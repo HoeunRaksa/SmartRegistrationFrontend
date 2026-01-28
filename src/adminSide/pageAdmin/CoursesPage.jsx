@@ -1,12 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import CourseForm from "../ConponentsAdmin/CourseForm.jsx";
 import CoursesList from "../ConponentsAdmin/CoursesList.jsx";
+import FormModal from "../../Components/FormModal.jsx";
 import { fetchAllCourses, createCourse, updateCourse, deleteCourse } from "../../api/course_api.jsx";
 import { BookOpen, PlusCircle } from "lucide-react";
 
 const CoursesPage = () => {
   const [courses, setCourses] = useState([]);
   const [editingCourse, setEditingCourse] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const loadCourses = async () => {
@@ -51,6 +54,25 @@ const CoursesPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Courses</h1>
+          <p className="text-sm text-gray-600 font-medium">Manage academic courses and curriculum structure.</p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => {
+            setEditingCourse(null);
+            setIsFormOpen(true);
+          }}
+          className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-sm shadow-lg shadow-blue-500/25 flex items-center gap-2"
+        >
+          <PlusCircle className="w-4 h-4" />
+          Add Course
+        </motion.button>
+      </div>
+
       {/* Quick stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {stats.map((s, i) => {
@@ -74,13 +96,30 @@ const CoursesPage = () => {
         })}
       </div>
 
-      {/* Form */}
-      <CourseForm
-        editingCourse={editingCourse}
-        onCancel={() => setEditingCourse(null)}
-        onCreate={handleCreate}
-        onUpdate={handleUpdate}
-      />
+      {/* Form Modal */}
+      <FormModal
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingCourse(null);
+        }}
+      >
+        <CourseForm
+          editingCourse={editingCourse}
+          onCancel={() => {
+            setEditingCourse(null);
+            setIsFormOpen(false);
+          }}
+          onCreate={(payload) => {
+            handleCreate(payload);
+            setIsFormOpen(false);
+          }}
+          onUpdate={(id, payload) => {
+            handleUpdate(id, payload);
+            setIsFormOpen(false);
+          }}
+        />
+      </FormModal>
 
       {/* List */}
       <CoursesList
@@ -88,7 +127,7 @@ const CoursesPage = () => {
         courses={courses}
         onEdit={(c) => {
           setEditingCourse(c);
-          window.scrollTo({ top: 0, behavior: "smooth" });
+          setIsFormOpen(true);
         }}
         onDelete={handleDelete}
         onRefresh={loadCourses}

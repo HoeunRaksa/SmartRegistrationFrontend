@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import EnrollmentForm from "../ConponentsAdmin/EnrollmentForm.jsx";
 import EnrollmentsList from "../ConponentsAdmin/EnrollmentsList.jsx";
+import FormModal from "../../Components/FormModal.jsx";
 
 import { fetchAllEnrollments } from "../../api/admin_course_api.jsx";
 import { fetchCourses } from "../../api/course_api.jsx";
@@ -200,6 +201,7 @@ const EnrollmentsPage = () => {
   });
 
   const [editingEnrollment, setEditingEnrollment] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   /* ================= INITIAL LOAD ================= */
@@ -300,7 +302,7 @@ const EnrollmentsPage = () => {
     async (qText, page = 1, append = false) => {
       try {
         setStudentsLoading(true);
-        
+
         const res = await searchStudents({
           department_id: filters.department_id || undefined,
           major_id: filters.major_id || undefined,
@@ -313,7 +315,7 @@ const EnrollmentsPage = () => {
 
         const list = res?.data?.data || [];
         const meta = res?.data?.meta || {};
-        
+
         setStudents((prev) => (append ? [...prev, ...list] : list));
         setStudentsPage(page);
         setStudentsHasMore(meta.current_page < meta.last_page);
@@ -402,7 +404,7 @@ const EnrollmentsPage = () => {
   /* ================= ACTIONS ================= */
   const handleEdit = (enrollment) => {
     setEditingEnrollment(enrollment);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setIsFormOpen(true);
   };
 
   const handleSuccess = () => {
@@ -444,7 +446,7 @@ const EnrollmentsPage = () => {
 
   return (
     <div className="min-h-screen space-y-8 pb-12">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {quickStats.map((stat, i) => (
           <motion.div
             key={stat.label}
@@ -464,7 +466,7 @@ const EnrollmentsPage = () => {
         ))}
       </div>
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        
+
         <GlassPanel>
           <div className="flex items-center justify-between gap-3 mb-6">
             <div className="flex items-center gap-3">
@@ -474,9 +476,21 @@ const EnrollmentsPage = () => {
                 <p className="text-xs text-gray-500">Server filters + fast student search</p>
               </div>
             </div>
-            
+
 
             <div className="flex items-center gap-2">
+              <motion.button
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  setEditingEnrollment(null);
+                  setIsFormOpen(true);
+                }}
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-sm shadow-xl shadow-blue-500/30 flex items-center gap-2 mr-2"
+              >
+                <Users className="w-4 h-4" />
+                Add Enrollment
+              </motion.button>
               <SoftButton icon={RefreshCw} onClick={() => loadEnrollments()} disabled={loading}>
                 Refresh
               </SoftButton>
@@ -562,7 +576,7 @@ const EnrollmentsPage = () => {
             <FilterSearchInput value={filters.search} onChange={(v) => handleFilterChange("search", v)} name="search" />
           </div>
 
-          
+
 
           <AnimatePresence>
             {hasAnyFilter ? (
@@ -593,19 +607,35 @@ const EnrollmentsPage = () => {
 
 
 
-      <EnrollmentForm
-        editingEnrollment={editingEnrollment}
-        onUpdate={handleSuccess}
-        onCancel={handleCancel}
-        students={students}
-        studentsLoading={studentsLoading}
-        onSearchStudents={onSearchStudents}
-        onLoadMoreStudents={onLoadMoreStudents}
-        hasMoreStudents={studentsHasMore}
-        courses={courses}
-        isAlreadyEnrolled={isAlreadyEnrolled}
-        filterSignature={`${filters.department_id}|${filters.major_id}|${filters.academic_year}|${filters.semester}|${filters.course_id}`}
-      />
+      {/* Form Modal */}
+      <FormModal
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingEnrollment(null);
+        }}
+        maxWidth="max-w-5xl"
+      >
+        <EnrollmentForm
+          editingEnrollment={editingEnrollment}
+          onUpdate={() => {
+            handleSuccess();
+            setIsFormOpen(false);
+          }}
+          onCancel={() => {
+            handleCancel();
+            setIsFormOpen(false);
+          }}
+          students={students}
+          studentsLoading={studentsLoading}
+          onSearchStudents={onSearchStudents}
+          onLoadMoreStudents={onLoadMoreStudents}
+          hasMoreStudents={studentsHasMore}
+          courses={courses}
+          isAlreadyEnrolled={isAlreadyEnrolled}
+          filterSignature={`${filters.department_id}|${filters.major_id}|${filters.academic_year}|${filters.semester}|${filters.course_id}`}
+        />
+      </FormModal>
 
       <EnrollmentsList
         enrollments={enrollments}

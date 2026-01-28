@@ -11,6 +11,7 @@ import {
     CheckCircle,
     Loader
 } from "lucide-react";
+import FormModal from "../../Components/FormModal.jsx";
 import {
     fetchAcademicSessions,
     createAcademicSession,
@@ -134,7 +135,7 @@ const AcademicSessionsPage = () => {
             </div>
 
             {/* Search & List */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="glass-card overflow-hidden">
                 <div className="p-4 border-b border-slate-100 flex gap-3">
                     <div className="relative flex-1 max-w-md">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
@@ -143,14 +144,14 @@ const AcademicSessionsPage = () => {
                             placeholder="Search sessions..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                            className="w-full pl-9 pr-4 py-2 bg-white/50 border border-white/30 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm glass"
                         />
                     </div>
                 </div>
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-slate-500 uppercase bg-slate-50/50">
+                        <thead className="text-xs text-slate-500 uppercase bg-white/30">
                             <tr>
                                 <th className="px-6 py-4 font-bold">Session Name</th>
                                 <th className="px-6 py-4 font-bold">Duration</th>
@@ -213,91 +214,99 @@ const AcademicSessionsPage = () => {
             </div>
 
             {/* Modal */}
-            <AnimatePresence>
-                {showModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-                        <motion.div
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white w-full max-w-lg rounded-2xl shadow-xl overflow-hidden"
-                        >
-                            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                                <h3 className="font-bold text-lg text-slate-900">{editingItem ? "Edit Session" : "New Session"}</h3>
-                                <button onClick={() => setShowModal(false)}><X className="text-slate-400 hover:text-slate-600 w-5 h-5" /></button>
+            <FormModal
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                title={editingItem ? "Edit Session" : "New Session"}
+            >
+                <div className="bg-white/90 backdrop-blur-2xl rounded-3xl border border-white/60 shadow-2xl overflow-hidden">
+                    <div className="px-6 py-5 border-b border-white/40 flex justify-between items-center bg-gradient-to-r from-blue-50/50 to-purple-50/50">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-blue-600 text-white">
+                                <Plus size={18} />
+                            </div>
+                            <h3 className="font-bold text-xl text-slate-900">{editingItem ? "Edit Session" : "New Session"}</h3>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleSave} className="p-6 space-y-5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div className="md:col-span-2">
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 ml-1">Session Name</label>
+                                <input
+                                    required
+                                    value={formData.name}
+                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                    placeholder="e.g. Fall 2024"
+                                    className="w-full px-4 py-2.5 bg-white/70 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/40 outline-none transition-all shadow-sm"
+                                />
                             </div>
 
-                            <form onSubmit={handleSave} className="p-6 space-y-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Session Name</label>
-                                    <input
-                                        required
-                                        value={formData.name}
-                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                        placeholder="e.g. Fall 2024"
-                                        className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                                    />
-                                </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 ml-1">Start Date</label>
+                                <input
+                                    required
+                                    type="date"
+                                    value={formData.start_date}
+                                    onChange={e => setFormData({ ...formData, start_date: e.target.value })}
+                                    className="w-full px-4 py-2.5 bg-white/70 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/40 outline-none transition-all shadow-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 ml-1">End Date</label>
+                                <input
+                                    required
+                                    type="date"
+                                    value={formData.end_date}
+                                    onChange={e => setFormData({ ...formData, end_date: e.target.value })}
+                                    className="w-full px-4 py-2.5 bg-white/70 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/40 outline-none transition-all shadow-sm"
+                                />
+                            </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Start Date</label>
-                                        <input
-                                            required
-                                            type="date"
-                                            value={formData.start_date}
-                                            onChange={e => setFormData({ ...formData, start_date: e.target.value })}
-                                            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">End Date</label>
-                                        <input
-                                            required
-                                            type="date"
-                                            value={formData.end_date}
-                                            onChange={e => setFormData({ ...formData, end_date: e.target.value })}
-                                            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                                        />
-                                    </div>
-                                </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 ml-1">Academic Year</label>
+                                <input
+                                    required
+                                    value={formData.academic_year}
+                                    onChange={e => setFormData({ ...formData, academic_year: e.target.value })}
+                                    placeholder="e.g. 2024-2025"
+                                    className="w-full px-4 py-2.5 bg-white/70 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/40 outline-none transition-all shadow-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 ml-1">Semester</label>
+                                <select
+                                    required
+                                    value={formData.semester}
+                                    onChange={e => setFormData({ ...formData, semester: e.target.value })}
+                                    className="w-full px-4 py-2.5 bg-white/70 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/40 outline-none transition-all shadow-sm"
+                                >
+                                    <option value="">Select...</option>
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
+                                    <option value="3">Summer</option>
+                                </select>
+                            </div>
+                        </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Academic Year</label>
-                                        <input
-                                            required
-                                            value={formData.academic_year}
-                                            onChange={e => setFormData({ ...formData, academic_year: e.target.value })}
-                                            placeholder="e.g. 2024-2025"
-                                            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Semester</label>
-                                        <select
-                                            required
-                                            value={formData.semester}
-                                            onChange={e => setFormData({ ...formData, semester: e.target.value })}
-                                            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                                        >
-                                            <option value="">Select...</option>
-                                            <option value="1">Semester 1</option>
-                                            <option value="2">Semester 2</option>
-                                            <option value="3">Summer</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="pt-4 flex justify-end gap-3">
-                                    <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl font-medium transition-colors">Cancel</button>
-                                    <button type="submit" className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-bold shadow-sm transition-all">Save Session</button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+                        <div className="pt-4 flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowModal(false)}
+                                className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl font-medium transition-colors border border-slate-200"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                className="px-8 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-lg rounded-xl font-bold shadow-md transition-all"
+                            >
+                                Save Session
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </FormModal>
         </div>
     );
 };

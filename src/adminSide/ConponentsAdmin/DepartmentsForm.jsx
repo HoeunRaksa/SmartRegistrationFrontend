@@ -214,9 +214,6 @@ const DepartmentsForm = ({ onUpdate, editingDepartment, onCancelEdit }) => {
 
 const FormShell = ({ children }) => (
   <motion.div
-    variants={animations.fadeUp}
-    initial="hidden"
-    animate="show"
     className="relative overflow-hidden rounded-3xl border border-white/60 bg-white/60 backdrop-blur-2xl shadow-[0_20px_60px_-20px_rgba(15,23,42,0.35)]"
   >
     <div className="absolute inset-0 pointer-events-none">
@@ -233,11 +230,10 @@ const Alert = ({ type, message, onClose }) => (
     initial={{ opacity: 0, y: -10, scale: 0.98 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, y: -10, scale: 0.98 }}
-    className={`flex items-center gap-3 rounded-2xl border px-4 py-3 shadow-sm backdrop-blur-xl ${
-      type === "success"
+    className={`flex items-center gap-3 rounded-2xl border px-4 py-3 shadow-sm backdrop-blur-xl ${type === "success"
         ? "bg-green-50/70 border-green-200/60"
         : "bg-red-50/70 border-red-200/60"
-    }`}
+      }`}
   >
     {type === "success" ? (
       <CheckCircle2 className="w-5 h-5 text-green-600" />

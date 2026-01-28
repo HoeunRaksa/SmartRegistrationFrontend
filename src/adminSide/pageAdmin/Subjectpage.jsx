@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import SubjectsForm from "../ConponentsAdmin/SubjectsForm.jsx";
 import SubjectsList from "../ConponentsAdmin/SubjectsList.jsx";
+import FormModal from "../../Components/FormModal.jsx";
 import { fetchSubjects } from "../../api/subject_api.jsx";
 import { fetchStudents } from "../../api/student_api.jsx";
 import {
@@ -14,6 +16,7 @@ const SubjectsPage = () => {
   const [subjects, setSubjects] = useState([]);
   const [students, setStudents] = useState([]);
   const [editingSubject, setEditingSubject] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -51,7 +54,7 @@ const SubjectsPage = () => {
   // ================= HANDLE EDIT =================
   const handleEdit = (subject) => {
     setEditingSubject(subject);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setIsFormOpen(true);
   };
 
   // ================= HANDLE SUCCESS =================
@@ -89,6 +92,25 @@ const SubjectsPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Subjects</h1>
+          <p className="text-sm text-gray-600 font-medium">Manage academic subjects and curriculum details.</p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => {
+            setEditingSubject(null);
+            setIsFormOpen(true);
+          }}
+          className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-sm shadow-lg shadow-blue-500/25 flex items-center gap-2"
+        >
+          <BookOpen className="w-4 h-4" />
+          Add Subject
+        </motion.button>
+      </div>
+
       {/* ================= QUICK STATS ================= */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {quickStats.map((stat, i) => {
@@ -96,7 +118,7 @@ const SubjectsPage = () => {
           return (
             <div
               key={i}
-              className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/40 shadow-sm hover:shadow-md transition-all"
+              className="glass-card p-4 hover:shadow-lg transition-all"
             >
               <div className="flex items-center gap-3">
                 <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.color}`}>
@@ -114,13 +136,27 @@ const SubjectsPage = () => {
         })}
       </div>
 
-      {/* ================= FORM ================= */}
-      <SubjectsForm
-        editingSubject={editingSubject}
-        onSuccess={handleSuccess}
-        onCancel={handleCancel}
-        onUpdate={loadSubjects}
-      />
+      {/* ================= FORM MODAL ================= */}
+      <FormModal
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingSubject(null);
+        }}
+      >
+        <SubjectsForm
+          editingSubject={editingSubject}
+          onSuccess={() => {
+            handleSuccess();
+            setIsFormOpen(false);
+          }}
+          onCancel={() => {
+            handleCancel();
+            setIsFormOpen(false);
+          }}
+          onUpdate={loadSubjects}
+        />
+      </FormModal>
 
       {/* ================= SUBJECTS LIST ================= */}
       <SubjectsList

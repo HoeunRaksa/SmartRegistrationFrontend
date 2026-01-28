@@ -93,7 +93,7 @@ function AppContent() {
             <div className="max-w-[1600px] mx-auto">
               <motion.div
                 whileHover={{ y: -2 }}
-                className="backdrop-blur-xl bg-white/90 rounded-3xl border border-slate-200 shadow-lg transition-all"
+                className="glass transition-all"
               >
                 <Nabar />
               </motion.div>
@@ -141,7 +141,7 @@ function AppContent() {
             <div className="max-w-[1600px] mx-auto">
               <motion.div
                 whileHover={{ y: -2 }}
-                className="backdrop-blur-xl bg-white/90 rounded-3xl border border-slate-200 shadow-lg transition-all"
+                className="glass transition-all"
               >
                 <Footer />
               </motion.div>

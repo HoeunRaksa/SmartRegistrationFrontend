@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import DepartmentsForm from "../ConponentsAdmin/DepartmentsForm.jsx";
 import { fetchStudents } from "../../api/student_api.jsx";
 import { fetchDepartments, deleteDepartment } from "../../api/department_api.jsx";
+import FormModal from "../../Components/FormModal.jsx";
 import {
   Building2,
   Users,
@@ -45,6 +46,7 @@ const DepartmentsPage = () => {
   const [selectedFaculty, setSelectedFaculty] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState("name"); // name, code, recent
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const loadDepartments = useCallback(async () => {
     try {
@@ -78,7 +80,7 @@ const DepartmentsPage = () => {
 
   const handleEdit = useCallback((department) => {
     setEditingDepartment(department);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setIsFormOpen(true);
   }, []);
 
   const handleDelete = useCallback(
@@ -175,6 +177,25 @@ const DepartmentsPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Departments</h1>
+          <p className="text-sm text-gray-600 font-medium">Manage university departments and faculties.</p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => {
+            setEditingDepartment(null);
+            setIsFormOpen(true);
+          }}
+          className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-sm shadow-lg shadow-blue-500/25 flex items-center gap-2"
+        >
+          <Building2 className="w-4 h-4" />
+          Add Department
+        </motion.button>
+      </div>
+
       {/* ================= QUICK STATS ================= */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {quickStats.map((stat, i) => {
@@ -182,7 +203,7 @@ const DepartmentsPage = () => {
           return (
             <div
               key={i}
-              className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white shadow-sm hover:shadow-md transition-all"
+              className="glass-card p-4 hover:shadow-lg transition-all"
             >
               <div className="flex items-center gap-3">
                 <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.color}`}>
@@ -204,15 +225,26 @@ const DepartmentsPage = () => {
         })}
       </div>
 
-      {/* ================= FORM ================= */}
-      <DepartmentsForm
-        onUpdate={loadDepartments}
-        editingDepartment={editingDepartment}
-        onCancelEdit={() => setEditingDepartment(null)}
-      />
+      {/* ================= FORM MODAL ================= */}
+      <FormModal
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingDepartment(null);
+        }}
+      >
+        <DepartmentsForm
+          onUpdate={loadDepartments}
+          editingDepartment={editingDepartment}
+          onCancelEdit={() => {
+            setIsFormOpen(false);
+            setEditingDepartment(null);
+          }}
+        />
+      </FormModal>
 
       {/* ================= FILTERS ================= */}
-      <div className="rounded-2xl bg-white/40 border border-white shadow-lg p-4">
+      <div className="glass p-4">
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Search */}
           <div className="flex-1 relative">
@@ -241,8 +273,8 @@ const DepartmentsPage = () => {
             type="button"
             onClick={() => setShowFilters((v) => !v)}
             className={`px-4 py-2.5 rounded-xl border transition-all font-medium text-sm flex items-center gap-2 ${showFilters || hasActiveFilters
-                ? "bg-blue-500 text-white border-blue-500"
-                : "bg-white/80 text-gray-700 border-gray-200 hover:bg-gray-50"
+              ? "bg-blue-500 text-white border-blue-500"
+              : "bg-white/80 text-gray-700 border-gray-200 hover:bg-gray-50"
               }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
@@ -336,7 +368,7 @@ const DepartmentsPage = () => {
 const DepartmentsList = ({ departments, loading, onEdit, onView, onDelete, searchTerm }) => {
   if (loading) {
     return (
-      <div className="rounded-2xl bg-white/40 border border-white shadow-lg p-12 text-center">
+      <div className="glass-card p-12 text-center">
         <div className="inline-flex p-4 rounded-full bg-blue-100 mb-4">
           <Building2 className="w-8 h-8 text-blue-600 animate-pulse" />
         </div>
@@ -346,7 +378,7 @@ const DepartmentsList = ({ departments, loading, onEdit, onView, onDelete, searc
   }
 
   return (
-    <div className="rounded-2xl bg-white/40 border border-white shadow-lg p-5">
+    <div className="glass-card p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Grid3x3 className="w-5 h-5 text-blue-600" />
@@ -396,7 +428,7 @@ const DepartmentCard = ({ department, onEdit, onView, onDelete }) => {
   return (
     <div
       onClick={() => onView(department)}
-      className="group relative overflow-hidden rounded-xl bg-white/60 border border-white/50 shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-200 cursor-pointer"
+      className="group relative overflow-hidden glass shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 cursor-pointer"
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {

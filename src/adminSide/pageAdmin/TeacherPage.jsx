@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import TeacherForm from "../ConponentsAdmin/TeacherForm.jsx";
+import FormModal from "../../Components/FormModal.jsx";
 import { fetchTeachers, deleteTeacher } from "../../api/teacher_api.jsx";
 import {
   Users,
@@ -22,6 +23,7 @@ const TeacherPage = () => {
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingTeacher, setEditingTeacher] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
 
   useEffect(() => {
@@ -44,7 +46,7 @@ const TeacherPage = () => {
 
   const handleEdit = (teacher) => {
     setEditingTeacher(teacher);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setIsFormOpen(true);
   };
 
   const handleDelete = async (id) => {
@@ -67,6 +69,25 @@ const TeacherPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Teacher Management</h1>
+          <p className="text-sm text-gray-600 font-medium">Manage university faculty and teaching personnel.</p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => {
+            setEditingTeacher(null);
+            setIsFormOpen(true);
+          }}
+          className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-sm shadow-lg shadow-blue-500/25 flex items-center gap-2"
+        >
+          <Users className="w-4 h-4" />
+          Add Teacher
+        </motion.button>
+      </div>
+
       {/* QUICK STATS */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {quickStats.map((stat, i) => {
@@ -90,12 +111,27 @@ const TeacherPage = () => {
         })}
       </div>
 
-      {/* FORM */}
-      <TeacherForm
-        onUpdate={loadTeachers}
-        editingTeacher={editingTeacher}
-        onCancelEdit={() => setEditingTeacher(null)}
-      />
+      {/* FORM MODAL */}
+      <FormModal
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingTeacher(null);
+        }}
+        maxWidth="max-w-4xl"
+      >
+        <TeacherForm
+          onUpdate={() => {
+            loadTeachers();
+            setIsFormOpen(false);
+          }}
+          editingTeacher={editingTeacher}
+          onCancelEdit={() => {
+            setEditingTeacher(null);
+            setIsFormOpen(false);
+          }}
+        />
+      </FormModal>
 
       {/* LIST */}
       <TeacherList

@@ -227,11 +227,10 @@ const Alert = ({ type, message, onClose }) => (
     initial={{ opacity: 0, y: -10, scale: 0.95 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, scale: 0.95 }}
-    className={`flex items-center gap-3 p-4 rounded-2xl border shadow-sm ${
-      type === "success"
+    className={`flex items-center gap-3 p-4 rounded-2xl border shadow-sm ${type === "success"
         ? "bg-green-50 border-green-200"
         : "bg-red-50 border-red-200"
-    }`}
+      }`}
   >
     {type === "success" ? (
       <CheckCircle2 className="w-5 h-5 text-green-600" />
@@ -239,9 +238,8 @@ const Alert = ({ type, message, onClose }) => (
       <AlertCircle className="w-5 h-5 text-red-600" />
     )}
     <p
-      className={`text-sm font-medium ${
-        type === "success" ? "text-green-800" : "text-red-800"
-      }`}
+      className={`text-sm font-medium ${type === "success" ? "text-green-800" : "text-red-800"
+        }`}
     >
       {message}
     </p>
@@ -259,9 +257,6 @@ const Alert = ({ type, message, onClose }) => (
 
 const FormSection = ({ isEditMode, onCancel, onSubmit, form, setForm, loading, departments }) => (
   <motion.div
-    variants={animations.fadeUp}
-    initial="hidden"
-    animate="show"
     className="relative overflow-hidden rounded-2xl bg-white/90 border border-white shadow-lg p-5"
   >
     <FormHeader isEditMode={isEditMode} onCancel={onCancel} />

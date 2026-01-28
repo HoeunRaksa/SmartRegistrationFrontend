@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import ClassSessionForm from "../ConponentsAdmin/ClassSessionForm.jsx";
 import ClassSessionsList from "../ConponentsAdmin/ClassSessionsList.jsx";
+import FormModal from "../../Components/FormModal.jsx";
 import { fetchAllSessions, generateSessions } from "../../api/course_api.jsx";
 import { fetchCourseOptions } from "../../api/course_api.jsx";
 import { fetchBuildingOptions } from "../../api/building_api.jsx";
@@ -14,6 +15,7 @@ const ClassSessionsPage = () => {
   const [editingSession, setEditingSession] = useState(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -67,7 +69,7 @@ const ClassSessionsPage = () => {
 
   const handleEdit = (session) => {
     setEditingSession(session);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setIsFormOpen(true);
   };
 
   const handleSuccess = () => {
@@ -148,6 +150,25 @@ const ClassSessionsPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Class Sessions</h1>
+          <p className="text-sm text-gray-600 font-medium">Individual class instances generated from schedules.</p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => {
+            setEditingSession(null);
+            setIsFormOpen(true);
+          }}
+          className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-sm shadow-lg shadow-blue-500/25 flex items-center gap-2"
+        >
+          <Calendar className="w-4 h-4" />
+          Add Class Session
+        </motion.button>
+      </div>
+
       {/* Quick Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {quickStats.map((stat, i) => {
@@ -235,15 +256,30 @@ const ClassSessionsPage = () => {
         </div>
       </div>
 
-      {/* Form */}
-      <ClassSessionForm
-        editingSession={editingSession}
-        onSuccess={handleSuccess}
-        onCancel={handleCancel}
-        onUpdate={loadSessions}
-        courses={courses}
-        buildings={buildings}
-      />
+      {/* Form Modal */}
+      <FormModal
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingSession(null);
+        }}
+        maxWidth="max-w-4xl"
+      >
+        <ClassSessionForm
+          editingSession={editingSession}
+          onSuccess={() => {
+            handleSuccess();
+            setIsFormOpen(false);
+          }}
+          onCancel={() => {
+            handleCancel();
+            setIsFormOpen(false);
+          }}
+          onUpdate={loadSessions}
+          courses={courses}
+          buildings={buildings}
+        />
+      </FormModal>
 
       {/* List */}
       <ClassSessionsList sessions={sessions} onEdit={handleEdit} onRefresh={loadSessions} />

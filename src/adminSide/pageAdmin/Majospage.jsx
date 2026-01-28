@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import MajorsForm from '../ConponentsAdmin/MajorsForm.jsx';
 import MajorsList from '../ConponentsAdmin/MajorsList.jsx';
+import FormModal from "../../Components/FormModal.jsx";
 import { fetchMajors } from "../../api/major_api.jsx";
 import { fetchStudents } from "../../api/student_api.jsx";
 import {
@@ -14,6 +16,7 @@ const MajorsPage = () => {
   const [majors, setMajors] = useState([]);
   const [students, setStudents] = useState([]);
   const [editingMajor, setEditingMajor] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
     loadMajors();
@@ -42,8 +45,7 @@ const MajorsPage = () => {
 
   const handleEdit = (major) => {
     setEditingMajor(major);
-    // Scroll to form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setIsFormOpen(true);
   };
 
   const handleSuccess = () => {
@@ -81,14 +83,33 @@ const MajorsPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Majors</h1>
+          <p className="text-sm text-gray-600 font-medium">Manage academic majors and their associated subjects.</p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => {
+            setEditingMajor(null);
+            setIsFormOpen(true);
+          }}
+          className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-sm shadow-lg shadow-blue-500/25 flex items-center gap-2"
+        >
+          <GraduationCap className="w-4 h-4" />
+          Add Major
+        </motion.button>
+      </div>
+
       {/* ================= QUICK STATS ================= */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {quickStats.map((stat, i) => {
           const Icon = stat.icon;
           return (
-            <div 
-              key={i} 
-              className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/40 shadow-sm hover:shadow-md transition-all"
+            <div
+              key={i}
+              className="glass-card p-4 hover:shadow-lg transition-all"
             >
               <div className="flex items-center gap-3">
                 <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.color}`}>
@@ -104,15 +125,29 @@ const MajorsPage = () => {
         })}
       </div>
 
-      {/* ================= FORM ================= */}
-      <MajorsForm 
-        editingMajor={editingMajor}
-        onSuccess={handleSuccess}
-        onCancel={handleCancel}
-      />
+      {/* ================= FORM MODAL ================= */}
+      <FormModal
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingMajor(null);
+        }}
+      >
+        <MajorsForm
+          editingMajor={editingMajor}
+          onSuccess={() => {
+            handleSuccess();
+            setIsFormOpen(false);
+          }}
+          onCancel={() => {
+            handleCancel();
+            setIsFormOpen(false);
+          }}
+        />
+      </FormModal>
 
       {/* ================= MAJORS LIST ================= */}
-      <MajorsList 
+      <MajorsList
         majors={majors}
         onEdit={handleEdit}
         onRefresh={loadMajors}

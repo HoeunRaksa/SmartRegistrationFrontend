@@ -110,7 +110,7 @@ const AdminDashboard = () => {
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, type: 'spring' }}
-        className="relative bg-white/60 backdrop-blur-sm rounded-2xl p-8 border border-white/40 shadow-sm hover:shadow-md transition-all overflow-hidden"
+        className="relative glass p-8 overflow-hidden"
       >
         {/* Animated background */}
         <div className="absolute inset-0 opacity-20 ">
@@ -273,7 +273,7 @@ const AdminDashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               whileHover={{ scale: 1.05, y: -5 }}
-              className="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-white/40 shadow-sm hover:shadow-md transition-all cursor-pointer"
+              className="glass-card p-5 cursor-pointer"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}>
@@ -305,7 +305,7 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         {/* Revenue Analytics */}
         <motion.div
-          className="xl:col-span-2 bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/40 shadow-sm hover:shadow-md transition-all"
+          className="xl:col-span-2 glass-card p-6"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           whileHover={{ scale: 1.01 }}
@@ -343,7 +343,7 @@ const AdminDashboard = () => {
 
         {/* Gender Demographics */}
         <motion.div
-          className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/40 shadow-sm hover:shadow-md transition-all"
+          className="glass-card p-6"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           whileHover={{ scale: 1.01 }}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import StaffForm from "../ConponentsAdmin/StaffForm.jsx";
+import FormModal from "../../Components/FormModal.jsx";
 import { fetchStaff, deleteStaff } from "../../api/staff_api.jsx";
 import {
   Users,
@@ -23,6 +24,7 @@ const StaffPage = () => {
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingStaff, setEditingStaff] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
 
   useEffect(() => {
@@ -45,7 +47,7 @@ const StaffPage = () => {
 
   const handleEdit = (staffMember) => {
     setEditingStaff(staffMember);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setIsFormOpen(true);
   };
 
   const handleDelete = async (id) => {
@@ -70,6 +72,25 @@ const StaffPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Staff Management</h1>
+          <p className="text-sm text-gray-600 font-medium">Manage administrative staff and university personnel.</p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => {
+            setEditingStaff(null);
+            setIsFormOpen(true);
+          }}
+          className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-sm shadow-lg shadow-blue-500/25 flex items-center gap-2"
+        >
+          <Briefcase className="w-4 h-4" />
+          Add Staff
+        </motion.button>
+      </div>
+
       {/* ================= QUICK STATS ================= */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {quickStats.map((stat, i) => {
@@ -93,12 +114,27 @@ const StaffPage = () => {
         })}
       </div>
 
-      {/* ================= FORM ================= */}
-      <StaffForm
-        onUpdate={loadStaff}
-        editingStaff={editingStaff}
-        onCancelEdit={() => setEditingStaff(null)}
-      />
+      {/* ================= FORM MODAL ================= */}
+      <FormModal
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingStaff(null);
+        }}
+        maxWidth="max-w-4xl"
+      >
+        <StaffForm
+          onUpdate={() => {
+            loadStaff();
+            setIsFormOpen(false);
+          }}
+          editingStaff={editingStaff}
+          onCancelEdit={() => {
+            setEditingStaff(null);
+            setIsFormOpen(false);
+          }}
+        />
+      </FormModal>
 
       {/* ================= STAFF LIST ================= */}
       <StaffList

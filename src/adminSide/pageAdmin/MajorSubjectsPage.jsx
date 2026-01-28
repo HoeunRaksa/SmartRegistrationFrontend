@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import MajorSubjectsForm from "../ConponentsAdmin/MajorSubjectsForm.jsx";
 import MajorSubjectsList from "../ConponentsAdmin/MajorSubjectsList.jsx";
+import FormModal from "../../Components/FormModal.jsx";
 import { fetchMajorSubjects, deleteMajorSubject } from "../../api/major_subject_api.jsx";
 import { Link2, BarChart3 } from "lucide-react";
 
 const MajorSubjectsPage = () => {
   const [rows, setRows] = useState([]);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const load = async () => {
@@ -47,6 +50,22 @@ const MajorSubjectsPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Major Subjects</h1>
+          <p className="text-sm text-gray-600 font-medium">Link subjects to specific majors and departments.</p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => setIsFormOpen(true)}
+          className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-sm shadow-lg shadow-blue-500/25 flex items-center gap-2"
+        >
+          <Link2 className="w-4 h-4" />
+          Add Major Subject
+        </motion.button>
+      </div>
+
       {/* quick stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {quickStats.map((stat, i) => {
@@ -83,7 +102,18 @@ const MajorSubjectsPage = () => {
         </div>
       </div>
 
-      <MajorSubjectsForm onSuccess={load} />
+      {/* Form Modal */}
+      <FormModal
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+      >
+        <MajorSubjectsForm
+          onSuccess={() => {
+            load();
+            setIsFormOpen(false);
+          }}
+        />
+      </FormModal>
       <MajorSubjectsList rows={rows} onDelete={handleDelete} onRefresh={load} />
     </div>
   );

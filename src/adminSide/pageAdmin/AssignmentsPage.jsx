@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import AssignmentForm from "../ConponentsAdmin/AssignmentForm.jsx";
 import AssignmentsList from "../ConponentsAdmin/AssignmentsList.jsx";
+import FormModal from "../../Components/FormModal.jsx";
 import { fetchAllAssignments } from "../../api/admin_course_api.jsx";
 import { fetchCourses } from "../../api/course_api.jsx";
 import { getCachedCourses } from "../../utils/dataCache";
@@ -16,6 +18,7 @@ const AssignmentsPage = () => {
   const [courses, setCourses] = useState([]);
   const [editingAssignment, setEditingAssignment] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState("");
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // ✅ FIXED: Staggered loading to prevent 429 errors
@@ -54,8 +57,7 @@ const AssignmentsPage = () => {
   // ================= HANDLE EDIT =================
   const handleEdit = (assignment) => {
     setEditingAssignment(assignment);
-    // Scroll to form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setIsFormOpen(true);
   };
 
   // ================= HANDLE SUCCESS =================
@@ -116,6 +118,18 @@ const AssignmentsPage = () => {
               </option>
             ))}
           </select>
+          <motion.button
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              setEditingAssignment(null);
+              setIsFormOpen(true);
+            }}
+            className="px-6 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-sm shadow-lg shadow-blue-500/25 flex items-center gap-2"
+          >
+            <FileText className="w-4 h-4" />
+            Add Assignment
+          </motion.button>
         </div>
       </div>
 
@@ -144,14 +158,29 @@ const AssignmentsPage = () => {
         })}
       </div>
 
-      {/* ================= FORM ================= */}
-      <AssignmentForm
-        editingAssignment={editingAssignment}
-        onSuccess={handleSuccess}
-        onCancel={handleCancel}
-        onUpdate={loadAssignments}
-        courses={courses}
-      />
+      {/* Form Modal */}
+      <FormModal
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingAssignment(null);
+        }}
+        maxWidth="max-w-4xl"
+      >
+        <AssignmentForm
+          editingAssignment={editingAssignment}
+          onSuccess={() => {
+            handleSuccess();
+            setIsFormOpen(false);
+          }}
+          onCancel={() => {
+            handleCancel();
+            setIsFormOpen(false);
+          }}
+          onUpdate={loadAssignments}
+          courses={courses}
+        />
+      </FormModal>
 
       {/* ================= ASSIGNMENTS LIST ================= */}
       <AssignmentsList

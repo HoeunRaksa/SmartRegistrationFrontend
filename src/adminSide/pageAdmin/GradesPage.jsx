@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import GradeForm from "../ConponentsAdmin/GradeForm.jsx";
 import GradesList from "../ConponentsAdmin/GradesList.jsx";
+import FormModal from "../../Components/FormModal.jsx";
 import { fetchAllGrades } from "../../api/admin_course_api.jsx";
 import { fetchStudents } from "../../api/student_api.jsx";
 import { fetchCourses } from "../../api/course_api.jsx";
@@ -18,6 +20,7 @@ const GradesPage = () => {
   const [courses, setCourses] = useState([]);
   const [editingGrade, setEditingGrade] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState("");
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // ✅ FIXED: Staggered loading to prevent 429 errors
@@ -74,8 +77,7 @@ const GradesPage = () => {
   // ================= HANDLE EDIT =================
   const handleEdit = (grade) => {
     setEditingGrade(grade);
-    // Scroll to form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setIsFormOpen(true);
   };
 
   // ================= HANDLE SUCCESS =================
@@ -137,6 +139,18 @@ const GradesPage = () => {
               </option>
             ))}
           </select>
+          <motion.button
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              setEditingGrade(null);
+              setIsFormOpen(true);
+            }}
+            className="px-6 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-sm shadow-lg shadow-blue-500/25 flex items-center gap-2"
+          >
+            <Award className="w-4 h-4" />
+            Add Grade
+          </motion.button>
         </div>
       </div>
 
@@ -165,15 +179,30 @@ const GradesPage = () => {
         })}
       </div>
 
-      {/* ================= FORM ================= */}
-      <GradeForm
-        editingGrade={editingGrade}
-        onSuccess={handleSuccess}
-        onCancel={handleCancel}
-        onUpdate={loadGrades}
-        students={students}
-        courses={courses}
-      />
+      {/* Form Modal */}
+      <FormModal
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingGrade(null);
+        }}
+        maxWidth="max-w-4xl"
+      >
+        <GradeForm
+          editingGrade={editingGrade}
+          onSuccess={() => {
+            handleSuccess();
+            setIsFormOpen(false);
+          }}
+          onCancel={() => {
+            handleCancel();
+            setIsFormOpen(false);
+          }}
+          onUpdate={loadGrades}
+          students={students}
+          courses={courses}
+        />
+      </FormModal>
 
       {/* ================= GRADES LIST ================= */}
       <GradesList

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import StudentsForm from "../ConponentsAdmin/StudentsForm.jsx";
 import StudentsTable from "../ConponentsAdmin/Studentstable.jsx";
+import FormModal from "../../Components/FormModal.jsx";
 import StudentProfile from "../../gobalConponent/Studentprofile.jsx";
 import { fetchStudents } from "../../api/student_api.jsx";
 import { Users, TrendingUp, BarChart3 } from "lucide-react";
@@ -12,6 +13,7 @@ const StudentPage = () => {
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [editingStudent, setEditingStudent] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadStudents = useCallback(async () => {
@@ -35,7 +37,7 @@ const StudentPage = () => {
   const handleEdit = useCallback((student) => {
     if (!student) return;
     setEditingStudent(student);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setIsFormOpen(true);
   }, []);
 
   const handleView = useCallback((student) => {
@@ -59,6 +61,25 @@ const StudentPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Student Management</h1>
+          <p className="text-sm text-gray-600 font-medium">Add, edit and manage university students.</p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => {
+            setEditingStudent(null);
+            setIsFormOpen(true);
+          }}
+          className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-sm shadow-lg shadow-blue-500/25 flex items-center gap-2"
+        >
+          <Users className="w-4 h-4" />
+          Add Student
+        </motion.button>
+      </div>
+
       {/* ================= QUICK STATS ================= */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {quickStats.map((stat, index) => {
@@ -97,12 +118,27 @@ const StudentPage = () => {
         })}
       </div>
 
-      {/* ================= FORM ================= */}
-      <StudentsForm
-        onUpdate={loadStudents}
-        editingStudent={editingStudent}
-        onCancelEdit={() => setEditingStudent(null)}
-      />
+      {/* ================= FORM MODAL ================= */}
+      <FormModal
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingStudent(null);
+        }}
+        maxWidth="max-w-4xl"
+      >
+        <StudentsForm
+          onUpdate={() => {
+            loadStudents();
+            setIsFormOpen(false);
+          }}
+          editingStudent={editingStudent}
+          onCancelEdit={() => {
+            setEditingStudent(null);
+            setIsFormOpen(false);
+          }}
+        />
+      </FormModal>
 
       {/* ================= TABLE ================= */}
       <StudentsTable

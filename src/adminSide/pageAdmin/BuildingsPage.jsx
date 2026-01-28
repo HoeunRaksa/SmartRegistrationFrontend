@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import BuildingForm from "../ConponentsAdmin/BuildingForm.jsx";
 import BuildingsList from "../ConponentsAdmin/BuildingsList.jsx";
+import FormModal from "../../Components/FormModal.jsx";
 import { fetchAllBuildings } from "../../api/building_api.jsx";
 import { Building, MapPin, Hash } from "lucide-react";
 
 const BuildingsPage = () => {
   const [buildings, setBuildings] = useState([]);
   const [editingBuilding, setEditingBuilding] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -29,7 +32,7 @@ const BuildingsPage = () => {
 
   const handleEdit = (building) => {
     setEditingBuilding(building);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setIsFormOpen(true);
   };
 
   const handleSuccess = () => {
@@ -67,6 +70,25 @@ const BuildingsPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Buildings</h1>
+          <p className="text-sm text-gray-600 font-medium">Manage university campus buildings and assets.</p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => {
+            setEditingBuilding(null);
+            setIsFormOpen(true);
+          }}
+          className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-sm shadow-lg shadow-blue-500/25 flex items-center gap-2"
+        >
+          <Building className="w-4 h-4" />
+          Add Building
+        </motion.button>
+      </div>
+
       {/* Quick Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {quickStats.map((stat, i) => {
@@ -92,13 +114,27 @@ const BuildingsPage = () => {
         })}
       </div>
 
-      {/* Form */}
-      <BuildingForm
-        editingBuilding={editingBuilding}
-        onSuccess={handleSuccess}
-        onCancel={handleCancel}
-        onUpdate={loadBuildings}
-      />
+      {/* Form Modal */}
+      <FormModal
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingBuilding(null);
+        }}
+      >
+        <BuildingForm
+          editingBuilding={editingBuilding}
+          onSuccess={() => {
+            handleSuccess();
+            setIsFormOpen(false);
+          }}
+          onCancel={() => {
+            handleCancel();
+            setIsFormOpen(false);
+          }}
+          onUpdate={loadBuildings}
+        />
+      </FormModal>
 
       {/* List */}
       <BuildingsList

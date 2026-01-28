@@ -22,6 +22,7 @@ import { ToastContext } from "../../Components/Context/ToastProvider.jsx";
 import { staggeredRequests } from "../../utils/apiThrottle";
 import { getCachedDepartments, getCachedMajors } from "../../utils/dataCache";
 import { createPortal } from "react-dom";
+import FormModal from "../../Components/FormModal.jsx";
 
 import {
   Users,
@@ -589,8 +590,8 @@ const RegistrationPage = () => {
               <button
                 onClick={() => setFilter("all")}
                 className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${filter === "all"
-                    ? "bg-blue-500 text-white shadow-lg"
-                    : "bg-white/60 text-gray-700 hover:bg-white/80"
+                  ? "bg-blue-500 text-white shadow-lg"
+                  : "bg-white/60 text-gray-700 hover:bg-white/80"
                   }`}
               >
                 All ({registrations.length})
@@ -599,8 +600,8 @@ const RegistrationPage = () => {
               <button
                 onClick={() => setFilter("paid")}
                 className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${filter === "paid"
-                    ? "bg-green-500 text-white shadow-lg"
-                    : "bg-white/60 text-gray-700 hover:bg-white/80"
+                  ? "bg-green-500 text-white shadow-lg"
+                  : "bg-white/60 text-gray-700 hover:bg-white/80"
                   }`}
               >
                 <CheckCircle className="w-4 h-4" />
@@ -610,8 +611,8 @@ const RegistrationPage = () => {
               <button
                 onClick={() => setFilter("pending")}
                 className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-1 ${filter === "pending"
-                    ? "bg-orange-500 text-white shadow-lg"
-                    : "bg-white/60 text-gray-700 hover:bg-white/80"
+                  ? "bg-orange-500 text-white shadow-lg"
+                  : "bg-white/60 text-gray-700 hover:bg-white/80"
                   }`}
               >
                 <Clock className="w-4 h-4" />
@@ -650,38 +651,42 @@ const RegistrationPage = () => {
         getAmount={getAmount}
       />
 
-      {/* ================= ADMIN QR MODAL ================= */}
-      {showAdminQr && adminQrReg && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <PaymentForm
-            registrationId={adminQrReg.id}
-            yearFee={safeNum(
-              adminQrReg?.registration_fee ??
-              adminQrReg?.period_tuition_amount ??
-              0,
-              0
-            )}
-            amount={safeNum(getAmount(adminQrReg), 0)}
-            payPlan={{ type: "SEMESTER", semester: selectedSemesterInt }}
-            registrationData={{
-              data: {
-                registration_id: adminQrReg.id,
-                payment_amount: safeNum(getAmount(adminQrReg), 0),
-              },
-            }}
-            onClose={() => {
-              setShowAdminQr(false);
-              setAdminQrReg(null);
-            }}
-            onSuccess={async () => {
-              setShowAdminQr(false);
-              setAdminQrReg(null);
-              semesterCacheRef.current.delete(String(selectedSemesterInt));
-              await loadRegistrationsOnly({ preferCache: false });
-            }}
-          />
-        </div>
-      )}
+      <FormModal
+        isOpen={showAdminQr && !!adminQrReg}
+        onClose={() => {
+          setShowAdminQr(false);
+          setAdminQrReg(null);
+        }}
+        maxWidth="max-w-4xl"
+      >
+        <PaymentForm
+          registrationId={adminQrReg?.id}
+          yearFee={safeNum(
+            adminQrReg?.registration_fee ??
+            adminQrReg?.period_tuition_amount ??
+            0,
+            0
+          )}
+          amount={safeNum(getAmount(adminQrReg || {}), 0)}
+          payPlan={{ type: "SEMESTER", semester: selectedSemesterInt }}
+          registrationData={{
+            data: {
+              registration_id: adminQrReg?.id,
+              payment_amount: safeNum(getAmount(adminQrReg || {}), 0),
+            },
+          }}
+          onClose={() => {
+            setShowAdminQr(false);
+            setAdminQrReg(null);
+          }}
+          onSuccess={async () => {
+            setShowAdminQr(false);
+            setAdminQrReg(null);
+            semesterCacheRef.current.delete(String(selectedSemesterInt));
+            await loadRegistrationsOnly({ preferCache: false });
+          }}
+        />
+      </FormModal>
 
       {/* ================= DETAIL MODAL ================= */}
       {selectedRegistration && (
@@ -712,47 +717,20 @@ const RegistrationPage = () => {
 
 /* ================== REPORT MODAL ================== */
 const ReportModal = ({ onClose }) => {
-  return createPortal(
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      >
-        <div className="absolute inset-0 grid place-items-center p-4">
-          <motion.div
-            initial={{ scale: 0.96, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.96, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 260, damping: 22 }}
-            onClick={(e) => e.stopPropagation()}
-            className="relative w-[95vw] max-w-7xl h-[90vh] bg-white rounded-3xl shadow-2xl flex flex-col"
-          >
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 z-50 p-2 rounded-full bg-red-500 text-white hover:bg-red-600 shadow-lg"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex-1 overflow-y-auto p-6">
-              <RegistrationReportPage />
-            </div>
-          </motion.div>
+  return (
+    <FormModal
+      isOpen={true}
+      onClose={onClose}
+      maxWidth="max-w-7xl"
+    >
+      <div className="relative h-[80vh] flex flex-col">
+        <div className="flex-1 overflow-y-auto">
+          <RegistrationReportPage />
         </div>
-      </motion.div>
-    </AnimatePresence>,
-    document.body
+      </div>
+    </FormModal>
   );
 };
-
-
-
-
-
-
 
 /* ================== LIST ================== */
 
@@ -1037,360 +1015,341 @@ const RegistrationModal = ({
   const qrLockRef = useRef(false);
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.15 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-        onClick={onClose}
-      >
-        <motion.div
-          initial={{ scale: 0.96, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.96, opacity: 0 }}
-          transition={{ duration: 0.15 }}
-          onClick={(e) => e.stopPropagation()}
-          className="relative max-w-3xl w-full max-h-[78vh] overflow-y-auto bg-white rounded-3xl shadow-2xl border border-gray-100"
+    <FormModal
+      isOpen={!!registration}
+      onClose={onClose}
+      maxWidth="max-w-4xl"
+    >
+      <div className="relative">
+        {/* Header */}
+        <div
+          className={`-mx-6 -mt-6 p-6 mb-6 ${isPaid
+            ? "bg-gradient-to-br from-green-500 to-emerald-600"
+            : "bg-gradient-to-br from-orange-500 to-red-600"
+            }`}
         >
-          {/* Header */}
-          <div
-            className={`sticky top-0 p-6 z-10 ${isPaid
-                ? "bg-gradient-to-br from-green-500 to-emerald-600"
-                : "bg-gradient-to-br from-orange-500 to-red-600"
-              }`}
-          >
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 p-2 rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/30 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-start gap-4">
-              <div className="w-20 h-20 rounded-full overflow-hidden bg-white shadow-lg flex-shrink-0">
-                {profileImage ? (
-                  <img
-                    src={profileImage}
-                    alt={registration.full_name_en}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.style.display = "none";
-                      e.target.parentElement.innerHTML =
-                        '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200"><svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>';
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                    <User className="w-10 h-10 text-gray-400" />
-                  </div>
-                )}
-              </div>
-
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold text-white mb-2">
-                  Registration Details
-                </h2>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm text-white/80">
-                    ID: {registration.id}
-                  </span>
-
-                  {registration.student_code && (
-                    <span className="text-sm text-white/80">
-                      • Student: {registration.student_code}
-                    </span>
-                  )}
-
-                  <span className="flex items-center gap-1 text-xs bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full border border-white/30">
-                    {isPaid ? (
-                      <>
-                        <CheckCircle className="w-3 h-3" />
-                        {label}
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="w-3 h-3" />
-                        {label}
-                      </>
-                    )}
-                  </span>
+          <div className="flex items-start gap-4">
+            <div className="w-20 h-20 rounded-full overflow-hidden bg-white shadow-lg flex-shrink-0">
+              {profileImage ? (
+                <img
+                  src={profileImage}
+                  alt={registration.full_name_en}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                    e.target.parentElement.innerHTML =
+                      '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200"><svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>';
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                  <User className="w-10 h-10 text-gray-400" />
                 </div>
+              )}
+            </div>
 
-                <p className="text-xs text-white/80 mt-2">
-                  Showing status for:{" "}
-                  <span className="font-semibold">{year || ""}</span> •{" "}
-                  <span className="font-semibold">Sem {sem || ""}</span>
-                </p>
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-white mb-2">
+                Registration Details
+              </h2>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm text-white/80">
+                  ID: {registration.id}
+                </span>
+
+                {registration.student_code && (
+                  <span className="text-sm text-white/80">
+                    • Student: {registration.student_code}
+                  </span>
+                )}
+
+                <span className="flex items-center gap-1 text-xs bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full border border-white/30">
+                  {isPaid ? (
+                    <>
+                      <CheckCircle className="w-3 h-3" />
+                      {label}
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="w-3 h-3" />
+                      {label}
+                    </>
+                  )}
+                </span>
               </div>
+
+              <p className="text-xs text-white/80 mt-2">
+                Showing status for:{" "}
+                <span className="font-semibold">{year || ""}</span> •{" "}
+                <span className="font-semibold">Sem {sem || ""}</span>
+              </p>
             </div>
           </div>
+        </div>
 
-          {/* Body */}
-          <div className="p-6 space-y-6">
-            <Section title="Personal Information">
-              <InfoGrid>
-                <InfoField
-                  label="Full Name (EN)"
-                  value={registration.full_name_en}
-                />
-                <InfoField
-                  label="Full Name (KH)"
-                  value={registration.full_name_kh}
-                />
-                <InfoField label="Gender" value={registration.gender} />
-                <InfoField
-                  label="Date of Birth"
-                  value={registration.date_of_birth}
-                />
-                <InfoField label="Email" value={registration.personal_email} />
-                <InfoField label="Phone" value={registration.phone_number} />
-                <InfoField
-                  label="Address"
-                  value={registration.address}
-                  fullWidth
-                />
-                <InfoField
-                  label="Current Address"
-                  value={registration.current_address}
-                  fullWidth
-                />
-              </InfoGrid>
-            </Section>
+        {/* Body */}
+        <div className="p-6 space-y-6">
+          <Section title="Personal Information">
+            <InfoGrid>
+              <InfoField
+                label="Full Name (EN)"
+                value={registration.full_name_en}
+              />
+              <InfoField
+                label="Full Name (KH)"
+                value={registration.full_name_kh}
+              />
+              <InfoField label="Gender" value={registration.gender} />
+              <InfoField
+                label="Date of Birth"
+                value={registration.date_of_birth}
+              />
+              <InfoField label="Email" value={registration.personal_email} />
+              <InfoField label="Phone" value={registration.phone_number} />
+              <InfoField
+                label="Address"
+                value={registration.address}
+                fullWidth
+              />
+              <InfoField
+                label="Current Address"
+                value={registration.current_address}
+                fullWidth
+              />
+            </InfoGrid>
+          </Section>
 
-            <Section title="Education Information">
-              <InfoGrid>
-                <InfoField
-                  label="High School"
-                  value={registration.high_school_name}
-                />
-                <InfoField
-                  label="Graduation Year"
-                  value={registration.graduation_year}
-                />
-                <InfoField
-                  label="Grade 12 Result"
-                  value={registration.grade12_result}
-                />
-                <InfoField
-                  label="Department"
-                  value={registration.department_name}
-                />
-                <InfoField label="Major" value={registration.major_name} />
-                <InfoField label="Faculty" value={registration.faculty} />
-                <InfoField label="Shift" value={registration.shift} />
-                <InfoField label="Batch" value={registration.batch} />
-                <InfoField
-                  label="Academic Year"
-                  value={registration.academic_year}
-                />
-              </InfoGrid>
-            </Section>
+          <Section title="Education Information">
+            <InfoGrid>
+              <InfoField
+                label="High School"
+                value={registration.high_school_name}
+              />
+              <InfoField
+                label="Graduation Year"
+                value={registration.graduation_year}
+              />
+              <InfoField
+                label="Grade 12 Result"
+                value={registration.grade12_result}
+              />
+              <InfoField
+                label="Department"
+                value={registration.department_name}
+              />
+              <InfoField label="Major" value={registration.major_name} />
+              <InfoField label="Faculty" value={registration.faculty} />
+              <InfoField label="Shift" value={registration.shift} />
+              <InfoField label="Batch" value={registration.batch} />
+              <InfoField
+                label="Academic Year"
+                value={registration.academic_year}
+              />
+            </InfoGrid>
+          </Section>
 
-            <Section title="Parent/Guardian Information">
-              <InfoGrid>
-                <InfoField
-                  label="Father's Name"
-                  value={registration.father_name}
-                />
-                <InfoField
-                  label="Father's Phone"
-                  value={registration.fathers_phone_number}
-                />
-                <InfoField
-                  label="Mother's Name"
-                  value={registration.mother_name}
-                />
-                <InfoField
-                  label="Mother's Phone"
-                  value={registration.mother_phone_number}
-                />
-                <InfoField
-                  label="Guardian Name"
-                  value={registration.guardian_name}
-                />
-                <InfoField
-                  label="Guardian Phone"
-                  value={registration.guardian_phone_number}
-                />
-              </InfoGrid>
-            </Section>
+          <Section title="Parent/Guardian Information">
+            <InfoGrid>
+              <InfoField
+                label="Father's Name"
+                value={registration.father_name}
+              />
+              <InfoField
+                label="Father's Phone"
+                value={registration.fathers_phone_number}
+              />
+              <InfoField
+                label="Mother's Name"
+                value={registration.mother_name}
+              />
+              <InfoField
+                label="Mother's Phone"
+                value={registration.mother_phone_number}
+              />
+              <InfoField
+                label="Guardian Name"
+                value={registration.guardian_name}
+              />
+              <InfoField
+                label="Guardian Phone"
+                value={registration.guardian_phone_number}
+              />
+            </InfoGrid>
+          </Section>
 
-            <Section title="Payment Information">
-              <div
-                className={`p-4 rounded-2xl border ${isPaid
-                    ? "bg-green-50 border-green-200"
-                    : "bg-orange-50 border-orange-200"
-                  }`}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`p-2 rounded-full ${isPaid ? "bg-green-500" : "bg-orange-500"
-                        }`}
-                    >
-                      {isPaid ? (
-                        <CheckCircle className="w-5 h-5 text-white" />
-                      ) : (
-                        <Clock className="w-5 h-5 text-white" />
-                      )}
-                    </div>
-
-                    <div>
-                      <p
-                        className={`font-semibold ${isPaid ? "text-green-700" : "text-orange-700"
-                          }`}
-                      >
-                        {isPaid ? "Payment Completed" : "Payment Pending"}
-                      </p>
-
-                      <p className="text-sm text-gray-700 mt-1">
-                        Amount:{" "}
-                        <span className="font-semibold">
-                          ${safeNum(getAmount(registration), 0).toFixed(2)}
-                        </span>
-                      </p>
-
-                      <p className="text-xs text-gray-500 mt-1">
-                        Academic Year:{" "}
-                        <span className="font-semibold">{year || ""}</span> •
-                        Semester:{" "}
-                        <span className="font-semibold">{sem || ""}</span>
-                      </p>
-                    </div>
+          <Section title="Payment Information">
+            <div
+              className={`p-4 rounded-2xl border ${isPaid
+                ? "bg-green-50 border-green-200"
+                : "bg-orange-50 border-orange-200"
+                }`}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`p-2 rounded-full ${isPaid ? "bg-green-500" : "bg-orange-500"
+                      }`}
+                  >
+                    {isPaid ? (
+                      <CheckCircle className="w-5 h-5 text-white" />
+                    ) : (
+                      <Clock className="w-5 h-5 text-white" />
+                    )}
                   </div>
 
-                  {isPaid && (
-                    <div className="text-right">
-                      <p className="text-xs text-gray-500">Paid on</p>
-                      <p className="text-sm font-semibold text-gray-800">
-                        {getPaidAt(registration) || "Date unavailable"}
-                      </p>
-                    </div>
-                  )}
+                  <div>
+                    <p
+                      className={`font-semibold ${isPaid ? "text-green-700" : "text-orange-700"
+                        }`}
+                    >
+                      {isPaid ? "Payment Completed" : "Payment Pending"}
+                    </p>
+
+                    <p className="text-sm text-gray-700 mt-1">
+                      Amount:{" "}
+                      <span className="font-semibold">
+                        ${safeNum(getAmount(registration), 0).toFixed(2)}
+                      </span>
+                    </p>
+
+                    <p className="text-xs text-gray-500 mt-1">
+                      Academic Year:{" "}
+                      <span className="font-semibold">{year || ""}</span> •
+                      Semester:{" "}
+                      <span className="font-semibold">{sem || ""}</span>
+                    </p>
+                  </div>
                 </div>
 
-                {!isPaid && (
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    <button
-                      disabled={generatingQr}
-                      onClick={async () => {
-                        if (qrLockRef.current) return;
-                        qrLockRef.current = true;
-
-                        if (generatingQr) return;
-                        setGeneratingQr(true);
-                        try {
-                          await adminGenerateQr(
-                            registration.id,
-                            Number(selectedSemester) || 1
-                          );
-                          toast?.success?.("QR generated successfully");
-                          onOpenQr(registration);
-                        } catch (e) {
-                          const err = extractAxiosError(e);
-                          console.log("GenerateQR FULL:", err);
-                          toast?.error?.(
-                            `${err.status ?? "NO-HTTP"} ${err.msg}${err.details ? " • " + err.details : ""
-                              }`.trim()
-                          );
-
-                          // if already paid, refresh so it becomes PAID
-                          if (err.status === 409) {
-                            await onRefresh();
-                            onClose();
-                          }
-                        } finally {
-                          setGeneratingQr(false);
-                          qrLockRef.current = false;
-                        }
-                      }}
-                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white transition-colors ${generatingQr
-                          ? "bg-blue-400 cursor-not-allowed"
-                          : "bg-blue-600 hover:bg-blue-700"
-                        }`}
-                    >
-                      <QrCode className="w-4 h-4" />
-                      {generatingQr ? "Generating..." : "Generate QR"}
-                    </button>
-
-                    {/* ✅ NEW: OPEN FORM WITH 3 OPTIONS (SEM1 / SEM2 / YEAR) */}
-                    <button
-                      disabled={payingCash}
-                      onClick={() => {
-                        // open option form; no confirm popup
-                        setCashOption(selectedSemester === 2 ? "SEM2" : "SEM1");
-                        setShowCashOption(true);
-                      }}
-                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white transition-colors ${payingCash
-                          ? "bg-green-400 cursor-not-allowed"
-                          : "bg-green-600 hover:bg-green-700"
-                        }`}
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                      Mark Paid (Cash)
-                    </button>
-
-                    <button
-                      onClick={onRefresh}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-gray-800 border border-gray-200 hover:bg-gray-50 transition-colors"
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                      Refresh Status
-                    </button>
+                {isPaid && (
+                  <div className="text-right">
+                    <p className="text-xs text-gray-500">Paid on</p>
+                    <p className="text-sm font-semibold text-gray-800">
+                      {getPaidAt(registration) || "Date unavailable"}
+                    </p>
                   </div>
                 )}
               </div>
-            </Section>
-          </div>
 
-          {/* ================= CASH OPTION MODAL ================= */}
-          {showCashOption && (
-            <CashPayOptionModal
-              registration={registration}
-              defaultOption={cashOption}
-              onClose={() => setShowCashOption(false)}
-              onSubmit={async (optionKey) => {
-                if (cashLockRef.current) return;
-                cashLockRef.current = true;
+              {!isPaid && (
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <button
+                    disabled={generatingQr}
+                    onClick={async () => {
+                      if (qrLockRef.current) return;
+                      qrLockRef.current = true;
 
-                if (payingCash) return;
-                setPayingCash(true);
+                      if (generatingQr) return;
+                      setGeneratingQr(true);
+                      try {
+                        await adminGenerateQr(
+                          registration.id,
+                          Number(selectedSemester) || 1
+                        );
+                        toast?.success?.("QR generated successfully");
+                        onOpenQr(registration);
+                      } catch (e) {
+                        const err = extractAxiosError(e);
+                        console.log("GenerateQR FULL:", err);
+                        toast?.error?.(
+                          `${err.status ?? "NO-HTTP"} ${err.msg}${err.details ? " • " + err.details : ""
+                            }`.trim()
+                        );
 
-                try {
-                  await markPaidCashByOption({
-                    registrationId: registration.id,
-                    optionKey,
-                  });
+                        // if already paid, refresh so it becomes PAID
+                        if (err.status === 409) {
+                          await onRefresh();
+                          onClose();
+                        }
+                      } finally {
+                        setGeneratingQr(false);
+                        qrLockRef.current = false;
+                      }
+                    }}
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white transition-colors ${generatingQr
+                      ? "bg-blue-400 cursor-not-allowed"
+                      : "bg-blue-600 hover:bg-blue-700"
+                      }`}
+                  >
+                    <QrCode className="w-4 h-4" />
+                    {generatingQr ? "Generating..." : "Generate QR"}
+                  </button>
 
-                  // keep your toast behavior (same success)
-                  toast?.success?.("Marked as PAID (Cash)");
+                  {/* ✅ NEW: OPEN FORM WITH 3 OPTIONS (SEM1 / SEM2 / YEAR) */}
+                  <button
+                    disabled={payingCash}
+                    onClick={() => {
+                      // open option form; no confirm popup
+                      setCashOption(selectedSemester === 2 ? "SEM2" : "SEM1");
+                      setShowCashOption(true);
+                    }}
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white transition-colors ${payingCash
+                      ? "bg-green-400 cursor-not-allowed"
+                      : "bg-green-600 hover:bg-green-700"
+                      }`}
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Mark Paid (Cash)
+                  </button>
 
-                  // refresh data after success
-                  await onRefresh();
-                  setShowCashOption(false);
-                  onClose();
-                } catch (payload) {
-                  const err = payload?.err || payload;
-                  const e = err?.status ? err : extractAxiosError(err);
+                  <button
+                    onClick={onRefresh}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-gray-800 border border-gray-200 hover:bg-gray-50 transition-colors"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Refresh Status
+                  </button>
+                </div>
+              )}
+            </div>
+          </Section>
+        </div>
 
-                  console.error("Mark paid cash error:", e.status, e.raw);
-                  toast?.error?.(
-                    `${e.status || ""} ${e.msg}${e.details ? " • " + e.details : ""
-                      }`.trim()
-                  );
-                } finally {
-                  setPayingCash(false);
-                  cashLockRef.current = false;
-                }
-              }}
-              busy={payingCash}
-            />
-          )}
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+        {/* ================= CASH OPTION MODAL ================= */}
+        {showCashOption && (
+          <CashPayOptionModal
+            registration={registration}
+            defaultOption={cashOption}
+            onClose={() => setShowCashOption(false)}
+            onSubmit={async (optionKey) => {
+              if (cashLockRef.current) return;
+              cashLockRef.current = true;
+
+              if (payingCash) return;
+              setPayingCash(true);
+
+              try {
+                await markPaidCashByOption({
+                  registrationId: registration.id,
+                  optionKey,
+                });
+
+                // keep your toast behavior (same success)
+                toast?.success?.("Marked as PAID (Cash)");
+
+                // refresh data after success
+                await onRefresh();
+                setShowCashOption(false);
+                onClose();
+              } catch (payload) {
+                const err = payload?.err || payload;
+                const e = err?.status ? err : extractAxiosError(err);
+
+                console.error("Mark paid cash error:", e.status, e.raw);
+                toast?.error?.(
+                  `${e.status || ""} ${e.msg}${e.details ? " • " + e.details : ""
+                    }`.trim()
+                );
+              } finally {
+                setPayingCash(false);
+                cashLockRef.current = false;
+              }
+            }}
+            busy={payingCash}
+          />
+        )}
+      </div>
+    </FormModal>
   );
 };
 
@@ -1415,11 +1374,12 @@ const CashPayOptionModal = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div
-        className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <FormModal
+      isOpen={true}
+      onClose={onClose}
+      maxWidth="max-w-lg"
+    >
+      <div className="relative">
         <div className="p-5 border-b border-gray-100 bg-white">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -1458,8 +1418,8 @@ const CashPayOptionModal = ({
                 type="button"
                 onClick={() => setChoice(it.key)}
                 className={`w-full text-left p-4 rounded-2xl border transition-all ${active
-                    ? "border-blue-500 bg-blue-50 shadow-sm"
-                    : "border-gray-200 bg-white hover:bg-gray-50"
+                  ? "border-blue-500 bg-blue-50 shadow-sm"
+                  : "border-gray-200 bg-white hover:bg-gray-50"
                   }`}
                 disabled={busy}
               >
@@ -1478,8 +1438,8 @@ const CashPayOptionModal = ({
                       </p>
                       <span
                         className={`text-xs px-2.5 py-1 rounded-full border ${active
-                            ? "bg-blue-100 text-blue-700 border-blue-200"
-                            : "bg-gray-100 text-gray-600 border-gray-200"
+                          ? "bg-blue-100 text-blue-700 border-blue-200"
+                          : "bg-gray-100 text-gray-600 border-gray-200"
                           }`}
                       >
                         {active ? "Selected" : "Select"}
@@ -1512,7 +1472,7 @@ const CashPayOptionModal = ({
           </button>
         </div>
       </div>
-    </div>
+    </FormModal>
   );
 };
 

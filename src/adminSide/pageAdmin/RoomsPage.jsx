@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import RoomForm from "../ConponentsAdmin/RoomForm.jsx";
 import RoomsList from "../ConponentsAdmin/RoomsList.jsx";
+import FormModal from "../../Components/FormModal.jsx";
 import { fetchAllRooms } from "../../api/room_api.jsx";
 import { fetchBuildingOptions } from "../../api/building_api.jsx";
 import { DoorOpen, Building, Hash, Users } from "lucide-react";
@@ -9,6 +11,7 @@ const RoomsPage = () => {
   const [rooms, setRooms] = useState([]);
   const [buildings, setBuildings] = useState([]);
   const [editingRoom, setEditingRoom] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -43,7 +46,7 @@ const RoomsPage = () => {
 
   const handleEdit = (room) => {
     setEditingRoom(room);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setIsFormOpen(true);
   };
 
   const handleSuccess = () => {
@@ -82,6 +85,25 @@ const RoomsPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Rooms</h1>
+          <p className="text-sm text-gray-600 font-medium">Manage campus rooms and teaching spaces.</p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => {
+            setEditingRoom(null);
+            setIsFormOpen(true);
+          }}
+          className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-sm shadow-lg shadow-blue-500/25 flex items-center gap-2"
+        >
+          <DoorOpen className="w-4 h-4" />
+          Add Room
+        </motion.button>
+      </div>
+
       {/* Quick Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {quickStats.map((stat, i) => {
@@ -107,14 +129,28 @@ const RoomsPage = () => {
         })}
       </div>
 
-      {/* Form */}
-      <RoomForm
-        editingRoom={editingRoom}
-        onSuccess={handleSuccess}
-        onCancel={handleCancel}
-        onUpdate={loadRooms}
-        buildings={buildings}
-      />
+      {/* Form Modal */}
+      <FormModal
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingRoom(null);
+        }}
+      >
+        <RoomForm
+          editingRoom={editingRoom}
+          onSuccess={() => {
+            handleSuccess();
+            setIsFormOpen(false);
+          }}
+          onCancel={() => {
+            handleCancel();
+            setIsFormOpen(false);
+          }}
+          onUpdate={loadRooms}
+          buildings={buildings}
+        />
+      </FormModal>
 
       {/* List */}
       <RoomsList rooms={rooms} onEdit={handleEdit} onRefresh={loadRooms} />

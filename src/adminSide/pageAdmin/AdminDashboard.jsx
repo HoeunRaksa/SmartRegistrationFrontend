@@ -226,10 +226,10 @@ const SidebarItem = React.memo(function SidebarItem({
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${isActive
-        ? "backdrop-blur-xl bg-gradient-to-r " +
+        ? "bg-gradient-to-r " +
         item.gradient +
-        " text-white shadow-lg"
-        : "backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40"
+        " text-white shadow-lg shadow-blue-500/20"
+        : "glass hover:bg-white/50 text-gray-700"
         } border border-white/30`}
       type="button"
     >
@@ -307,6 +307,8 @@ const ActivePage = React.memo(({ section }) => {
         return <TeacherPage />;
       case "class-groups":
         return <ClassGroupsPage />;
+      case "academic-sessions":
+        return <AcademicSessionsPage />;
       default:
         return <Dashboard />;
     }
@@ -445,7 +447,7 @@ const AdminDashboard = () => {
       <motion.aside
         animate={{ width: sidebarCollapsed ? 80 : 280 }}
         transition={{ duration: 0.2 }}
-        className="fixed left-0 top-0 h-screen backdrop-blur-2xl bg-white/30 border-r border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.2)] z-40 hidden md:block"
+        className="fixed left-0 top-0 h-screen glass-bar border-r border-white/20 z-40 hidden md:block"
       >
         <div className="flex flex-col h-full p-4">
           <div className="flex items-center justify-between mb-6 px-2">
@@ -626,7 +628,7 @@ const AdminDashboard = () => {
         className={`transition-all duration-200 ${sidebarCollapsed ? "md:ml-20" : "md:ml-72"
           }`}
       >
-        <header className="sticky top-0 z-30 backdrop-blur-2xl bg-white/40 border-b border-white/20 shadow-sm">
+        <header className="sticky top-0 z-30 glass-bar">
           <div className="flex items-center justify-between px-4 md:px-6 py-3">
             <div className="flex items-center gap-3">
               <motion.button

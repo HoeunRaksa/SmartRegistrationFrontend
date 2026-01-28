@@ -22,6 +22,7 @@ import {
   updateMajorQuota,
   deleteMajorQuota,
 } from "../../../src/api/major_quota_api.jsx";
+import FormModal from "../../Components/FormModal.jsx";
 
 import {
   GraduationCap,
@@ -100,9 +101,8 @@ const Alert = ({ type, message, onClose }) => (
     initial={{ opacity: 0, y: -10, scale: 0.98 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, y: -10, scale: 0.98 }}
-    className={`flex items-start gap-3 p-4 rounded-2xl border shadow-sm ${
-      type === "success" ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
-    }`}
+    className={`flex items-start gap-3 p-4 rounded-2xl border shadow-sm ${type === "success" ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+      }`}
   >
     {type === "success" ? (
       <div className="p-1 bg-green-100 rounded-full mt-0.5">
@@ -312,69 +312,53 @@ const EditQuotaModal = ({
   };
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-        onClick={!saving ? onClose : undefined}
-      >
-        <motion.div
-          initial={{ scale: 0.96, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.96, opacity: 0 }}
-          onClick={(e) => e.stopPropagation()}
-          className="bg-white rounded-2xl shadow-2xl p-6 max-w-xl w-full border border-white/60"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">Edit Major Quota</h3>
-              <p className="text-xs text-gray-500 mt-1">
-                {dept?.name ? `${dept.name} • ` : ""}
-                {major?.major_name ? major.major_name : `Major #${quota.major_id}`} • {quota.academic_year}
-              </p>
-            </div>
-            <button onClick={onClose} disabled={saving} className="text-gray-500 hover:text-gray-800">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+    <FormModal
+      isOpen={show}
+      onClose={onClose}
+    >
+      <div className="relative">
+        <div className="mb-6">
+          <h3 className="text-xl font-bold text-gray-900">Edit Major Quota</h3>
+          <p className="text-sm text-gray-500 mt-1">
+            {dept?.name ? `${dept.name} • ` : ""}
+            {major?.major_name ? major.major_name : `Major #${quota.major_id}`} • {quota.academic_year}
+          </p>
+        </div>
 
-          <AnimatePresence>
-            {error && (
-              <Alert type="error" message={error} onClose={() => setError(null)} />
-            )}
-          </AnimatePresence>
+        <AnimatePresence>
+          {error && (
+            <Alert type="error" message={error} onClose={() => setError(null)} />
+          )}
+        </AnimatePresence>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
-            <FieldShell label="Limit" icon={Hash}>
-              <Input value={limit} onChange={setLimit} placeholder="e.g. 200" type="number" />
-            </FieldShell>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <FieldShell label="Limit" icon={Hash}>
+            <Input value={limit} onChange={setLimit} placeholder="e.g. 200" type="number" />
+          </FieldShell>
 
-            <FieldShell label="Opens At" icon={Clock} col="md:col-span-2">
-              <Input value={opensAt} onChange={setOpensAt} type="datetime-local" />
-            </FieldShell>
+          <FieldShell label="Opens At" icon={Clock} col="md:col-span-2">
+            <Input value={opensAt} onChange={setOpensAt} type="datetime-local" />
+          </FieldShell>
 
-            <FieldShell label="Closes At" icon={Lock} col="md:col-span-2">
-              <Input value={closesAt} onChange={setClosesAt} type="datetime-local" />
-            </FieldShell>
+          <FieldShell label="Closes At" icon={Lock} col="md:col-span-2">
+            <Input value={closesAt} onChange={setClosesAt} type="datetime-local" />
+          </FieldShell>
 
-            <FieldShell label="Academic Year" icon={Calendar}>
-              <Select value={quota.academic_year} onChange={() => {}} options={academicYears.map((y) => ({ value: y, label: y }))} disabled />
-            </FieldShell>
-          </div>
+          <FieldShell label="Academic Year" icon={Calendar}>
+            <Select value={quota.academic_year} onChange={() => { }} options={academicYears.map((y) => ({ value: y, label: y }))} disabled />
+          </FieldShell>
+        </div>
 
-          <div className="flex justify-end gap-2 mt-6">
-            <GhostButton onClick={onClose} disabled={saving}>
-              Cancel
-            </GhostButton>
-            <PrimaryButton onClick={handleSave} disabled={saving || !limit} icon={saving ? Loader : CheckCircle}>
-              {saving ? "Saving..." : "Save Changes"}
-            </PrimaryButton>
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+        <div className="flex justify-end gap-3 mt-8">
+          <GhostButton onClick={onClose} disabled={saving}>
+            Cancel
+          </GhostButton>
+          <PrimaryButton onClick={handleSave} disabled={saving || !limit} icon={saving ? Loader : CheckCircle}>
+            {saving ? "Saving..." : "Save Changes"}
+          </PrimaryButton>
+        </div>
+      </div>
+    </FormModal>
   );
 };
 
@@ -410,6 +394,7 @@ const MajorQuotasPage = () => {
   const [createLimit, setCreateLimit] = useState("");
   const [createOpensAt, setCreateOpensAt] = useState("");
   const [createClosesAt, setCreateClosesAt] = useState("");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [creating, setCreating] = useState(false);
 
   // edit modal
@@ -621,6 +606,22 @@ const MajorQuotasPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Major Quotas</h1>
+          <p className="text-sm text-gray-600 font-medium">Manage student admission quotas and time windows.</p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => setIsAddModalOpen(true)}
+          className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-sm shadow-lg shadow-blue-500/25 flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          Add Quota
+        </motion.button>
+      </div>
+
       {/* ================= QUICK STATS ================= */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {stats.map((s) => (
@@ -647,101 +648,96 @@ const MajorQuotasPage = () => {
         {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
       </AnimatePresence>
 
-      {/* ================= CREATE / UPSERT FORM ================= */}
-      <motion.div variants={animations.fadeUp} initial="hidden" animate="show" className="rounded-2xl bg-white/90 border border-white shadow-lg p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Plus className="w-4 h-4 text-purple-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Create / Update Major Quota</h2>
+      {/* ================= CREATE / UPSERT FORM MODAL ================= */}
+      <FormModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+      >
+        <div className="relative">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg">
+                <Plus className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Add New Major Quota</h2>
+                <p className="text-sm text-gray-600">Set capacity and availability window</p>
+              </div>
+            </div>
           </div>
 
-          <div className="flex gap-2">
-            <GhostButton
-              icon={RefreshCw}
-              onClick={async () => {
-                setError(null);
-                setSuccess(null);
-                await loadQuotas();
-              }}
-              disabled={loading}
-            >
-              Refresh
-            </GhostButton>
-          </div>
-        </div>
+          <form onSubmit={handleCreate} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FieldShell label="Department" icon={Building2}>
+                <Select
+                  value={createDepartmentId}
+                  onChange={(v) => {
+                    setCreateDepartmentId(v);
+                    setCreateMajorId("");
+                  }}
+                  options={departmentOptions}
+                  placeholder="Select Department"
+                />
+              </FieldShell>
 
-        <form onSubmit={handleCreate} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <FieldShell label="Department" icon={Building2}>
-              <Select
-                value={createDepartmentId}
-                onChange={(v) => {
-                  setCreateDepartmentId(v);
-                  setCreateMajorId("");
+              <FieldShell label="Major" icon={GraduationCap}>
+                <Select
+                  value={createMajorId}
+                  onChange={setCreateMajorId}
+                  options={majorOptionsForCreate}
+                  placeholder="Select Major"
+                  disabled={!createDepartmentId && majors.length === 0}
+                />
+              </FieldShell>
+
+              <FieldShell label="Academic Year" icon={Calendar}>
+                <Select
+                  value={createAcademicYear}
+                  onChange={setCreateAcademicYear}
+                  options={academicYearOptions.map((y) => ({ value: y, label: y }))}
+                  placeholder="Select Academic Year"
+                />
+              </FieldShell>
+
+              <FieldShell label="Limit" icon={Hash}>
+                <Input value={createLimit} onChange={setCreateLimit} placeholder="e.g. 200" type="number" />
+              </FieldShell>
+
+              <FieldShell label="Opens At (optional)" icon={Clock}>
+                <Input value={createOpensAt} onChange={setCreateOpensAt} type="datetime-local" />
+              </FieldShell>
+
+              <FieldShell label="Closes At (optional)" icon={Lock}>
+                <Input value={createClosesAt} onChange={setCreateClosesAt} type="datetime-local" />
+              </FieldShell>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <GhostButton
+                onClick={() => {
+                  setCreateLimit("");
+                  setCreateOpensAt("");
+                  setCreateClosesAt("");
                 }}
-                options={departmentOptions}
-                placeholder="Select Department"
-              />
-            </FieldShell>
+                disabled={creating}
+              >
+                Clear Times
+              </GhostButton>
 
-            <FieldShell label="Major" icon={GraduationCap}>
-              <Select
-                value={createMajorId}
-                onChange={setCreateMajorId}
-                options={majorOptionsForCreate}
-                placeholder="Select Major"
-                disabled={!createDepartmentId && majors.length === 0}
-              />
-            </FieldShell>
+              <PrimaryButton type="submit" disabled={creating} icon={creating ? Loader : CheckCircle} className="flex-1 sm:flex-none">
+                {creating ? "Saving..." : "Save Quota"}
+              </PrimaryButton>
+            </div>
+          </form>
 
-            <FieldShell label="Academic Year" icon={Calendar}>
-              <Select
-                value={createAcademicYear}
-                onChange={setCreateAcademicYear}
-                options={academicYearOptions.map((y) => ({ value: y, label: y }))}
-                placeholder="Select Academic Year"
-              />
-            </FieldShell>
-
-            <FieldShell label="Limit" icon={Hash}>
-              <Input value={createLimit} onChange={setCreateLimit} placeholder="e.g. 200" type="number" />
-            </FieldShell>
-
-            <FieldShell label="Opens At (optional)" icon={Clock} col="md:col-span-1">
-              <Input value={createOpensAt} onChange={setCreateOpensAt} type="datetime-local" />
-            </FieldShell>
-
-            <FieldShell label="Closes At (optional)" icon={Lock} col="md:col-span-1">
-              <Input value={createClosesAt} onChange={setCreateClosesAt} type="datetime-local" />
-            </FieldShell>
+          <div className="mt-6 text-xs text-gray-600 bg-blue-50/60 border border-blue-200/50 rounded-2xl p-4 flex items-start gap-3">
+            <Filter className="w-5 h-5 text-blue-700 mt-0.5" />
+            <p className="leading-relaxed">
+              <b>Important:</b> This will create a new quota entry or overwrite the existing one for the same <b>Major + Academic Year</b> combination.
+            </p>
           </div>
-
-          <div className="flex justify-end gap-2">
-            <GhostButton
-              onClick={() => {
-                setCreateLimit("");
-                setCreateOpensAt("");
-                setCreateClosesAt("");
-              }}
-              disabled={creating}
-            >
-              Clear Time
-            </GhostButton>
-
-            <PrimaryButton type="submit" disabled={creating} icon={creating ? Loader : CheckCircle}>
-              {creating ? "Saving..." : "Save Quota"}
-            </PrimaryButton>
-          </div>
-        </form>
-
-        <div className="mt-4 text-xs text-gray-600 bg-blue-50/60 border border-blue-200/50 rounded-xl p-3 flex items-start gap-2">
-          <Filter className="w-4 h-4 text-blue-700 mt-0.5" />
-          <p>
-            This form uses <b>POST /major-quotas</b> and your controller does <b>updateOrCreate</b>, so it will create or
-            overwrite the quota for the same <b>(major_id + academic_year)</b>.
-          </p>
         </div>
-      </motion.div>
+      </FormModal>
 
       {/* ================= FILTER BAR ================= */}
       <motion.div
@@ -969,11 +965,10 @@ const MajorQuotasPage = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setCurrentPage(i + 1)}
-                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                        currentPage === i + 1
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${currentPage === i + 1
                           ? "bg-blue-600 text-white shadow-lg"
                           : "border border-gray-200 hover:bg-gray-50 bg-white"
-                      }`}
+                        }`}
                     >
                       {i + 1}
                     </motion.button>

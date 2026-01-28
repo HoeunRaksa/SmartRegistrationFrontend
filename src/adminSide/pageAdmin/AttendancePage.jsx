@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import AttendanceForm from "../ConponentsAdmin/AttendanceForm.jsx";
 import AttendanceList from "../ConponentsAdmin/AttendanceList.jsx";
+import FormModal from "../../Components/FormModal.jsx";
 import { fetchAllAttendance, fetchAllSessions } from "../../api/admin_course_api.jsx";
 import { fetchStudents } from "../../api/student_api.jsx";
 import { fetchCourses } from "../../api/course_api.jsx";
@@ -19,6 +21,7 @@ const AttendancePage = () => {
   const [sessions, setSessions] = useState([]);
   const [editingRecord, setEditingRecord] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState("");
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // ✅ FIXED: Staggered loading to prevent 429 errors
@@ -93,8 +96,7 @@ const AttendancePage = () => {
   // ================= HANDLE EDIT =================
   const handleEdit = (record) => {
     setEditingRecord(record);
-    // Scroll to form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setIsFormOpen(true);
   };
 
   // ================= HANDLE SUCCESS =================
@@ -159,6 +161,18 @@ const AttendancePage = () => {
               </option>
             ))}
           </select>
+          <motion.button
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              setEditingRecord(null);
+              setIsFormOpen(true);
+            }}
+            className="px-6 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-sm shadow-lg shadow-blue-500/25 flex items-center gap-2"
+          >
+            <CheckCircle className="w-4 h-4" />
+            Add Attendance
+          </motion.button>
         </div>
       </div>
 
@@ -187,16 +201,31 @@ const AttendancePage = () => {
         })}
       </div>
 
-      {/* ================= FORM ================= */}
-      <AttendanceForm
-        editingRecord={editingRecord}
-        onSuccess={handleSuccess}
-        onCancel={handleCancel}
-        onUpdate={loadAttendance}
-        students={students}
-        courses={courses}
-        sessions={sessions}
-      />
+      {/* Form Modal */}
+      <FormModal
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingRecord(null);
+        }}
+        maxWidth="max-w-4xl"
+      >
+        <AttendanceForm
+          editingRecord={editingRecord}
+          onSuccess={() => {
+            handleSuccess();
+            setIsFormOpen(false);
+          }}
+          onCancel={() => {
+            handleCancel();
+            setIsFormOpen(false);
+          }}
+          onUpdate={loadAttendance}
+          students={students}
+          courses={courses}
+          sessions={sessions}
+        />
+      </FormModal>
 
       {/* ================= ATTENDANCE LIST ================= */}
       <AttendanceList

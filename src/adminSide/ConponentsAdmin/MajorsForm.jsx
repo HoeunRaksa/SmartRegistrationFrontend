@@ -234,9 +234,6 @@ const MajorsForm = ({ editingMajor, onSuccess, onCancel }) => {
 
   return (
     <motion.div
-      variants={animations.fadeUp}
-      initial="hidden"
-      animate="show"
       className="rounded-2xl bg-white/40 backdrop-blur-sm border border-white/40 shadow-lg p-6"
     >
       <div className="flex items-center justify-between mb-6">
@@ -363,11 +360,10 @@ const MajorsForm = ({ editingMajor, onSuccess, onCancel }) => {
                   return (
                     <label
                       key={s.id}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition ${
-                        checked
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition ${checked
                           ? "bg-blue-50 border-blue-300"
                           : "bg-white border-gray-200 hover:bg-gray-50"
-                      }`}
+                        }`}
                     >
                       <input
                         type="checkbox"

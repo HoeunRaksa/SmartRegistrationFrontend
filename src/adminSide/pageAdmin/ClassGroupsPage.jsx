@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { GraduationCap, Users, TrendingUp } from "lucide-react";
 import ClassGroupForm from "../ConponentsAdmin/ClassGroupForm.jsx";
 import ClassGroupsList from "../ConponentsAdmin/ClassGroupsList.jsx";
+import FormModal from "../../Components/FormModal.jsx";
 import {
   fetchAllClassGroups,
   createClassGroup,
@@ -14,6 +16,7 @@ import ClassGroupStudentsModal from "../ConponentsAdmin/ClassGroupStudentsModal.
 const ClassGroupsPage = () => {
   const [classGroups, setClassGroups] = useState([]);
   const [editingGroup, setEditingGroup] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [viewGroup, setViewGroup] = useState(null);
@@ -67,7 +70,7 @@ const ClassGroupsPage = () => {
       <div className="relative overflow-hidden rounded-3xl border border-white/60 bg-gradient-to-br from-blue-50/80 via-purple-50/60 to-pink-50/80 backdrop-blur-2xl shadow-[0_22px_70px_-30px_rgba(15,23,42,0.35)] p-8 mb-6">
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl -mr-32 -mt-32" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-pink-400/10 to-purple-400/10 rounded-full blur-3xl -ml-24 -mb-24" />
-        
+
         <div className="relative">
           <div className="flex items-start justify-between">
             <div>
@@ -85,6 +88,18 @@ const ClassGroupsPage = () => {
                 </div>
               </div>
             </div>
+            <motion.button
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                setEditingGroup(null);
+                setIsFormOpen(true);
+              }}
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-sm shadow-xl shadow-blue-500/30 flex items-center gap-2"
+            >
+              <Users className="w-4 h-4" />
+              Add Class Group
+            </motion.button>
           </div>
 
           {/* Stats Cards */}
@@ -142,19 +157,37 @@ const ClassGroupsPage = () => {
 
       {/* Main Content */}
       <div className="space-y-6">
-        <ClassGroupForm
-          editingGroup={editingGroup}
-          onCancel={() => setEditingGroup(null)}
-          onCreate={handleCreate}
-          onUpdate={handleUpdate}
-        />
+        {/* Form Modal */}
+        <FormModal
+          isOpen={isFormOpen}
+          onClose={() => {
+            setIsFormOpen(false);
+            setEditingGroup(null);
+          }}
+        >
+          <ClassGroupForm
+            editingGroup={editingGroup}
+            onCancel={() => {
+              setEditingGroup(null);
+              setIsFormOpen(false);
+            }}
+            onCreate={(payload) => {
+              handleCreate(payload);
+              setIsFormOpen(false);
+            }}
+            onUpdate={(id, payload) => {
+              handleUpdate(id, payload);
+              setIsFormOpen(false);
+            }}
+          />
+        </FormModal>
 
         <ClassGroupsList
           loading={loading}
           classGroups={classGroups}
           onEdit={(g) => {
             setEditingGroup(g);
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            setIsFormOpen(true);
           }}
           onDelete={handleDelete}
           onRefresh={loadGroups}
@@ -166,16 +199,25 @@ const ClassGroupsPage = () => {
       </div>
 
       {/* Modal */}
-      {viewOpen && viewGroup && (
-        <ClassGroupStudentsModal
-          open={viewOpen}
-          group={viewGroup}
-          onClose={() => {
-            setViewOpen(false);
-            setViewGroup(null);
-          }}
-        />
-      )}
+      <FormModal
+        isOpen={viewOpen}
+        onClose={() => {
+          setViewOpen(false);
+          setViewGroup(null);
+        }}
+        maxWidth="max-w-5xl"
+      >
+        {viewGroup && (
+          <ClassGroupStudentsModal
+            open={viewOpen}
+            group={viewGroup}
+            onClose={() => {
+              setViewOpen(false);
+              setViewGroup(null);
+            }}
+          />
+        )}
+      </FormModal>
     </div>
   );
 };

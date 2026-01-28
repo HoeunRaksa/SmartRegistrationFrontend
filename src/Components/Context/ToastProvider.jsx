@@ -32,21 +32,26 @@ export const ToastProvider = ({ children }) => {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className="min-w-[260px] max-w-[360px] rounded-xl border bg-white shadow-lg px-4 py-3"
+            className={`min-w-[260px] max-w-[360px] rounded-2xl border border-white/30 px-4 py-3 shadow-2xl transition-all duration-300 ${t.type === "success" ? "toast-success" :
+                t.type === "error" ? "toast-error" :
+                  "toast-info"
+              }`}
           >
             <div className="flex items-start justify-between gap-3">
-              <div className="text-sm font-medium text-gray-900">
-                {t.type === "success" && "✅ Success"}
-                {t.type === "error" && "❌ Error"}
-                {t.type === "info" && "ℹ️ Info"}
-                <div className="mt-1 text-sm font-normal text-gray-700 break-words">
+              <div className="text-sm font-semibold text-white">
+                <div className="flex items-center gap-2">
+                  {t.type === "success" && "✅ Success"}
+                  {t.type === "error" && "❌ Error"}
+                  {t.type === "info" && "ℹ️ Info"}
+                </div>
+                <div className="mt-1 text-sm font-normal text-white/90 break-words">
                   {t.message}
                 </div>
               </div>
 
               <button
                 onClick={() => remove(t.id)}
-                className="text-gray-400 hover:text-gray-700"
+                className="text-white/60 hover:text-white transition-colors"
               >
                 ✕
               </button>
