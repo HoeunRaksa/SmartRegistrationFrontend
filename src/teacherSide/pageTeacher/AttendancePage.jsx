@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CheckSquare, X, Check, Calendar, Download, Search, Users, Clock, UserCheck, AlertCircle, BookOpen } from 'lucide-react';
 import {
@@ -19,10 +20,17 @@ const AttendancePage = () => {
 
   const [attendance, setAttendance] = useState([]);
   const [studentSearch, setStudentSearch] = useState('');
+  const location = useLocation();
 
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (location.state?.courseId) {
+      setSelectedCourseId(location.state.courseId);
+    }
+  }, [location.state]);
 
   const loadData = async () => {
     try {

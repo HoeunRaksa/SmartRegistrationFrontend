@@ -41,7 +41,8 @@ export const sendMessage = async (id, content, attachments = [], isConversation 
   try {
     const url = isConversation ? `/conversations/${id}/messages` : `/chat/${id}`;
     const formData = new FormData();
-    if (content) formData.append("content", content);
+    // Always append content, even if empty, to ensure backend doesn't crash on missing field
+    formData.append("content", content || "");
 
     attachments.forEach((file) => {
       formData.append("files[]", file);

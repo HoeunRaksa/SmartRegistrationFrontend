@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, MapPin, Users, ChevronLeft, ChevronRight, Loader } from 'lucide-react';
 import { fetchTeacherSchedule } from '../../api/teacher_api';
 
 const SchedulePage = () => {
+  const navigate = useNavigate();
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [loading, setLoading] = useState(true);
   const [scheduleData, setScheduleData] = useState({});
@@ -25,6 +27,7 @@ const SchedulePage = () => {
         acc[day].push({
           time: `${item.start_time} - ${item.end_time}`,
           course: item.course_name,
+          course_id: item.course_id,
           code: item.course_code,
           room: item.room,
           color: 'from-blue-500 to-cyan-500'
@@ -98,16 +101,20 @@ const SchedulePage = () => {
                   scheduleData[day].map((classItem, index) => (
                     <div
                       key={index}
-                      className="p-3 rounded-xl bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-all shadow-sm"
+                      onClick={() => navigate('/teacher/attendance', { state: { courseId: classItem.course_id } })}
+                      className="p-3 rounded-xl bg-gray-50 border border-gray-100 hover:bg-blue-50 hover:border-blue-200 cursor-pointer transition-all shadow-sm group"
                     >
-                      <div className={`inline-flex px-2 py-1 rounded-lg bg-gradient-to-r ${classItem.color} text-white text-[10px] font-bold mb-2`}>
+                      <div className={`inline-flex px-2 py-1 rounded-lg bg-gradient-to-r ${classItem.color} text-white text-[10px] font-bold mb-2 group-hover:scale-105 transition-transform`}>
                         {classItem.time}
                       </div>
-                      <h4 className="font-bold text-gray-800 text-xs mb-1">{classItem.course}</h4>
+                      <h4 className="font-bold text-gray-800 text-xs mb-1 group-hover:text-blue-700">{classItem.course}</h4>
                       <p className="text-[10px] text-gray-500 mb-2 truncate">{classItem.code}</p>
                       <div className="flex items-center gap-2 text-[10px] text-gray-600 mb-1">
                         <MapPin className="w-3 h-3 text-red-500" />
                         <span className="truncate">{classItem.room}</span>
+                      </div>
+                      <div className="mt-2 text-[10px] text-blue-600 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                        Take Attendance →
                       </div>
                     </div>
                   ))
