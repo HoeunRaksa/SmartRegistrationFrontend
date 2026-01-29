@@ -42,6 +42,8 @@ const MessagesPage = () => {
   const [groupTitle, setGroupTitle] = useState("");
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [availableUsers, setAvailableUsers] = useState([]);
+  const [typingUsers, setTypingUsers] = useState([]);
+  const typingTimeoutRef = useRef({});
 
   // Media state
   const [attachments, setAttachments] = useState([]);
@@ -89,6 +91,8 @@ const MessagesPage = () => {
     }
   }, [selectedConversation?.id]);
 
+
+
   useEffect(() => {
     if (!currentUser?.id || !selectedConversation?.id) return;
 
@@ -115,12 +119,44 @@ const MessagesPage = () => {
         if (prev.some(m => m.id === event.id)) return prev;
         return [...prev, incomingMessage];
       });
+
+      // Clear typing indicator for this user when message is received
+      setTypingUsers(prev => prev.filter(u => u.id !== event.s_id));
+    });
+
+    channel.listenForWhisper("typing", (e) => {
+      setTypingUsers((prev) => {
+        if (prev.some(u => u.id === e.id)) return prev;
+        return [...prev, e];
+      });
+
+      // Clear existing timeout for this user
+      if (typingTimeoutRef.current[e.id]) {
+        clearTimeout(typingTimeoutRef.current[e.id]);
+      }
+
+      // Remove typing indicator after 3 seconds
+      typingTimeoutRef.current[e.id] = setTimeout(() => {
+        setTypingUsers((prev) => prev.filter(u => u.id !== e.id));
+      }, 3000);
     });
 
     return () => {
       echo.leave(channelName);
     };
   }, [currentUser?.id, selectedConversation?.id]);
+
+  const handleTyping = () => {
+    if (!selectedConversation?.id) return;
+    const channelName = `conversation.${selectedConversation.id}`;
+    const echo = getEcho();
+    if (echo) {
+      echo.private(channelName).whisper("typing", {
+        id: currentUser.id,
+        name: currentUser.name
+      });
+    }
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -568,6 +604,20 @@ const MessagesPage = () => {
                     </div>
                   </div>
                 ))}
+                {typingUsers.length > 0 && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+                    </div>
+                    <span className="text-xs text-slate-400 font-medium">
+                      {typingUsers.length > 2
+                        ? `${typingUsers.length} people are typing...`
+                        : `${typingUsers.map(u => u.name.split(' ')[0]).join(', ')} ${typingUsers.length === 1 ? 'is' : 'are'} typing...`}
+                    </span>
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
 
@@ -644,7 +694,10 @@ const MessagesPage = () => {
                     <input
                       type="text"
                       value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
+                      onChange={(e) => {
+                        setNewMessage(e.target.value);
+                        handleTyping();
+                      }}
                       placeholder="Type a message..."
                       className="flex-1 px-4 py-3 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium"
                     />
