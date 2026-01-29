@@ -93,7 +93,7 @@ function Socials() {
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`Link to our ${label} page`}
-          className="backdrop-blur-xl bg-white/60 p-2.5 rounded-full border border-white/60 text-gray-600 hover:text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 transition-all duration-300 shadow-lg"
+          className="backdrop-blur-xl bg-white/60 p-2.5 rounded-full border border-white/60 gen-z-glass text-gray-600 hover:text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 transition-all duration-300 shadow-lg"
         >
           <Icon className="w-5 h-5" />
         </motion.a>
@@ -105,7 +105,7 @@ function Socials() {
 
 export function Footer() {
   return (
-    <footer className="relative backdrop-blur-xl bg-gradient-to-br from-white/60 to-white/40 border-t-2 border-white/40">
+    <footer className="relative backdrop-blur-xl bg-gradient-to-br from-white/60 to-white/40 border-t-2 border-white/40 gen-z-perspective" style={{ transformStyle: 'preserve-3d' }}>
       {/* Main Footer Content */}
       <div className="mx-auto py-16 px-6 lg:px-10 max-w-7xl">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-y-10 gap-x-8">
@@ -125,7 +125,7 @@ export function Footer() {
             </motion.h3>
             <motion.div
               whileHover={{ scale: 1.02, y: -2 }}
-              className="backdrop-blur-xl bg-white/50 p-5 rounded-2xl border border-white/60 mb-6"
+              className="backdrop-blur-xl bg-white/50 p-5 rounded-2xl border border-white/60 gen-z-card mb-6"
             >
               <p className="text-sm leading-relaxed text-gray-700 font-medium mb-3">
                 Empowering minds and shaping the future through innovative education,
@@ -184,7 +184,7 @@ export function Footer() {
             </h4>
             <motion.div
               whileHover={{ scale: 1.02, y: -2 }}
-              className="backdrop-blur-xl bg-white/50 p-5 rounded-2xl border border-white/60"
+              className="backdrop-blur-xl bg-white/50 p-5 rounded-2xl border border-white/60 gen-z-card"
             >
               <div className="text-sm font-medium space-y-3 text-gray-700">
                 <div className="flex items-start gap-3">
@@ -240,7 +240,7 @@ export function Footer() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="mt-12 backdrop-blur-xl bg-gradient-to-r from-blue-600/90 via-purple-600/90 to-pink-600/90 rounded-2xl p-6 border border-white/30"
+          className="mt-12 backdrop-blur-xl bg-gradient-to-r from-blue-600/90 via-purple-600/90 to-pink-600/90 rounded-2xl p-6 border border-white/30 gen-z-card gen-z-glow-purple"
         >
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center text-white">
             <div>

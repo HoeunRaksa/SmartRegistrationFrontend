@@ -49,7 +49,7 @@ function Navbar() {
   };
 
   return (
-    <nav className="relative">
+    <nav className="relative gen-z-perspective" style={{ transformStyle: 'preserve-3d' }}>
       <ToastContainer />
 
       {/* Navbar Content */}
@@ -115,7 +115,7 @@ function Navbar() {
         <div className="flex items-center space-x-3">
           {user ? (
             <div className="hidden md:flex items-center gap-3">
-              <div className="backdrop-blur-xl bg-white/60 px-4 py-2 rounded-full border border-white/60">
+              <div className="backdrop-blur-xl bg-white/60 px-4 py-2 rounded-full border border-white/60 gen-z-glass">
                 <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   {user.name}
                 </span>
@@ -124,7 +124,7 @@ function Navbar() {
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleLogout}
-                className="relative backdrop-blur-xl bg-gradient-to-r from-red-500 to-pink-500 text-white px-6 py-2.5 rounded-full shadow-lg hover:shadow-[0_10px_30px_rgba(239,68,68,0.4)] transition-all duration-300 font-semibold border border-white/30 overflow-hidden group"
+                className="relative backdrop-blur-xl bg-gradient-to-r from-red-500 to-pink-500 text-white px-6 py-2.5 rounded-full gen-z-btn gen-z-glow-pink shadow-lg hover:shadow-[0_10px_30px_rgba(239,68,68,0.4)] transition-all duration-300 font-semibold border border-white/30 overflow-hidden group"
               >
                 <motion.div
                   animate={{
@@ -146,7 +146,7 @@ function Navbar() {
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/login")}
-              className="hidden md:inline-flex relative backdrop-blur-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-2.5 rounded-full shadow-lg hover:shadow-[0_10px_30px_rgba(139,92,246,0.4)] transition-all duration-300 font-semibold border border-white/30 overflow-hidden group"
+              className="hidden md:inline-flex relative backdrop-blur-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-2.5 rounded-full gen-z-btn gen-z-glow-purple shadow-lg hover:shadow-[0_10px_30px_rgba(139,92,246,0.4)] transition-all duration-300 font-semibold border border-white/30 overflow-hidden group"
             >
               <motion.div
                 animate={{
@@ -168,7 +168,7 @@ function Navbar() {
           <motion.button
             whileHover={{ scale: 1.1, rotate: 90 }}
             whileTap={{ scale: 0.9 }}
-            className="md:hidden backdrop-blur-xl bg-white/60 p-2.5 rounded-full border-2 border-white/60 shadow-lg transition-all duration-300"
+            className="md:hidden backdrop-blur-xl bg-white/60 p-2.5 rounded-full border-2 border-white/60 gen-z-glass shadow-lg transition-all duration-300"
             onClick={() => setIsMenuOpen((v) => !v)}
             aria-label="Toggle menu"
           >
@@ -200,7 +200,7 @@ function Navbar() {
             transition={{ duration: 0.3 }}
             className="md:hidden overflow-hidden"
           >
-            <div className="backdrop-blur-xl bg-white/40 border-t-2 border-white/40 p-4 space-y-2 rounded-b-3xl">
+            <div className="backdrop-blur-xl bg-white/40 border-t-2 border-white/40 gen-z-glass p-4 space-y-2 rounded-b-3xl">
               {NAV_LINKS.map(({ path, label }, index) => (
                 <motion.div
                   key={path}

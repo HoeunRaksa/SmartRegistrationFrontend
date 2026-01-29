@@ -143,7 +143,7 @@ const Login = () => {
       </div>
 
       {/* Login Card */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center px-4 py-12">
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-4 py-12 gen-z-perspective">
         <motion.div
           initial={{ opacity: 0, y: 24, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -154,6 +154,7 @@ const Login = () => {
             border-2 border-white/60
             bg-gradient-to-br from-white/80 via-white/70 to-white/60
             backdrop-blur-2xl
+            gen-z-card gen-z-glass
             shadow-[0_20px_60px_rgba(0,0,0,0.15)]
             hover:shadow-[0_30px_80px_rgba(139,92,246,0.3)]
             transition-all duration-500
@@ -288,7 +289,7 @@ const Login = () => {
               whileTap={{ scale: 0.98 }}
               disabled={loading || (cooldownUntil > Date.now())}
               type="submit"
-              className="relative w-full mt-6 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 py-4 text-sm font-bold text-white shadow-[0_10px_40px_rgba(139,92,246,0.4)] hover:shadow-[0_20px_60px_rgba(139,92,246,0.6)] transition-all duration-500 disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden group"
+              className="relative w-full mt-6 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 py-4 text-sm font-bold text-white gen-z-btn gen-z-glow-purple shadow-[0_10px_40px_rgba(139,92,246,0.4)] hover:shadow-[0_20px_60px_rgba(139,92,246,0.6)] transition-all duration-500 disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden group"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
 

@@ -1,17 +1,14 @@
-/* Professional Animation Utilities - Real-World Style */
+/* Professional Animation Utilities - Real-World Style
+   Performance: only transform + opacity where possible; contain layout; respect reduced-motion. */
 
-/* Smooth transitions for all interactive elements */
-* {
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Card hover - subtle lift with shadow */
+/* Card hover - subtle lift with shadow (GPU-friendly: transform + box-shadow) */
 .card-hover {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    contain: layout style;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-hover:hover {
-    transform: translateY(-2px);
+    transform: translateY(-2px) translateZ(0);
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
         0 8px 10px -6px rgba(0, 0, 0, 0.1);
 }
@@ -21,36 +18,30 @@
     transform: scale(0.98);
 }
 
-/* Fade in animation */
+/* Fade in animation (opacity only = compositor-only) */
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .fade-in {
-    animation: fadeIn 0.3s ease-out;
+    animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Slide up animation */
+/* Slide up animation (transform + opacity = GPU) */
 @keyframes slideUp {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(10px) translateZ(0);
     }
-
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) translateZ(0);
     }
 }
 
 .slide-up {
-    animation: slideUp 0.4s ease-out;
+    animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Subtle pulse for notifications */
@@ -70,15 +61,14 @@
     animation: pulse 2s ease-in-out infinite;
 }
 
-/* Loading spinner */
+/* Loading spinner (transform only = GPU) */
 @keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+    to { transform: rotate(360deg) translateZ(0); }
 }
 
 .spin {
     animation: spin 1s linear infinite;
+    transform: translateZ(0);
 }
 
 /* Skeleton loading shimmer */
@@ -139,10 +129,12 @@
         0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
 
-/* Hover scale for icons */
+/* Hover scale for icons (GPU-friendly) */
+.icon-hover {
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
 .icon-hover:hover {
-    transform: scale(1.1);
-    transition: transform 0.15s ease;
+    transform: scale(1.1) translateZ(0);
 }
 
 /* Status indicator dot */
@@ -199,19 +191,24 @@
 .preserve-3d {
     transform-style: preserve-3d;
     perspective: 1000px;
+    contain: layout style;
 }
 
-/* Base class for 3D interactive cards */
+/* Base class for 3D interactive cards - will-change only on hover to avoid constant layer promotion */
 .card-3d {
     position: relative;
     transform-style: preserve-3d;
-    transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.6s ease;
+    contain: layout style;
+    transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-3d:hover {
     will-change: transform;
 }
 
 /* Hover tilt effect - combined with Framer Motion or JS for dynamic tilt */
 .card-3d:hover {
-    transform: rotateX(4deg) rotateY(-4deg) translateY(-5px);
+    transform: rotateX(4deg) rotateY(-4deg) translateY(-5px) translateZ(0);
     box-shadow:
         20px 20px 60px rgba(0, 0, 0, 0.05),
         -20px -20px 60px rgba(255, 255, 255, 0.8);
@@ -230,22 +227,16 @@
     transform: translateZ(60px);
 }
 
-/* Floating 3D Animation */
+/* Floating 3D Animation (transform only = GPU) */
 @keyframes float3d {
-
-    0%,
-    100% {
-        transform: translateZ(30px) translateY(0);
-    }
-
-    50% {
-        transform: translateZ(50px) translateY(-10px);
-    }
+    0%, 100% { transform: translateZ(30px) translateY(0); }
+    50% { transform: translateZ(50px) translateY(-10px); }
 }
 
 .animate-float-3d {
-    animation: float3d 4s ease-in-out infinite;
+    animation: float3d 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     transform-style: preserve-3d;
+    contain: layout style;
 }
 
 /* Glassmorphism 3D */
@@ -274,4 +265,233 @@
 
 .card-3d:hover::after {
     opacity: 1;
+}
+
+/* ==========================================================================
+   GEN Z 3D SYSTEM - Maximum depth, neon glow, glassmorphism, next-gen UI
+   ========================================================================== */
+
+/* Perspective container for whole sections */
+.gen-z-perspective {
+    perspective: 1200px;
+    transform-style: preserve-3d;
+}
+
+/* Gen Z card: lift, neon border glow, deep shadow */
+.gen-z-card {
+    position: relative;
+    transform-style: preserve-3d;
+    contain: layout style;
+    transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1),
+                box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.06),
+        0 10px 30px -10px rgba(59, 130, 246, 0.15),
+        0 0 0 1px rgba(139, 92, 246, 0.08);
+}
+
+.gen-z-card:hover {
+    transform: translateY(-8px) translateZ(20px) rotateX(2deg);
+    box-shadow:
+        0 25px 50px -12px rgba(0, 0, 0, 0.15),
+        0 20px 40px -15px rgba(59, 130, 246, 0.25),
+        0 0 40px -5px rgba(139, 92, 246, 0.2),
+        0 0 0 1px rgba(139, 92, 246, 0.15);
+}
+
+/* Neon glow variants */
+.gen-z-glow-blue {
+    box-shadow: 0 0 30px -5px rgba(59, 130, 246, 0.4), 0 10px 40px -10px rgba(59, 130, 246, 0.2);
+}
+.gen-z-glow-blue:hover {
+    box-shadow: 0 0 50px -5px rgba(59, 130, 246, 0.5), 0 20px 50px -10px rgba(59, 130, 246, 0.3);
+}
+
+.gen-z-glow-purple {
+    box-shadow: 0 0 30px -5px rgba(139, 92, 246, 0.4), 0 10px 40px -10px rgba(139, 92, 246, 0.2);
+}
+.gen-z-glow-purple:hover {
+    box-shadow: 0 0 50px -5px rgba(139, 92, 246, 0.5), 0 20px 50px -10px rgba(139, 92, 246, 0.3);
+}
+
+.gen-z-glow-pink {
+    box-shadow: 0 0 30px -5px rgba(236, 72, 153, 0.35), 0 10px 40px -10px rgba(236, 72, 153, 0.2);
+}
+.gen-z-glow-pink:hover {
+    box-shadow: 0 0 50px -5px rgba(236, 72, 153, 0.45), 0 20px 50px -10px rgba(236, 72, 153, 0.25);
+}
+
+/* Gen Z glass: depth + inner glow */
+.gen-z-glass {
+    background: rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.6),
+        0 8px 32px -8px rgba(31, 38, 135, 0.12),
+        0 0 0 1px rgba(139, 92, 246, 0.06);
+    transform-style: preserve-3d;
+}
+
+.gen-z-glass:hover {
+    box-shadow:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.7),
+        0 20px 50px -15px rgba(59, 130, 246, 0.15),
+        0 0 30px -10px rgba(139, 92, 246, 0.15);
+}
+
+/* Gen Z button: 3D press + neon edge */
+.gen-z-btn {
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.2s cubic-bezier(0.23, 1, 0.32, 1),
+                box-shadow 0.2s ease;
+    box-shadow:
+        0 4px 14px 0 rgba(59, 130, 246, 0.25),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+.gen-z-btn:hover {
+    transform: translateY(-3px) translateZ(8px);
+    box-shadow:
+        0 12px 28px -5px rgba(59, 130, 246, 0.35),
+        0 0 40px -10px rgba(139, 92, 246, 0.25);
+}
+
+.gen-z-btn:active {
+    transform: translateY(1px) translateZ(0);
+    box-shadow: 0 2px 8px 0 rgba(59, 130, 246, 0.2);
+}
+
+/* Depth layers - stronger Z for Gen Z */
+.depth-z-1 { transform: translateZ(15px); }
+.depth-z-2 { transform: translateZ(35px); }
+.depth-z-3 { transform: translateZ(55px); }
+.depth-z-4 { transform: translateZ(80px); }
+
+/* Shimmer border animation */
+@keyframes genZShimmer {
+    0% { background-position: 200% 50%; }
+    100% { background-position: -200% 50%; }
+}
+
+.gen-z-shimmer-border {
+    position: relative;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(59, 130, 246, 0.3),
+        rgba(139, 92, 246, 0.4),
+        rgba(236, 72, 153, 0.3),
+        transparent);
+    background-size: 200% 100%;
+    animation: genZShimmer 4s linear infinite;
+}
+
+/* Glow pulse for CTAs */
+@keyframes genZGlowPulse {
+    0%, 100% { opacity: 0.8; filter: brightness(1); }
+    50% { opacity: 1; filter: brightness(1.1); }
+}
+
+.gen-z-glow-pulse {
+    animation: genZGlowPulse 2.5s ease-in-out infinite;
+}
+
+/* Float with depth - Gen Z hero elements */
+@keyframes genZFloat {
+    0%, 100% { transform: translateY(0) translateZ(0); }
+    50% { transform: translateY(-12px) translateZ(15px); }
+}
+
+.gen-z-float {
+    animation: genZFloat 5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    transform-style: preserve-3d;
+}
+
+/* ==========================================================================
+   FIXED SIDEBAR - Stays fixed on any page, does not scroll with content
+   ========================================================================== */
+.sidebar-fixed {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    overflow: hidden !important;
+    z-index: 40;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+}
+
+/* Inner scroll for nav only - sidebar panel itself does not scroll */
+.sidebar-fixed-nav {
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1;
+    min-height: 0;
+}
+
+/* Main content area - ONLY this area scrolls when content is long; sidebar never scrolls */
+.sidebar-main {
+    height: 100vh;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Wrapper for dashboard layout - no page scroll; only .sidebar-main scrolls */
+.sidebar-layout-root {
+    height: 100vh;
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
+/* ==========================================================================
+   REDUCED MOTION - respect user preference (accessibility + performance)
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    .sidebar-fixed {
+        transition: none;
+    }
+
+    .card-hover,
+    .card-3d,
+    .animate-float-3d,
+    .slide-up,
+    .fade-in,
+    .icon-hover,
+    .pulse,
+    .status-online,
+    .gen-z-card,
+    .gen-z-glass,
+    .gen-z-btn,
+    .gen-z-float,
+    .gen-z-glow-pulse,
+    .gen-z-shimmer-border {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .card-hover:hover,
+    .card-3d:hover,
+    .gen-z-card:hover,
+    .gen-z-glass:hover,
+    .gen-z-btn:hover {
+        transform: none;
+        will-change: auto;
+    }
+
+    .animate-float-3d,
+    .gen-z-float {
+        animation: none;
+    }
+
+    .icon-hover:hover {
+        transform: none;
+    }
 }

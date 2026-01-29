@@ -45,9 +45,12 @@ const AcademicSessionsPage = () => {
         try {
             setLoading(true);
             const res = await fetchAcademicSessions();
-            setSessions(res?.data || []);
+            // API returns { data: [...] }; extractData may return array or { data }
+            const list = Array.isArray(res) ? res : (res?.data ?? []);
+            setSessions(list);
         } catch (error) {
             console.error("Failed to load sessions:", error);
+            setSessions([]);
         } finally {
             setLoading(false);
         }
@@ -72,10 +75,12 @@ const AcademicSessionsPage = () => {
 
     const handleDelete = async (id) => {
         if (!window.confirm("Are you sure? This will not delete created class sessions, only this record.")) return;
+        const previous = sessions;
+        setSessions(prev => prev.filter(s => Number(s.id) !== Number(id)));
         try {
             await deleteAcademicSession(id);
-            loadSessions();
         } catch (error) {
+            setSessions(previous);
             alert("Failed to delete session.");
         }
     };
@@ -86,7 +91,9 @@ const AcademicSessionsPage = () => {
         try {
             setProcessingId(session.id);
             const res = await generateSessionSchedules(session.id);
-            alert(`${res.message} Created ${res.count} sessions.`);
+            const msg = res?.message ?? "Done.";
+            const count = res?.count ?? 0;
+            alert(`${msg} Created ${count} sessions.`);
         } catch (error) {
             alert("Failed to generate schedules. Ensure courses exist for this Year/Semester.");
         } finally {
@@ -118,7 +125,7 @@ const AcademicSessionsPage = () => {
     );
 
     return (
-        <div className="p-6 max-w-7xl mx-auto space-y-6">
+        <div className="p-6 max-w-7xl mx-auto space-y-6 w-full min-w-0 overflow-x-hidden">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>

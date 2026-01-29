@@ -393,7 +393,7 @@ const AdminDashboard = () => {
   }, []);
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden">
+    <div className="sidebar-layout-root min-h-screen w-full relative">
       {/* ================= BACKGROUND SYSTEM ================= */}
       <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/30" />
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -443,14 +443,14 @@ const AdminDashboard = () => {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
       </div>
 
-      {/* ================= SIDEBAR - DESKTOP ================= */}
+      {/* ================= SIDEBAR - DESKTOP (fixed, non-scroll, 3D) ================= */}
       <motion.aside
         animate={{ width: sidebarCollapsed ? 80 : 280 }}
         transition={{ duration: 0.2 }}
-        className="fixed left-0 top-0 h-screen glass-bar border-r border-white/20 z-40 hidden md:block"
+        className="sidebar-fixed glass-bar gen-z-glass border-r border-white/20 hidden md:block"
       >
-        <div className="flex flex-col h-full p-4">
-          <div className="flex items-center justify-between mb-6 px-2">
+        <div className="flex flex-col h-full p-4 overflow-hidden">
+          <div className="flex items-center justify-between mb-6 px-2 flex-shrink-0">
             {!sidebarCollapsed && (
               <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                 NovaTech
@@ -477,7 +477,7 @@ const AdminDashboard = () => {
             </motion.button>
           </div>
 
-          <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-hide">
+          <nav className="sidebar-fixed-nav space-y-1 scrollbar-hide">
             {MENU_ITEMS.map((item, index) => (
               <SidebarItem
                 key={item.id}
@@ -494,7 +494,7 @@ const AdminDashboard = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-4"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-4 flex-shrink-0"
             type="button"
           >
             <motion.div
@@ -527,7 +527,7 @@ const AdminDashboard = () => {
               animate={{ x: 0 }}
               exit={{ x: -280 }}
               transition={{ duration: 0.2 }}
-              className="fixed left-0 top-0 h-screen w-72 backdrop-blur-2xl bg-white/40 border-r border-white/20 shadow-2xl z-50 md:hidden"
+              className="sidebar-fixed w-72 backdrop-blur-2xl bg-white/40 gen-z-glass border-r border-white/20 shadow-2xl z-50 md:hidden"
             >
               <div className="flex flex-col h-full p-4">
                 <div className="flex items-center justify-between mb-6">
@@ -623,12 +623,12 @@ const AdminDashboard = () => {
         )}
       </AnimatePresence>
 
-      {/* ================= MAIN CONTENT ================= */}
+      {/* ================= MAIN CONTENT (scrolls; sidebar stays fixed) ================= */}
       <div
-        className={`transition-all duration-200 ${sidebarCollapsed ? "md:ml-20" : "md:ml-72"
+        className={`sidebar-main transition-all duration-200 ${sidebarCollapsed ? "md:ml-20" : "md:ml-72"
           }`}
       >
-        <header className="sticky top-0 z-30 glass-bar">
+        <header className="sticky top-0 z-30 glass-bar gen-z-glass">
           <div className="flex items-center justify-between px-4 md:px-6 py-3">
             <div className="flex items-center gap-3">
               <motion.button

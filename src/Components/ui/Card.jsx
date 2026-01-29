@@ -1,21 +1,25 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import React, { useState, useEffect } from "react";
 
-// Standard Glass Card
-export const Card = ({ children, className = "", ...props }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ duration: 0.5 }}
-    className={`rounded-3xl backdrop-blur-2xl bg-white/60 border-2 border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.05)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.1)] transition-all duration-500 ${className}`}
-    {...props}
-  >
-    {children}
-  </motion.div>
-);
+// Standard Glass Card - GPU-friendly (opacity + y/transform), respects reduced motion
+export const Card = ({ children, className = "", ...props }) => {
+  const reduced = useReducedMotion();
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: reduced ? 0.12 : 0.5, ease: "easeOut" }}
+      className={`rounded-3xl backdrop-blur-2xl bg-white/60 border-2 border-white/60 gen-z-card shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_50px_-12px_rgba(59,130,246,0.2)] transition-all duration-500 ${className}`}
+      style={{ willChange: reduced ? "auto" : undefined }}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
-// 3D Enhanced Card
+// 3D Enhanced Card - GPU transforms; respects reduced motion by disabling tilt
 export const Card3D = ({
   children,
   className = '',
@@ -27,9 +31,11 @@ export const Card3D = ({
 }) => {
   const [rotateX, setRotateX] = React.useState(0);
   const [rotateY, setRotateY] = React.useState(0);
+  const reducedMotion = useReducedMotion();
+  const enable3D = hover3D && !reducedMotion;
 
   const handleMouseMove = (e) => {
-    if (!hover3D) return;
+    if (!enable3D) return;
 
     const card = e.currentTarget;
     const rect = card.getBoundingClientRect();
@@ -56,12 +62,17 @@ export const Card3D = ({
     high: 'shadow-2xl hover:shadow-[0_35px_60px_-15px_rgba(0,0,0,0.15)]',
   };
 
+  const springTransition = reducedMotion
+    ? { duration: 0.1, ease: "easeOut" }
+    : { type: 'spring', stiffness: 400, damping: 30 };
+
   return (
     <motion.div
-      className={`relative rounded-3xl transition-shadow duration-500 ${shadowStyles[shadowIntensity]} ${className}`}
+      className={`relative rounded-3xl transition-shadow duration-500 gen-z-card group ${shadowStyles[shadowIntensity]} ${className}`}
       style={{
         perspective: `${perspective}px`,
         transformStyle: 'preserve-3d',
+        backfaceVisibility: 'hidden',
       }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -69,58 +80,53 @@ export const Card3D = ({
         rotateX,
         rotateY,
       }}
-      transition={{
-        type: 'spring',
-        stiffness: 400,
-        damping: 30,
-      }}
-      whileHover={{
-        scale: 1.02,
-        z: 50,
-      }}
+      transition={springTransition}
+      whileHover={reducedMotion ? undefined : { scale: 1.02, z: 50 }}
       {...props}
     >
       <div style={{ transform: 'translateZ(20px)' }} className="h-full">
         {children}
       </div>
 
-      {/* 3D Depth Shadow/Glow */}
+      {/* Gen Z 3D depth glow */}
       <div
-        className="absolute inset-0 -z-10 rounded-[inherit] opacity-20 blur-2xl transition-opacity duration-500"
+        className="absolute inset-0 -z-10 rounded-[inherit] opacity-30 blur-2xl transition-opacity duration-500 group-hover:opacity-50"
         style={{
-          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(79, 70, 229, 0.4))',
-          transform: 'translateZ(-10px)',
+          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(139, 92, 246, 0.5))',
+          transform: 'translateZ(-12px)',
         }}
       />
     </motion.div>
   );
 };
 
-// Floating Card Animation
+// Floating Card Animation - disabled when user prefers reduced motion
 export const FloatingCard3D = ({ children, className = '', delay = 0 }) => {
+  const reducedMotion = useReducedMotion();
   return (
     <motion.div
       className={`relative ${className}`}
       style={{
         transformStyle: 'preserve-3d',
+        backfaceVisibility: 'hidden',
       }}
-      animate={{
-        y: [0, -10, 0],
-        rotateX: [0, 2, 0],
-        rotateY: [0, 3, 0],
-      }}
-      transition={{
-        duration: 4,
-        delay,
-        repeat: Infinity,
-        ease: 'easeInOut',
-      }}
-      whileHover={{
-        y: -15,
-        rotateX: 5,
-        rotateY: 5,
-        scale: 1.05,
-      }}
+      animate={
+        reducedMotion
+          ? { y: 0, rotateX: 0, rotateY: 0 }
+          : {
+              y: [0, -10, 0],
+              rotateX: [0, 2, 0],
+              rotateY: [0, 3, 0],
+            }
+      }
+      transition={
+        reducedMotion
+          ? { duration: 0 }
+          : { duration: 4, delay, repeat: Infinity, ease: 'easeInOut' }
+      }
+      whileHover={
+        reducedMotion ? undefined : { y: -15, rotateX: 5, rotateY: 5, scale: 1.05 }
+      }
     >
       {children}
     </motion.div>

@@ -175,7 +175,7 @@ const Home = () => {
             </motion.h1>
 
             <motion.div
-              className="backdrop-blur-2xl bg-white/50 p-6 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.15)] transition-all duration-500"
+              className="backdrop-blur-2xl bg-white/50 p-6 rounded-3xl border border-white/60 gen-z-card shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.15)] transition-all duration-500"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
@@ -186,7 +186,7 @@ const Home = () => {
             </motion.div>
 
             <motion.div
-              className="backdrop-blur-xl bg-gradient-to-br from-white/40 to-white/20 p-6 rounded-3xl border border-white/50 shadow-xl hidden sm:block hover:shadow-2xl transition-all duration-500"
+              className="backdrop-blur-xl bg-gradient-to-br from-white/40 to-white/20 p-6 rounded-3xl border border-white/50 gen-z-card gen-z-glass shadow-xl hidden sm:block hover:shadow-2xl transition-all duration-500"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}
@@ -233,7 +233,7 @@ const Home = () => {
               ].map((stat, index) => (
                 <Card3D
                   key={index}
-                  className="backdrop-blur-2xl bg-gradient-to-br from-white/70 to-white/40 px-4 sm:px-6 py-4 rounded-2xl border border-white/50 text-center shadow-xl hover:shadow-2xl transition-all duration-500"
+                  className="backdrop-blur-2xl bg-gradient-to-br from-white/70 to-white/40 px-4 sm:px-6 py-4 rounded-2xl border border-white/50 gen-z-card text-center shadow-xl hover:shadow-2xl transition-all duration-500"
                 >
                   <p className="font-bold text-xl sm:text-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent">
                     {stat.number}
@@ -289,7 +289,7 @@ const Home = () => {
               </motion.h2>
 
               <motion.div
-                className="backdrop-blur-2xl bg-gradient-to-br from-white/70 via-white/50 to-white/40 p-6 sm:p-8 rounded-3xl border border-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.15)] hover:shadow-[0_30px_80px_rgba(139,92,246,0.3)] transition-all duration-500 hover:scale-[1.02]"
+                className="backdrop-blur-2xl bg-gradient-to-br from-white/70 via-white/50 to-white/40 p-6 sm:p-8 rounded-3xl border border-white/60 gen-z-card gen-z-glow-purple shadow-[0_20px_60px_rgba(0,0,0,0.15)] hover:shadow-[0_30px_80px_rgba(139,92,246,0.3)] transition-all duration-500 hover:scale-[1.02]"
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
@@ -340,7 +340,7 @@ const Home = () => {
             </motion.h2>
 
             <motion.div
-              className="backdrop-blur-2xl bg-gradient-to-br from-white/60 to-white/40 p-6 rounded-3xl border border-white/60 shadow-xl max-w-4xl mx-auto"
+              className="backdrop-blur-2xl bg-gradient-to-br from-white/60 to-white/40 p-6 rounded-3xl border border-white/60 gen-z-card shadow-xl max-w-4xl mx-auto"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -444,7 +444,7 @@ const Home = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="backdrop-blur-2xl bg-gradient-to-br from-white/60 to-white/40 p-6 rounded-3xl border border-white/60 shadow-xl max-w-4xl mx-auto"
+              className="backdrop-blur-2xl bg-gradient-to-br from-white/60 to-white/40 p-6 rounded-3xl border border-white/60 gen-z-card shadow-xl max-w-4xl mx-auto"
             >
               <p className="text-base sm:text-lg md:text-xl text-gray-800 leading-relaxed font-light">
                 At NovaTech University, we combine academic excellence with real-world experience,
@@ -552,7 +552,7 @@ const Home = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="backdrop-blur-2xl bg-gradient-to-br from-white/60 to-white/40 p-6 rounded-3xl border border-white/60 shadow-xl max-w-4xl mx-auto"
+              className="backdrop-blur-2xl bg-gradient-to-br from-white/60 to-white/40 p-6 rounded-3xl border border-white/60 gen-z-card shadow-xl max-w-4xl mx-auto"
             >
               <p className="text-base sm:text-lg md:text-xl text-gray-800 leading-relaxed font-light">
                 Our modern campus features state-of-the-art facilities designed to support

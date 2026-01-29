@@ -41,9 +41,10 @@ const AttendancePage = () => {
         fetchTeacherAttendanceStats()
       ]);
 
-      const courseList = coursesRes.data?.data || [];
-      setCourses(courseList);
-      setSessions(sessionsRes.data?.data || []);
+      const courseList = coursesRes?.data?.data ?? (Array.isArray(coursesRes?.data) ? coursesRes.data : []);
+      const sessionList = sessionsRes?.data?.data ?? (Array.isArray(sessionsRes?.data) ? sessionsRes.data : []);
+      setCourses(Array.isArray(courseList) ? courseList : []);
+      setSessions(Array.isArray(sessionList) ? sessionList : []);
       setStats(statsRes.data?.data || null);
 
       if (courseList.length > 0 && !selectedCourseId) {
@@ -222,12 +223,13 @@ const AttendancePage = () => {
           >
             <option value="">{selectedCourseId ? "Choose a session..." : "Select a course first"}</option>
             {sessions
-              .filter(s => s.course_name === courses.find(c => c.id == selectedCourseId)?.name)
+              .filter(s => String(s.course_id) === String(selectedCourseId))
               .map(session => {
-                const isToday = session.date === new Date().toISOString().split('T')[0];
+                const sessionDate = session.date ? (session.date.split && session.date.split('T')[0]) || session.date : '';
+                const isToday = sessionDate === new Date().toISOString().split('T')[0];
                 return (
                   <option key={session.id} value={session.id}>
-                    {isToday ? "⭐️ TODAY - " : ""}{session.date} ({session.time})
+                    {isToday ? "⭐️ TODAY - " : ""}{sessionDate} ({session.time || '—'})
                   </option>
                 );
               })}

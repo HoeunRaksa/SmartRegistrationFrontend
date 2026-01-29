@@ -215,8 +215,8 @@ const StudentDashboard = () => {
         }
     };
 
-    return (
-        <div className="min-h-screen w-full relative overflow-hidden">
+return (
+            <div className="sidebar-layout-root min-h-screen w-full relative">
             {/* ================= BACKGROUND SYSTEM ================= */}
             <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/30" />
 
@@ -270,15 +270,15 @@ const StudentDashboard = () => {
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
             </div>
 
-            {/* ================= SIDEBAR - DESKTOP ================= */}
+            {/* ================= SIDEBAR - DESKTOP (fixed, non-scroll, 3D) ================= */}
             <motion.aside
                 animate={{ width: sidebarCollapsed ? 80 : 280 }}
                 transition={{ duration: 0.2 }}
-                className="fixed left-0 top-0 h-screen backdrop-blur-2xl bg-white/30 border-r border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.2)] z-40 hidden md:block"
+                className="sidebar-fixed backdrop-blur-2xl bg-white/30 gen-z-glass border-r border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.2)] hidden md:block"
             >
-                <div className="flex flex-col h-full p-4">
+                <div className="flex flex-col h-full p-4 overflow-hidden">
                     {/* Logo */}
-                    <div className="flex items-center justify-between mb-8 px-2">
+                    <div className="flex items-center justify-between mb-8 px-2 flex-shrink-0">
                         {!sidebarCollapsed && (
                             <div>
                                 <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
@@ -310,7 +310,7 @@ const StudentDashboard = () => {
                     </div>
 
                     {/* Menu Items */}
-                    <nav className="flex-1 space-y-2 overflow-y-auto scrollbar-hide">
+                    <nav className="sidebar-fixed-nav space-y-2 scrollbar-hide">
                         {menuItems.map((item, index) => {
                             const Icon = item.icon;
                             const isActive = activeSection === item.id;
@@ -361,7 +361,7 @@ const StudentDashboard = () => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-2 rounded-2xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-5"
+                        className="w-full flex items-center gap-3 px-4 py-2 rounded-2xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-5 flex-shrink-0"
                     >
                         <motion.div
                             whileHover={{ rotate: [0, -15, 15, 0] }}
@@ -393,7 +393,7 @@ const StudentDashboard = () => {
                             animate={{ x: 0 }}
                             exit={{ x: -280 }}
                             transition={{ duration: 0.2 }}
-                            className="fixed left-0 top-0 h-screen w-72 backdrop-blur-2xl bg-white/40 border-r border-white/20 shadow-2xl z-50 md:hidden"
+                            className="sidebar-fixed w-72 backdrop-blur-2xl bg-white/40 gen-z-glass border-r border-white/20 shadow-2xl z-50 md:hidden"
                         >
                             <div className="flex flex-col h-full p-4">
                                 <div className="flex items-center justify-between mb-8">
@@ -494,10 +494,10 @@ const StudentDashboard = () => {
                 )}
             </AnimatePresence>
 
-            {/* ================= MAIN CONTENT ================= */}
-            <div className={`transition-all duration-200 ${sidebarCollapsed ? 'md:ml-20' : 'md:ml-72'}`}>
+            {/* ================= MAIN CONTENT (scrolls; sidebar stays fixed) ================= */}
+            <div className={`sidebar-main transition-all duration-200 ${sidebarCollapsed ? 'md:ml-20' : 'md:ml-72'}`}>
                 {/* ================= TOP BAR ================= */}
-                <header className="sticky top-0 z-30 backdrop-blur-2xl bg-white/40 border-b border-white/20 shadow-sm">
+                <header className="sticky top-0 z-30 backdrop-blur-2xl bg-white/40 gen-z-glass border-b border-white/20 shadow-sm">
                     <div className="flex items-center justify-between px-4 md:px-6 py-3">
                         {/* Left Section */}
                         <div className="flex items-center gap-3">

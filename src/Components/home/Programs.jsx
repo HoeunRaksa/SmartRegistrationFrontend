@@ -16,7 +16,7 @@ const ProgramCard = ({ department, index, onSelect }) => {
       className="h-full"
       hover3D={true}
     >
-      <div className="relative h-full flex flex-col overflow-hidden rounded-3xl backdrop-blur-3xl bg-white/90 border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.12)] group hover:shadow-[0_20px_40px_rgba(0,0,0,0.2)] transition-all duration-500">
+      <div className="relative h-full flex flex-col overflow-hidden rounded-3xl backdrop-blur-3xl bg-white/90 border border-white/80 gen-z-card shadow-[0_8px_30px_rgb(0,0,0,0.12)] group hover:shadow-[0_20px_40px_rgba(0,0,0,0.2)] transition-all duration-500">
 
         {/* Gradient accent top border */}
         <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700" />

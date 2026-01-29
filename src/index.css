@@ -16,3 +16,10 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(59, 130, 246, 0.6);
 }
+
+/* Animation performance: promote animated elements to own layer (use sparingly on animating nodes) */
+.gpu-accelerate {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}

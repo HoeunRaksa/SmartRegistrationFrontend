@@ -252,7 +252,7 @@ const AboutUs = () => {
                   className={`flex flex-col md:flex-row items-center gap-8 ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'}`}
                 >
                   <div className={`flex-1 ${index % 2 === 0 ? 'md:text-right' : 'md:text-left'} w-full`}>
-                    <Card3D className="bg-white/80 backdrop-blur-xl border-white/60 p-8 hover:border-purple-300/50 transition-colors">
+                    <Card3D className="bg-white/80 backdrop-blur-xl border-white/60 gen-z-card p-8 hover:border-purple-300/50 transition-colors">
                       <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-blue-600 to-purple-600 opacity-20 absolute top-4 right-8">{item.year}</span>
                       <h3 className="text-xl font-bold text-gray-900 mb-2 relative z-10">{item.event}</h3>
                       <p className="text-gray-600 relative z-10">{item.description}</p>

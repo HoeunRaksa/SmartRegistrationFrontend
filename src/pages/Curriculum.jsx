@@ -145,7 +145,7 @@ const Curriculum = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <div className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 border-2 border-white/60 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] p-6 sm:p-10">
+          <div className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 border-2 border-white/60 rounded-3xl gen-z-card gen-z-glass shadow-[0_20px_60px_rgba(0,0,0,0.15)] p-6 sm:p-10">
             {/* Gradient top accent */}
             <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700" />
 
@@ -292,7 +292,7 @@ const Curriculum = () => {
                       initial="hidden"
                       whileInView="visible"
                       viewport={{ once: true, amount: 0.2 }}
-                      className="relative flex flex-col h-full rounded-3xl overflow-hidden backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 border-2 border-white/60 shadow-xl transition-all duration-500 group"
+                      className="relative flex flex-col h-full rounded-3xl overflow-hidden backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 border-2 border-white/60 gen-z-card shadow-xl transition-all duration-500 group"
                       hover3D={true}
                     >
 
