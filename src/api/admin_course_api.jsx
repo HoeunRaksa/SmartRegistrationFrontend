@@ -73,8 +73,8 @@ const requestOnce = async (method, url, payloadOrConfig) => {
 // ==============================
 
 // GET: Fetch all course enrollments
-export const fetchAllEnrollments = async () => {
-  const response = await requestOnce("get", "/admin/enrollments");
+export const fetchAllEnrollments = async (params = {}) => {
+  const response = await requestOnce("get", "/admin/enrollments", params);
   const data = extractData(response);
   return { data: { data: Array.isArray(data) ? data : [] } };
 };

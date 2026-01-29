@@ -70,7 +70,7 @@ const FormModal = ({ isOpen, onClose, children, title, maxWidth = "max-w-2xl" })
                             </button>
 
                             {/* Content Wrapper */}
-                            <div className="bg-transparent">
+                            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
                                 {children}
                             </div>
                         </motion.div>

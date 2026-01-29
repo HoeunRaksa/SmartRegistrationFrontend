@@ -55,10 +55,10 @@ const CoursesPage = () => {
             placeholder="Search courses..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 rounded-xl backdrop-blur-xl bg-white/60 border border-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
+            className="w-full pl-12 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 shadow-sm"
           />
         </div>
-        <button className="px-6 py-3 rounded-xl backdrop-blur-xl bg-white/60 border border-white/40 hover:bg-white/80 transition-all flex items-center gap-2">
+        <button className="px-6 py-3 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm">
           <Filter className="w-5 h-5" />
           <span>Filter</span>
         </button>
@@ -76,7 +76,7 @@ const CoursesPage = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="backdrop-blur-xl bg-white/60 rounded-2xl border border-white/40 shadow-lg hover:shadow-xl transition-all overflow-hidden group"
+              className="bg-white rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-all overflow-hidden group"
             >
               <div className={`h-2 bg-gradient-to-r ${course.color}`} />
               <div className="p-6">

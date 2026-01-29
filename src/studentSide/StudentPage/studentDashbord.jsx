@@ -35,7 +35,8 @@ import {
     MessageSquare,
     Maximize2,
     Minimize2,
-    Construction
+    Construction,
+    Users
 } from 'lucide-react';
 
 const profileFallback = "/assets/images/profile-fallback.png";

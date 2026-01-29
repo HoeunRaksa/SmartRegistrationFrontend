@@ -7,6 +7,7 @@ import FormModal from "../../Components/FormModal.jsx";
 import { fetchAllEnrollments } from "../../api/admin_course_api.jsx";
 import { fetchCourses } from "../../api/course_api.jsx";
 import { fetchDepartments, fetchMajorsByDepartment } from "../../api/department_api.jsx";
+import { fetchAllClassGroups } from "../../api/class_group_api.jsx";
 import { searchStudents } from "../../api/student_api.jsx";
 
 import { getCachedCourses } from "../../utils/dataCache";
@@ -126,7 +127,7 @@ const FilterSelect = ({
     >
       <option value="">{placeholder}</option>
       {options.map((opt) => (
-        <option key={String(opt.id)} value={String(opt.id)}>
+        <option key={String(opt.id || opt.value || Math.random())} value={String(opt.id || opt.value || "")}>
           {opt.label}
         </option>
       ))}
@@ -182,6 +183,7 @@ const EnrollmentsPage = () => {
 
   const [departments, setDepartments] = useState([]);
   const [majors, setMajors] = useState([]);
+  const [classGroups, setClassGroups] = useState([]);
 
   const [students, setStudents] = useState([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
@@ -194,6 +196,7 @@ const EnrollmentsPage = () => {
   const [filters, setFilters] = useState({
     department_id: "",
     major_id: "",
+    class_group_id: "",
     course_id: "",
     academic_year: "",
     semester: "",
@@ -208,9 +211,11 @@ const EnrollmentsPage = () => {
   useEffect(() => {
     loadCourses();
     loadDepartments();
+    loadClassGroups();
     loadEnrollments({
       department_id: "",
       major_id: "",
+      class_group_id: "",
       course_id: "",
       q: "",
       academic_year: "",
@@ -240,7 +245,7 @@ const EnrollmentsPage = () => {
     try {
       setLoading(true);
 
-      const res = await fetchAllEnrollments({
+      const params = {
         department_id: f.department_id || undefined,
         major_id: f.major_id || undefined,
         course_id: f.course_id || undefined,
@@ -248,7 +253,16 @@ const EnrollmentsPage = () => {
         semester: f.semester || undefined,
         q: (f.search || "").trim() || undefined,
         per_page: 50,
-      });
+      };
+
+      // ✅ Sync backend specific group filters
+      if (f.class_group_id) {
+        params.class_group_id = f.class_group_id;
+        params.scg_academic_year = f.academic_year || undefined;
+        params.scg_semester = f.semester || undefined;
+      }
+
+      const res = await fetchAllEnrollments(params);
 
       const data = res?.data?.data || res?.data || [];
       setEnrollments(Array.isArray(data) ? data : []);
@@ -294,6 +308,17 @@ const EnrollmentsPage = () => {
     } catch (e) {
       console.error(e);
       setMajors([]);
+    }
+  };
+
+  const loadClassGroups = async () => {
+    try {
+      const res = await fetchAllClassGroups();
+      const data = res?.data?.data || res?.data || [];
+      setClassGroups(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error(e);
+      setClassGroups([]);
     }
   };
 
@@ -556,6 +581,23 @@ const EnrollmentsPage = () => {
               iconColor="text-sky-600"
               iconBg="from-sky-100 to-cyan-100"
               ringColor="focus:ring-sky-500/20 focus:border-sky-500"
+            />
+
+            {/* Class Group Filter */}
+            <FilterSelect
+              name="class_group_id"
+              icon={Layers}
+              placeholder="All Groups"
+              value={filters.class_group_id}
+              onChange={(v) => handleFilterChange("class_group_id", v)}
+              options={classGroups.map((cg) => ({
+                id: cg.id,
+                label: cg.class_name,
+              }))}
+              iconBg="from-pink-100 to-rose-100"
+              iconColor="text-pink-600"
+              disabled={!filters.academic_year || !filters.semester}
+              ringColor="focus:ring-pink-500/20 focus:border-pink-500"
             />
 
             <FilterSelect

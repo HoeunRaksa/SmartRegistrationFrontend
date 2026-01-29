@@ -60,16 +60,16 @@ const University3DHub = ({ stats, charts, extendedStats, activities, systemStatu
         const particles = [];
         for (let i = 0; i < particleCount; i++) {
             particles.push({
-                x: (Math.random() - 0.5) * 2000,
-                y: (Math.random() - 0.5) * 2000,
-                z: (Math.random() - 0.5) * 2000,
-                speedX: (Math.random() - 0.5) * 2,
-                speedY: (Math.random() - 0.5) * 2,
-                speedZ: (Math.random() - 0.5) * 2,
-                size: Math.random() * 3 + 0.5,
-                color: `hsl(${Math.random() * 360}, 80%, 60%)`,
-                pulseOffset: Math.random() * Math.PI * 2,
-                life: Math.random() * 100,
+                x: (Math.random() - 0.5) * 4000,
+                y: (Math.random() - 0.5) * 4000,
+                z: (Math.random() - 0.5) * 4000,
+                speedX: (Math.random() - 0.5) * 0.5,
+                speedY: (Math.random() - 0.5) * 0.5,
+                speedZ: (Math.random() - 0.5) * 0.5,
+                size: Math.random() * 2 + 0.2,
+                color: Math.random() > 0.8 ? `hsl(${Math.random() * 40 + 200}, 100%, 80%)` : '#ffffff', // Cool blue or white stars
+                pulseFactor: Math.random() * 0.05 + 0.01,
+                phase: Math.random() * Math.PI * 2
             });
         }
 
@@ -94,12 +94,13 @@ const University3DHub = ({ stats, charts, extendedStats, activities, systemStatu
             });
         });
 
-        // --- Data-Driven Visual Units ---
-        const dataIslands = [
-            { x: -600, y: -200, z: 0, size: 180, color: '#3b82f6', value: stats.totalStudents, label: 'Students', icon: '👥' },
-            { x: -200, y: -200, z: 0, size: 180, color: '#a855f7', value: stats.totalCourses, label: 'Courses', icon: '📚' },
-            { x: 200, y: -200, z: 0, size: 180, color: '#10b981', value: stats.totalDepartments, label: 'Departments', icon: '🏢' },
-            { x: 600, y: -200, z: 0, size: 180, color: '#f59e0b', value: stats.pendingRegistrations, label: 'Pending', icon: '🎓' },
+        // --- Data-Driven Cosmic Units ---
+        const celestialBodies = [
+            { id: 'depts', x: 0, y: 0, z: 0, size: 180, type: 'sun', color: '#fbbf24', value: stats.totalDepartments, label: 'Departments', icon: '☀️' },
+            { id: 'majors', x: 350, y: -100, z: 150, size: 70, type: 'moon', color: '#e2e8f0', value: stats.totalMajors || 0, label: 'Majors', icon: '🌙' },
+            { id: 'pending', x: -350, y: 150, z: 200, size: 60, type: 'moon', color: '#f87171', value: stats.pendingRegistrations || 0, label: 'Pending', icon: '☄️' },
+            { id: 'students', x: -650, y: -150, z: -150, size: 180, type: 'ringed', color: '#c084fc', value: stats.totalStudents, label: 'Students', icon: '🪐' },
+            { id: 'courses', x: 650, y: 150, z: -350, size: 150, type: 'planet', color: '#60a5fa', value: stats.totalCourses, label: 'Courses', icon: '🌍' },
         ];
 
         const revenueTowers = (charts.revenueByDept || []).map((dept, i) => ({
@@ -148,84 +149,138 @@ const University3DHub = ({ stats, charts, extendedStats, activities, systemStatu
         };
 
         // --- Core Rendering Functions ---
-        const drawHolographicCube = (island, rotation) => {
-            const s = island.size / 2;
-            const vertices = [[-s, -s, -s], [s, -s, -s], [s, s, -s], [-s, s, -s], [-s, -s, s], [s, -s, s], [s, s, s], [-s, s, s]];
-            const rotatedVertices = vertices.map(([x, y, z]) => {
-                const rotated = rotatePoint(x, y, z, rotation, Math.sin(time * 0.5) * 0.3);
-                return project3D(rotated.x + island.x, rotated.y + island.y, rotated.z + island.z);
-            });
-            const faces = [[0, 1, 2, 3], [4, 5, 6, 7], [0, 1, 5, 4], [2, 3, 7, 6], [0, 3, 7, 4], [1, 2, 6, 5]];
-            faces.forEach((face, i) => {
+        const drawCelestialBody = (body, rotation) => {
+            const proj = project3D(body.x, body.y, body.z);
+            if (proj.scale <= 0) return;
+
+            const baseSize = body.size * proj.scale;
+
+            // Draw Atmoshere/Glow
+            const glow = ctx.createRadialGradient(proj.x, proj.y, 0, proj.x, proj.y, baseSize * 1.5);
+            glow.addColorStop(0, body.color + '44');
+            glow.addColorStop(0.5, body.color + '22');
+            glow.addColorStop(1, 'transparent');
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(proj.x, proj.y, baseSize * 1.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Solar Flares for Sun
+            if (body.type === 'sun') {
+                for (let i = 0; i < 8; i++) {
+                    const angle = time * 2 + i * Math.PI / 4;
+                    const flareLen = baseSize * (1.2 + Math.sin(time * 5 + i) * 0.1);
+                    ctx.beginPath();
+                    ctx.strokeStyle = body.color + '33';
+                    ctx.lineWidth = 15 * proj.scale;
+                    ctx.moveTo(proj.x, proj.y);
+                    ctx.lineTo(proj.x + Math.cos(angle) * flareLen, proj.y + Math.sin(angle) * flareLen);
+                    ctx.stroke();
+                }
+            }
+
+            // Saturn Rings
+            if (body.type === 'ringed') {
                 ctx.beginPath();
-                ctx.moveTo(rotatedVertices[face[0]].x, rotatedVertices[face[0]].y);
-                face.forEach(v => ctx.lineTo(rotatedVertices[v].x, rotatedVertices[v].y));
-                ctx.closePath();
-                const brightness = 0.3 + (i / faces.length) * 0.5 + Math.sin(time + i) * 0.2;
-                ctx.fillStyle = island.color + Math.floor(brightness * 150).toString(16).padStart(2, '0');
-                ctx.globalAlpha = 0.6 + Math.sin(time * 2 + i) * 0.2;
-                ctx.fill();
-                ctx.globalAlpha = 1;
-                ctx.strokeStyle = island.color;
+                ctx.ellipse(proj.x, proj.y, baseSize * 2.2, baseSize * 0.6, rotation + Math.PI / 6, 0, Math.PI * 2);
+                ctx.strokeStyle = body.color + '66';
+                ctx.lineWidth = 10 * proj.scale;
                 ctx.stroke();
-            });
-            const centerProj = project3D(island.x, island.y - s - 100, island.z);
-            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 32px monospace'; ctx.textAlign = 'center';
-            ctx.fillText(island.value.toLocaleString(), centerProj.x, centerProj.y);
-            ctx.font = 'bold 12px monospace'; ctx.fillStyle = island.color;
-            ctx.fillText(island.label.toUpperCase(), centerProj.x, centerProj.y + 20);
+            }
+
+            // Main Body
+            const bodyGrad = ctx.createRadialGradient(
+                proj.x - baseSize / 3, proj.y - baseSize / 3, baseSize / 10,
+                proj.x, proj.y, baseSize
+            );
+            bodyGrad.addColorStop(0, '#ffffff');
+            bodyGrad.addColorStop(0.2, body.color);
+            bodyGrad.addColorStop(1, '#000000');
+
+            ctx.fillStyle = bodyGrad;
+            ctx.beginPath();
+            ctx.arc(proj.x, proj.y, baseSize, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Surface details (Fake craters/clouds)
+            ctx.globalAlpha = 0.2;
+            ctx.fillStyle = '#000';
+            for (let i = 0; i < 5; i++) {
+                const cx = Math.sin(i * 13) * baseSize * 0.5;
+                const cy = Math.cos(i * 17) * baseSize * 0.5;
+                ctx.beginPath();
+                ctx.arc(proj.x + cx, proj.y + cy, baseSize * 0.2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+
+            // Labels
+            const centerProj = project3D(body.x, body.y - body.size - 80, body.z);
+            ctx.shadowBlur = 10; ctx.shadowColor = body.color;
+            ctx.fillStyle = '#ffffff'; ctx.font = `bold ${Math.floor(32 * proj.scale)}px monospace`; ctx.textAlign = 'center';
+            ctx.fillText(body.value.toLocaleString(), centerProj.x, centerProj.y);
+            ctx.font = `bold ${Math.floor(14 * proj.scale)}px monospace`; ctx.fillStyle = body.color;
+            ctx.fillText(body.label.toUpperCase(), centerProj.x, centerProj.y + 20);
+            ctx.shadowBlur = 0;
         };
 
-        const draw3DTower = (tower, rotation) => {
-            const cos = Math.cos(rotation), sin = Math.sin(rotation);
-            const w = tower.width / 2, h = tower.height, d = tower.depth / 2;
-            const vertices = [[-w, 0, -d], [w, 0, -d], [w, 0, d], [-w, 0, d], [-w, -h, -d], [w, -h, -d], [w, -h, d], [-w, -h, d]];
+        const drawCosmicUnit = (unit, rotation, type = 'beam') => {
+            const proj = project3D(unit.x, unit.y, unit.z);
+            if (proj.scale <= 0) return;
 
-            const rotatedVertices = vertices.map(([vx, vy, vz]) => {
-                const rx = vx * cos - vz * sin;
-                const rz = vx * sin + vz * cos;
-                return project3D(rx + tower.x, vy + tower.y, rz + tower.z);
-            });
+            const w = unit.width * proj.scale;
+            const h = unit.height * proj.scale;
 
-            const faces = [[4, 5, 6, 7], [0, 1, 5, 4], [1, 2, 6, 5], [2, 3, 7, 6], [3, 0, 4, 7]];
-            faces.forEach((face, i) => {
-                ctx.beginPath();
-                ctx.moveTo(rotatedVertices[face[0]].x, rotatedVertices[face[0]].y);
-                face.forEach(v => ctx.lineTo(rotatedVertices[v].x, rotatedVertices[v].y));
-                ctx.closePath();
-
-                const grad = ctx.createLinearGradient(
-                    rotatedVertices[face[0]].x, rotatedVertices[face[0]].y,
-                    rotatedVertices[face[2]].x, rotatedVertices[face[2]].y
-                );
-                const brightness = 0.4 + (i / faces.length) * 0.4;
-                grad.addColorStop(0, tower.color);
-                grad.addColorStop(1, `hsl(${rotationAngle * 50 + i * 20}, 70%, ${20 + brightness * 30}%)`);
+            if (type === 'beam') {
+                // Draw Energy Beam/Pillar
+                const grad = ctx.createLinearGradient(proj.x - w / 2, proj.y, proj.x + w / 2, proj.y);
+                grad.addColorStop(0, 'transparent');
+                grad.addColorStop(0.5, unit.color);
+                grad.addColorStop(1, 'transparent');
 
                 ctx.fillStyle = grad;
-                ctx.globalAlpha = 0.8;
-                ctx.fill();
-                ctx.globalAlpha = 1;
-                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-                ctx.stroke();
-            });
+                ctx.globalAlpha = 0.6 + Math.sin(time * 4) * 0.2;
+                ctx.fillRect(proj.x - w / 2, proj.y - h, w, h);
 
-            const top = project3D(tower.x, tower.y - h - 30, tower.z);
-            ctx.shadowBlur = 15; ctx.shadowColor = tower.color;
-            ctx.fillStyle = '#fff'; ctx.font = 'bold 16px monospace'; ctx.textAlign = 'center';
-            ctx.fillText(tower.value, top.x, top.y);
-            ctx.font = 'bold 10px monospace'; ctx.fillStyle = 'rgba(255,255,255,0.7)';
-            ctx.fillText(tower.label.toUpperCase(), top.x, top.y + 15);
-            ctx.shadowBlur = 0;
+                // Core beam
+                ctx.fillStyle = '#fff';
+                ctx.globalAlpha = 0.8;
+                ctx.fillRect(proj.x - 2 * proj.scale, proj.y - h, 4 * proj.scale, h);
+                ctx.globalAlpha = 1;
+            } else {
+                // Draw Asteroid/Crystal
+                const s = unit.width * proj.scale / 2;
+                ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i / 6) * Math.PI * 2 + rotation;
+                    const r = s * (0.8 + Math.sin(time + i) * 0.2);
+                    const px = proj.x + Math.cos(angle) * r;
+                    const py = proj.y + Math.sin(angle) * r - h / 2;
+                    if (i === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.closePath();
+                ctx.fillStyle = unit.color + '88';
+                ctx.fill();
+                ctx.strokeStyle = unit.color;
+                ctx.stroke();
+            }
+
+            const labelPos = project3D(unit.x, unit.y - unit.height - 30, unit.z);
+            ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.floor(12 * proj.scale)}px monospace`; ctx.textAlign = 'center';
+            ctx.fillText(unit.value, labelPos.x, labelPos.y);
+            ctx.font = `bold ${Math.floor(8 * proj.scale)}px monospace`; ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.fillText(unit.label.toUpperCase(), labelPos.x, labelPos.y + 12);
         };
 
         const animate = () => {
             ctx.clearRect(0, 0, width, height);
 
-            // Background
+            // Deep Space Background
             const bgGradient = ctx.createRadialGradient(width / 2 / window.devicePixelRatio, height / 2 / window.devicePixelRatio, 0, width / 2 / window.devicePixelRatio, height / 2 / window.devicePixelRatio, width);
-            bgGradient.addColorStop(0, visualMode === 'matrix' ? '#001a00' : '#0f172a');
-            bgGradient.addColorStop(1, '#020617');
+            bgGradient.addColorStop(0, '#0a0a20'); // Dark Indigo core
+            bgGradient.addColorStop(0.5, '#020617'); // Almost black middle
+            bgGradient.addColorStop(1, '#000000'); // Pure black edges
             ctx.fillStyle = bgGradient;
             ctx.fillRect(0, 0, width / window.devicePixelRatio, height / window.devicePixelRatio);
 
@@ -248,19 +303,27 @@ const University3DHub = ({ stats, charts, extendedStats, activities, systemStatu
             }
 
             particles.forEach((p, i) => {
-                p.y += p.speedY; if (p.y > 1000) p.y = -1000;
+                p.x += p.speedX; p.y += p.speedY; p.z += p.speedZ;
+                if (Math.abs(p.x) > 2000) p.x *= -0.9;
+                if (Math.abs(p.y) > 2000) p.y *= -0.9;
+                if (Math.abs(p.z) > 2000) p.z *= -0.9;
+
                 const proj = project3D(p.x, p.y, p.z);
-                ctx.beginPath(); ctx.arc(proj.x, proj.y, p.size * proj.scale, 0, Math.PI * 2);
-                ctx.fillStyle = visualMode === 'matrix' ? '#22c55e' : p.color;
-                ctx.globalAlpha = 0.5;
+                if (proj.scale <= 0) return;
+
+                const twinkle = Math.sin(time * 3 + p.phase) * 0.5 + 0.5;
+                ctx.beginPath(); ctx.arc(proj.x, proj.y, p.size * proj.scale * (0.8 + twinkle * 0.4), 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = 0.2 + twinkle * 0.6;
                 ctx.fill();
                 ctx.globalAlpha = 1;
             });
 
             // View Mode Specifics
-            if (viewMode === 'summary') dataIslands.forEach(island => drawHolographicCube(island, rotationAngle));
-            if (viewMode === 'finance') revenueTowers.forEach(tower => draw3DTower(tower, rotationAngle));
-            if (viewMode === 'academics') academicTowers.forEach(tower => draw3DTower(tower, rotationAngle));
+            if (viewMode === 'summary') celestialBodies.forEach(body => drawCelestialBody(body, rotationAngle));
+            if (viewMode === 'summary') celestialBodies.forEach(body => drawCelestialBody(body, rotationAngle));
+            if (viewMode === 'finance') revenueTowers.forEach(tower => drawCosmicUnit(tower, rotationAngle, 'beam'));
+            if (viewMode === 'academics') academicTowers.forEach(tower => drawCosmicUnit(tower, rotationAngle, 'beam'));
             if (viewMode === 'operations') {
                 attendanceOrbs.forEach((orb, i) => {
                     const pulse = Math.sin(time * 2 + i) * 0.2 + 1;
@@ -278,7 +341,7 @@ const University3DHub = ({ stats, charts, extendedStats, activities, systemStatu
                     ctx.font = 'bold 10px monospace'; ctx.fillStyle = orb.color;
                     ctx.fillText(orb.label, proj.x, proj.y - orb.size * proj.scale * pulse - 10);
                 });
-                campusBlocks.forEach(block => draw3DTower(block, rotationAngle));
+                campusBlocks.forEach(block => drawCosmicUnit(block, rotationAngle, 'asteroid'));
             }
 
             majorBadges.forEach(badge => {
@@ -301,10 +364,10 @@ const University3DHub = ({ stats, charts, extendedStats, activities, systemStatu
             <div className="absolute top-6 left-6 z-10 space-y-4">
                 <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-4 border border-white/10">
                     <h3 className="text-white font-black text-xl flex items-center gap-2">
-                        <Zap className="text-yellow-400 w-5 h-5 fill-yellow-400" />
-                        Digital Twin Hub
+                        <Sparkles className="text-yellow-400 w-5 h-5" />
+                        Cosmic Command Center
                     </h3>
-                    <p className="text-gray-400 text-xs font-mono uppercase tracking-widest mt-1">Status: Operational</p>
+                    <p className="text-blue-400 text-xs font-mono uppercase tracking-widest mt-1">Galaxy Scan: Online</p>
                 </div>
 
                 <div className="flex flex-col gap-2">

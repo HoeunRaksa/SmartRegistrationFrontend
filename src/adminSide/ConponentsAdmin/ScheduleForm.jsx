@@ -2,8 +2,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createSchedule, updateSchedule } from "../../api/admin_course_api.jsx";
-import {fetchRoomOptions } from "../../api/room_api.jsx";
-import { fetchBuildingOptions} from '../../api/building_api.jsx';
+import { fetchRoomOptions } from "../../api/room_api.jsx";
+import { fetchBuildingOptions } from '../../api/building_api.jsx';
 import {
   Calendar,
   X,
@@ -363,9 +363,8 @@ const Alert = ({ type, message, onClose }) => (
     initial={{ opacity: 0, y: -10, scale: 0.95 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, scale: 0.95 }}
-    className={`flex items-center gap-3 p-4 rounded-2xl border shadow-sm ${
-      type === "success" ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
-    }`}
+    className={`flex items-center gap-3 p-4 rounded-2xl border shadow-sm ${type === "success" ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+      }`}
   >
     {type === "success" ? (
       <CheckCircle2 className="w-5 h-5 text-green-600" />
@@ -409,7 +408,7 @@ const FormSection = ({
     }}
     initial="hidden"
     animate="show"
-    className="relative overflow-hidden rounded-2xl bg-white/90 border border-white shadow-lg p-5"
+    className="relative overflow-hidden rounded-2xl bg-white border border-white shadow-lg p-5"
   >
     <FormHeader isEditMode={isEditMode} onCancel={onCancel} />
 

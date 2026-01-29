@@ -79,7 +79,7 @@ const BulkGradePage = () => {
 
     return (
         <div className="space-y-6">
-            <div className="rounded-3xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-xl p-6">
+            <div className="rounded-3xl bg-white border border-gray-200 shadow-xl p-6">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
                         <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500">
@@ -156,7 +156,7 @@ const BulkGradePage = () => {
                         />
                         <label
                             htmlFor="grade-file-upload"
-                            className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-purple-500 transition-all bg-white/40"
+                            className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-purple-500 transition-all bg-gray-50/50"
                         >
                             <FileSpreadsheet className="w-12 h-12 text-gray-400 mb-2" />
                             <p className="text-sm text-gray-600">
@@ -170,8 +170,8 @@ const BulkGradePage = () => {
                     onClick={handleUpload}
                     disabled={uploading || !file || !courseId || !assignmentName || !totalPoints}
                     className={`w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold transition-all ${uploading || !file || !courseId || !assignmentName || !totalPoints
-                            ? 'bg-purple-400 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:shadow-lg'
+                        ? 'bg-purple-400 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:shadow-lg'
                         }`}
                 >
                     <Upload className="w-5 h-5" />
@@ -183,8 +183,8 @@ const BulkGradePage = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className={`mt-6 p-4 rounded-xl border ${result.success
-                                ? 'bg-green-50 border-green-200'
-                                : 'bg-red-50 border-red-200'
+                            ? 'bg-green-50 border-green-200'
+                            : 'bg-red-50 border-red-200'
                             }`}
                     >
                         <div className="flex items-start gap-3">

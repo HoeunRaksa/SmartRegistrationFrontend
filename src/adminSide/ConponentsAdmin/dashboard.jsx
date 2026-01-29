@@ -17,6 +17,7 @@ const AdminDashboard = () => {
     totalStudents: 0,
     totalCourses: 0,
     totalDepartments: 0,
+    totalMajors: 0,
     pendingRegistrations: 0,
   });
   const [charts, setCharts] = useState({
@@ -112,27 +113,34 @@ const AdminDashboard = () => {
         transition={{ duration: 0.8, type: 'spring' }}
         className="relative glass p-8 overflow-hidden"
       >
-        {/* Animated background */}
-        <div className="absolute inset-0 opacity-20 ">
-          {[...Array(15)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-2 h-2 bg-blue-400 rounded-full"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-              animate={{
-                scale: [1, 1.5, 1],
-                opacity: [0.2, 0.6, 0.2],
-              }}
-              transition={{
-                duration: 3 + Math.random() * 2,
-                repeat: Infinity,
-                delay: Math.random() * 2,
-              }}
-            />
-          ))}
+        {/* Animated starfield background */}
+        <div className="absolute inset-0 opacity-40">
+          {[...Array(30)].map((_, i) => {
+            const size = Math.random() * 3 + 1;
+            const colors = ['bg-blue-400', 'bg-purple-400', 'bg-white', 'bg-cyan-300'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            return (
+              <motion.div
+                key={i}
+                className={`absolute rounded-full ${color} shadow-[0_0_8px_rgba(255,255,255,0.5)]`}
+                style={{
+                  width: size,
+                  height: size,
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                }}
+                animate={{
+                  scale: [1, 1.5, 1],
+                  opacity: [0.1, 0.8, 0.1],
+                }}
+                transition={{
+                  duration: 2 + Math.random() * 3,
+                  repeat: Infinity,
+                  delay: Math.random() * 5,
+                }}
+              />
+            );
+          })}
         </div>
 
         <div className="relative z-10">

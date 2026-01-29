@@ -141,7 +141,7 @@ const AttendancePage = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="backdrop-blur-xl bg-white/60 rounded-2xl p-4 border border-white/40 shadow-sm">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
           <div className="flex items-center gap-2 text-blue-600 mb-2">
             <Users className="w-4 h-4" />
             <span className="text-xs font-bold uppercase tracking-wider">Total</span>
@@ -149,7 +149,7 @@ const AttendancePage = () => {
           <p className="text-2xl font-bold text-gray-800">{totalStudents}</p>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="backdrop-blur-xl bg-white/60 rounded-2xl p-4 border border-white/40 shadow-sm">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
           <div className="flex items-center gap-2 text-emerald-600 mb-2">
             <Check className="w-4 h-4" />
             <span className="text-xs font-bold uppercase tracking-wider">Present</span>
@@ -157,7 +157,7 @@ const AttendancePage = () => {
           <p className="text-2xl font-bold text-emerald-600">{presentCount}</p>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="backdrop-blur-xl bg-white/60 rounded-2xl p-4 border border-white/40 shadow-sm">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
           <div className="flex items-center gap-2 text-amber-500 mb-2">
             <Clock className="w-4 h-4" />
             <span className="text-xs font-bold uppercase tracking-wider">Late</span>
@@ -165,7 +165,7 @@ const AttendancePage = () => {
           <p className="text-2xl font-bold text-amber-500">{lateCount}</p>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="backdrop-blur-xl bg-white/60 rounded-2xl p-4 border border-white/40 shadow-sm">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
           <div className="flex items-center gap-2 text-red-500 mb-2">
             <X className="w-4 h-4" />
             <span className="text-xs font-bold uppercase tracking-wider">Absent</span>
@@ -173,7 +173,7 @@ const AttendancePage = () => {
           <p className="text-2xl font-bold text-red-500">{absentCount}</p>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="backdrop-blur-xl bg-white/60 rounded-2xl p-4 border border-white/40 shadow-sm">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
           <div className="flex items-center gap-2 text-slate-500 mb-2">
             <AlertCircle className="w-4 h-4" />
             <span className="text-xs font-bold uppercase tracking-wider">Excused</span>
@@ -231,7 +231,7 @@ const AttendancePage = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="backdrop-blur-xl bg-white/60 rounded-3xl border border-white/40 shadow-xl overflow-hidden"
+        className="bg-white rounded-3xl border border-gray-200 shadow-xl overflow-hidden"
       >
         <div className="p-6 border-b border-white/40 bg-white/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="relative flex-1 max-w-md">

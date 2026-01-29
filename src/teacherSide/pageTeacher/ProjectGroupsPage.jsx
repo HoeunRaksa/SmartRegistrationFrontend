@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Users, Plus, UserPlus, Grid, List as ListIcon, RefreshCw, Trash2, CheckCircle } from "lucide-react";
+import { Users, Plus, UserPlus, Grid, List as ListIcon, RefreshCw, Trash2, CheckCircle, Settings, Users2, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import API from "../../api/index";
 import { fetchCourses } from "../../api/course_api.jsx";
 import { getCachedCourses } from "../../utils/dataCache";
+import FormModal from "../../Components/FormModal";
 
 const ProjectGroupsPage = () => {
     const [courses, setCourses] = useState([]);
@@ -69,7 +70,7 @@ const ProjectGroupsPage = () => {
     return (
         <div className="min-h-screen space-y-6">
             {/* Header & Controls */}
-            <div className="bg-white/60 backdrop-blur-md rounded-3xl p-6 border border-white/40 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="bg-white rounded-3xl p-6 border border-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
                 <div>
                     <h1 className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center gap-3">
                         <Users className="w-8 h-8 text-blue-600" />
@@ -79,7 +80,7 @@ const ProjectGroupsPage = () => {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-2 bg-white/80 p-1.5 rounded-2xl border border-gray-100 shadow-inner">
+                    <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-100 shadow-inner">
                         <button
                             onClick={() => setViewMode("grid")}
                             className={`p-2 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:text-gray-600'}`}
@@ -115,46 +116,69 @@ const ProjectGroupsPage = () => {
                 </div>
             </div>
 
-            {/* Auto Assign Modal (Sub-form) */}
-            <AnimatePresence>
-                {showAutoAssign && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className="bg-indigo-50/50 backdrop-blur-sm border border-indigo-100 rounded-3xl p-6 shadow-sm"
-                    >
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                            <div>
-                                <h3 className="text-lg font-bold text-indigo-900">Smart Auto-Assignment</h3>
-                                <p className="text-sm text-indigo-700">Set the maximum members per group. Students not already in a group will be randomly assigned.</p>
-                            </div>
-                            <div className="flex items-center gap-3">
+            {/* Auto Assign Modal (Portalled) */}
+            <FormModal
+                isOpen={showAutoAssign}
+                onClose={() => setShowAutoAssign(false)}
+                title="Smart Auto-Assignment"
+            >
+                <div className="bg-white p-6 space-y-6">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-3 rounded-2xl bg-indigo-50 text-indigo-600 shadow-sm">
+                            <Users2 className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold text-gray-800">Assign Teams</h3>
+                            <p className="text-sm text-gray-500">Create balanced project teams automatically.</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/50">
+                            <label className="block text-sm font-bold text-indigo-900 mb-3 flex items-center gap-2">
+                                <Settings className="w-4 h-4" />
+                                Max Members Per Group
+                            </label>
+                            <div className="flex items-center gap-4">
                                 <input
-                                    type="number"
+                                    type="range"
+                                    min="2"
+                                    max="15"
                                     value={membersPerGroup}
                                     onChange={(e) => setMembersPerGroup(e.target.value)}
-                                    className="w-20 bg-white border border-indigo-200 rounded-xl px-4 py-2 text-center font-bold text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    min="2"
-                                    max="20"
+                                    className="flex-1 accent-indigo-600"
                                 />
-                                <button
-                                    onClick={handleAutoAssign}
-                                    className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-indigo-700 transition-colors"
-                                >
-                                    Generate Groups
-                                </button>
-                                <button
-                                    onClick={() => setShowAutoAssign(false)}
-                                    className="text-gray-500 font-medium hover:text-gray-700 px-2"
-                                >
-                                    Cancel
-                                </button>
+                                <span className="w-12 h-12 flex items-center justify-center bg-white border-2 border-indigo-200 rounded-xl font-black text-indigo-600 shadow-sm">
+                                    {membersPerGroup}
+                                </span>
                             </div>
                         </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+
+                        <div className="bg-amber-50 rounded-xl p-4 border border-amber-100 flex gap-3">
+                            <RefreshCw className="w-5 h-5 text-amber-600 shrink-0" />
+                            <p className="text-sm text-amber-800">
+                                This will randomly distribute students who are currently without a group. Existing groups will not be affected.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-3 pt-4 border-t border-gray-100">
+                        <button
+                            onClick={() => setShowAutoAssign(false)}
+                            className="flex-1 py-4 rounded-xl bg-gray-50 text-gray-700 font-bold hover:bg-gray-100 transition-all font-sans"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleAutoAssign}
+                            className="flex-[2] py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold shadow-lg hover:shadow-indigo-200 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+                        >
+                            <CheckCircle className="w-5 h-5" />
+                            Generate Groups
+                        </button>
+                    </div>
+                </div>
+            </FormModal>
 
             {/* Groups Grid/List */}
             {loading && !groups.length ? (
@@ -209,7 +233,7 @@ const ProjectGroupsPage = () => {
                     ))}
                 </div>
             ) : (
-                <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-20 border border-white/40 flex flex-col items-center text-center gap-4">
+                <div className="bg-white rounded-3xl p-20 border border-gray-200 shadow-sm flex flex-col items-center text-center gap-4">
                     <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center">
                         <UserPlus className="w-8 h-8 text-gray-400" />
                     </div>

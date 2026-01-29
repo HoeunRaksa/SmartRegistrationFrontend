@@ -228,8 +228,8 @@ const Alert = ({ type, message, onClose }) => (
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, scale: 0.95 }}
     className={`flex items-center gap-3 p-4 rounded-2xl border shadow-sm ${type === "success"
-        ? "bg-green-50 border-green-200"
-        : "bg-red-50 border-red-200"
+      ? "bg-green-50 border-green-200"
+      : "bg-red-50 border-red-200"
       }`}
   >
     {type === "success" ? (
@@ -257,7 +257,7 @@ const Alert = ({ type, message, onClose }) => (
 
 const FormSection = ({ isEditMode, onCancel, onSubmit, form, setForm, loading, departments }) => (
   <motion.div
-    className="relative overflow-hidden rounded-2xl bg-white/90 border border-white shadow-lg p-5"
+    className="relative overflow-hidden rounded-2xl bg-white border border-white shadow-lg p-5"
   >
     <FormHeader isEditMode={isEditMode} onCancel={onCancel} />
 
@@ -329,7 +329,7 @@ const InputField = ({ field, form, setForm, departments }) => {
           value={value}
           onChange={handleChange}
           required
-          className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
+          className="w-full rounded-xl bg-white pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
         >
           <option value="">Select Department</option>
           {departments.map((d) => (

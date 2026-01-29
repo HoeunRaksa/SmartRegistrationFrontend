@@ -102,7 +102,7 @@ const DashboardHome = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="backdrop-blur-xl bg-white/60 rounded-2xl p-6 border border-white/40 shadow-lg hover:shadow-xl transition-all"
+                className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg hover:shadow-xl transition-all"
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient}`}>
@@ -141,7 +141,7 @@ const DashboardHome = () => {
                 {upcomingClasses.map((cls) => (
                   <div
                     key={cls.id}
-                    className="flex items-center justify-between p-4 rounded-xl bg-white/50 border border-white/60 hover:bg-white/70 transition-all"
+                    className="flex items-center justify-between p-4 rounded-xl bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-all"
                   >
                     <div>
                       <h3 className="font-semibold text-gray-800">{cls.course}</h3>
@@ -173,7 +173,7 @@ const DashboardHome = () => {
                 {recentActivities.map((activity) => (
                   <div
                     key={activity.id}
-                    className="flex items-start gap-3 p-4 rounded-xl bg-white/50 border border-white/60"
+                    className="flex items-start gap-3 p-4 rounded-xl bg-gray-50 border border-gray-100"
                   >
                     <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 mt-2" />
                     <div className="flex-1">
@@ -192,7 +192,7 @@ const DashboardHome = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="mt-8 backdrop-blur-xl bg-white/60 rounded-2xl p-6 border border-white/40 shadow-lg"
+            className="mt-8 bg-white rounded-2xl p-6 border border-gray-100 shadow-lg"
           >
             <h2 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

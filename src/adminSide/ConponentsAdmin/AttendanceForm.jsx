@@ -239,7 +239,7 @@ const SessionFormSection = ({ onSubmit, form, setForm, loading, courses }) => (
     variants={animations.fadeUp}
     initial="hidden"
     animate="show"
-    className="relative overflow-hidden rounded-2xl bg-white/90 border border-white shadow-lg p-5"
+    className="relative overflow-hidden rounded-2xl bg-white border border-white shadow-lg p-5"
   >
     <div className="flex items-center gap-2 mb-4">
       <Sparkles className="w-4 h-4 text-purple-600" />
@@ -300,7 +300,7 @@ const AttendanceFormSection = ({ onSubmit, form, setForm, loading, students, ses
     variants={animations.fadeUp}
     initial="hidden"
     animate="show"
-    className="relative overflow-hidden rounded-2xl bg-white/90 border border-white shadow-lg p-5"
+    className="relative overflow-hidden rounded-2xl bg-white border border-white shadow-lg p-5"
   >
     <div className="flex items-center gap-2 mb-4">
       <Sparkles className="w-4 h-4 text-purple-600" />

@@ -193,7 +193,7 @@ const FormSection = ({ isEditMode, onCancel, onSubmit, form, setForm, loading, c
     variants={animations.fadeUp}
     initial="hidden"
     animate="show"
-    className="relative overflow-hidden rounded-2xl bg-white/90 border border-white shadow-lg p-5"
+    className="relative overflow-hidden rounded-2xl bg-white border border-white shadow-lg p-5"
   >
     <FormHeader isEditMode={isEditMode} onCancel={onCancel} />
 
@@ -267,7 +267,7 @@ const InputField = ({ field, form, setForm, courses }) => {
           value={value}
           onChange={handleChange}
           required
-          className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
+          className="w-full rounded-xl bg-white pl-10 pr-4 py-2.5 text-sm text-gray-900 border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 transition-all"
         >
           <option value="">{field.placeholder}</option>
           {options.map((opt) => (
@@ -294,7 +294,7 @@ const InputField = ({ field, form, setForm, courses }) => {
           placeholder={field.placeholder}
           min={field.type === "number" ? "0" : undefined}
           required
-          className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
+          className="w-full rounded-xl bg-white pl-10 pr-4 py-2.5 text-sm text-gray-900 border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 transition-all"
         />
       )}
     </motion.div>

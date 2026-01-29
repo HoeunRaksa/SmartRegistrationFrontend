@@ -58,9 +58,9 @@ const SchedulePage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="flex items-center justify-between mb-6 backdrop-blur-xl bg-white/60 rounded-2xl p-4 border border-white/40 shadow-lg"
+        className="flex items-center justify-between mb-6 bg-white rounded-2xl p-4 border border-gray-200 shadow-lg"
       >
-        <button className="p-2 rounded-lg hover:bg-white/60 transition-all">
+        <button className="p-2 rounded-lg hover:bg-gray-100 transition-all">
           <ChevronLeft className="w-5 h-5 text-gray-700" />
         </button>
         <div className="text-center">
@@ -69,7 +69,7 @@ const SchedulePage = () => {
           </h2>
           <p className="text-sm text-gray-600">Active Schedule</p>
         </div>
-        <button className="p-2 rounded-lg hover:bg-white/60 transition-all">
+        <button className="p-2 rounded-lg hover:bg-gray-100 transition-all">
           <ChevronRight className="w-5 h-5 text-gray-700" />
         </button>
       </motion.div>
@@ -87,7 +87,7 @@ const SchedulePage = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: dayIndex * 0.05 }}
-              className="backdrop-blur-xl bg-white/60 rounded-2xl border border-white/40 shadow-lg overflow-hidden"
+              className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden"
             >
               <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 text-white">
                 <h3 className="font-bold text-lg">{day}</h3>
@@ -98,7 +98,7 @@ const SchedulePage = () => {
                   scheduleData[day].map((classItem, index) => (
                     <div
                       key={index}
-                      className="p-3 rounded-xl bg-white/50 border border-white/60 hover:bg-white/70 transition-all shadow-sm"
+                      className="p-3 rounded-xl bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-all shadow-sm"
                     >
                       <div className={`inline-flex px-2 py-1 rounded-lg bg-gradient-to-r ${classItem.color} text-white text-[10px] font-bold mb-2`}>
                         {classItem.time}
@@ -128,7 +128,7 @@ const SchedulePage = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="mt-8 p-6 backdrop-blur-xl bg-white/40 rounded-3xl border border-white/40 text-center"
+          className="mt-8 p-6 bg-white/60 rounded-3xl border border-gray-200 text-center"
         >
           <p className="text-gray-600 text-sm italic">Showing your formal academic teaching schedule for the current semester.</p>
         </motion.div>

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ClipboardList, Plus, Calendar, Users, FileText, X, Save, Clock, Loader } from 'lucide-react';
 import {
   fetchTeacherAssignments,
   fetchTeacherCourses,
   createTeacherAssignment
 } from '../../api/teacher_api';
+import FormModal from '../../Components/FormModal';
 
 const AssignmentsPage = () => {
   const [selectedCourseId, setSelectedCourseId] = useState('all');
@@ -187,20 +188,22 @@ const AssignmentsPage = () => {
       )}
 
       {/* Create Modal */}
-      <AnimatePresence>
-        {showCreateModal && (
-          <CreateAssignmentModal
-            courses={courses}
-            onClose={() => setShowCreateModal(false)}
-            onCreated={loadData}
-          />
-        )}
-      </AnimatePresence>
+      <FormModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="New Assignment"
+      >
+        <CreateAssignmentForm
+          courses={courses}
+          onCreated={loadData}
+          onClose={() => setShowCreateModal(false)}
+        />
+      </FormModal>
     </div>
   );
 };
 
-const CreateAssignmentModal = ({ courses, onClose, onCreated }) => {
+const CreateAssignmentForm = ({ courses, onCreated, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     course_id: '',
@@ -226,85 +229,105 @@ const CreateAssignmentModal = ({ courses, onClose, onCreated }) => {
   };
 
   return (
-    <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-    >
-      <motion.div
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden"
-        initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
-      >
-        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-800">New Assignment</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X className="w-6 h-6" /></button>
+    <div className="bg-white p-6 space-y-4">
+      <div className="flex items-center gap-3 mb-2">
+        <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
+          <FileText className="w-5 h-5 text-white" />
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <h2 className="text-2xl font-bold text-gray-800">New Assignment</h2>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+            <Users className="w-4 h-4 text-blue-500" />
+            Target Course
+          </label>
+          <select
+            required
+            value={formData.course_id}
+            onChange={e => setFormData({ ...formData, course_id: e.target.value })}
+            className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+          >
+            <option value="">Select a course...</option>
+            {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+            <FileText className="w-4 h-4 text-indigo-500" />
+            Assignment Title
+          </label>
+          <input
+            required
+            type="text"
+            placeholder="e.g. Final Project Phase 1"
+            value={formData.title}
+            onChange={e => setFormData({ ...formData, title: e.target.value })}
+            className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Target Course</label>
-            <select
-              required
-              value={formData.course_id}
-              onChange={e => setFormData({ ...formData, course_id: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
-            >
-              <option value="">Select a course...</option>
-              {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Assignment Title</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+              <Save className="w-4 h-4 text-emerald-500" />
+              Points
+            </label>
             <input
               required
-              type="text"
-              placeholder="e.g. Final Project Phase 1"
-              value={formData.title}
-              onChange={e => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+              type="number"
+              value={formData.points}
+              onChange={e => setFormData({ ...formData, points: e.target.value })}
+              className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Points</label>
-              <input
-                required
-                type="number"
-                value={formData.points}
-                onChange={e => setFormData({ ...formData, points: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Due Date</label>
-              <input
-                required
-                type="date"
-                value={formData.due_date}
-                onChange={e => setFormData({ ...formData, due_date: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-            </div>
-          </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Instructions</label>
-            <textarea
+            <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-amber-500" />
+              Due Date
+            </label>
+            <input
               required
-              rows="3"
-              placeholder="Describe assignment tasks..."
-              value={formData.description}
-              onChange={e => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
-            ></textarea>
+              type="date"
+              value={formData.due_date}
+              onChange={e => setFormData({ ...formData, due_date: e.target.value })}
+              className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+            />
           </div>
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+            <ClipboardList className="w-4 h-4 text-purple-500" />
+            Instructions
+          </label>
+          <textarea
+            required
+            rows="3"
+            placeholder="Describe assignment tasks..."
+            value={formData.description}
+            onChange={e => setFormData({ ...formData, description: e.target.value })}
+            className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
+          ></textarea>
+        </div>
+        <div className="flex gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-3.5 rounded-xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition-all font-sans"
+          >
+            Cancel
+          </button>
           <button
             disabled={loading}
             type="submit"
-            className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-lg hover:shadow-xl transition-all disabled:opacity-50"
+            className="flex-[2] py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold hover:shadow-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
+            {loading ? <Loader className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
             {loading ? 'Creating...' : 'Launch Assignment'}
           </button>
-        </form>
-      </motion.div>
-    </motion.div>
+        </div>
+      </form>
+    </div>
   );
 };
 

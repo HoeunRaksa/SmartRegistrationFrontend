@@ -286,7 +286,7 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="relative overflow-hidden rounded-2xl border border-white/40 bg-white/90 backdrop-blur-sm shadow-lg p-6"
+      className="relative overflow-hidden rounded-2xl bg-white border border-white shadow-lg p-5"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-5 pb-4 border-b border-gray-200">
@@ -464,7 +464,7 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
               <select
                 value={form.semester}
                 onChange={(e) => handleChange("semester", e.target.value)}
-                className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
+                className="w-full rounded-xl bg-white pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
               >
                 <option value="">Select semester</option>
                 <option value="1">Semester 1</option>
@@ -487,7 +487,7 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
               <select
                 value={form.academic_year}
                 onChange={(e) => handleChange("academic_year", e.target.value)}
-                className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
+                className="w-full rounded-xl bg-white pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
               >
                 <option value="">Select academic year</option>
                 {academicYearSelectOptions.map((y) => (

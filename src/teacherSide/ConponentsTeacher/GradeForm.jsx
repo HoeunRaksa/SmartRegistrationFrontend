@@ -188,11 +188,10 @@ const Alert = ({ type, message, onClose }) => (
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -12 }}
     transition={{ duration: 0.3 }}
-    className={`p-4 rounded-xl border ${
-      type === "success"
+    className={`p-4 rounded-xl border ${type === "success"
         ? "bg-emerald-50 border-emerald-200 text-emerald-800"
         : "bg-red-50 border-red-200 text-red-800"
-    } flex items-center gap-3`}
+      } flex items-center gap-3`}
   >
     {type === "success" ? (
       <CheckCircle2 className="w-5 h-5 text-emerald-600" />
@@ -226,7 +225,7 @@ const FormSection = ({
     variants={animations.fadeUp}
     initial="hidden"
     animate="show"
-    className="backdrop-blur-xl bg-white/60 rounded-2xl p-6 border border-white/40 shadow-lg"
+    className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg"
   >
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-3">
@@ -306,7 +305,7 @@ const FormInput = ({ field, form, setForm, students, courses }) => {
           value={form[field.key]}
           onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
           required
-          className="w-full px-4 py-3 rounded-xl bg-white/50 border border-white/60 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 transition"
+          className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:ring-2 focus:ring-blue-500 text-gray-800 transition shadow-sm"
         >
           <option value="">{field.placeholder}</option>
           {options?.map((opt) => (
@@ -350,7 +349,7 @@ const FormInput = ({ field, form, setForm, students, courses }) => {
         onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
         placeholder={field.placeholder}
         required
-        className="w-full px-4 py-3 rounded-xl bg-white/50 border border-white/60 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 transition"
+        className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:ring-2 focus:ring-blue-500 text-gray-800 transition shadow-sm"
       />
     </div>
   );

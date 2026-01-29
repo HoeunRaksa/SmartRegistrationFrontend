@@ -185,7 +185,7 @@ const TeacherForm = ({ onUpdate, editingTeacher, onCancelEdit }) => {
   const isEditMode = Boolean(editingTeacher);
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-white/60 bg-white/60 backdrop-blur-2xl shadow-[0_22px_70px_-30px_rgba(15,23,42,0.45)] p-6 md:p-7">
+    <div className="relative overflow-hidden rounded-2xl bg-white border border-white shadow-lg p-5">
       {/* Soft background accents */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-purple-400/20 blur-3xl" />
@@ -225,7 +225,7 @@ const TeacherForm = ({ onUpdate, editingTeacher, onCancelEdit }) => {
 
       <form onSubmit={handleSubmit} className="relative space-y-6">
         {/* Profile Image */}
-        <div className="rounded-3xl border border-white/60 bg-white/70 backdrop-blur-xl shadow-sm p-5 md:p-6">
+        <div className="rounded-3xl border border-white/60 bg-white backdrop-blur-xl shadow-sm p-5 md:p-6">
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="relative">
               {imagePreview ? (
@@ -284,7 +284,7 @@ const TeacherForm = ({ onUpdate, editingTeacher, onCancelEdit }) => {
                   </p>
                 </div>
 
-                <div className="rounded-2xl bg-white/70 border border-gray-200 p-4">
+                <div className="rounded-2xl bg-white border border-gray-200 p-4">
                   <label className="block text-xs font-semibold text-gray-700 mb-2">
                     Upload Folder
                   </label>
@@ -292,7 +292,7 @@ const TeacherForm = ({ onUpdate, editingTeacher, onCancelEdit }) => {
                     name="upload_to"
                     value={formData.upload_to}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-white/90 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500/30 focus:border-blue-300 outline-none transition-all shadow-sm hover:border-gray-300"
+                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500/30 focus:border-blue-300 outline-none transition-all shadow-sm hover:border-gray-300"
                   >
                     <option value="teachers">uploads/teachers</option>
                     <option value="profiles">uploads/profiles</option>
@@ -444,7 +444,7 @@ const TeacherForm = ({ onUpdate, editingTeacher, onCancelEdit }) => {
                   value={formData.department_id}
                   onChange={handleChange}
                   required
-                  className="w-full pl-10 pr-4 py-2.5 bg-white/80 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500/30 focus:border-blue-300 outline-none transition-all shadow-sm hover:border-gray-300"
+                  className="w-full rounded-xl bg-white pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
                 >
                   <option value="">Select Department</option>
                   {departments.map((dept) => (

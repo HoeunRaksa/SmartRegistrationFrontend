@@ -328,7 +328,7 @@ const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
         )}
       </AnimatePresence>
 
-      <motion.div className="rounded-2xl bg-white/90 border border-white shadow-lg p-5">
+      <motion.div className="rounded-2xl bg-white border border-white shadow-lg p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-purple-600" />
@@ -575,7 +575,7 @@ const InputField = ({ label, icon, value, onChange, placeholder = "", type = "te
       value={value ?? ""}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
+      className="w-full rounded-xl bg-white pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
     />
   </BaseFieldShell>
 );

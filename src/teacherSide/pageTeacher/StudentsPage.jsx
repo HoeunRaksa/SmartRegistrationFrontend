@@ -59,13 +59,13 @@ const StudentsPage = () => {
             placeholder="Search students..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 rounded-xl backdrop-blur-xl bg-white/60 border border-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
+            className="w-full pl-12 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 shadow-sm"
           />
         </div>
         <select
           value={selectedDepartment}
           onChange={(e) => setSelectedDepartment(e.target.value)}
-          className="px-6 py-3 rounded-xl backdrop-blur-xl bg-white/60 border border-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
+          className="px-6 py-3 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 shadow-sm"
         >
           {departments.map(dept => (
             <option key={dept} value={dept}>{dept === 'all' ? 'All Departments' : dept}</option>
@@ -78,7 +78,7 @@ const StudentsPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="backdrop-blur-xl bg-white/60 rounded-2xl border border-white/40 shadow-lg overflow-hidden"
+        className="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden"
       >
         {loading ? (
           <div className="flex justify-center items-center h-64">
@@ -87,7 +87,7 @@ const StudentsPage = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-white/40 border-b border-white/40">
+              <thead className="bg-gray-50/50 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Student</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Student ID</th>
