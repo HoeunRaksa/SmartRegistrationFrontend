@@ -3,7 +3,7 @@ import Program from "../Components/home/Programs";
 import milestone from "../Data/Milestones.json";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { fetchDepartments } from "../api/department_api";
 import { Card, Card3D, FloatingCard3D } from "../Components/ui/Card";
 import { Button, Button3D } from "../Components/ui/Button";
@@ -121,6 +121,7 @@ const testimonials = [
 ];
 
 const Home = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     total_departments: 0,
     total_majors: 0
@@ -405,7 +406,9 @@ const Home = () => {
           </div>
         </section>
 
-        <Program />
+        <div id="programs">
+          <Program />
+        </div>
 
         {/* Why Choose Us Section */}
         <section className="py-20 max-w-7xl mx-auto">

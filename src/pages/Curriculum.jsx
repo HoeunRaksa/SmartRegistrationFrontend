@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { fetchDepartments } from "../api/department_api";
 import { Card, Card3D, FloatingCard3D } from "../Components/ui/Card";
+import { Button3D } from "../Components/ui/Button";
 import "../styles/3d-effects.css";
 
 const headerImage = "/assets/images/curriculum.png";
