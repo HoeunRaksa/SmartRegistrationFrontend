@@ -43,6 +43,7 @@ export const sendMessage = async (id, content, attachments = [], isConversation 
     const formData = new FormData();
     // Always append content, even if empty, to ensure backend doesn't crash on missing field
     formData.append("content", content || "");
+    formData.append("message", content || ""); // Support 'message' key as well
 
     attachments.forEach((file) => {
       formData.append("files[]", file);

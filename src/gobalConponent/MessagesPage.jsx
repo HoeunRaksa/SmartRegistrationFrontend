@@ -296,7 +296,7 @@ const MessagesPage = () => {
 
     try {
       // Fetch messages for this user ID (backend will create/fetch private convo)
-      const res = await fetchMessages(userId);
+      const res = await fetchMessages(userId, false);
       const data = res?.data?.data || [];
       // We need to reload to get the new conversation in list
       await loadConversations();
@@ -445,8 +445,8 @@ const MessagesPage = () => {
                 <div className="flex items-center gap-3">
                   <button className="md:hidden p-2" onClick={() => setShowChat(false)}><ArrowLeft /></button>
                   <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm text-white overflow-hidden bg-gradient-to-br ${selectedConversation.type === 'course_group' ? "from-emerald-500 to-teal-600" :
-                      selectedConversation.type === 'group' ? "from-indigo-600 to-purple-600" :
-                        "from-blue-600 to-indigo-600"
+                    selectedConversation.type === 'group' ? "from-indigo-600 to-purple-600" :
+                      "from-blue-600 to-indigo-600"
                     }`}>
                     {selectedConversation.avatar ? (
                       <img src={selectedConversation.avatar} className="w-full h-full object-cover" alt="" />
