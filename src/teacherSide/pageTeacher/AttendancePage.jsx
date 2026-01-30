@@ -89,30 +89,41 @@ const AttendancePage = () => {
     const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' }); // e.g. "Monday"
     const currentTimeStr = now.toTimeString().slice(0, 5); // "HH:MM"
 
-    // Find if something is scheduled NOW (with 15 min early buffer)
+    // Helper to convert "HH:MM" to minutes from midnight
+    const toMinutes = (str) => {
+      if (!str) return 0;
+      const [h, m] = str.split(':').map(Number);
+      return h * 60 + m;
+    };
+
+    const currentMinutes = toMinutes(currentTimeStr);
+
+    // Find if something is scheduled NOW (with 30 min early buffer)
     const activeSchedule = schedules.find(s => {
       if (s.day_of_week && s.day_of_week.toLowerCase() !== currentDay.toLowerCase()) return false;
 
-      const sessionStart = s.start_time; // HH:MM
-      const sessionEnd = s.end_time;     // HH:MM
+      const startMin = toMinutes(s.start_time?.slice(0, 5));
+      const endMin = toMinutes(s.end_time?.slice(0, 5));
 
-      // Add 15 min buffer to start
-      const [sh, sm] = sessionStart.split(':').map(Number);
-      const bufferStart = new Date(now);
-      bufferStart.setHours(sh, sm - 15, 0);
-      const bufferStartStr = bufferStart.toTimeString().slice(0, 5);
-
-      return currentTimeStr >= bufferStartStr && currentTimeStr <= sessionEnd;
+      // Check window: 30 mins before start -> end time
+      return currentMinutes >= (startMin - 30) && currentMinutes <= endMin;
     });
 
     if (activeSchedule) {
       const courseId = activeSchedule.course_id || activeSchedule.id; // Backend might send course_id or we use ID if flat
-      // Check if we already have a session for this course TODAY and this TIME
+      // Check if we already have a session for this course TODAY
       const todayStr = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
+
       const existingSession = sessions.find(sess => {
         const sessDate = sess.date ? new Date(sess.date).toLocaleDateString('en-CA') : '';
         const matchCourse = String(sess.course_id) === String(courseId);
-        const matchTime = sess.time?.includes(activeSchedule.start_time) || sess.start_time === activeSchedule.start_time;
+
+        // Match if it's the same day and roughly same time (overlapping start times)
+        // This is robust against small differences like 08:00 vs 08:00:00
+        const sessStartMin = toMinutes(sess.time?.split(' - ')[0] || sess.start_time?.slice(0, 5));
+        const schedStartMin = toMinutes(activeSchedule.start_time?.slice(0, 5));
+        const matchTime = Math.abs(sessStartMin - schedStartMin) < 15; // Within 15 mins start time
+
         return matchCourse && sessDate === todayStr && matchTime;
       });
 
