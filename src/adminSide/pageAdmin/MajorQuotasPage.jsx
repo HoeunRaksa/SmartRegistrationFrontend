@@ -101,36 +101,6 @@ const animations = {
 };
 
 /* ================== UI PARTS ================== */
-const Alert = ({ type, message, onClose }) => (
-  <motion.div
-    initial={{ opacity: 0, y: -10, scale: 0.98 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    exit={{ opacity: 0, y: -10, scale: 0.98 }}
-    className={`flex items-start gap-3 p-4 rounded-2xl border shadow-sm ${type === "success" ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
-      }`}
-  >
-    {type === "success" ? (
-      <div className="p-1 bg-green-100 rounded-full mt-0.5">
-        <CheckCircle className="w-5 h-5 text-green-600" />
-      </div>
-    ) : (
-      <div className="p-1 bg-red-100 rounded-full mt-0.5">
-        <AlertCircle className="w-5 h-5 text-red-600" />
-      </div>
-    )}
-
-    <div className="flex-1">
-      <p className={`text-sm font-medium ${type === "success" ? "text-green-800" : "text-red-800"}`}>{message}</p>
-    </div>
-
-    {onClose && (
-      <button onClick={onClose} className="text-gray-500 hover:text-gray-800" type="button">
-        <X className="w-5 h-5" />
-      </button>
-    )}
-  </motion.div>
-);
-
 const FieldShell = ({ label, icon: Icon, children, col = "" }) => (
   <div className={`space-y-1 ${col}`}>
     <label className="text-xs font-semibold text-gray-700">{label}</label>
