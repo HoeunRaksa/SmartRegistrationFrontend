@@ -88,11 +88,10 @@ export const Card3D = ({
         {children}
       </div>
 
-      {/* Gen Z 3D depth glow */}
       <div
-        className="absolute inset-0 -z-10 rounded-[inherit] opacity-30 blur-2xl transition-opacity duration-500 group-hover:opacity-50"
+        className="absolute inset-0 -z-10 rounded-[inherit] opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-40"
         style={{
-          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(139, 92, 246, 0.5))',
+          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2))',
           transform: 'translateZ(-12px)',
         }}
       />
@@ -114,10 +113,10 @@ export const FloatingCard3D = ({ children, className = '', delay = 0 }) => {
         reducedMotion
           ? { y: 0, rotateX: 0, rotateY: 0 }
           : {
-              y: [0, -10, 0],
-              rotateX: [0, 2, 0],
-              rotateY: [0, 3, 0],
-            }
+            y: [0, -10, 0],
+            rotateX: [0, 2, 0],
+            rotateY: [0, 3, 0],
+          }
       }
       transition={
         reducedMotion
