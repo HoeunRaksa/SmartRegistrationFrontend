@@ -7,6 +7,11 @@ import PaymentAPI from "./paymentClient";
 import { cachedGet, invalidateCache } from "../utils/requestCache";
 
 // ==============================
+// EMAIL CHECK (PUBLIC)
+// ==============================
+export const checkEmailExists = (email) => API.post("/check-email", { email });
+
+// ==============================
 // REGISTRATION CRUD (STAFF/ADMIN)
 // backend routes: /registers
 // ==============================

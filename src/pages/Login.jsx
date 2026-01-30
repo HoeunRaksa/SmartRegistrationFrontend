@@ -1,11 +1,12 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { loginApi } from "../api/auth.jsx";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { saveAuthData } from "../utils/auth.js";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -16,6 +17,15 @@ const Login = () => {
 
   // ✅ optional: cooldown after 429 so user can’t spam
   const [cooldownUntil, setCooldownUntil] = useState(0);
+
+  // ✅ Pre-fill email from URL params (when redirected from registration)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const emailParam = params.get('email');
+    if (emailParam) {
+      setForm(prev => ({ ...prev, email: emailParam }));
+    }
+  }, [location]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

@@ -43,6 +43,7 @@ import {
   submitRegistration,
   payLater as payLaterApi,
   canRegister,
+  checkEmailExists,
 } from "../api/registration_api.jsx";
 import {
   fetchDepartments,
@@ -136,6 +137,7 @@ const Field = memo(function Field({
   label,
   value,
   onChange,
+  onBlur,
   placeholder,
   required,
   icon: Icon,
@@ -190,6 +192,7 @@ const Field = memo(function Field({
           name={name}
           value={value}
           onChange={onChange}
+          onBlur={onBlur}
           placeholder={placeholder}
           className={`${inputClassBase} ${Icon ? "!pl-10" : ""} ${className}`}
           required={required}
@@ -252,10 +255,14 @@ const Section = memo(function Section({
 const DEFAULT_PAY_PLAN = { type: "YEAR", semester: 1 }; // type: "YEAR" | "SEMESTER"
 
 const Registration = () => {
+  const navigate = useNavigate();
   const [form, setForm] = useState(DEFAULT_FORM);
 
   const [majors, setMajors] = useState([]);
   const [departments, setDepartments] = useState([]);
+
+  // ✅ Email check state
+  const [emailCheckModal, setEmailCheckModal] = useState(null); // { exists, name, message }
 
   // fee
   const [selectedMajorFee, setSelectedMajorFee] = useState(null);
@@ -538,6 +545,29 @@ const Registration = () => {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.majorId, form.academicYear, loadMajorFee, loadMajorQuota]);
+
+  // \u2705 Check if email exists when user finishes typing
+  const handleEmailBlur = useCallback(async () => {
+    const email = (form.personalEmail || "").trim();
+    if (!email || !validateEmail(email)) return;
+
+    try {
+      const res = await checkEmailExists(email);
+      const data = res.data;
+
+      if (data.exists) {
+        setEmailCheckModal({
+          exists: true,
+          name: data.name || "User",
+          message: data.message || "This email is already registered.",
+          email: email,
+        });
+      }
+    } catch (err) {
+      // Silent fail - don't block registration if check fails
+      console.error("Email check failed:", err);
+    }
+  }, [form.personalEmail]);
 
   const handleChange = useCallback(
     (e) => {
@@ -1494,6 +1524,84 @@ const Registration = () => {
         )}
       </AnimatePresence>
 
+      {/* Email Exists Modal */}
+      <AnimatePresence>
+        {emailCheckModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-50 px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="relative backdrop-blur-2xl bg-gradient-to-br from-white/90 via-white/80 to-white/70 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] border-2 border-white/60 p-8 max-w-md w-full"
+            >
+              <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+
+              <motion.button
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setEmailCheckModal(null)}
+                className="absolute top-4 right-4 backdrop-blur-xl bg-white/60 p-2 rounded-full hover:bg-white/80 transition-all duration-300 border border-white/40"
+              >
+                <X size={20} className="text-gray-600" />
+              </motion.button>
+
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center p-4 backdrop-blur-xl bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mb-4 shadow-xl">
+                  <Mail size={32} className="text-white" />
+                </div>
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                  Email Already Registered
+                </h3>
+                <p className="text-gray-700 text-sm mb-4">
+                  {emailCheckModal.message}
+                </p>
+              </div>
+
+              <div className="backdrop-blur-xl bg-blue-50/60 border border-blue-200/40 rounded-xl p-4 mb-6">
+                <p className="text-sm text-gray-700 mb-1">
+                  <span className="font-semibold">Name:</span> {emailCheckModal.name}
+                </p>
+                <p className="text-sm text-gray-700">
+                  <span className="font-semibold">Email:</span> {emailCheckModal.email}
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <motion.button
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    navigate(`/login?email=${encodeURIComponent(emailCheckModal.email)}`);
+                  }}
+                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-bold shadow-lg shadow-blue-200 flex items-center justify-center gap-2 group"
+                >
+                  Go to Login
+                  <motion.div animate={{ x: [0, 5, 0] }} transition={{ duration: 1, repeat: Infinity }}>
+                    <ArrowRight size={20} />
+                  </motion.div>
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setEmailCheckModal(null)}
+                  className="w-full py-3 rounded-2xl bg-white/60 text-gray-700 font-semibold border border-white/60 hover:bg-white/80 transition-all"
+                >
+                  Use Different Email
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-12">
@@ -1719,6 +1827,7 @@ const Registration = () => {
                       label={f.label}
                       value={form[f.name]}
                       onChange={handleChange}
+                      onBlur={f.name === "personalEmail" ? handleEmailBlur : undefined}
                       placeholder={f.placeholder}
                       required={!!f.required}
                       icon={f.icon}
