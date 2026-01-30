@@ -421,7 +421,9 @@ const FormSection = ({
         name="course_id"
         value={form.course_id}
         onChange={handleChange}
-        placeholder="Select Course"
+        label="Select Course"
+        placeholder="Choose a course for this session..."
+        helpText="The subject this class belongs to"
         options={courseOptions}
         required
       />
@@ -433,19 +435,37 @@ const FormSection = ({
         type="date"
         value={form.session_date}
         onChange={handleChange}
+        label="Class Date"
         placeholder="Session Date"
+        helpText="The day this specific class session occurs"
         required
       />
 
       {/* SHIFT INFO */}
-      {shift ? (
-        <div className="text-xs text-gray-600 px-1">
-          Shift detected from class group: <b className="uppercase">{shift}</b>
-          <span className="ml-2 text-gray-500">(2 sessions available, 2.5 hours total with 30min break)</span>
-        </div>
-      ) : (
-        <div className="text-xs text-gray-500 px-1">Select a course to detect shift and show session options.</div>
-      )}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="md:col-span-2"
+      >
+        {shift ? (
+          <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3 flex items-start gap-3">
+            <div className="p-1.5 bg-blue-100 rounded-lg">
+              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-blue-700 uppercase tracking-wide">Automatic Shift Detection</p>
+              <p className="text-xs text-blue-600 mt-0.5">
+                This class is scheduled for the <b className="underline underline-offset-2">{shift}</b> shift. Standard sessions are 75 minutes.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-gray-50 border border-gray-200 border-dashed rounded-xl p-3 flex items-center gap-3">
+            <AlertCircle className="w-3.5 h-3.5 text-gray-400" />
+            <p className="text-xs text-gray-500 italic">Select a course to see available time sessions</p>
+          </div>
+        )}
+      </motion.div>
 
       {/* SESSION SELECT (optional - for quick time selection) */}
       <FieldSelect
@@ -453,19 +473,22 @@ const FormSection = ({
         name="session_id"
         value={sessionId}
         onChange={handleChange}
-        placeholder={shift ? `Quick Select Session (${shift})` : "Quick Select Session (optional)"}
+        label="Quick Time Pick"
+        placeholder={shift ? `Standard ${shift} Sessions` : "Quick Select (Select Course first)"}
+        helpText="Automatically fill start and end times"
         options={(Array.isArray(sessionOptions) ? sessionOptions : []).map((s) => ({ id: s.id, name: s.name }))}
         disabled={!Array.isArray(sessionOptions) || sessionOptions.length === 0}
       />
 
       {/* TIME FIELDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FieldTime
           icon={Clock}
           name="start_time"
           value={form.start_time}
           onChange={(e) => setForm((p) => ({ ...p, start_time: e.target.value }))}
           label="Start Time"
+          helpText="Format: HH:MM"
           disabled={!timeEditable}
           required
         />
@@ -475,6 +498,7 @@ const FormSection = ({
           value={form.end_time}
           onChange={(e) => setForm((p) => ({ ...p, end_time: e.target.value }))}
           label="End Time"
+          helpText="Format: HH:MM"
           disabled={!timeEditable}
           required
         />
@@ -484,23 +508,25 @@ const FormSection = ({
         <button
           type="button"
           onClick={toggleModifyTime}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-purple-200/60 bg-white/70 text-sm text-gray-800 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-blue-200 bg-blue-50/30 text-[11px] font-bold text-blue-700 hover:bg-blue-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider shadow-sm"
           disabled={!form.start_time || !form.end_time}
-          title="Enable custom time"
         >
-          <Pencil className="w-4 h-4" />
-          {timeEditable ? "Lock Time" : "Modify Time"}
+          {timeEditable ? (
+            <CheckCircle2 className="w-3.5 h-3.5" />
+          ) : (
+            <Pencil className="w-3.5 h-3.5" />
+          )}
+          {timeEditable ? "Lock Manual Time" : "Customize Time"}
         </button>
 
         <button
           type="button"
           onClick={resetTimeToDefault}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-purple-200/60 bg-white/70 text-sm text-gray-800 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={!defaultTimes?.start || !defaultTimes?.end}
-          title="Reset to default session time"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 bg-white text-[11px] font-bold text-gray-700 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider shadow-sm"
+          disabled={!defaultTimes?.start || !defaultTimes?.end || !timeEditable}
         >
-          <RotateCcw className="w-4 h-4" />
-          Reset Default Time
+          <RotateCcw className="w-3.5 h-3.5" />
+          Reset Standard
         </button>
       </div>
 
@@ -510,7 +536,9 @@ const FormSection = ({
         name="building_id"
         value={form.building_id}
         onChange={handleChange}
-        placeholder="Select Building (optional)"
+        label="Building Location"
+        placeholder="Select Building (Optional)"
+        helpText="Campus building for this class"
         options={(Array.isArray(buildingsList) ? buildingsList : []).map((b) => ({
           id: b.id,
           name: b.label ?? `${b.code ?? b.building_code ?? ""} - ${b.name ?? b.building_name ?? ""}`.trim(),
@@ -523,9 +551,11 @@ const FormSection = ({
         name="room_id"
         value={form.room_id}
         onChange={handleChange}
+        label="Specific Room"
         placeholder={
-          form.building_id ? (roomsLoading ? "Loading rooms..." : "Select Room (optional)") : "Select building first"
+          form.building_id ? (roomsLoading ? "Loading rooms..." : "Choose Room") : "Select building first"
         }
+        helpText="Classroom number or name"
         options={(Array.isArray(rooms) ? rooms : []).map((r) => ({
           id: r.id,
           name: r.label ?? `${r.building_code ?? ""}-${r.room_number ?? ""}`.replace(/^-|-$/g, ""),
@@ -539,7 +569,9 @@ const FormSection = ({
         name="session_type"
         value={form.session_type}
         onChange={handleChange}
-        placeholder="Session Type (optional)"
+        label="Type of Session"
+        placeholder="Select Type (Optional)"
+        helpText="Lecture, Lab, Exam, etc."
         options={SESSION_TYPES}
       />
 
@@ -571,62 +603,108 @@ const FormHeader = ({ isEditMode, onCancel }) => (
   </div>
 );
 
-const FieldSelect = ({ icon: Icon, name, value, onChange, placeholder, options, required, disabled }) => (
-  <div className="relative">
-    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
-      <Icon className="w-3.5 h-3.5" />
+const FieldSelect = ({
+  icon: Icon,
+  name,
+  value,
+  onChange,
+  placeholder,
+  options,
+  required,
+  disabled,
+  label,
+  helpText,
+}) => (
+  <div className="space-y-1.5 w-full">
+    {label && (
+      <label className="block text-xs font-bold text-gray-700 ml-1 uppercase tracking-wider">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+    )}
+    <div className="relative">
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-600 pointer-events-none z-10">
+        <Icon className="w-4 h-4" />
+      </div>
+      <select
+        name={name}
+        value={value ?? ""}
+        onChange={onChange}
+        required={!!required}
+        disabled={!!disabled}
+        className="w-full rounded-xl bg-gray-50/50 pl-10 pr-3 py-2.5 text-sm text-gray-900 border border-gray-200 outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+      >
+        <option value="">{placeholder}</option>
+        {(Array.isArray(options) ? options : []).map((opt) => (
+          <option key={opt.id} value={opt.id}>
+            {opt.name}
+          </option>
+        ))}
+      </select>
     </div>
-    <select
-      name={name}
-      value={value ?? ""}
-      onChange={onChange}
-      required={!!required}
-      disabled={!!disabled}
-      className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-    >
-      <option value="">{placeholder}</option>
-      {(Array.isArray(options) ? options : []).map((opt) => (
-        <option key={opt.id} value={opt.id}>
-          {opt.name}
-        </option>
-      ))}
-    </select>
+    {helpText && <p className="text-[10px] text-gray-500 ml-1 italic">{helpText}</p>}
   </div>
 );
 
-const FieldInput = ({ icon: Icon, name, type = "text", value, onChange, placeholder, required, ...props }) => (
-  <div className="relative">
-    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
-      <Icon className="w-3.5 h-3.5" />
+const FieldInput = ({
+  icon: Icon,
+  name,
+  type = "text",
+  value,
+  onChange,
+  placeholder,
+  required,
+  label,
+  helpText,
+  ...props
+}) => (
+  <div className="space-y-1.5 w-full">
+    {label && (
+      <label className="block text-xs font-bold text-gray-700 ml-1 uppercase tracking-wider">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+    )}
+    <div className="relative">
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-600 pointer-events-none z-10">
+        <Icon className="w-4 h-4" />
+      </div>
+      <input
+        type={type}
+        name={name}
+        value={value ?? ""}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={!!required}
+        className="w-full rounded-xl bg-gray-50/50 pl-10 pr-3 py-2.5 text-sm text-gray-900 border border-gray-200 outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all shadow-sm"
+        {...props}
+      />
     </div>
-    <input
-      type={type}
-      name={name}
-      value={value ?? ""}
-      onChange={onChange}
-      placeholder={placeholder}
-      required={!!required}
-      className="w-full rounded-xl bg-white pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
-      {...props}
-    />
+    {helpText && <p className="text-[10px] text-gray-500 ml-1 italic">{helpText}</p>}
   </div>
 );
 
-const FieldTime = ({ icon: Icon, name, value, onChange, label, disabled, required }) => (
-  <div className="relative">
-    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
-      <Icon className="w-3.5 h-3.5" />
+const FieldTime = ({ icon: Icon, name, value, onChange, label, disabled, required, helpText }) => (
+  <div className="space-y-1.5 w-full">
+    {label && (
+      <label className="block text-xs font-bold text-gray-700 ml-1 uppercase tracking-wider">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+    )}
+    <div className="relative">
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-600 pointer-events-none z-10">
+        <Icon className="w-4 h-4" />
+      </div>
+      <input
+        type="time"
+        name={name}
+        value={value ?? ""}
+        onChange={onChange}
+        aria-label={label}
+        disabled={!!disabled}
+        required={!!required}
+        className="w-full rounded-xl bg-gray-50/50 pl-10 pr-3 py-2.5 text-sm text-gray-900 border border-gray-200 outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+      />
     </div>
-    <input
-      type="time"
-      name={name}
-      value={value ?? ""}
-      onChange={onChange}
-      aria-label={label}
-      disabled={!!disabled}
-      required={!!required}
-      className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-    />
+    {helpText && <p className="text-[10px] text-gray-500 ml-1 italic">{helpText}</p>}
   </div>
 );
 

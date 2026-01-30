@@ -19,6 +19,8 @@ import {
   Calendar,
   MapPin,
 } from "lucide-react";
+import Alert from "../../gobalConponent/Alert.jsx";
+import ConfirmDialog from "../../gobalConponent/ConfirmDialog.jsx";
 
 const StaffPage = () => {
   const [staff, setStaff] = useState([]);
@@ -26,6 +28,15 @@ const StaffPage = () => {
   const [editingStaff, setEditingStaff] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
+
+  // Global UI State
+  const [alert, setAlert] = useState({ show: false, message: "", type: "success" });
+  const [confirm, setConfirm] = useState({ show: false, id: null });
+
+  const showAlert = (message, type = "success") => {
+    setAlert({ show: true, message, type });
+    if (type === "success") setTimeout(() => setAlert(prev => ({ ...prev, show: false })), 5000);
+  };
 
   useEffect(() => {
     loadStaff();
@@ -51,16 +62,18 @@ const StaffPage = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this staff member?")) {
-      return;
-    }
+    setConfirm({ show: true, id });
+  };
 
+  const executeDelete = async () => {
+    if (!confirm.id) return;
     try {
-      await deleteStaff(id);
+      await deleteStaff(confirm.id);
+      showAlert("Staff member deleted successfully", "success");
       loadStaff();
     } catch (error) {
       console.error("Delete error:", error);
-      alert(error.response?.data?.message || "Failed to delete staff member");
+      showAlert(error.response?.data?.message || "Failed to delete staff member", "error");
     }
   };
 
@@ -72,6 +85,27 @@ const StaffPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
+      <AnimatePresence>
+        {alert.show && (
+          <div className="fixed top-20 right-5 z-[9999] w-80">
+            <Alert
+              type={alert.type}
+              message={alert.message}
+              onClose={() => setAlert(prev => ({ ...prev, show: false }))}
+            />
+          </div>
+        )}
+      </AnimatePresence>
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this staff member? This action cannot be undone."
+        onConfirm={executeDelete}
+        onCancel={() => setConfirm({ show: false, id: null })}
+        confirmText="Delete"
+        type="danger"
+      />
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Staff Management</h1>

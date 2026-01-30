@@ -44,11 +44,16 @@ import {
   RefreshCw,
   Lock,
 } from "lucide-react";
+import Alert from "../../gobalConponent/Alert.jsx";
+import ConfirmDialog from "../../gobalConponent/ConfirmDialog.jsx";
 
 /* ================== HELPERS ================== */
-const buildAcademicYears = (count = 12) => {
+const buildAcademicYears = (past = 5, future = 5) => {
   const y = new Date().getFullYear();
-  return Array.from({ length: count }, (_, i) => `${y + i}-${y + i + 1}`);
+  return Array.from({ length: past + future + 1 }, (_, i) => {
+    const startYear = y - past + i;
+    return `${startYear}-${startYear + 1}`;
+  });
 };
 
 const toDateTimeLocal = (val) => {
@@ -387,7 +392,7 @@ const MajorQuotasPage = () => {
   const [itemsPerPage] = useState(10);
 
   // create/upsert form
-  const academicYearOptions = useMemo(() => buildAcademicYears(12), []);
+  const academicYearOptions = useMemo(() => buildAcademicYears(5, 5), []);
   const [createDepartmentId, setCreateDepartmentId] = useState("");
   const [createMajorId, setCreateMajorId] = useState("");
   const [createAcademicYear, setCreateAcademicYear] = useState(academicYearOptions[0] || "");
@@ -966,8 +971,8 @@ const MajorQuotasPage = () => {
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setCurrentPage(i + 1)}
                       className={`px-4 py-2 rounded-lg font-medium transition-colors ${currentPage === i + 1
-                          ? "bg-blue-600 text-white shadow-lg"
-                          : "border border-gray-200 hover:bg-gray-50 bg-white"
+                        ? "bg-blue-600 text-white shadow-lg"
+                        : "border border-gray-200 hover:bg-gray-50 bg-white"
                         }`}
                     >
                       {i + 1}
@@ -1021,6 +1026,16 @@ const MajorQuotasPage = () => {
           setQuotaToDelete(null);
         }}
         loading={deleting}
+      />
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this major quota? This action will remove the registration limit for this major for the specified academic year."
+        onConfirm={executeDelete}
+        onCancel={() => setConfirm({ show: false, quota: null })}
+        confirmText="Delete"
+        type="danger"
       />
     </div>
   );

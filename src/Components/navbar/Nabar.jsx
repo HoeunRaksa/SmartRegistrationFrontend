@@ -30,6 +30,15 @@ function Navbar() {
     }
   }, []);
 
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => { document.body.style.overflow = "unset"; };
+  }, [isMenuOpen]);
+
   const closeMenu = useCallback(() => setIsMenuOpen(false), []);
 
   // ✅ Logout
@@ -223,31 +232,31 @@ function Navbar() {
                 </motion.div>
               ))}
 
-          {user ? (
-            <div className="space-y-2 pt-2 border-t-2 border-white/40">
-              <div className="backdrop-blur-xl bg-white/60 p-3 rounded-xl border border-white/60 text-center">
-                <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  {user.name}
-                </span>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="w-full backdrop-blur-xl bg-gradient-to-r from-red-500 to-pink-500 text-white py-3 rounded-xl shadow-lg font-semibold border border-white/30"
-              >
-                Logout
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => {
-                navigate("/login");
-                closeMenu();
-              }}
-              className="w-full backdrop-blur-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl shadow-lg font-semibold border border-white/30 mt-2"
-            >
-              Login
-            </button>
-          )}
+              {user ? (
+                <div className="space-y-2 pt-2 border-t-2 border-white/40">
+                  <div className="backdrop-blur-xl bg-white/60 p-3 rounded-xl border border-white/60 text-center">
+                    <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                      {user.name}
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full backdrop-blur-xl bg-gradient-to-r from-red-500 to-pink-500 text-white py-3 rounded-xl shadow-lg font-semibold border border-white/30"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    navigate("/login");
+                    closeMenu();
+                  }}
+                  className="w-full backdrop-blur-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl shadow-lg font-semibold border border-white/30 mt-2"
+                >
+                  Login
+                </button>
+              )}
             </div>
           </motion.div>
         )}

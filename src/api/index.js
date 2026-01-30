@@ -138,11 +138,11 @@ API.interceptors.request.use((config) => {
   const method = (config.method || "get").toLowerCase();
   if (method !== "get") return config;
 
-  // don't dedupe cached adapters
-  if (config.adapter) return config;
+  // don't dedupe cached adapters OR already internal requests
+  if (config.adapter || config.__skipDedupe) return config;
 
   const key = makeKey(config);
-  const promise = API.request({ ...config, adapter: undefined }); // real request
+  const promise = API.request({ ...config, __skipDedupe: true }); // real request
   inFlight.set(key, promise);
 
   // Replace current request with adapter that waits for the stored promise

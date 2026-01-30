@@ -18,6 +18,8 @@ import {
   Calendar,
   MapPin,
 } from "lucide-react";
+import Alert from "../../gobalConponent/Alert.jsx";
+import ConfirmDialog from "../../gobalConponent/ConfirmDialog.jsx";
 
 const TeacherPage = () => {
   const [teachers, setTeachers] = useState([]);
@@ -25,6 +27,15 @@ const TeacherPage = () => {
   const [editingTeacher, setEditingTeacher] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
+
+  // Global UI State
+  const [alert, setAlert] = useState({ show: false, message: "", type: "success" });
+  const [confirm, setConfirm] = useState({ show: false, id: null });
+
+  const showAlert = (message, type = "success") => {
+    setAlert({ show: true, message, type });
+    if (type === "success") setTimeout(() => setAlert(prev => ({ ...prev, show: false })), 5000);
+  };
 
   useEffect(() => {
     loadTeachers();
@@ -50,14 +61,18 @@ const TeacherPage = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this teacher?")) return;
+    setConfirm({ show: true, id });
+  };
 
+  const executeDelete = async () => {
+    if (!confirm.id) return;
     try {
-      await deleteTeacher(id);
+      await deleteTeacher(confirm.id);
+      showAlert("Teacher deleted successfully", "success");
       loadTeachers();
     } catch (error) {
       console.error("Delete error:", error);
-      alert(error.response?.data?.message || "Failed to delete teacher");
+      showAlert(error.response?.data?.message || "Failed to delete teacher", "error");
     }
   };
 
@@ -69,6 +84,27 @@ const TeacherPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
+      <AnimatePresence>
+        {alert.show && (
+          <div className="fixed top-20 right-5 z-[9999] w-80">
+            <Alert
+              type={alert.type}
+              message={alert.message}
+              onClose={() => setAlert(prev => ({ ...prev, show: false }))}
+            />
+          </div>
+        )}
+      </AnimatePresence>
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this teacher? This action will remove their account and data."
+        onConfirm={executeDelete}
+        onCancel={() => setConfirm({ show: false, id: null })}
+        confirmText="Delete"
+        type="danger"
+      />
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Teacher Management</h1>

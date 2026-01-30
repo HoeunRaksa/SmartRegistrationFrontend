@@ -22,6 +22,7 @@ import {
   Lock,
   GraduationCap,
 } from "lucide-react";
+import Alert from "../../gobalConponent/Alert.jsx";
 
 /* ================== HELPERS ================== */
 const toDateInputValue = (val) => {
@@ -49,9 +50,12 @@ const generatePassword = () => {
   return `novatech${yyyy}${mm}${dd}${hh}${mi}${ss}`;
 };
 
-const buildAcademicYears = (count = 10) => {
+const buildAcademicYears = (past = 5, future = 5) => {
   const y = new Date().getFullYear();
-  return Array.from({ length: count }, (_, i) => `${y + i}-${y + i + 1}`);
+  return Array.from({ length: past + future + 1 }, (_, i) => {
+    const startYear = y - past + i;
+    return `${startYear}-${startYear + 1}`;
+  });
 };
 
 /* ================== CONSTANTS ================== */
@@ -119,7 +123,7 @@ const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
   const [passwordResetSuccess, setPasswordResetSuccess] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const academicYearOptions = useMemo(() => buildAcademicYears(12), []);
+  const academicYearOptions = useMemo(() => buildAcademicYears(5, 5), []);
   const filteredMajors = useMemo(() => {
     if (!form.department_id) return majors;
     return majors.filter((m) => String(m.department_id) === String(form.department_id));
@@ -525,29 +529,6 @@ const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
 };
 
 /* ===================== UI PARTS ===================== */
-const Alert = ({ type, message, onClose }) => (
-  <motion.div
-    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.95 }}
-    className={`flex items-center gap-3 p-4 rounded-2xl border shadow-sm ${type === "success" ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
-      }`}
-  >
-    {type === "success" ? (
-      <CheckCircle2 className="w-5 h-5 text-green-600" />
-    ) : (
-      <AlertCircle className="w-5 h-5 text-red-600" />
-    )}
-
-    <p className={`text-sm font-medium ${type === "success" ? "text-green-800" : "text-red-800"}`}>{message}</p>
-
-    {onClose && (
-      <button onClick={onClose} className="ml-auto text-red-600 hover:text-red-800" type="button">
-        <X className="w-4 h-4" />
-      </button>
-    )}
-  </motion.div>
-);
 
 const SectionTitle = ({ title }) => (
   <div className="pt-2">

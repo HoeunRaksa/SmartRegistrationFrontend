@@ -49,11 +49,21 @@ import {
   fetchMajorsByDepartment,
 } from "../api/department_api.jsx";
 import { fetchMajor } from "../api/major_api.jsx";
+import { fetchCurrentSession } from "../api/admin_session_api.jsx";
 import API from "../api/index"; // ✅ used for major capacity endpoint
 
 export const ToastContext = createContext();
 
 const currentYear = new Date().getFullYear();
+
+const buildAcademicYears = (past = 5, future = 5) => {
+  const y = new Date().getFullYear();
+  return Array.from({ length: past + future + 1 }, (_, i) => {
+    const startYear = y - past + i;
+    const label = `${startYear}-${startYear + 1}`;
+    return { value: label, label: label };
+  });
+};
 
 /**
  * ✅ Registration is for academic year (NOT for semester payment).
@@ -273,6 +283,9 @@ const Registration = () => {
   const [success, setSuccess] = useState(null);
 
   const [profilePreview, setProfilePreview] = useState(null);
+  const [currentSession, setCurrentSession] = useState(null);
+
+  const academicYearOptions = useMemo(() => buildAcademicYears(5, 5), []);
 
   // avoid state updates after unmount
   const aliveRef = useRef(true);
@@ -303,6 +316,12 @@ const Registration = () => {
 
   useEffect(() => {
     aliveRef.current = true;
+
+    // Fetch current session for dates
+    fetchCurrentSession().then(res => {
+      if (aliveRef.current) setCurrentSession(res?.data || res);
+    }).catch(console.error);
+
     return () => {
       aliveRef.current = false;
       if (quotaTimerRef.current) clearTimeout(quotaTimerRef.current);
@@ -899,7 +918,7 @@ const Registration = () => {
 
   const academicFields = useMemo(
     () => [
-      { name: "academicYear", label: "Academic Year", required: true, placeholder: "2026-2027" },
+      { name: "academicYear", label: "Academic Year", type: "select", required: true, options: academicYearOptions },
       { name: "departmentId", label: "Department", type: "select", required: true, options: departmentOptions },
       {
         name: "majorId",
@@ -1536,15 +1555,29 @@ const Registration = () => {
             <div className="flex flex-wrap justify-center gap-6 text-center">
               <div className="backdrop-blur-xl bg-blue-50/60 px-6 py-3 rounded-xl border border-blue-200/50">
                 <p className="text-xs text-gray-600">Application Deadline</p>
-                <p className="font-bold text-blue-600">May 15, 2025</p>
+                <p className="font-bold text-blue-600">
+                  {currentSession?.start_date
+                    ? new Date(currentSession.start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                    : "May 15, 2025"}
+                </p>
               </div>
               <div className="backdrop-blur-xl bg-purple-50/60 px-6 py-3 rounded-xl border border-purple-200/50">
                 <p className="text-xs text-gray-600">Classes Begin</p>
-                <p className="font-bold text-purple-600">Aug 20, 2025</p>
+                <p className="font-bold text-purple-600">
+                  {currentSession?.start_date
+                    ? new Date(currentSession.start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                    : "Aug 20, 2025"}
+                </p>
               </div>
               <div className="backdrop-blur-xl bg-green-50/60 px-6 py-3 rounded-xl border border-green-200/50">
-                <p className="text-xs text-gray-600">Support Hotline</p>
-                <p className="font-bold text-green-600">+1 (555) 123-4567</p>
+                <p className="text-xs text-gray-600">
+                  {currentSession?.semester ? `Semester ${currentSession.semester} Term` : "Semester Term"}
+                </p>
+                <p className="font-bold text-green-600">
+                  {currentSession
+                    ? `${new Date(currentSession.start_date).toLocaleDateString()} - ${new Date(currentSession.end_date).toLocaleDateString()}`
+                    : "Scheduled dates soon"}
+                </p>
               </div>
             </div>
           </div>
@@ -1570,12 +1603,13 @@ const Registration = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Field
+                type="select"
                 name="academicYear"
                 label="Academic Year"
                 required
                 value={form.academicYear}
                 onChange={handleChange}
-                placeholder="2026-2027"
+                options={academicYearOptions}
               />
 
               <Field

@@ -21,6 +21,8 @@ import {
   XCircle,
   SlidersHorizontal,
 } from "lucide-react";
+import Alert from "../../gobalConponent/Alert.jsx";
+import ConfirmDialog from "../../gobalConponent/ConfirmDialog.jsx";
 
 /* ================== HELPERS ================== */
 
@@ -47,6 +49,15 @@ const DepartmentsPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState("name"); // name, code, recent
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  // Dynamic UI State
+  const [alert, setAlert] = useState({ show: false, message: "", type: "success" });
+  const [confirm, setConfirm] = useState({ show: false, id: null });
+
+  const showAlert = (message, type = "success") => {
+    setAlert({ show: true, message, type });
+    if (type === "success") setTimeout(() => setAlert(prev => ({ ...prev, show: false })), 5000);
+  };
 
   const loadDepartments = useCallback(async () => {
     try {
@@ -84,22 +95,25 @@ const DepartmentsPage = () => {
   }, []);
 
   const handleDelete = useCallback(
-    async (departmentId) => {
-      const ok = window.confirm(
-        "Are you sure you want to delete this department? This action cannot be undone."
-      );
-      if (!ok) return;
-
-      try {
-        await deleteDepartment(departmentId);
-        await loadDepartments();
-      } catch (err) {
-        console.error("Delete error:", err);
-        alert(err?.response?.data?.message || "Failed to delete department");
-      }
+    (departmentId) => {
+      setConfirm({ show: true, id: departmentId });
     },
-    [loadDepartments]
+    []
   );
+
+  const executeDelete = async () => {
+    if (!confirm.id) return;
+    try {
+      await deleteDepartment(confirm.id);
+      showAlert("Department deleted successfully", "success");
+      loadDepartments();
+    } catch (err) {
+      console.error("Delete error:", err);
+      showAlert(err?.response?.data?.message || "Failed to delete department", "error");
+    } finally {
+      setConfirm({ show: false, id: null });
+    }
+  };
 
   const faculties = useMemo(() => {
     const list = departments.map((d) => d?.faculty).filter(Boolean);
@@ -177,6 +191,27 @@ const DepartmentsPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
+      <AnimatePresence>
+        {alert.show && (
+          <div className="fixed top-20 right-5 z-[9999] w-80">
+            <Alert
+              type={alert.type}
+              message={alert.message}
+              onClose={() => setAlert(prev => ({ ...prev, show: false }))}
+            />
+          </div>
+        )}
+      </AnimatePresence>
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this department? This action cannot be undone and will affect associated majors and courses."
+        onConfirm={executeDelete}
+        onCancel={() => setConfirm({ show: false, id: null })}
+        confirmText="Delete"
+        type="danger"
+      />
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Departments</h1>

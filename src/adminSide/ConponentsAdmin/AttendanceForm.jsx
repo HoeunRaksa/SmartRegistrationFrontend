@@ -14,6 +14,8 @@ import {
   Calendar,
   User,
   Clock,
+  Info,
+  HelpCircle,
 } from "lucide-react";
 
 /* ================== CONSTANTS ================== */
@@ -36,21 +38,25 @@ const INITIAL_ATTENDANCE_FORM = {
 
 const animations = {
   fadeUp: {
-    hidden: { opacity: 0, y: 24 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] } },
   },
   container: {
     hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.15 } },
+    show: { opacity: 1, transition: { staggerChildren: 0.06, delayChildren: 0.1 } },
   },
   item: {
-    hidden: { opacity: 0, y: 18, scale: 0.96 },
+    hidden: { opacity: 0, y: 12, scale: 0.98 },
     show: {
       opacity: 1,
       y: 0,
       scale: 1,
-      transition: { type: "spring", stiffness: 260, damping: 22 },
+      transition: { type: "spring", stiffness: 300, damping: 25 },
     },
+  },
+  scaleIn: {
+    hidden: { opacity: 0, scale: 0.95 },
+    show: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
   },
 };
 
@@ -148,60 +154,87 @@ const AttendanceForm = ({ onUpdate, courses, students, sessions }) => {
   };
 
   return (
-    <div className="space-y-4">
-      {/* Mode Toggle */}
-      <div className="flex gap-2 p-1 bg-white/60 backdrop-blur-sm rounded-xl border border-white/40">
-        <button
-          type="button"
-          onClick={() => setMode("session")}
-          className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${mode === "session"
-            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md"
-            : "text-gray-600 hover:bg-white/40"
-            }`}
-        >
-          Create Class Session
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("attendance")}
-          className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${mode === "attendance"
-            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md"
-            : "text-gray-600 hover:bg-white/40"
-            }`}
-        >
-          Mark Attendance
-        </button>
-      </div>
+    <div className="space-y-4 sm:space-y-6">
+      {/* Mode Toggle - Fully Responsive */}
+      <motion.div variants={animations.scaleIn} initial="hidden" animate="show">
+        <div className="flex flex-col sm:flex-row gap-2 p-1.5 sm:p-2 bg-gradient-to-br from-blue-50/80 to-purple-50/80 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-gray-200/60 shadow-sm">
+          <button
+            type="button"
+            onClick={() => setMode("session")}
+            className={`flex-1 py-2.5 sm:py-3 px-3 sm:px-6 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 ${mode === "session"
+                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/30 scale-105"
+                : "text-gray-600 hover:bg-white/60 hover:text-gray-800"
+              }`}
+          >
+            📅 Create Class Session
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("attendance")}
+            className={`flex-1 py-2.5 sm:py-3 px-3 sm:px-6 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 ${mode === "attendance"
+                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-purple-500/30 scale-105"
+                : "text-gray-600 hover:bg-white/60 hover:text-gray-800"
+              }`}
+          >
+            ✓ Mark Attendance
+          </button>
+        </div>
+      </motion.div>
 
-      {/* Alerts */}
+      {/* Info Box - Mobile Friendly */}
+      <motion.div variants={animations.fadeUp} initial="hidden" animate="show">
+        <div className="p-3 sm:p-4 rounded-xl bg-blue-50/60 border border-blue-200/40 backdrop-blur-sm">
+          <div className="flex items-start gap-2 sm:gap-3">
+            <Info className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-blue-900">
+                {mode === "session"
+                  ? "Create a new class session before marking attendance"
+                  : "Select a session from the dropdown to mark student attendance"}
+              </p>
+              <p className="text-xs text-blue-700 mt-1 leading-relaxed">
+                {mode === "session"
+                  ? "Choose the course, date, and time for the class session"
+                  : "All sessions you've created will appear in the dropdown list"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Alerts - Responsive */}
       <AnimatePresence>
         {success && (
-          <Alert type="success" message={`${mode === "session" ? "Class session created" : "Attendance marked"} successfully!`} />
+          <Alert type="success" message={`${mode === "session" ? "Class session created" : "Attendance marked"} successfully! 🎉`} />
         )}
         {error && (
           <Alert type="error" message={error} onClose={() => setError(null)} />
         )}
       </AnimatePresence>
 
-      {/* Forms */}
-      {mode === "session" ? (
-        <SessionFormSection
-          onSubmit={handleSessionSubmit}
-          form={sessionForm}
-          setForm={setSessionForm}
-          loading={loading}
-          courses={courses}
-        />
-      ) : (
-        <AttendanceFormSection
-          onSubmit={handleAttendanceSubmit}
-          form={attendanceForm}
-          setForm={setAttendanceForm}
-          loading={loading}
-          students={students}
-          sessions={sessions}
-        />
-      )}
+      {/* Forms - AnimatePresence for smooth transitions */}
+      <AnimatePresence mode="wait">
+        {mode === "session" ? (
+          <SessionFormSection
+            key="session"
+            onSubmit={handleSessionSubmit}
+            form={sessionForm}
+            setForm={setSessionForm}
+            loading={loading}
+            courses={courses}
+          />
+        ) : (
+          <AttendanceFormSection
+            key="attendance"
+            onSubmit={handleAttendanceSubmit}
+            form={attendanceForm}
+            setForm={setAttendanceForm}
+            loading={loading}
+            students={students}
+            sessions={sessions}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -212,23 +245,24 @@ const Alert = ({ type, message, onClose }) => (
   <motion.div
     initial={{ opacity: 0, y: -10, scale: 0.95 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.95 }}
-    className={`flex items-center gap-3 p-4 rounded-2xl border shadow-sm ${type === "success"
-      ? "bg-green-50 border-green-200"
-      : "bg-red-50 border-red-200"
+    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+    transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+    className={`flex items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl sm:rounded-2xl border shadow-md ${type === "success"
+        ? "bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200"
+        : "bg-gradient-to-r from-red-50 to-rose-50 border-red-200"
       }`}
   >
     {type === "success" ? (
-      <CheckCircle2 className="w-5 h-5 text-green-600" />
+      <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 flex-shrink-0" />
     ) : (
-      <AlertCircle className="w-5 h-5 text-red-600" />
+      <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 flex-shrink-0" />
     )}
-    <p className={`text-sm font-medium ${type === "success" ? "text-green-800" : "text-red-800"}`}>
+    <p className={`text-xs sm:text-sm font-medium flex-1 ${type === "success" ? "text-emerald-800" : "text-red-800"}`}>
       {message}
     </p>
     {onClose && (
-      <button onClick={onClose} className="ml-auto text-red-600 hover:text-red-800">
-        <X className="w-4 h-4" />
+      <button onClick={onClose} className="text-red-600 hover:text-red-800 transition-colors flex-shrink-0">
+        <X className="w-4 h-4 sm:w-5 sm:h-5" />
       </button>
     )}
   </motion.div>
@@ -239,11 +273,18 @@ const SessionFormSection = ({ onSubmit, form, setForm, loading, courses }) => (
     variants={animations.fadeUp}
     initial="hidden"
     animate="show"
-    className="relative overflow-hidden rounded-2xl bg-white border border-white shadow-lg p-5"
+    exit="hidden"
+    className="relative overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-xl p-4 sm:p-6 lg:p-8"
   >
-    <div className="flex items-center gap-2 mb-4">
-      <Sparkles className="w-4 h-4 text-purple-600" />
-      <h2 className="text-lg font-semibold text-gray-900">Create Class Session</h2>
+    {/* Header */}
+    <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+      <div className="p-2 sm:p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
+        <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <h2 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">Create Class Session</h2>
+        <p className="text-xs sm:text-sm text-gray-600 mt-0.5">Set up a new teaching session</p>
+      </div>
     </div>
 
     <motion.form
@@ -251,33 +292,44 @@ const SessionFormSection = ({ onSubmit, form, setForm, loading, courses }) => (
       variants={animations.container}
       initial="hidden"
       animate="show"
-      className="space-y-3"
+      className="space-y-4 sm:space-y-5"
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+        {/* Course Selection */}
         <InputField
           icon={BookOpen}
           name="course_id"
           type="select"
-          placeholder="Select Course"
+          label="Course"
+          placeholder="Choose a course"
+          helpText="Select the course for this session"
           value={form.course_id}
           onChange={(e) => setForm({ ...form, course_id: e.target.value })}
           options={courses}
-          col="md:col-span-2"
+          col="lg:col-span-2"
         />
+
+        {/* Date */}
         <InputField
           icon={Calendar}
           name="session_date"
           type="date"
-          placeholder="Session Date"
+          label="Session Date"
+          placeholder="Pick a date"
+          helpText="When will this session take place?"
           value={form.session_date}
           onChange={(e) => setForm({ ...form, session_date: e.target.value })}
-          col="md:col-span-2"
+          col="lg:col-span-2"
         />
+
+        {/* Time Fields */}
         <InputField
           icon={Clock}
           name="start_time"
           type="time"
-          placeholder="Start Time"
+          label="Start Time"
+          placeholder="Start time"
+          helpText="Session begins at"
           value={form.start_time}
           onChange={(e) => setForm({ ...form, start_time: e.target.value })}
         />
@@ -285,12 +337,15 @@ const SessionFormSection = ({ onSubmit, form, setForm, loading, courses }) => (
           icon={Clock}
           name="end_time"
           type="time"
-          placeholder="End Time"
+          label="End Time"
+          placeholder="End time"
+          helpText="Session ends at"
           value={form.end_time}
           onChange={(e) => setForm({ ...form, end_time: e.target.value })}
         />
       </div>
-      <SubmitButton loading={loading} text="Create Session" />
+
+      <SubmitButton loading={loading} text="Create Session" icon={Sparkles} />
     </motion.form>
   </motion.div>
 );
@@ -300,11 +355,18 @@ const AttendanceFormSection = ({ onSubmit, form, setForm, loading, students, ses
     variants={animations.fadeUp}
     initial="hidden"
     animate="show"
-    className="relative overflow-hidden rounded-2xl bg-white border border-white shadow-lg p-5"
+    exit="hidden"
+    className="relative overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-xl p-4 sm:p-6 lg:p-8"
   >
-    <div className="flex items-center gap-2 mb-4">
-      <Sparkles className="w-4 h-4 text-purple-600" />
-      <h2 className="text-lg font-semibold text-gray-900">Mark Attendance</h2>
+    {/* Header */}
+    <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+      <div className="p-2 sm:p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg">
+        <CheckSquare className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <h2 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">Mark Attendance</h2>
+        <p className="text-xs sm:text-sm text-gray-600 mt-0.5">Record student attendance</p>
+      </div>
     </div>
 
     <motion.form
@@ -312,72 +374,101 @@ const AttendanceFormSection = ({ onSubmit, form, setForm, loading, students, ses
       variants={animations.container}
       initial="hidden"
       animate="show"
-      className="space-y-3"
+      className="space-y-4 sm:space-y-5"
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+        {/* Student Selection */}
         <InputField
           icon={User}
           name="student_id"
           type="select"
-          placeholder="Select Student"
+          label="Student"
+          placeholder="Select student"
+          helpText="Which student attended?"
           value={form.student_id}
           onChange={(e) => setForm({ ...form, student_id: e.target.value })}
           options={students}
+          col="lg:col-span-2"
         />
+
+        {/* Session Selection - Most Important */}
         <InputField
           icon={BookOpen}
           name="class_session_id"
           type="select"
-          placeholder="Select Session"
+          label="Class Session"
+          placeholder="Choose a session"
+          helpText="Select the session you want to mark attendance for"
           value={form.class_session_id}
           onChange={(e) => setForm({ ...form, class_session_id: e.target.value })}
           options={sessions || []}
+          col="lg:col-span-2"
+          important
         />
+
+        {/* Status */}
         <InputField
           icon={CheckSquare}
           name="status"
           type="select"
-          placeholder="Status"
+          label="Attendance Status"
+          placeholder="Select status"
+          helpText="Was the student present, late, absent, or excused?"
           value={form.status}
           onChange={(e) => setForm({ ...form, status: e.target.value })}
           options={[
-            { id: "present", name: "Present" },
-            { id: "absent", name: "Absent" },
-            { id: "late", name: "Late" },
-            { id: "excused", name: "Excused" }
+            { id: "present", name: "✓ Present" },
+            { id: "late", name: "⏰ Late" },
+            { id: "absent", name: "✗ Absent" },
+            { id: "excused", name: "📝 Excused" }
           ]}
         />
+
+        {/* Remarks */}
         <InputField
-          icon={X}
+          icon={HelpCircle}
           name="remarks"
           type="text"
-          placeholder="Remarks (optional)"
+          label="Remarks (Optional)"
+          placeholder="Add notes (e.g., 'Doctor's appointment')"
+          helpText="Any additional information"
           value={form.remarks}
           onChange={(e) => setForm({ ...form, remarks: e.target.value })}
         />
       </div>
-      <SubmitButton loading={loading} text="Mark Attendance" />
+
+      <SubmitButton loading={loading} text="Mark Attendance" icon={CheckCircle2} />
     </motion.form>
   </motion.div>
 );
 
-const InputField = ({ icon: Icon, name, type, placeholder, value, onChange, options = [], col = "" }) => (
+const InputField = ({ icon: Icon, name, type, label, placeholder, helpText, value, onChange, options = [], col = "", important = false }) => (
   <motion.div variants={animations.item} className={`relative ${col}`}>
-    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
-      <Icon className="w-3.5 h-3.5" />
-    </div>
+    {/* Label with Icon */}
+    <label className="flex items-center gap-2 mb-2">
+      <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
+      <span className="text-xs sm:text-sm font-semibold text-gray-700">
+        {label}
+        {important && <span className="text-red-500 ml-1">*</span>}
+      </span>
+    </label>
+
+    {/* Input/Select */}
     {type === "select" ? (
       <select
         name={name}
         value={value}
         onChange={onChange}
         required={!placeholder.includes("optional")}
-        className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
+        className={`w-full rounded-xl sm:rounded-2xl bg-white px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-gray-900 border-2 ${important ? 'border-blue-400' : 'border-gray-200'
+          } outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 shadow-sm hover:border-blue-300`}
       >
         <option value="">{placeholder}</option>
         {options.map((opt) => (
           <option key={opt.id} value={opt.id}>
-            {opt.display_name || opt.course_name || opt.full_name_en || opt.student_name || opt.name || opt.title || (opt.student_code ? `${opt.full_name_kh || ''} (${opt.student_code})` : opt.id)}
+            {opt.display_name || opt.course_name || opt.full_name_en || opt.student_name || opt.name || opt.title ||
+              (opt.student_code ? `${opt.full_name_kh || opt.name || 'Student'} (${opt.student_code})` :
+                (opt.course_code ? `${opt.name} (${opt.course_code})` : opt.id))}
           </option>
         ))}
       </select>
@@ -389,21 +480,30 @@ const InputField = ({ icon: Icon, name, type, placeholder, value, onChange, opti
         onChange={onChange}
         placeholder={placeholder}
         required={!placeholder.includes("optional")}
-        className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all"
+        className="w-full rounded-xl sm:rounded-2xl bg-white px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-gray-900 border-2 border-gray-200 outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 shadow-sm hover:border-blue-300"
       />
+    )}
+
+    {/* Help Text */}
+    {helpText && (
+      <p className="mt-1.5 text-xs text-gray-500 flex items-center gap-1">
+        <Info className="w-3 h-3" />
+        {helpText}
+      </p>
     )}
   </motion.div>
 );
 
-const SubmitButton = ({ loading, text }) => (
+const SubmitButton = ({ loading, text, icon: Icon }) => (
   <motion.button
     variants={animations.item}
     whileHover={{ scale: 1.02, y: -2 }}
     whileTap={{ scale: 0.98 }}
     disabled={loading}
     type="submit"
-    className="w-full relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 py-2.5 text-sm font-semibold text-white shadow-lg disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+    className="w-full relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 py-3 sm:py-4 text-sm sm:text-base font-bold text-white shadow-xl shadow-blue-500/30 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/40"
   >
+    {/* Shimmer Effect */}
     {!loading && (
       <motion.div
         animate={{ x: ["-100%", "100%"] }}
@@ -420,11 +520,11 @@ const SubmitButton = ({ loading, text }) => (
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
             className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
           />
-          Processing...
+          <span className="text-xs sm:text-sm">Processing...</span>
         </>
       ) : (
         <>
-          <CheckCircle2 className="w-5 h-5" />
+          <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
           {text}
         </>
       )}

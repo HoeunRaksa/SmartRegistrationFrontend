@@ -72,15 +72,33 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
 
   const handleChange = (key, value) => {
     setError("");
-    setForm((p) => ({ ...p, [key]: value }));
+    setForm((p) => {
+      const updated = { ...p, [key]: value };
+
+      // Manual resets only when user interacts
+      if (key === "department_id") {
+        updated.major_id = "";
+        updated.major_subject_id = "";
+        updated.class_group_id = "";
+      } else if (key === "major_id") {
+        updated.major_subject_id = "";
+        updated.class_group_id = "";
+      }
+
+      return updated;
+    });
   };
 
   // Prefill when editing
   useEffect(() => {
     if (editingCourse) {
+      // ✅ Handle various backend naming conventions
       const ms = editingCourse?.majorSubject ?? editingCourse?.major_subject ?? null;
-      const majorId = ms?.major_id ?? ms?.major?.id ?? editingCourse?.major_id ?? "";
-      const deptId = ms?.major?.department_id ?? editingCourse?.department_id ?? "";
+      const major = ms?.major ?? editingCourse?.major ?? null;
+
+      const majorId = ms?.major_id ?? major?.id ?? editingCourse?.major_id ?? "";
+      const deptId = major?.department_id ?? editingCourse?.department_id ?? "";
+
       const ay = editingCourse?.academic_year ? String(editingCourse.academic_year) : "";
 
       setForm({
@@ -135,7 +153,6 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
 
     if (!deptId) {
       setMajors([]);
-      setForm((p) => ({ ...p, major_id: "", major_subject_id: "", class_group_id: "" }));
       return;
     }
 
@@ -184,11 +201,6 @@ const CourseForm = ({ editingCourse, onCancel, onCreate, onUpdate }) => {
       }
     })();
   }, []);
-
-  // Reset when major changes
-  useEffect(() => {
-    setForm((p) => ({ ...p, major_subject_id: "", class_group_id: "" }));
-  }, [form.major_id]);
 
   // Filter major-subjects by selected major
   const majorSubjectsFiltered = useMemo(() => {

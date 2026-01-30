@@ -99,6 +99,15 @@ const StudentDashboard = () => {
         }
     }, [section, navigate]);
 
+    useEffect(() => {
+        if (mobileMenuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => { document.body.style.overflow = 'unset'; };
+    }, [mobileMenuOpen]);
+
     const handleSectionChange = (sectionId) => {
         navigate(`/student/${sectionId}`);
     };
@@ -215,8 +224,8 @@ const StudentDashboard = () => {
         }
     };
 
-return (
-            <div className="sidebar-layout-root min-h-screen w-full relative">
+    return (
+        <div className="sidebar-layout-root min-h-screen w-full relative">
             {/* ================= BACKGROUND SYSTEM ================= */}
             <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/30" />
 
@@ -380,20 +389,22 @@ return (
             <AnimatePresence>
                 {mobileMenuOpen && (
                     <>
+                        {/* Overlay - darker and less blurry */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.15 }}
-                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 md:hidden"
+                            className="fixed inset-0 bg-black/50 z-50 md:hidden"
                             onClick={() => setMobileMenuOpen(false)}
                         />
+                        {/* Sidebar - solid and fixed position */}
                         <motion.aside
-                            initial={{ x: -280 }}
+                            initial={{ x: "-100%" }}
                             animate={{ x: 0 }}
-                            exit={{ x: -280 }}
-                            transition={{ duration: 0.2 }}
-                            className="sidebar-fixed w-72 backdrop-blur-2xl bg-white/40 gen-z-glass border-r border-white/20 shadow-2xl z-50 md:hidden"
+                            exit={{ x: "-100%" }}
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            className="fixed left-0 top-0 bottom-0 w-[280px] bg-white border-r border-gray-100 shadow-2xl z-[100] md:hidden"
                         >
                             <div className="flex flex-col h-full p-4">
                                 <div className="flex items-center justify-between mb-8">
@@ -428,9 +439,9 @@ return (
                                                     setMobileMenuOpen(false);
                                                 }}
                                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
-                                                    ? 'backdrop-blur-xl bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
-                                                    : 'backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40'
-                                                    } border border-white/30`}
+                                                    ? 'bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
+                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                    } border ${isActive ? 'border-white/30' : 'border-gray-200'}`}
                                             >
                                                 <motion.div
                                                     animate={isActive ? { rotate: [0, -10, 10, 0] } : {}}
@@ -460,8 +471,8 @@ return (
                                 </motion.button>
 
                                 {/* Mobile User Profile */}
-                                <div className="mt-auto pt-4 border-t border-white/20">
-                                    <div className="backdrop-blur-xl bg-white/40 rounded-2xl p-3 border border-white/30">
+                                <div className="mt-auto pt-4 border-t border-gray-200">
+                                    <div className="bg-gray-100 rounded-2xl p-3 border border-gray-200 shadow-sm">
                                         <div className="flex items-center gap-3">
                                             {user?.profile_picture_url ? (
                                                 <img
@@ -497,7 +508,7 @@ return (
             {/* ================= MAIN CONTENT (scrolls; sidebar stays fixed) ================= */}
             <div className={`sidebar-main transition-all duration-200 ${sidebarCollapsed ? 'md:ml-20' : 'md:ml-72'}`}>
                 {/* ================= TOP BAR ================= */}
-                <header className="sticky top-0 z-30 backdrop-blur-2xl bg-white/40 gen-z-glass border-b border-white/20 shadow-sm">
+                <header className="sticky top-0 z-30 backdrop-blur-md bg-white/80 border-b border-gray-200 shadow-sm">
                     <div className="flex items-center justify-between px-4 md:px-6 py-3">
                         {/* Left Section */}
                         <div className="flex items-center gap-3">

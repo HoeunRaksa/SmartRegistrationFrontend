@@ -46,7 +46,7 @@ const iconWrap =
 
 const fieldWithIconPadding = "pl-[3.25rem]";
 
-const buildAcademicYears = (past = 2, future = 3) => {
+const buildAcademicYears = (past = 5, future = 5) => {
   const currentYear = new Date().getFullYear();
   const start = currentYear - past;
   const end = currentYear + future;
@@ -74,7 +74,7 @@ const ClassGroupForm = ({ editingGroup, onCancel, onCreate, onUpdate }) => {
   const [loadingDept, setLoadingDept] = useState(false);
   const [loadingMaj, setLoadingMaj] = useState(false);
 
-  const academicYears = useMemo(() => buildAcademicYears(2, 3), []);
+  const academicYears = useMemo(() => buildAcademicYears(5, 5), []);
 
   const setField = (key, value) => {
     setError("");

@@ -20,9 +20,12 @@ import StudentDashboardAPI, {
   getGreeting,
 } from '../../api/student_dashboard_api';
 
+import { fetchCurrentSession } from "../../api/admin_session_api.jsx";
+
 const DashboardHome = () => {
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
+  const [currentSession, setCurrentSession] = useState(null);
   const navigate = useNavigate();
 
   const user = useMemo(() => {
@@ -35,6 +38,9 @@ const DashboardHome = () => {
 
   useEffect(() => {
     loadDashboard();
+    fetchCurrentSession().then(res => {
+      setCurrentSession(res?.data || res);
+    }).catch(console.error);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -118,18 +124,37 @@ const DashboardHome = () => {
           className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
           style={{ backgroundSize: "200% 100%" }}
         />
-        <div className="relative z-10">
-          <motion.h1
-            animate={{ x: [0, 5, 0] }}
-            transition={{ duration: 2, repeat: Infinity, repeatDelay: 2 }}
-            className="text-3xl font-bold text-white mb-2"
-          >
-            {getGreeting()}, {dashboardData?.student?.name}! 👋
-          </motion.h1>
-          <p className="text-white/90">
-            {dashboardData?.student?.student_code} •{" "}
-            {dashboardData?.student?.major} • {dashboardData?.student?.year}
-          </p>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <motion.h1
+              animate={{ x: [0, 5, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 2 }}
+              className="text-3xl font-bold text-white mb-2"
+            >
+              {getGreeting()}, {dashboardData?.student?.name}! 👋
+            </motion.h1>
+            <p className="text-white/90">
+              {dashboardData?.student?.student_code} •{" "}
+              {dashboardData?.student?.major} • {dashboardData?.student?.year}
+            </p>
+          </div>
+
+          {currentSession && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="backdrop-blur-md bg-white/20 rounded-xl p-4 border border-white/30 text-white min-w-[240px]"
+            >
+              <p className="text-xs font-bold uppercase tracking-wider opacity-80 mb-1">Current Term</p>
+              <h3 className="font-bold text-lg">{currentSession.name}</h3>
+              <div className="flex items-center gap-2 mt-2 text-sm opacity-90">
+                <Clock className="w-4 h-4" />
+                <span>
+                  {new Date(currentSession.start_date).toLocaleDateString()} — {new Date(currentSession.end_date).toLocaleDateString()}
+                </span>
+              </div>
+            </motion.div>
+          )}
         </div>
       </motion.div>
 
@@ -346,8 +371,8 @@ const PendingAssignmentsCard = ({ assignments, onViewAll }) => (
               transition={{ delay: 0.6 + index * 0.1 }}
               whileHover={{ scale: 1.02, x: 5 }}
               className={`p-4 rounded-xl border cursor-pointer ${isUrgent
-                  ? "bg-red-50/50 border-red-200"
-                  : "bg-orange-50/50 border-orange-200"
+                ? "bg-red-50/50 border-red-200"
+                : "bg-orange-50/50 border-orange-200"
                 }`}
             >
               <div className="flex items-start justify-between mb-2">

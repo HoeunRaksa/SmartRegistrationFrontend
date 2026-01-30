@@ -1,19 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ClipboardList, Plus, Calendar, Users, FileText, X, Save, Clock, Loader } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ClipboardList, Plus, Calendar, Users, FileText, X, Save, Clock, Loader, Eye, Award, CheckSquare } from 'lucide-react';
 import {
   fetchTeacherAssignments,
   fetchTeacherCourses,
-  createTeacherAssignment
+  createTeacherAssignment,
+  fetchTeacherSubmissions,
+  deleteTeacherAssignment
 } from '../../api/teacher_api';
 import FormModal from '../../Components/FormModal';
 
 const AssignmentsPage = () => {
+  const navigate = useNavigate();
   const [selectedCourseId, setSelectedCourseId] = useState('all');
   const [courses, setCourses] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState(null);
+  const [showSubmissionsModal, setShowSubmissionsModal] = useState(false);
+  const [submissions, setSubmissions] = useState([]);
 
   useEffect(() => {
     loadData();
@@ -48,6 +55,40 @@ const AssignmentsPage = () => {
   const getProgress = (submitted, total) => {
     if (!total || total === 0) return 0;
     return ((submitted / total) * 100).toFixed(0);
+  };
+
+  const handleViewSubmissions = async (assignment) => {
+    try {
+      setLoading(true);
+      setSelectedAssignment(assignment);
+      const res = await fetchTeacherSubmissions(assignment.id);
+      setSubmissions(res.data?.data || []);
+      setShowSubmissionsModal(true);
+    } catch (error) {
+      console.error('Failed to load submissions:', error);
+      alert('Failed to load submissions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGradeAssignment = (assignment) => {
+    // Navigate to a grading page or open grading modal
+    setSelectedAssignment(assignment);
+    handleViewSubmissions(assignment);
+  };
+
+  const handleDeleteAssignment = async (assignmentId) => {
+    if (!confirm('Are you sure you want to delete this assignment?')) return;
+
+    try {
+      await deleteTeacherAssignment(assignmentId);
+      alert('Assignment deleted successfully');
+      loadData();
+    } catch (error) {
+      console.error('Failed to delete assignment:', error);
+      alert('Failed to delete assignment');
+    }
   };
 
   return (
@@ -156,10 +197,18 @@ const AssignmentsPage = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <button className="flex-1 py-2 rounded-xl backdrop-blur-xl bg-white/60 border border-white/40 hover:bg-white/80 transition-all text-gray-700 font-medium">
+                  <button
+                    onClick={() => handleViewSubmissions(assignment)}
+                    className="flex-1 py-2 rounded-xl backdrop-blur-xl bg-white/60 border border-white/40 hover:bg-white/80 transition-all text-gray-700 font-medium flex items-center justify-center gap-2"
+                  >
+                    <Eye className="w-4 h-4" />
                     Submissions
                   </button>
-                  <button className={`flex-1 py-2 rounded-xl bg-gradient-to-r ${assignment.color} text-white font-medium hover:shadow-lg transition-all`}>
+                  <button
+                    onClick={() => handleGradeAssignment(assignment)}
+                    className={`flex-1 py-2 rounded-xl bg-gradient-to-r ${assignment.color} text-white font-medium hover:shadow-lg transition-all flex items-center justify-center gap-2`}
+                  >
+                    <CheckSquare className="w-4 h-4" />
                     Grade Now
                   </button>
                 </div>
@@ -198,6 +247,82 @@ const AssignmentsPage = () => {
           onCreated={loadData}
           onClose={() => setShowCreateModal(false)}
         />
+      </FormModal>
+
+      {/* Submissions Modal */}
+      <FormModal
+        isOpen={showSubmissionsModal}
+        onClose={() => setShowSubmissionsModal(false)}
+        title={`Submissions: ${selectedAssignment?.title || ''}`}
+      >
+        <div className="bg-white p-6">
+          <div className="mb-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-800">
+                Student Submissions ({submissions.length})
+              </h3>
+              <div className="text-sm text-gray-600">
+                {submissions.filter(s => s.graded).length} graded
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {submissions.length === 0 ? (
+              <div className="text-center py-12 text-gray-400">
+                <ClipboardList className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p>No submissions yet</p>
+              </div>
+            ) : (
+              submissions.map((submission, idx) => (
+                <div key={submission.id || idx} className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                        {(submission.student_name || 'S').charAt(0)}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-800">{submission.student_name || 'Student'}</div>
+                        <div className="text-xs text-gray-500">
+                          Submitted: {submission.submitted_at || 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      {submission.graded ? (
+                        <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
+                          Graded: {submission.score}/{submission.total_points}
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold">
+                          Pending
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {submission.file_url && (
+                    <div className="mt-2">
+                      <a
+                        href={submission.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline text-sm flex items-center gap-1"
+                      >
+                        <FileText className="w-4 h-4" />
+                        View Submission
+                      </a>
+                    </div>
+                  )}
+                  {submission.content && (
+                    <div className="mt-2 text-sm text-gray-600 bg-white p-3 rounded-lg border border-gray-100">
+                      {submission.content}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </FormModal>
     </div>
   );

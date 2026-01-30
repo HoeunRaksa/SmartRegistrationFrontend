@@ -1,20 +1,11 @@
-/* Custom Scrollbar Utility */
+/* Custom Scrollbar Utility - Hidden */
 .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+    display: none;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.05);
-    border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(59, 130, 246, 0.4);
-    border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(59, 130, 246, 0.6);
+.custom-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 /* Animation performance: promote animated elements to own layer (use sparingly on animating nodes) */

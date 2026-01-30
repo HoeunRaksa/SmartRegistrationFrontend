@@ -14,6 +14,7 @@ import {
   BookOpen,
   Hash,
   FileText,
+  Info,
 } from "lucide-react";
 
 /* ================== CONSTANTS ================== */
@@ -32,16 +33,93 @@ const INITIAL_FORM_STATE = {
 };
 
 const INPUT_FIELDS = [
-  { key: "student_id", icon: User, placeholder: "Select Student", col: "md:col-span-1", type: "select" },
-  { key: "course_id", icon: BookOpen, placeholder: "Select Course", col: "md:col-span-1", type: "select" },
-  { key: "assignment_name", icon: FileText, placeholder: "Assignment Name", col: "md:col-span-2" },
-  { key: "score", icon: Hash, placeholder: "Score", col: "md:col-span-1", type: "number" },
-  { key: "total_points", icon: Hash, placeholder: "Total Points", col: "md:col-span-1", type: "number" },
-  { key: "letter_grade", icon: Award, placeholder: "Letter Grade (A, B, C...)", col: "md:col-span-1" },
-  { key: "grade_point", icon: Hash, placeholder: "Grade Point (4.0)", col: "md:col-span-1", type: "number", step: "0.01" },
-  { key: "semester", icon: FileText, placeholder: "Semester (e.g., Fall)", col: "md:col-span-1" },
-  { key: "academic_year", icon: FileText, placeholder: "Academic Year (e.g., 2024)", col: "md:col-span-1" },
-  { key: "feedback", icon: FileText, placeholder: "Feedback (optional)", col: "md:col-span-2", multiline: true },
+  {
+    key: "student_id",
+    icon: User,
+    label: "Student",
+    placeholder: "Select Student",
+    helpText: "Choose the student to grade",
+    col: "md:col-span-1",
+    type: "select"
+  },
+  {
+    key: "course_id",
+    icon: BookOpen,
+    label: "Course",
+    placeholder: "Select Course",
+    helpText: "Which course is this grade for?",
+    col: "md:col-span-1",
+    type: "select"
+  },
+  {
+    key: "assignment_name",
+    icon: FileText,
+    label: "Assignment Name",
+    placeholder: "e.g., Midterm Exam, Homework 1",
+    helpText: "Name of the assignment or exam",
+    col: "md:col-span-2"
+  },
+  {
+    key: "score",
+    icon: Hash,
+    label: "Score Earned",
+    placeholder: "Score (e.g., 85)",
+    helpText: "Points the student earned",
+    col: "md:col-span-1",
+    type: "number"
+  },
+  {
+    key: "total_points",
+    icon: Hash,
+    label: "Total Points",
+    placeholder: "Total (e.g., 100)",
+    helpText: "Maximum points possible",
+    col: "md:col-span-1",
+    type: "number"
+  },
+  {
+    key: "letter_grade",
+    icon: Award,
+    label: "Letter Grade",
+    placeholder: "A, B, C, D, or F",
+    helpText: "Letter grade (A is highest)",
+    col: "md:col-span-1"
+  },
+  {
+    key: "grade_point",
+    icon: Hash,
+    label: "Grade Point (GPA)",
+    placeholder: "4.0, 3.5, etc.",
+    helpText: "On a 4.0 scale (4.0 = A)",
+    col: "md:col-span-1",
+    type: "number",
+    step: "0.01"
+  },
+  {
+    key: "semester",
+    icon: FileText,
+    label: "Semester",
+    placeholder: "Fall, Spring, Summer",
+    helpText: "Which semester/term?",
+    col: "md:col-span-1"
+  },
+  {
+    key: "academic_year",
+    icon: FileText,
+    label: "Academic Year",
+    placeholder: "2024, 2025, etc.",
+    helpText: "Year this grade was earned",
+    col: "md:col-span-1"
+  },
+  {
+    key: "feedback",
+    icon: FileText,
+    label: "Feedback (Optional)",
+    placeholder: "Comments for the student...",
+    helpText: "Optional comments or notes",
+    col: "md:col-span-2",
+    multiline: true
+  },
 ];
 
 /* ================== ANIMATION VARIANTS ================== */
@@ -189,8 +267,8 @@ const Alert = ({ type, message, onClose }) => (
     exit={{ opacity: 0, y: -12 }}
     transition={{ duration: 0.3 }}
     className={`p-4 rounded-xl border ${type === "success"
-        ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-        : "bg-red-50 border-red-200 text-red-800"
+      ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+      : "bg-red-50 border-red-200 text-red-800"
       } flex items-center gap-3`}
   >
     {type === "success" ? (
@@ -297,15 +375,15 @@ const FormInput = ({ field, form, setForm, students, courses }) => {
     const options = field.key === "student_id" ? students : courses;
     return (
       <div>
-        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-          <Icon className="w-4 h-4" />
-          {field.placeholder}
+        <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2">
+          <Icon className="w-4 h-4 text-blue-600" />
+          {field.label || field.placeholder}
         </label>
         <select
           value={form[field.key]}
           onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
           required
-          className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:ring-2 focus:ring-blue-500 text-gray-800 transition shadow-sm"
+          className="w-full px-4 py-3 rounded-xl bg-white border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 transition shadow-sm hover:border-gray-300"
         >
           <option value="">{field.placeholder}</option>
           {options?.map((opt) => (
@@ -316,6 +394,12 @@ const FormInput = ({ field, form, setForm, students, courses }) => {
             </option>
           ))}
         </select>
+        {field.helpText && (
+          <p className="mt-1.5 text-xs text-gray-500 flex items-center gap-1">
+            <span className="inline-block w-3 h-3 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px]">i</span>
+            {field.helpText}
+          </p>
+        )}
       </div>
     );
   }
@@ -323,26 +407,32 @@ const FormInput = ({ field, form, setForm, students, courses }) => {
   if (field.multiline) {
     return (
       <div>
-        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-          <Icon className="w-4 h-4" />
-          {field.placeholder}
+        <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2">
+          <Icon className="w-4 h-4 text-blue-600" />
+          {field.label || field.placeholder}
         </label>
         <textarea
           value={form[field.key]}
           onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
           placeholder={field.placeholder}
           rows={3}
-          className="w-full px-4 py-3 rounded-xl bg-white/50 border border-white/60 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 transition resize-none"
+          className="w-full px-4 py-3 rounded-xl bg-white border-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 transition resize-none hover:border-gray-300"
         />
+        {field.helpText && (
+          <p className="mt-1.5 text-xs text-gray-500 flex items-center gap-1">
+            <span className="inline-block w-3 h-3 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px]">i</span>
+            {field.helpText}
+          </p>
+        )}
       </div>
     );
   }
 
   return (
     <div>
-      <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-        <Icon className="w-4 h-4" />
-        {field.placeholder}
+      <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2">
+        <Icon className="w-4 h-4 text-blue-600" />
+        {field.label || field.placeholder}
       </label>
       <input
         type={field.type || "text"}
@@ -351,8 +441,14 @@ const FormInput = ({ field, form, setForm, students, courses }) => {
         onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
         placeholder={field.placeholder}
         required
-        className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:ring-2 focus:ring-blue-500 text-gray-800 transition shadow-sm"
+        className="w-full px-4 py-3 rounded-xl bg-white border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 transition shadow-sm hover:border-gray-300"
       />
+      {field.helpText && (
+        <p className="mt-1.5 text-xs text-gray-500 flex items-center gap-1">
+          <span className="inline-block w-3 h-3 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px]">i</span>
+          {field.helpText}
+        </p>
+      )}
     </div>
   );
 };

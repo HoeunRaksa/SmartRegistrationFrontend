@@ -26,8 +26,11 @@ const INITIAL_FORM_STATE = {
   session_id: "",
   start_time: "",
   end_time: "",
-  building_id: "", // ✅ NEW
-  room_id: "",     // ✅ NEW
+  building_id: "",
+  room_id: "",
+  // Filters to find courses
+  filter_academic_year: "",
+  filter_semester: "",
 };
 
 const SHIFT_SESSIONS = {
@@ -73,9 +76,9 @@ const courseLabel = (c) => {
 const normalizeShift = (shift) => {
   const s = String(shift || "").trim().toLowerCase();
   if (!s) return "";
-  if (["morning", "am", "a", "shift1", "1"].includes(s)) return "morning";
-  if (["afternoon", "pm", "b", "shift2", "2"].includes(s)) return "afternoon";
-  if (["evening", "night", "c", "shift3", "3"].includes(s)) return "evening";
+  if (s.includes("morning") || ["am", "a", "shift1", "1", "shift 1", "shift-1"].includes(s)) return "morning";
+  if (s.includes("afternoon") || ["pm", "b", "shift2", "2", "shift 2", "shift-2"].includes(s)) return "afternoon";
+  if (s.includes("evening") || s.includes("night") || ["c", "shift3", "3", "shift 3", "shift-3"].includes(s)) return "evening";
   return s;
 };
 
@@ -109,6 +112,19 @@ const ScheduleForm = ({ onUpdate, onSuccess, editingSchedule, onCancel, courses 
     const arr = Array.isArray(courses) ? courses : [];
     return arr.find((c) => String(c.id) === String(form.course_id));
   }, [courses, form.course_id]);
+
+  // ✅ Computed filtered course options
+  const filteredCourseOptions = useMemo(() => {
+    const arr = Array.isArray(courses) ? courses : [];
+    return arr
+      .filter((c) => {
+        if (!c) return false;
+        const matchYear = form.filter_academic_year ? String(c.academic_year) === String(form.filter_academic_year) : true;
+        const matchSem = form.filter_semester ? String(c.semester) === String(form.filter_semester) : true;
+        return matchYear && matchSem;
+      })
+      .map((c) => ({ id: c.id, name: courseLabel(c) }));
+  }, [courses, form.filter_academic_year, form.filter_semester]);
 
   const shift = useMemo(() => normalizeShift(selectedCourse?.shift), [selectedCourse?.shift]);
 
@@ -156,14 +172,22 @@ const ScheduleForm = ({ onUpdate, onSuccess, editingSchedule, onCancel, courses 
   // ✅ prefill when edit
   useEffect(() => {
     if (editingSchedule) {
+      // ✅ Prefill logic with nested safety
+      const roomId = editingSchedule.room_id || editingSchedule.room?.id || "";
+      const buildingId = editingSchedule.building_id || editingSchedule.room?.building_id || "";
+      const course = editingSchedule.course || null;
+
       setForm({
-        course_id: editingSchedule.course_id ?? "",
-        day_of_week: editingSchedule.day_of_week ?? "",
+        course_id: editingSchedule.course_id || "",
+        day_of_week: editingSchedule.day_of_week || "",
         session_id: "",
-        start_time: editingSchedule.start_time ?? "",
-        end_time: editingSchedule.end_time ?? "",
-        building_id: editingSchedule.building_id ?? "", // if you return it from API
-        room_id: editingSchedule.room_id ?? "",
+        start_time: editingSchedule.start_time || "",
+        end_time: editingSchedule.end_time || "",
+        building_id: buildingId ? String(buildingId) : "",
+        room_id: roomId ? String(roomId) : "",
+        // Pre-fill filters if course exists to "auto-select" the right context
+        filter_academic_year: course?.academic_year || "",
+        filter_semester: course?.semester || "",
       });
 
       setTimeEditable(false);
@@ -340,7 +364,7 @@ const ScheduleForm = ({ onUpdate, onSuccess, editingSchedule, onCancel, courses 
         form={form}
         setForm={setForm}
         loading={loading}
-        courseOptions={courseOptions}
+        courseOptions={filteredCourseOptions} // Use filtered list
         shift={shift}
         sessionOptions={sessionOptions}
         buildings={buildings}
@@ -412,6 +436,45 @@ const FormSection = ({
   >
     <FormHeader isEditMode={isEditMode} onCancel={onCancel} />
 
+    {/* COURSE FILTERS SECTION */}
+    <div className="bg-gray-50/50 border border-dashed border-gray-200 rounded-xl p-4 mb-5">
+      <div className="flex items-center gap-2 mb-3">
+        <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+        <h3 className="text-xs font-bold text-gray-700 uppercase tracking-widest">Filter Courses</h3>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Academic Year</label>
+          <select
+            name="filter_academic_year"
+            value={form.filter_academic_year}
+            onChange={handleChange}
+            className="w-full rounded-lg bg-white border border-gray-200 px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500/20"
+          >
+            <option value="">All Years</option>
+            {/* Standard years - could be dynamic later */}
+            <option value="2023-2024">2023-2024</option>
+            <option value="2024-2025">2024-2025</option>
+            <option value="2025-2026">2025-2026</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Semester</label>
+          <select
+            name="filter_semester"
+            value={form.filter_semester}
+            onChange={handleChange}
+            className="w-full rounded-lg bg-white border border-gray-200 px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500/20"
+          >
+            <option value="">All Semesters</option>
+            <option value="1">Semester 1</option>
+            <option value="2">Semester 2</option>
+            <option value="3">Semester 3</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     <motion.form onSubmit={onSubmit} initial="hidden" animate="show" className="space-y-3">
       {/* COURSE */}
       <FieldSelect
@@ -419,7 +482,9 @@ const FormSection = ({
         name="course_id"
         value={form.course_id}
         onChange={handleChange}
-        placeholder="Select Course"
+        label="Course Selection"
+        placeholder="Choose a course..."
+        helpText="Select the subject or course for this schedule"
         options={courseOptions}
         required
         col="md:col-span-2"
@@ -431,21 +496,39 @@ const FormSection = ({
         name="day_of_week"
         value={form.day_of_week}
         onChange={handleChange}
-        placeholder="Day of Week"
+        label="Day of Week"
+        placeholder="Select Day..."
+        helpText="The day this class will be held every week"
         options={DAY_OPTIONS}
         required
         col="md:col-span-2"
       />
 
       {/* SHIFT INFO */}
-      {shift ? (
-        <div className="text-xs text-gray-600 px-1">
-          Shift detected from class group: <b className="uppercase">{shift}</b>
-          <span className="ml-2 text-gray-500">(2 sessions available, 2.5 hours total with 30min break)</span>
-        </div>
-      ) : (
-        <div className="text-xs text-gray-500 px-1">Select a course to detect shift and show session options.</div>
-      )}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="md:col-span-2"
+      >
+        {shift ? (
+          <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3 flex items-start gap-3">
+            <div className="p-1.5 bg-blue-100 rounded-lg">
+              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-blue-700 uppercase tracking-wide">Automatic Shift Detection</p>
+              <p className="text-xs text-blue-600 mt-0.5">
+                This class is scheduled for the <b className="underline underline-offset-2">{shift}</b> shift. Sessions are 75 minutes each.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-gray-50 border border-gray-200 border-dashed rounded-xl p-3 flex items-center gap-3">
+            <AlertCircle className="w-3.5 h-3.5 text-gray-400" />
+            <p className="text-xs text-gray-500 italic">Select a course to see available time sessions</p>
+          </div>
+        )}
+      </motion.div>
 
       {/* SESSION */}
       <FieldSelect
@@ -453,7 +536,9 @@ const FormSection = ({
         name="session_id"
         value={form.session_id}
         onChange={handleChange}
-        placeholder={shift ? `Select Session (${shift})` : "Select Session"}
+        label="Class Session"
+        placeholder={shift ? `Select ${shift} Session` : "Select Session"}
+        helpText="Quickly pick a standard session time"
         options={(Array.isArray(sessionOptions) ? sessionOptions : []).map((s) => ({ id: s.id, name: s.name }))}
         required={!isEditMode}
         col="md:col-span-2"
@@ -461,14 +546,16 @@ const FormSection = ({
       />
 
       {/* TIME */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2">
         <FieldTime
           icon={Clock}
           name="start_time"
           value={form.start_time}
           onChange={(e) => setForm((p) => ({ ...p, start_time: e.target.value }))}
           label="Start Time"
+          helpText="Format: HH:MM (e.g., 07:45)"
           disabled={!timeEditable}
+          required
         />
         <FieldTime
           icon={Clock}
@@ -476,31 +563,35 @@ const FormSection = ({
           value={form.end_time}
           onChange={(e) => setForm((p) => ({ ...p, end_time: e.target.value }))}
           label="End Time"
+          helpText="Format: HH:MM (e.g., 09:00)"
           disabled={!timeEditable}
+          required
         />
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 md:col-span-2">
         <button
           type="button"
           onClick={toggleModifyTime}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-purple-200/60 bg-white/70 text-sm text-gray-800 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-blue-200 bg-blue-50/30 text-[11px] font-bold text-blue-700 hover:bg-blue-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider shadow-sm"
           disabled={!form.start_time || !form.end_time}
-          title="Enable custom time"
         >
-          <Pencil className="w-4 h-4" />
-          {timeEditable ? "Lock Time" : "Modify Time"}
+          {timeEditable ? (
+            <CheckCircle2 className="w-3.5 h-3.5" />
+          ) : (
+            <Pencil className="w-3.5 h-3.5" />
+          )}
+          {timeEditable ? "Lock Manual Time" : "Customize Time"}
         </button>
 
         <button
           type="button"
           onClick={resetTimeToDefault}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-purple-200/60 bg-white/70 text-sm text-gray-800 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={!defaultTimes?.start || !defaultTimes?.end}
-          title="Reset to default session time"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 bg-white text-[11px] font-bold text-gray-700 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider shadow-sm"
+          disabled={!defaultTimes?.start || !defaultTimes?.end || !timeEditable}
         >
-          <RotateCcw className="w-4 h-4" />
-          Reset Default Time
+          <RotateCcw className="w-3.5 h-3.5" />
+          Reset Standard
         </button>
       </div>
 
@@ -510,7 +601,9 @@ const FormSection = ({
         name="building_id"
         value={form.building_id}
         onChange={handleChange}
-        placeholder="Select Building (optional)"
+        label="Campus Building"
+        placeholder="Select Building (Optional)"
+        helpText="Where is this class located?"
         options={(Array.isArray(buildings) ? buildings : []).map((b) => ({
           id: b.id,
           name: b.label ?? `${b.code ?? b.building_code ?? ""} - ${b.name ?? b.building_name ?? ""}`.trim(),
@@ -524,7 +617,9 @@ const FormSection = ({
         name="room_id"
         value={form.room_id}
         onChange={handleChange}
-        placeholder={form.building_id ? (roomsLoading ? "Loading rooms..." : "Select Room (optional)") : "Select building first"}
+        label="Classroom"
+        placeholder={form.building_id ? (roomsLoading ? "Loading rooms..." : "Choose Room") : "Select building first"}
+        helpText="Specific room number or name"
         options={(Array.isArray(rooms) ? rooms : []).map((r) => ({
           id: r.id,
           name: r.label ?? `${r.building_code ?? ""}-${r.room_number ?? ""}`.replace(/^-|-$/g, ""),
@@ -559,43 +654,59 @@ const FormHeader = ({ isEditMode, onCancel }) => (
   </div>
 );
 
-const FieldSelect = ({ icon: Icon, name, value, onChange, placeholder, options, required, col, disabled }) => (
-  <div className={`relative ${col || ""}`}>
-    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
-      <Icon className="w-3.5 h-3.5" />
+const FieldSelect = ({ icon: Icon, name, value, onChange, placeholder, options, required, col, disabled, label, helpText }) => (
+  <div className={`space-y-1.5 ${col || ""}`}>
+    {label && (
+      <label className="block text-xs font-bold text-gray-700 ml-1 uppercase tracking-wider">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+    )}
+    <div className="relative">
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-600 pointer-events-none z-10">
+        <Icon className="w-4 h-4" />
+      </div>
+      <select
+        name={name}
+        value={value ?? ""}
+        onChange={onChange}
+        required={!!required}
+        disabled={!!disabled}
+        className="w-full rounded-xl bg-gray-50/50 pl-10 pr-3 py-2.5 text-sm text-gray-900 border border-gray-200 outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+      >
+        <option value="">{placeholder}</option>
+        {(Array.isArray(options) ? options : []).map((opt) => (
+          <option key={opt.id} value={opt.id}>
+            {opt.name}
+          </option>
+        ))}
+      </select>
     </div>
-    <select
-      name={name}
-      value={value ?? ""}
-      onChange={onChange}
-      required={!!required}
-      disabled={!!disabled}
-      className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-    >
-      <option value="">{placeholder}</option>
-      {(Array.isArray(options) ? options : []).map((opt) => (
-        <option key={opt.id} value={opt.id}>
-          {opt.name}
-        </option>
-      ))}
-    </select>
+    {helpText && <p className="text-[10px] text-gray-500 ml-1 italic">{helpText}</p>}
   </div>
 );
 
-const FieldTime = ({ icon: Icon, name, value, onChange, label, disabled }) => (
-  <div className="relative">
-    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
-      <Icon className="w-3.5 h-3.5" />
+const FieldTime = ({ icon: Icon, name, value, onChange, label, disabled, helpText, required }) => (
+  <div className="space-y-1.5 w-full">
+    {label && (
+      <label className="block text-xs font-bold text-gray-700 ml-1 uppercase tracking-wider">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+    )}
+    <div className="relative">
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-600 pointer-events-none z-10">
+        <Icon className="w-4 h-4" />
+      </div>
+      <input
+        type="time"
+        name={name}
+        value={value ?? ""}
+        onChange={onChange}
+        aria-label={label}
+        disabled={!!disabled}
+        className="w-full rounded-xl bg-gray-50/50 pl-10 pr-3 py-2.5 text-sm text-gray-900 border border-gray-200 outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+      />
     </div>
-    <input
-      type="time"
-      name={name}
-      value={value ?? ""}
-      onChange={onChange}
-      aria-label={label}
-      disabled={!!disabled}
-      className="w-full rounded-xl bg-white/70 pl-10 pr-3 py-2 text-sm text-gray-900 border border-purple-200/60 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-300 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-    />
+    {helpText && <p className="text-[10px] text-gray-500 ml-1 italic">{helpText}</p>}
   </div>
 );
 

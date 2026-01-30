@@ -1,5 +1,5 @@
 // SchedulesPage.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import ScheduleForm from "../ConponentsAdmin/ScheduleForm.jsx";
 import SchedulesList from "../ConponentsAdmin/SchedulesList.jsx";
@@ -15,6 +15,8 @@ const SchedulesPage = () => {
   const [loadingSchedules, setLoadingSchedules] = useState(false);
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [filterYear, setFilterYear] = useState("");
+  const [filterSemester, setFilterSemester] = useState("");
 
   // ✅ staggered loading to reduce 429 risk
   useEffect(() => {
@@ -75,16 +77,25 @@ const SchedulesPage = () => {
     setEditingSchedule(null);
   };
 
+  const filteredSchedules = useMemo(() => {
+    return (schedules || []).filter((s) => {
+      const course = s.course || {};
+      const matchYear = filterYear ? String(course.academic_year || s.academic_year) === String(filterYear) : true;
+      const matchSem = filterSemester ? String(course.semester || s.semester) === String(filterSemester) : true;
+      return matchYear && matchSem;
+    });
+  }, [schedules, filterYear, filterSemester]);
+
   // ================= QUICK STATS =================
-  const totalCourses = new Set((schedules || []).map((s) => s.course_id)).size;
-  const totalDays = new Set((schedules || []).map((s) => s.day_of_week)).size;
+  const totalCourses = new Set((filteredSchedules || []).map((s) => s.course_id)).size;
+  const totalDays = new Set((filteredSchedules || []).map((s) => s.day_of_week)).size;
 
   const isLoading = loadingSchedules || loadingCourses;
 
   const quickStats = [
     {
-      label: "Total Schedules",
-      value: schedules.length,
+      label: "Filtered Schedules",
+      value: filteredSchedules.length,
       color: "from-blue-500 to-cyan-500",
       icon: Calendar,
     },
@@ -148,6 +159,44 @@ const SchedulesPage = () => {
         })}
       </div>
 
+      {/* ================= FILTERS ================= */}
+      <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-white/40 shadow-sm flex flex-col md:flex-row items-end gap-4">
+        <div className="flex-1 w-full space-y-1.5">
+          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Academic Year</label>
+          <select
+            value={filterYear}
+            onChange={(e) => setFilterYear(e.target.value)}
+            className="w-full rounded-xl bg-white border border-gray-200 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/20"
+          >
+            <option value="">All Academic Years</option>
+            <option value="2023-2024">2023-2024</option>
+            <option value="2024-2025">2024-2025</option>
+            <option value="2025-2026">2025-2026</option>
+          </select>
+        </div>
+        <div className="flex-1 w-full space-y-1.5">
+          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Semester</label>
+          <select
+            value={filterSemester}
+            onChange={(e) => setFilterSemester(e.target.value)}
+            className="w-full rounded-xl bg-white border border-gray-200 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/20"
+          >
+            <option value="">All Semesters</option>
+            <option value="1">Semester 1</option>
+            <option value="2">Semester 2</option>
+            <option value="3">Semester 3</option>
+          </select>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => { setFilterYear(""); setFilterSemester(""); }}
+          className="px-4 py-2 rounded-xl text-xs font-bold text-gray-500 hover:text-blue-600 transition-colors"
+        >
+          Clear Filters
+        </motion.button>
+      </div>
+
       {/* Form Modal */}
       <FormModal
         isOpen={isFormOpen}
@@ -174,7 +223,7 @@ const SchedulesPage = () => {
 
       {/* ================= SCHEDULES LIST ================= */}
       <SchedulesList
-        schedules={schedules}
+        schedules={filteredSchedules}
         onEdit={handleEdit}
         onRefresh={loadSchedules}
       />

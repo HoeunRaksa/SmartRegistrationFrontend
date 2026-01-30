@@ -9,7 +9,6 @@ import {
 
 import { TrendChart, ComparisonBarChart, DistributionPieChart, MultiLineChart } from '../../Components/ui/Charts';
 import AdminDashboardAPI from '../../api/admin_dashboard_api';
-import University3DHub from './University3DHub';
 
 const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -32,9 +31,6 @@ const AdminDashboard = () => {
   const [systemStatus, setSystemStatus] = useState([]);
   const [advancedStats, setAdvancedStats] = useState([]);
   const [extendedStats, setExtendedStats] = useState({});
-
-  // 3D State
-  const [view3D, setView3D] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -164,150 +160,116 @@ const AdminDashboard = () => {
               </motion.p>
             </div>
 
-            <div className="flex items-center gap-4">
-              {/* 3D Toggle */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setView3D(!view3D)}
-                className={`px-6 py-3 rounded-xl font-bold shadow-lg transition-all ${view3D
-                  ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white'
-                  : 'bg-white text-gray-900 border-2 border-purple-200'
-                  }`}
-              >
-                {view3D ? '📊 2D View' : '🎯 3D Digital Twin'}
-              </motion.button>
-
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                whileHover={{ scale: 1.05 }}
-                className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-purple-200/60 shadow-sm"
-              >
-                <div className="text-blue-600 text-xs font-bold uppercase mb-2 tracking-widest">
-                  System Health
-                </div>
-                <div className="text-4xl md:text-5xl font-black text-gray-900 mb-3">
-                  99.9%
-                </div>
-                <div className="flex gap-1.5">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div
-                      key={i}
-                      className="h-1.5 w-8 bg-blue-200/50 rounded-full overflow-hidden"
-                    >
-                      <motion.div
-                        animate={{ x: [-32, 32] }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          delay: i * 0.2,
-                          ease: 'linear',
-                        }}
-                        className="h-full w-4 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            </div>
-          </div>
-
-          {/* Command Center Tabs */}
-          <div className="flex flex-wrap gap-3">
             <motion.div
-              whileHover={{ scale: 1.05, y: -2 }}
-              className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl shadow-lg cursor-pointer"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              whileHover={{ scale: 1.05 }}
+              className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-purple-200/60 shadow-sm"
             >
-              <div className="flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-white" />
-                <span className="text-white font-bold">Finance</span>
+              <div className="text-blue-600 text-xs font-bold uppercase mb-2 tracking-widest">
+                System Health
               </div>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.05, y: -2 }}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-lg cursor-pointer"
-            >
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-white" />
-                <span className="text-white font-bold">Academics</span>
+              <div className="text-4xl md:text-5xl font-black text-gray-900 mb-3">
+                99.9%
               </div>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.05, y: -2 }}
-              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg cursor-pointer"
-            >
-              <div className="flex items-center gap-2">
-                <Building className="w-5 h-5 text-white" />
-                <span className="text-white font-bold">Campus Ops</span>
+              <div className="flex gap-1.5">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div
+                    key={i}
+                    className="h-1.5 w-8 bg-blue-200/50 rounded-full overflow-hidden"
+                  >
+                    <motion.div
+                      animate={{ x: [-32, 32] }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        delay: i * 0.2,
+                        ease: 'linear',
+                      }}
+                      className="h-full w-4 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
+                    />
+                  </div>
+                ))}
               </div>
             </motion.div>
           </div>
         </div>
-      </motion.div>
 
-      {/* 3D UNIVERSE */}
-      <AnimatePresence>
-        {view3D && (
+        {/* Command Center Tabs */}
+        <div className="flex flex-wrap gap-3">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 50 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 50 }}
-            transition={{ duration: 0.6, type: 'spring' }}
-            className="mb-8"
+            whileHover={{ scale: 1.05, y: -2 }}
+            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl shadow-lg cursor-pointer"
           >
-            <University3DHub
-              stats={stats}
-              charts={charts}
-              extendedStats={extendedStats}
-              activities={activities}
-              systemStatus={systemStatus}
-            />
+            <div className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-white" />
+              <span className="text-white font-bold">Finance</span>
+            </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+
+          <motion.div
+            whileHover={{ scale: 1.05, y: -2 }}
+            className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-lg cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-white" />
+              <span className="text-white font-bold">Academics</span>
+            </div>
+          </motion.div>
+
+          <motion.div
+            whileHover={{ scale: 1.05, y: -2 }}
+            className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <Building className="w-5 h-5 text-white" />
+              <span className="text-white font-bold">Campus Ops</span>
+            </div>
+          </motion.div>
+        </div>
+      </motion.div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <motion.div
-              key={stat.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.05, y: -5 }}
-              className="glass-card p-5 cursor-pointer"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}>
-                  <Icon className="w-6 h-6 text-white" />
+        {
+          statCards.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <motion.div
+                key={stat.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="glass-card p-5 cursor-pointer"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}>
+                    <Icon className="w-6 h-6 text-white" />
+                  </div>
+                  <div
+                    className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wide ${stat.trend === 'up'
+                      ? 'bg-green-100 text-green-600 border border-green-200'
+                      : 'bg-red-100 text-red-600 border border-red-200'
+                      }`}
+                  >
+                    {stat.change}
+                  </div>
                 </div>
-                <div
-                  className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wide ${stat.trend === 'up'
-                    ? 'bg-green-100 text-green-600 border border-green-200'
-                    : 'bg-red-100 text-red-600 border border-red-200'
-                    }`}
-                >
-                  {stat.change}
+                <div>
+                  <p className="text-gray-600 text-xs font-semibold uppercase tracking-wide mb-1">
+                    {stat.title}
+                  </p>
+                  <p className="text-3xl font-black text-gray-900">
+                    {stat.value.toLocaleString()}
+                  </p>
                 </div>
-              </div>
-              <div>
-                <p className="text-gray-600 text-xs font-semibold uppercase tracking-wide mb-1">
-                  {stat.title}
-                </p>
-                <p className="text-3xl font-black text-gray-900">
-                  {stat.value.toLocaleString()}
-                </p>
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
+              </motion.div>
+            );
+          })
+        }
+      </div >
 
       {/* Advanced Charts Section */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
@@ -350,7 +312,7 @@ const AdminDashboard = () => {
         </motion.div>
 
         {/* Gender Demographics */}
-        <motion.div
+        < motion.div
           className="glass-card p-6"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -388,12 +350,12 @@ const AdminDashboard = () => {
             ))}
           </div>
         </motion.div>
-      </div>
+      </div >
 
       {/* Popular Majors & Activity Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Popular Majors */}
-        <motion.div
+        < motion.div
           className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/40 shadow-sm hover:shadow-md transition-all"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -440,7 +402,7 @@ const AdminDashboard = () => {
         </motion.div>
 
         {/* Activity Feed */}
-        <motion.div
+        < motion.div
           className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/40 shadow-sm hover:shadow-md transition-all"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -484,10 +446,10 @@ const AdminDashboard = () => {
             )}
           </div>
         </motion.div>
-      </div>
+      </div >
 
       {/* System Status */}
-      <motion.div
+      < motion.div
         className="bg-white/60 backdrop-blur-sm rounded-2xl p-8 border border-white/40 shadow-sm hover:shadow-md transition-all"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -509,20 +471,13 @@ const AdminDashboard = () => {
         </div>
       </motion.div>
 
-      <style jsx>{`
+      <style>{`
         .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
+          display: none;
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(100, 116, 139, 0.1);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, #a855f7, #ec4899);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(to bottom, #9333ea, #db2777);
+        .custom-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </div>

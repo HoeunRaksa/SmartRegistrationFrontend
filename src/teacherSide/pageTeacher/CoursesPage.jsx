@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Users, Calendar, Clock, Search, Filter } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { BookOpen, Users, Calendar, Clock, Search, Filter, Eye } from 'lucide-react';
 
 import { fetchTeacherCourses } from '../../api/teacher_api';
 
 const CoursesPage = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showFilter, setShowFilter] = useState(false);
+  const [filterYear, setFilterYear] = useState('all');
 
   useEffect(() => {
     loadCourses();
@@ -23,6 +27,11 @@ const CoursesPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewCourse = (courseId) => {
+    // Navigate to course details or attendance page for this course
+    navigate('/teacher/attendance', { state: { courseId } });
   };
 
   const filteredCourses = courses.filter(course =>
@@ -58,7 +67,10 @@ const CoursesPage = () => {
             className="w-full pl-12 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 shadow-sm"
           />
         </div>
-        <button className="px-6 py-3 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm">
+        <button
+          onClick={() => setShowFilter(!showFilter)}
+          className="px-6 py-3 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm"
+        >
           <Filter className="w-5 h-5" />
           <span>Filter</span>
         </button>
@@ -114,7 +126,11 @@ const CoursesPage = () => {
                   )}
                 </div>
 
-                <button className={`w-full py-2 rounded-xl bg-gradient-to-r ${course.color} text-white font-medium hover:shadow-lg transition-all`}>
+                <button
+                  onClick={() => handleViewCourse(course.id)}
+                  className={`w-full py-2 rounded-xl bg-gradient-to-r ${course.color} text-white font-medium hover:shadow-lg transition-all flex items-center justify-center gap-2`}
+                >
+                  <Eye className="w-4 h-4" />
                   View Details
                 </button>
               </div>

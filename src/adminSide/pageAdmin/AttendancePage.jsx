@@ -58,10 +58,14 @@ const AttendancePage = () => {
       const res = await fetchAllSessions();
       const data = res.data?.data || res.data || [];
       // Map to include name for select option
-      const mapped = (Array.isArray(data) ? data : []).map(s => ({
-        ...s,
-        name: `${s.course?.major_subject?.subject?.subject_name ?? 'Session'} - ${s.session_date} (${s.start_time})`
-      }));
+      const mapped = (Array.isArray(data) ? data : []).map(s => {
+        const d = s.session_date ? new Date(s.session_date) : null;
+        const localDate = d ? d.toLocaleDateString('en-CA') : (s.session_date || 'N/A');
+        return {
+          ...s,
+          name: `${s.course?.major_subject?.subject?.subject_name || s.course?.name || 'Session'} - ${localDate} (${s.start_time || '—'})`
+        };
+      });
       setSessions(mapped);
     } catch (error) {
       console.error("Failed to load sessions:", error);
