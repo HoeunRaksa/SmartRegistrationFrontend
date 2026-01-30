@@ -112,8 +112,8 @@ const AttendancePage = () => {
   };
 
   const filteredStudents = attendance.filter(s =>
-    s.name.toLowerCase().includes(studentSearch.toLowerCase()) ||
-    s.student_id.toLowerCase().includes(studentSearch.toLowerCase())
+    (s.name || '').toLowerCase().includes(studentSearch.toLowerCase()) ||
+    (s.student_id || '').toLowerCase().includes(studentSearch.toLowerCase())
   );
 
   const presentCount = attendance.filter(s => s.status === 'present').length;
@@ -287,10 +287,10 @@ const AttendancePage = () => {
                             src={student.profile_picture_url}
                             alt=""
                             className="w-full h-full object-cover"
-                            onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerText = student.name.charAt(0); }}
+                            onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerText = (student.name || '?').charAt(0); }}
                           />
                         ) : (
-                          student.name.charAt(0)
+                          (student.name || '?').charAt(0)
                         )}
                       </div>
                       <span className="font-semibold text-gray-800">{student.name}</span>
