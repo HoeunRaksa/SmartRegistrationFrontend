@@ -997,16 +997,6 @@ const MajorQuotasPage = () => {
         }}
         loading={deleting}
       />
-
-      <ConfirmDialog
-        isOpen={confirm.show}
-        title="Confirm Delete"
-        message="Are you sure you want to delete this major quota? This action will remove the registration limit for this major for the specified academic year."
-        onConfirm={executeDelete}
-        onCancel={() => setConfirm({ show: false, quota: null })}
-        confirmText="Delete"
-        type="danger"
-      />
     </div>
   );
 };
