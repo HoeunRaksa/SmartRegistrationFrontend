@@ -20,12 +20,10 @@ import StudentDashboardAPI, {
   getGreeting,
 } from '../../api/student_dashboard_api';
 
-import { fetchCurrentSession } from "../../api/admin_session_api.jsx";
 
-const DashboardHome = () => {
+const DashboardHome = ({ currentSession }) => {
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
-  const [currentSession, setCurrentSession] = useState(null);
   const navigate = useNavigate();
 
   const user = useMemo(() => {
@@ -38,9 +36,6 @@ const DashboardHome = () => {
 
   useEffect(() => {
     loadDashboard();
-    fetchCurrentSession().then(res => {
-      setCurrentSession(res?.data || res);
-    }).catch(console.error);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

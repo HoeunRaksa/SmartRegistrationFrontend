@@ -196,7 +196,7 @@ const StudentDashboard = () => {
     const renderSection = () => {
         switch (activeSection) {
             case 'dashboard':
-                return <DashboardHome />;
+                return <DashboardHome currentSession={currentSession} />;
             case 'courses':
                 return <CoursesPage />;
             case 'schedule':
@@ -220,7 +220,7 @@ const StudentDashboard = () => {
             case 'settings':
                 return <SettingPage />;
             default:
-                return <DashboardHome />;
+                return <DashboardHome currentSession={currentSession} />;
         }
     };
 
