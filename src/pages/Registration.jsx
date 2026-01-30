@@ -16,6 +16,7 @@ import React, {
   useCallback,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   X,
   Loader,
@@ -36,6 +37,7 @@ import {
   CheckCircle,
   Info,
   Lock,
+  ArrowRight,
 } from "lucide-react";
 
 import PaymentForm from "../Components/payment/PaymentForm.jsx";
