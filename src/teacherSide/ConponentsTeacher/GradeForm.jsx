@@ -310,7 +310,9 @@ const FormInput = ({ field, form, setForm, students, courses }) => {
           <option value="">{field.placeholder}</option>
           {options?.map((opt) => (
             <option key={opt.id} value={opt.id}>
-              {field.key === "student_id" ? opt.full_name_en || opt.name : opt.course_name || opt.name}
+              {field.key === "student_id"
+                ? (opt.full_name || opt.full_name_en || opt.name || 'Unknown')
+                : (opt.name || opt.course_name || 'Unknown')}
             </option>
           ))}
         </select>
