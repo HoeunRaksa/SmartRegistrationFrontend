@@ -811,21 +811,27 @@ const Registration = () => {
     [ensureRegistration, payPlan.type, payPlan.semester, payAmount, resetForm]
   );
 
-  const handlePaymentSuccess = useCallback(() => {
+  const handlePaymentSuccess = useCallback((paymentData) => {
     setShowQr(false);
 
+    // ✅ Preserve student_account if it exists in registrationData
+    const finalData = {
+      ...registrationData,
+      ...(paymentData || {})
+    };
+
     setSuccess({
-      title: "Payment Completed!",
-      message: "Your registration and payment have been successfully processed.",
-      data: registrationData,
+      title: "Payment Successfully Completed! 🎉",
+      message: "Congratulations! Your registration and payment have been processed. You can now access your student portal.",
+      data: finalData,
     });
 
-    setTimeout(() => {
-      resetForm();
-      setSuccess(null);
-      setRegistrationData(null);
-    }, 8000);
-  }, [registrationData, resetForm]);
+    // We don't want to auto-reset if they want to Click "Go to Dashboard"
+    // setTimeout(() => {
+    //   resetForm();
+    //   setSuccess(null);
+    // }, 15000); 
+  }, [registrationData]);
 
   // ✅ Field configs
   const personalFields = useMemo(
@@ -1136,51 +1142,71 @@ const Registration = () => {
               </div>
 
               {success.data?.student_account && (
-                <div className="backdrop-blur-xl bg-green-50/60 border border-green-200/40 rounded-xl p-4 mb-4">
-                  <h4 className="font-semibold text-gray-800 mb-2">
-                    Your Account Details:
-                  </h4>
-                  <div className="space-y-1 text-sm">
-                    <p>
-                      <span className="font-medium">Email:</span>{" "}
-                      {success.data.student_account.email}
-                    </p>
-                    <p>
-                      <span className="font-medium">Password:</span>{" "}
-                      {success.data.student_account.password ??
-                        "Already existing account"}
-                    </p>
+                <div className="backdrop-blur-xl bg-green-50/60 border border-green-200/40 rounded-xl p-5 mb-6 shadow-sm group">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Lock size={18} className="text-green-600" />
+                    <h4 className="font-bold text-gray-800">Your Account Details:</h4>
                   </div>
-                  <p className="text-xs text-gray-600 mt-2">
-                    ⚠️ Please save these credentials!
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center p-2 bg-white/40 rounded-lg">
+                      <span className="text-gray-600 font-medium">Email</span>
+                      <span className="font-bold text-gray-800">{success.data.student_account.email}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white/40 rounded-lg">
+                      <span className="text-gray-600 font-medium">Password</span>
+                      <span className="font-bold text-blue-600">{success.data.student_account.password || "••••••••"}</span>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-gray-500 mt-3 italic text-center">
+                    Please save these credentials to log in later.
                   </p>
                 </div>
               )}
 
-              <motion.button
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  resetForm();
-                  setSuccess(null);
-                  setRegistrationData(null);
-                }}
-                className="w-full backdrop-blur-xl bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-xl hover:shadow-xl transition-all duration-300 font-semibold overflow-hidden group"
-              >
-                <motion.div
-                  animate={{
-                    x: ["-100%", "100%"],
+              <div className="grid grid-cols-1 gap-3">
+                {success.data?.student_account && (
+                  <motion.button
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={async () => {
+                      try {
+                        setLoading(true);
+                        const loginRes = await API.post("/login", {
+                          email: success.data.student_account.email,
+                          password: success.data.student_account.password || ("novatech" + new Date().toISOString().slice(0, 10).replace(/-/g, ""))
+                        });
+                        if (loginRes.data?.success || loginRes.data?.token) {
+                          localStorage.setItem("token", loginRes.data.token);
+                          localStorage.setItem("user", JSON.stringify(loginRes.data.user));
+                          window.location.href = "/student/dashboard";
+                        } else {
+                          window.location.href = "/login";
+                        }
+                      } catch (err) {
+                        window.location.href = "/login";
+                      }
+                    }}
+                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-bold shadow-lg shadow-blue-200 flex items-center justify-center gap-2 group"
+                  >
+                    Go to Student Dashboard
+                    <motion.div animate={{ x: [0, 5, 0] }} transition={{ duration: 1, repeat: Infinity }}>
+                      <CheckCircle size={20} />
+                    </motion.div>
+                  </motion.button>
+                )}
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    resetForm();
+                    setSuccess(null);
                   }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    repeatDelay: 3,
-                    ease: "easeInOut"
-                  }}
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                />
-                <span className="relative z-10">Close</span>
-              </motion.button>
+                  className="w-full py-3 rounded-2xl bg-white/60 text-gray-700 font-semibold border border-white/60 hover:bg-white/80 transition-all font-medium"
+                >
+                  Done & Close
+                </motion.button>
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -1914,7 +1940,7 @@ const Registration = () => {
           </form>
         )}
       </div>
-    </section>
+    </section >
   );
 };
 
