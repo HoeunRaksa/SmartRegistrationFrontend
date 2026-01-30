@@ -346,7 +346,7 @@ export const fetchTeacherDashboardStats = async () => {
 
 export const fetchTeacherConversations = async () => {
   try {
-    const response = await API.get("/teacher/messages/conversations");
+    const response = await API.get("/conversations");
     const data = extractData(response);
     return { data: { data: Array.isArray(data) ? data : [] } };
   } catch (error) {
@@ -357,7 +357,7 @@ export const fetchTeacherConversations = async () => {
 
 export const fetchTeacherMessages = async (conversationId) => {
   try {
-    const response = await API.get(`/teacher/messages/conversations/${conversationId}`);
+    const response = await API.get(`/conversations/${conversationId}/messages`);
     const data = extractData(response);
     return { data: { data: Array.isArray(data) ? data : [] } };
   } catch (error) {
@@ -368,7 +368,8 @@ export const fetchTeacherMessages = async (conversationId) => {
 
 export const sendTeacherMessage = async (messageData) => {
   try {
-    return await API.post("/teacher/messages", messageData);
+    const { conversation_id, content } = messageData;
+    return await API.post(`/conversations/${conversation_id}/messages`, { content });
   } catch (error) {
     console.error("sendTeacherMessage error:", error);
     throw error;

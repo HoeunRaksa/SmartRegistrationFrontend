@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, Download, GraduationCap, AlertCircle, CheckCircle, FileSpreadsheet } from 'lucide-react';
-import axios from 'axios';
+import API from '../../api/index';
 
 const BulkGradePage = () => {
     const [file, setFile] = useState(null);
@@ -21,7 +21,7 @@ const BulkGradePage = () => {
 
     const handleDownloadTemplate = async () => {
         try {
-            const response = await axios.get('/api/teacher/bulk/grades/template', {
+            const response = await API.get('/teacher/bulk/grades/template', {
                 responseType: 'blob'
             });
 
@@ -54,7 +54,7 @@ const BulkGradePage = () => {
             formData.append('assignment_name', assignmentName);
             formData.append('total_points', totalPoints);
 
-            const response = await axios.post('/api/teacher/bulk/grades', formData, {
+            const response = await API.post('/teacher/bulk/grades', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 

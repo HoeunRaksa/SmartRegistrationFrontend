@@ -26,8 +26,8 @@ const CoursesPage = () => {
   };
 
   const filteredCourses = courses.filter(course =>
-    course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.code.toLowerCase().includes(searchTerm.toLowerCase())
+    (course.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (course.code || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
