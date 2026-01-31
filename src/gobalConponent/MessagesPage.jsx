@@ -108,7 +108,9 @@ const MessagesPage = () => {
 
     const channel = echo.private(channelName);
 
-    channel.listen(".message.sent", (event) => {
+    // Listen for multiple event name variations to ensure we catch the event
+    const handleMessageEvent = (event) => {
+      console.log("📨 Incoming Message Event:", event);
       const incomingMessage = {
         id: event.id,
         sender_id: event.s_id,
@@ -126,29 +128,33 @@ const MessagesPage = () => {
         return [...prev, incomingMessage];
       });
 
-      setTypingUsers(prev => prev.filter(u => u.id !== event.s_id));
+      // Stop typing indicator for this sender
+      setTypingUsers(prev => prev.filter(u => String(u.id) !== String(event.s_id)));
 
-      // ✅ Play sound for incoming message (iOS 26 Style)
+      // Play sound
       if (event.s_id !== currentUser.id) {
         const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3");
         audio.play().catch(e => console.log("Sound play error:", e));
       }
-    });
+    };
+
+    // Robust listening for broadcastAs alias and potential fallback names
+    channel.listen(".message.sent", handleMessageEvent);
+    channel.listen("message.sent", handleMessageEvent);
+    channel.listen("MessageSent", handleMessageEvent);
 
     channel.listenForWhisper("typing", (e) => {
       setTypingUsers((prev) => {
-        if (prev.some(u => u.id === e.id)) return prev;
+        if (prev.some(u => String(u.id) === String(e.id))) return prev;
         return [...prev, e];
       });
 
-      // Clear existing timeout for this user
       if (typingTimeoutRef.current[e.id]) {
         clearTimeout(typingTimeoutRef.current[e.id]);
       }
 
-      // Remove typing indicator after 3 seconds
       typingTimeoutRef.current[e.id] = setTimeout(() => {
-        setTypingUsers((prev) => prev.filter(u => u.id !== e.id));
+        setTypingUsers((prev) => prev.filter(u => String(u.id) !== String(e.id)));
       }, 3000);
     });
 
@@ -664,7 +670,7 @@ const MessagesPage = () => {
                         <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                         <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
                       </div>
-                      <span className="text-xs text-slate-400 font-medium">
+                      <span className="text-xs text-blue-600 font-medium">
                         {typingUsers.length > 2
                           ? `${typingUsers.length} people are typing...`
                           : `${typingUsers.map(u => u.name.split(' ')[0]).join(', ')} ${typingUsers.length === 1 ? 'is' : 'are'} typing...`}
