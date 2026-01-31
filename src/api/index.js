@@ -14,11 +14,13 @@ const API = axios.create({
 });
 
 // -----------------------------
-// ✅ 1) Auth header
+// ✅ 1) Auth header - Send Bearer token if available
 // -----------------------------
 API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 
@@ -111,6 +113,8 @@ API.interceptors.response.use(
     const config = error.config || {};
     const key = makeKey(config);
     inFlight.delete(key);
+
+    const status = error?.response?.status;
 
     // -----------------------------
     // ✅ 4) Handle 401 (Cookie expired/invalid) -> Force Logout

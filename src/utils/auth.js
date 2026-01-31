@@ -46,16 +46,15 @@ export const hasRole = (requiredRoles) => {
 
 /**
  * Get auth token
- * @deprecated Tokens are now HttpOnly cookies
  */
 export const getToken = () => {
-  return null;
+  return localStorage.getItem('token');
 };
 
 /**
  * Save auth data after login
  */
 export const saveAuthData = (token, user) => {
-  // Token is HTTP-Only cookie now
+  localStorage.setItem('token', token);
   localStorage.setItem('user', JSON.stringify(user));
 };
