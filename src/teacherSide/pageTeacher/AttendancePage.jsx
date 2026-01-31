@@ -12,13 +12,6 @@ import {
   fetchTeacherSchedule
 } from '../../api/teacher_api';
 
-import {
-  Plus,
-  Sparkles,
-  Save as SaveIcon
-} from 'lucide-react';
-
-import FormModal from '../../Components/FormModal';
 import Alert from '../../gobalConponent/Alert.jsx';
 import { AnimatePresence } from 'framer-motion';
 
@@ -35,12 +28,6 @@ const AttendancePage = () => {
 
   const [attendance, setAttendance] = useState([]);
   const [studentSearch, setStudentSearch] = useState('');
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [sessionForm, setSessionForm] = useState({
-    session_date: new Date().toLocaleDateString('en-CA'),
-    start_time: '07:45',
-    end_time: '09:00',
-  });
   const [alert, setAlert] = useState({ show: false, message: '', type: 'error' });
   const location = useLocation();
 
@@ -204,34 +191,6 @@ const AttendancePage = () => {
     }
   };
 
-  const handleCreateSession = async (e) => {
-    e.preventDefault();
-    if (!selectedCourseId) return setAlert({ show: true, message: "Please select a course first", type: "error" });
-
-    try {
-      setLoading(true);
-      const res = await createTeacherClassSession({
-        course_id: selectedCourseId,
-        ...sessionForm
-      });
-
-      setAlert({ show: true, message: 'Session created successfully!', type: 'success' });
-      setIsCreateModalOpen(false);
-
-      // Reload sessions and select the new one
-      const sessionsRes = await fetchTeacherAttendanceSessions();
-      const sessionList = sessionsRes?.data?.data ?? (Array.isArray(sessionsRes?.data) ? sessionsRes.data : []);
-      setSessions(sessionList);
-
-      if (res.data?.data?.id) {
-        setSelectedSessionId(res.data.data.id);
-      }
-    } catch (error) {
-      setAlert({ show: true, message: error.response?.data?.message || 'Failed to create session', type: 'error' });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const updateStatus = (studentId, status) => {
     setAttendance(prev => prev.map(student =>
@@ -286,15 +245,6 @@ const AttendancePage = () => {
           <p className="text-gray-600">Mark daily attendance for your classes</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <motion.button
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setIsCreateModalOpen(true)}
-            className="px-6 py-3 rounded-xl bg-white border border-blue-200 text-blue-600 font-bold text-sm shadow-sm hover:shadow-md transition-all flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            New Session
-          </motion.button>
           <button
             disabled={loading}
             onClick={loadData}
@@ -470,11 +420,11 @@ const AttendancePage = () => {
               })}
           </select>
           {selectedCourseId && sessions.filter(s => String(s.course_id || s.subject_id || '') === String(selectedCourseId)).length === 0 && (
-            <div className="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-100 flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5" />
+            <div className="mt-3 p-3 rounded-xl bg-blue-50 border border-blue-100 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-blue-500 mt-0.5" />
               <div>
-                <p className="text-[11px] font-bold text-amber-800 uppercase">No sessions found</p>
-                <p className="text-[10px] text-amber-700">Click the <b>"New Session"</b> button at the top to create one yourself and start marking attendance!</p>
+                <p className="text-[11px] font-bold text-blue-800 uppercase">No sessions available yet</p>
+                <p className="text-[10px] text-blue-700">Sessions are automatically created when you have a scheduled class. Check back during your class time!</p>
               </div>
             </div>
           )}
@@ -608,96 +558,6 @@ const AttendancePage = () => {
         </div>
       </motion.div>
 
-      {/* CREATE SESSION MODAL */}
-      <FormModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        maxWidth="max-w-xl"
-      >
-        <div className="p-6 sm:p-8">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">Create New Session</h2>
-              <p className="text-xs text-gray-500 mt-0.5">Quickly set up a session to mark attendance</p>
-            </div>
-          </div>
-
-          <form onSubmit={handleCreateSession} className="space-y-5">
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5 ml-1">
-                Course / Subject
-              </label>
-              <select
-                required
-                value={selectedCourseId}
-                onChange={(e) => setSelectedCourseId(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 font-bold"
-              >
-                <option value="">Select a course</option>
-                {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5 ml-1">
-                Session Date
-              </label>
-              <input
-                type="date"
-                required
-                value={sessionForm.session_date}
-                onChange={(e) => setSessionForm({ ...sessionForm, session_date: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 font-bold"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5 ml-1">
-                  Start Time
-                </label>
-                <input
-                  type="time"
-                  required
-                  value={sessionForm.start_time}
-                  onChange={(e) => setSessionForm({ ...sessionForm, start_time: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 font-bold"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5 ml-1">
-                  End Time
-                </label>
-                <input
-                  type="time"
-                  required
-                  value={sessionForm.end_time}
-                  onChange={(e) => setSessionForm({ ...sessionForm, end_time: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 font-bold"
-                />
-              </div>
-            </div>
-
-            <motion.button
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              disabled={loading}
-              type="submit"
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 mt-4 disabled:opacity-50"
-            >
-              {loading ? 'Creating...' : (
-                <>
-                  <SaveIcon className="w-5 h-5" />
-                  Create & Start Marking
-                </>
-              )}
-            </motion.button>
-          </form>
-        </div>
-      </FormModal>
     </div>
   );
 };
