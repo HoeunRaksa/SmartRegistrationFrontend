@@ -86,6 +86,7 @@ const SoftButton = ({ icon: Icon, children, onClick, disabled, variant = "ghost"
 };
 
 /* ================= FILTER SELECT COMPONENT (COLOR LIKE YOUR SAMPLE) ================= */
+/* ================= FILTER SELECT COMPONENT (CLEANER) ================= */
 const FilterSelect = ({
   icon: Icon,
   value,
@@ -98,8 +99,8 @@ const FilterSelect = ({
   ringColor = "focus:ring-blue-500/20 focus:border-blue-500",
   name,
 }) => (
-  <div className="relative">
-    <div className={`absolute left-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-gradient-to-br ${iconBg}`}>
+  <div className="relative group">
+    <div className={`absolute left-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-gradient-to-br ${iconBg} transition-all group-hover:scale-105`}>
       <Icon className={`w-4 h-4 ${iconColor}`} />
     </div>
 
@@ -110,20 +111,13 @@ const FilterSelect = ({
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
       className={[
-        "w-full pl-14 pr-4 py-3 rounded-2xl",
-        "border-2 border-gray-300 bg-white text-sm outline-none",
-        "transition-all shadow-sm hover:shadow-md appearance-none cursor-pointer",
-        "disabled:opacity-50 disabled:cursor-not-allowed",
-        "focus:ring-4",
+        "w-full pl-12 pr-10 py-3 rounded-2xl",
+        "border border-gray-200 bg-white/50 backdrop-blur-sm text-sm font-medium outline-none",
+        "transition-all shadow-sm hover:shadow-md hover:border-gray-300 appearance-none cursor-pointer",
+        "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none",
+        "focus:ring-4 focus:bg-white",
         ringColor,
       ].join(" ")}
-      style={{
-        backgroundImage:
-          `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "right 1rem center",
-        paddingRight: "3rem",
-      }}
     >
       <option value="">{placeholder}</option>
       {options.map((opt) => (
@@ -132,12 +126,16 @@ const FilterSelect = ({
         </option>
       ))}
     </select>
+
+    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+      <SlidersHorizontal className="w-4 h-4" />
+    </div>
   </div>
 );
 
 const FilterSearchInput = ({ value, onChange, name = "search" }) => (
-  <div className="relative">
-    <div className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-gradient-to-br from-orange-100 to-red-100">
+  <div className="relative group">
+    <div className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-gradient-to-br from-orange-100 to-red-100 transition-all group-hover:scale-105">
       <Search className="w-4 h-4 text-orange-600" />
     </div>
     <input
@@ -145,8 +143,8 @@ const FilterSearchInput = ({ value, onChange, name = "search" }) => (
       name={name}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      placeholder="Search student (server)…"
-      className="w-full pl-14 pr-4 py-3 rounded-2xl border-2 border-gray-300 bg-white text-sm outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all shadow-sm hover:shadow-md"
+      placeholder="Search student..."
+      className="w-full pl-12 pr-4 py-3 rounded-2xl border border-gray-200 bg-white/50 backdrop-blur-sm text-sm font-medium outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 focus:bg-white transition-all shadow-sm hover:shadow-md hover:border-gray-300"
     />
   </div>
 );
@@ -497,8 +495,8 @@ const EnrollmentsPage = () => {
             <div className="flex items-center gap-3">
               <IconGradient icon={Filter} gradient="from-indigo-500 to-purple-600" />
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Filter Enrollments</h3>
-                <p className="text-xs text-gray-500">Server filters + fast student search</p>
+                <h3 className="text-lg font-bold text-gray-900">Filters</h3>
+                <p className="text-xs text-gray-500">Search & refine list</p>
               </div>
             </div>
 
@@ -620,30 +618,7 @@ const EnrollmentsPage = () => {
 
 
 
-          <AnimatePresence>
-            {hasAnyFilter ? (
-              <motion.div
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                className="mt-5 flex flex-wrap items-center gap-2"
-              >
-                <Pill>
-                  <SlidersHorizontal className="w-4 h-4 text-gray-700" />
-                  Showing{" "}
-                  <span className="font-black text-gray-900">
-                    {(Array.isArray(enrollments) ? enrollments : []).length}
-                  </span>
-                </Pill>
-                {filters.department_id ? <Pill>Dept: {filters.department_id}</Pill> : null}
-                {filters.major_id ? <Pill>Major: {filters.major_id}</Pill> : null}
-                {filters.academic_year ? <Pill>Year: {filters.academic_year}</Pill> : null}
-                {filters.semester ? <Pill>Sem: {filters.semester}</Pill> : null}
-                {filters.course_id ? <Pill>Course: {filters.course_id}</Pill> : null}
-                {(filters.search || "").trim() ? <Pill>Search: "{(filters.search || "").trim()}"</Pill> : null}
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
+
         </GlassPanel>
       </motion.div>
 
