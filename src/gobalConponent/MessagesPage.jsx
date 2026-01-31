@@ -170,8 +170,11 @@ const MessagesPage = () => {
   };
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    const timeout = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, [messages, showChat]);
 
   // Voice recording helpers
   const startRecording = async () => {
@@ -592,8 +595,8 @@ const MessagesPage = () => {
                       )}
 
                       <div className={`px-4 py-2 rounded-2xl shadow-sm transition-all ${msg.is_mine
-                          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-none"
-                          : "bg-white text-slate-800 border border-slate-100 rounded-tl-none"
+                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-none"
+                        : "bg-white text-slate-800 border border-slate-100 rounded-tl-none"
                         } ${msg.is_deleted ? "opacity-60 bg-slate-100" : ""}`}>
 
                         {msg.is_deleted ? (
