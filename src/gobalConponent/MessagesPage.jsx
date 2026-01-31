@@ -102,7 +102,7 @@ const MessagesPage = () => {
   useEffect(() => {
     if (!currentUser?.id || !selectedConversation?.id) return;
 
-    const channelName = `conversation.${selectedConversation.id} `;
+    const channelName = `conversation.${selectedConversation.id}`;
     const echo = getEcho();
     if (!echo) return;
 
@@ -159,7 +159,7 @@ const MessagesPage = () => {
 
   const handleTyping = () => {
     if (!selectedConversation?.id) return;
-    const channelName = `conversation.${selectedConversation.id} `;
+    const channelName = `conversation.${selectedConversation.id}`;
     const echo = getEcho();
     if (echo) {
       echo.private(channelName).whisper("typing", {
