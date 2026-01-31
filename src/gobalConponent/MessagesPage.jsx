@@ -158,6 +158,13 @@ const MessagesPage = () => {
       }, 3000);
     });
 
+    // Debugging hooks
+    channel.subscribed(() => {
+      console.log(`✅ Successfully subscribed to ${channelName}`);
+    }).error((err) => {
+      console.error(`❌ Failed to subscribe to ${channelName}:`, err);
+    });
+
     return () => {
       echo.leave(channelName);
     };
