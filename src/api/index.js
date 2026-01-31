@@ -14,15 +14,10 @@ const API = axios.create({
 });
 
 // -----------------------------
-// ✅ 1) Auth header - Send Bearer token if available
+// ✅ 1) Auth via HttpOnly Cookies (Secure)
 // -----------------------------
-API.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+// Token is sent automatically via cookies (withCredentials: true)
+// No need to manually add Authorization header
 
 // -----------------------------
 // ✅ 2) Request DEDUPE (same GET same params -> 1 request only)

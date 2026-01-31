@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const [isChecking, setIsChecking] = useState(true);
-  const token = localStorage.getItem("token");
   const userStr = localStorage.getItem("user");
 
   useEffect(() => {
@@ -27,8 +26,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   // Check if user is logged in
-  if (!token || !userStr) {
-
+  if (!userStr) {
     return <Navigate to="/login" replace />;
   }
 
@@ -38,7 +36,6 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     user = JSON.parse(userStr);
   } catch (error) {
     console.error("❌ Invalid user data - clearing localStorage");
-    localStorage.removeItem("token");
     localStorage.removeItem("user");
     return <Navigate to="/login" replace />;
   }

@@ -60,10 +60,10 @@ const Login = () => {
 
     try {
       const res = await loginApi({ email, password });
-      const { token, user } = res.data;
+      const { user } = res.data;
 
-      // ✅ use your util (no duplicates)
-      saveAuthData(token, user);
+      // ✅ Token is in HttpOnly cookie, not in response
+      saveAuthData(null, user);
 
       if (user.role === "admin" || user.role === "staff") {
         navigate("/admin/dashboard", { replace: true });
