@@ -8,6 +8,7 @@ import {
   createTeacherClassSession,
   markTeacherAttendanceBulk,
   fetchTeacherAttendanceStats,
+  fetchCourseStudents,
   fetchTeacherSchedule
 } from '../../api/teacher_api';
 
@@ -105,9 +106,35 @@ const AttendancePage = () => {
     // Helper to convert "HH:MM" to minutes from midnight
     const toMinutes = (str) => {
       if (!str) return 0;
-      const [h, m] = str.split(':').map(Number);
+      const [h, m] = str.split(':').map(Number).filter(n => !isNaN(n));
+      if (m === undefined) return h * 60;
       return h * 60 + m;
     };
+
+    const isTimeValid = (session) => {
+      if (!session) return false;
+      const now = new Date();
+      const todayStr = now.toLocaleDateString('en-CA');
+      const sessionDate = session.date ? new Date(session.date).toLocaleDateString('en-CA') : '';
+
+      if (sessionDate !== todayStr) return false;
+
+      const currentTimeStr = now.toTimeString().slice(0, 5);
+      const currentMin = toMinutes(currentTimeStr);
+
+      const startTimeStr = session.start_time || session.time?.split(' - ')[0];
+      const endTimeStr = session.end_time || session.time?.split(' - ')[1];
+
+      if (!startTimeStr || !endTimeStr) return true;
+
+      const startMin = toMinutes(startTimeStr.slice(0, 5));
+      const endMin = toMinutes(endTimeStr.slice(0, 5));
+
+      // Allow 15 mins buffer
+      return currentMin >= (startMin - 15) && currentMin <= (endMin + 15);
+    };
+
+    const toMinutesLocal = toMinutes; // alias for scope
 
     const currentMinutes = toMinutes(currentTimeStr);
 
@@ -141,10 +168,11 @@ const AttendancePage = () => {
       });
 
       if (existingSession) {
-
-        setSelectedCourseId(courseId);
-        setSelectedSessionId(existingSession.id);
-        setIsAutoDetected(true);
+        if (isTimeValid(existingSession)) {
+          setSelectedCourseId(courseId);
+          setSelectedSessionId(existingSession.id);
+          setIsAutoDetected(true);
+        }
       } else {
 
         try {
@@ -192,6 +220,36 @@ const AttendancePage = () => {
   const handleSaveAttendance = async () => {
     if (!selectedSessionId) {
       setAlert({ show: true, message: 'Please select a class session', type: 'error' });
+      return;
+    }
+
+    const currentSession = sessions.find(s => String(s.id) === String(selectedSessionId));
+
+    // STRICT TIME CHECK
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('en-CA');
+    const sessionDate = currentSession?.date ? new Date(currentSession.date).toLocaleDateString('en-CA') : '';
+
+    const toMinutes = (str) => {
+      if (!str) return 0;
+      const [h, m] = str.split(':').map(Number).filter(n => !isNaN(n));
+      return (h || 0) * 60 + (m || 0);
+    };
+
+    const currentTimeStr = now.toTimeString().slice(0, 5);
+    const currentMin = toMinutes(currentTimeStr);
+    const startTimeStr = currentSession?.start_time || currentSession?.time?.split(' - ')[0];
+    const endTimeStr = currentSession?.end_time || currentSession?.time?.split(' - ')[1];
+
+    const startMin = toMinutes(startTimeStr?.slice(0, 5));
+    const endMin = toMinutes(endTimeStr?.slice(0, 5));
+
+    if (sessionDate !== todayStr || currentMin < (startMin - 15) || currentMin > (endMin + 30)) {
+      setAlert({
+        show: true,
+        message: `Submission Closed: You can only submit attendance during the scheduled time (${startTimeStr} - ${endTimeStr}).`,
+        type: 'error'
+      });
       return;
     }
 
@@ -305,7 +363,7 @@ const AttendancePage = () => {
             >
               <Calendar className="w-5 h-5 text-gray-600" />
             </button>
-            <button
+            <motion.button
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setIsCreateModalOpen(true)}
@@ -313,7 +371,7 @@ const AttendancePage = () => {
             >
               <Plus className="w-4 h-4" />
               New Session
-            </button>
+            </motion.button>
             <button
               disabled={loading || !selectedSessionId}
               onClick={handleSaveAttendance}
@@ -464,7 +522,27 @@ const AttendancePage = () => {
               {sessions
                 .filter(s => {
                   const sid = String(s.course_id || s.subject_id || '');
-                  return sid === String(selectedCourseId);
+                  const matchCourse = sid === String(selectedCourseId);
+
+                  // TIME FILTER: Only show sessions that are TODAY and NOT EXPIRED
+                  const now = new Date();
+                  const todayStr = now.toLocaleDateString('en-CA');
+                  const sessionDate = s.date ? new Date(s.date).toLocaleDateString('en-CA') : '';
+
+                  const toMin = (str) => {
+                    if (!str) return 0;
+                    const [h, m] = str.split(':').map(Number);
+                    return (h || 0) * 60 + (m || 0);
+                  };
+
+                  const endTimeStr = s.end_time || s.time?.split(' - ')[1];
+                  const endMin = toMin(endTimeStr?.slice(0, 5));
+                  const currentMin = toMin(now.toTimeString().slice(0, 5));
+
+                  const isToday = sessionDate === todayStr;
+                  const isNotExpired = currentMin <= (endMin + 60); // Show up to 1 hour after class
+
+                  return matchCourse && isToday && isNotExpired;
                 })
                 .map(session => {
                   // Use toLocaleDateString to get the correct LOCAL date from whatever the server sent
