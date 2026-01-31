@@ -9,6 +9,10 @@ import {
   BookOpen,
   FileText,
 } from "lucide-react";
+import { useState } from "react";
+import Alert from "../../gobalConponent/Alert.jsx";
+import ConfirmDialog from "../../gobalConponent/ConfirmDialog.jsx";
+import { AnimatePresence } from "framer-motion";
 
 /* ================== ANIMATION VARIANTS ================== */
 
@@ -26,15 +30,24 @@ const animations = {
 /* ================== COMPONENT ================== */
 
 const GradesList = ({ grades, onEdit, onRefresh }) => {
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this grade?")) return;
+  const [confirm, setConfirm] = useState({ show: false, id: null });
+  const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
+
+  const handleDelete = (id) => {
+    setConfirm({ show: true, id });
+  };
+
+  const executeDelete = async () => {
+    if (!confirm.id) return;
 
     try {
       await deleteGrade(id);
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error("Failed to delete grade:", err);
-      alert(err.response?.data?.message || "Failed to delete grade");
+      setAlert({ show: true, message: err.response?.data?.message || "Failed to delete grade", type: "error" });
+    } finally {
+      setConfirm({ show: false, id: null });
     }
   };
 
@@ -103,6 +116,28 @@ const GradesList = ({ grades, onEdit, onRefresh }) => {
           </table>
         </div>
       )}
+
+      <AnimatePresence>
+        {alert.show && (
+          <div className="fixed top-20 right-5 z-[9999] w-80">
+            <Alert
+              type={alert.type}
+              message={alert.message}
+              onClose={() => setAlert({ ...alert, show: false })}
+            />
+          </div>
+        )}
+      </AnimatePresence>
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this grade? This action cannot be undone."
+        onConfirm={executeDelete}
+        onCancel={() => setConfirm({ show: false, id: null })}
+        confirmText="Delete"
+        type="danger"
+      />
     </motion.div>
   );
 };

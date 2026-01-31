@@ -2,9 +2,12 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Download, Users, GraduationCap, Calendar, DollarSign, Loader } from 'lucide-react';
 import axios from 'axios';
+import Alert from '../../gobalConponent/Alert.jsx';
+import { AnimatePresence } from 'framer-motion';
 
 const DataExportPage = () => {
     const [exporting, setExporting] = useState({});
+    const [alert, setAlert] = useState({ show: false, message: '', type: 'error' });
 
     const handleExport = async (type, params = {}) => {
         try {
@@ -49,7 +52,7 @@ const DataExportPage = () => {
             window.URL.revokeObjectURL(url);
         } catch (error) {
             console.error('Export failed:', error);
-            alert('Failed to export data. Please try again.');
+            setAlert({ show: true, message: 'Failed to export data. Please try again.', type: 'error' });
         } finally {
             setExporting(prev => ({ ...prev, [type]: false }));
         }
@@ -97,6 +100,13 @@ const DataExportPage = () => {
 
     return (
         <div className="space-y-6">
+            <Alert
+                isOpen={alert.show}
+                type={alert.type}
+                message={alert.message}
+                onClose={() => setAlert({ ...alert, show: false })}
+            />
+
             <div className="rounded-3xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-xl p-6">
                 <div className="flex items-center gap-3 mb-6">
                     <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500">
@@ -155,8 +165,8 @@ const DataExportPage = () => {
                                     })}
                                     disabled={isLoading || (option.needsCourseId && !courseIdInput)}
                                     className={`w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white font-medium transition-all ${isLoading || (option.needsCourseId && !courseIdInput)
-                                            ? 'bg-gray-400 cursor-not-allowed'
-                                            : `bg-gradient-to-r ${option.color} hover:shadow-lg`
+                                        ? 'bg-gray-400 cursor-not-allowed'
+                                        : `bg-gradient-to-r ${option.color} hover:shadow-lg`
                                         }`}
                                 >
                                     {isLoading ? (

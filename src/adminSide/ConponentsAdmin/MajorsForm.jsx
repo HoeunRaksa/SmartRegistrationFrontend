@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { createMajor, updateMajor } from "../../api/major_api.jsx";
 import { fetchDepartments } from "../../api/department_api.jsx";
 import { fetchSubjects } from "../../api/subject_api.jsx";
+import Alert from "../../gobalConponent/Alert.jsx";
+import { AnimatePresence } from "framer-motion";
 
 import {
   GraduationCap,
@@ -40,7 +42,7 @@ const MajorsForm = ({ editingMajor, onSuccess, onCancel }) => {
     image: null,
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
 
   // --------- Load dropdowns once ----------
   useEffect(() => {
@@ -118,7 +120,7 @@ const MajorsForm = ({ editingMajor, onSuccess, onCancel }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    setError("");
+    setAlert({ show: false, message: "", type: "error" });
   };
 
   const handleImageChange = (e) => {
@@ -127,12 +129,12 @@ const MajorsForm = ({ editingMajor, onSuccess, onCancel }) => {
 
     const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
     if (!validTypes.includes(file.type)) {
-      setError("Please upload a valid image file (JPEG, PNG, GIF, or WEBP)");
+      setAlert({ show: true, message: "Please upload a valid image file (JPEG, PNG, GIF, or WEBP)", type: "error" });
       return;
     }
 
     if (file.size > 2048 * 1024) {
-      setError("Image size should be less than 2MB");
+      setAlert({ show: true, message: "Image size should be less than 2MB", type: "error" });
       return;
     }
 
@@ -141,7 +143,7 @@ const MajorsForm = ({ editingMajor, onSuccess, onCancel }) => {
     const reader = new FileReader();
     reader.onloadend = () => setImagePreview(reader.result);
     reader.readAsDataURL(file);
-    setError("");
+    setAlert({ show: false, message: "", type: "error" });
   };
 
   const removeImage = () => {
@@ -160,17 +162,17 @@ const MajorsForm = ({ editingMajor, onSuccess, onCancel }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setAlert({ show: false, message: "", type: "error" });
 
     try {
       // Basic validation
       if (!formData.major_name?.trim()) {
-        setError("Major Name is required");
+        setAlert({ show: true, message: "Major Name is required", type: "error" });
         setLoading(false);
         return;
       }
       if (!formData.department_id) {
-        setError("Department is required");
+        setAlert({ show: true, message: "Department is required", type: "error" });
         setLoading(false);
         return;
       }
@@ -204,7 +206,7 @@ const MajorsForm = ({ editingMajor, onSuccess, onCancel }) => {
       if (onSuccess) onSuccess();
     } catch (err) {
       console.error("Failed to save major:", err);
-      setError(err.response?.data?.message || err.response?.data?.error || "Failed to save major");
+      setAlert({ show: true, message: err.response?.data?.message || err.response?.data?.error || "Failed to save major", type: "error" });
     } finally {
       setLoading(false);
     }
@@ -220,7 +222,7 @@ const MajorsForm = ({ editingMajor, onSuccess, onCancel }) => {
     });
     setSelectedSubjects([]);
     setImagePreview(null);
-    setError("");
+    setAlert({ show: false, message: "", type: "error" });
     const fileInput = document.getElementById("image-upload");
     if (fileInput) fileInput.value = "";
   };
@@ -262,11 +264,12 @@ const MajorsForm = ({ editingMajor, onSuccess, onCancel }) => {
         )}
       </div>
 
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
-          {error}
-        </div>
-      )}
+      <Alert
+        isOpen={alert.show}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert({ ...alert, show: false })}
+      />
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid md:grid-cols-2 gap-4">
@@ -361,8 +364,8 @@ const MajorsForm = ({ editingMajor, onSuccess, onCancel }) => {
                     <label
                       key={s.id}
                       className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition ${checked
-                          ? "bg-blue-50 border-blue-300"
-                          : "bg-white border-gray-200 hover:bg-gray-50"
+                        ? "bg-blue-50 border-blue-300"
+                        : "bg-white border-gray-200 hover:bg-gray-50"
                         }`}
                     >
                       <input

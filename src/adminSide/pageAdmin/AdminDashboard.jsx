@@ -27,7 +27,8 @@ import {
   Calendar,
   Link2,
   Building,
-  University
+  University,
+  Shield
 } from "lucide-react";
 
 const profileFallback = "/assets/images/profile-fallback.png";
@@ -57,6 +58,7 @@ const RoomsPage = lazy(() => import('../pageAdmin/RoomsPage.jsx'));
 const BuildingsPage = lazy(() => import("./BuildingsPage.jsx"));
 const MajorQuotasPage = lazy(() => import("./MajorQuotasPage.jsx"));
 const AcademicSessionsPage = lazy(() => import("./AcademicSessionsPage.jsx"));
+const AuditLogsPage = lazy(() => import("./AuditLogsPage.jsx"));
 
 /* =========================
    LOADING COMPONENT
@@ -152,12 +154,7 @@ const MENU_ITEMS = [
     gradient: "from-blue-600 to-indigo-600",
   },
 
-  {
-    id: "grades",
-    label: "Grades",
-    icon: Award,
-    gradient: "from-purple-500 to-pink-500",
-  },
+
   {
     id: "students",
     label: "Students",
@@ -199,6 +196,12 @@ const MENU_ITEMS = [
     label: "Settings",
     icon: Settings,
     gradient: "from-gray-500 to-slate-500",
+  },
+  {
+    id: "audit-logs",
+    label: "Audit Logs",
+    icon: Shield,
+    gradient: "from-amber-500 to-orange-500",
   },
 ];
 
@@ -309,6 +312,8 @@ const ActivePage = React.memo(({ section }) => {
         return <ClassGroupsPage />;
       case "academic-sessions":
         return <AcademicSessionsPage />;
+      case "audit-logs":
+        return <AuditLogsPage />;
       default:
         return <Dashboard />;
     }

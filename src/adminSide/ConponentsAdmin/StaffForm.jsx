@@ -17,11 +17,13 @@ import {
   Building2,
   Image as ImageIcon,
 } from "lucide-react";
+import Alert from "../../gobalConponent/Alert";
 
 const StaffForm = ({ onUpdate, editingStaff, onCancelEdit }) => {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
+  const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
 
   const [formData, setFormData] = useState({
     email: "",
@@ -112,7 +114,7 @@ const StaffForm = ({ onUpdate, editingStaff, onCancelEdit }) => {
     if (!file) return;
 
     if (file.size > 2048000) {
-      alert("Image size must be less than 2MB");
+      setAlert({ show: true, message: "Image size must be less than 2MB", type: "error" });
       e.target.value = null;
       return;
     }
@@ -166,7 +168,11 @@ const StaffForm = ({ onUpdate, editingStaff, onCancelEdit }) => {
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error("Failed to save staff:", error);
-      alert(error.response?.data?.message || "Failed to save staff");
+      setAlert({
+        show: true,
+        message: error.response?.data?.message || "Failed to save staff",
+        type: "error"
+      });
     } finally {
       setLoading(false);
     }
@@ -176,6 +182,12 @@ const StaffForm = ({ onUpdate, editingStaff, onCancelEdit }) => {
 
   return (
     <div className="relative overflow-hidden rounded-3xl border border-white/60 bg-white/60 backdrop-blur-2xl shadow-[0_22px_70px_-30px_rgba(15,23,42,0.45)] p-6 md:p-7">
+      <Alert
+        isOpen={alert.show}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert({ ...alert, show: false })}
+      />
       {/* Soft background accents */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-purple-400/20 blur-3xl" />

@@ -1,9 +1,6 @@
-// =====================================================
-// src/adminSide/ConponentsAdmin/ClassGroupsList.jsx
-// ✅ ENHANCED UI - All logic preserved
-// =====================================================
 import React, { memo, useMemo, useState } from "react";
 import { Edit3, Trash2, RefreshCw, Search, Users, BookOpen, Calendar, Clock, GraduationCap } from "lucide-react";
+import ConfirmDialog from "../../gobalConponent/ConfirmDialog.jsx";
 
 const rowCls = "border-t border-white/50 hover:bg-white/60 transition-all duration-200";
 const safeLower = (v) => String(v ?? "").trim().toLowerCase();
@@ -17,6 +14,7 @@ const ClassGroupsList = memo(function ClassGroupsList({
   onViewStudents,
 }) {
   const [query, setQuery] = useState("");
+  const [confirm, setConfirm] = useState({ show: false, id: null, name: "" });
 
   const filtered = useMemo(() => {
     const q = safeLower(query);
@@ -237,11 +235,7 @@ const ClassGroupsList = memo(function ClassGroupsList({
                         {/* 🗑 Delete */}
                         <button
                           type="button"
-                          onClick={() => {
-                            const ok = window.confirm(`Delete class group "${cg.class_name}"?`);
-                            if (!ok) return;
-                            onDelete?.(cg.id);
-                          }}
+                          onClick={() => setConfirm({ show: true, id: cg.id, name: cg.class_name })}
                           className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-red-50 to-red-100/50 border border-red-200 hover:from-red-100 hover:to-red-200/50 transition-all shadow-sm hover:shadow"
                         >
                           <Trash2 size={14} className="text-red-600" />
@@ -256,6 +250,19 @@ const ClassGroupsList = memo(function ClassGroupsList({
           </table>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title="Delete Class Group"
+        message={`Are you sure you want to delete class group "${confirm.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        type="danger"
+        onConfirm={() => {
+          onDelete?.(confirm.id);
+          setConfirm({ show: false, id: null, name: "" });
+        }}
+        onCancel={() => setConfirm({ show: false, id: null, name: "" })}
+      />
     </div>
   );
 });

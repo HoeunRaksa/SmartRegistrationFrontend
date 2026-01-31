@@ -279,10 +279,20 @@ const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
 
   return (
     <div className="space-y-8">
-      <AnimatePresence>
-        {success && <Alert type="success" message="Student updated successfully!" />}
-        {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
+      <Alert
+        isOpen={success}
+        type="success"
+        message="Student updated successfully!"
+        onClose={() => setSuccess(false)}
+      />
+      <Alert
+        isOpen={!!error}
+        type="error"
+        message={error}
+        onClose={() => setError(null)}
+      />
 
+      <AnimatePresence>
         {passwordResetSuccess && (
           <motion.div
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -524,7 +534,7 @@ const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
           </motion.form>
         )}
       </motion.div>
-    </div>
+    </div >
   );
 };
 

@@ -12,17 +12,30 @@ import {
   CheckCircle,
   Users,
 } from "lucide-react";
+import { useState } from "react";
+import Alert from "../../gobalConponent/Alert.jsx";
+import ConfirmDialog from "../../gobalConponent/ConfirmDialog.jsx";
+import { AnimatePresence } from "framer-motion";
 
 const ClassSessionsList = ({ sessions, onEdit, onRefresh }) => {
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this session?")) return;
+  const [confirm, setConfirm] = useState({ show: false, id: null });
+  const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
+
+  const handleDelete = (id) => {
+    setConfirm({ show: true, id });
+  };
+
+  const executeDelete = async () => {
+    if (!confirm.id) return;
 
     try {
       await deleteSession(id);
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error("Failed to delete session:", err);
-      alert(err.response?.data?.message || "Failed to delete session");
+      setAlert({ show: true, message: err.response?.data?.message || "Failed to delete session", type: "error" });
+    } finally {
+      setConfirm({ show: false, id: null });
     }
   };
 
@@ -73,6 +86,28 @@ const ClassSessionsList = ({ sessions, onEdit, onRefresh }) => {
           </table>
         </div>
       )}
+
+      <AnimatePresence>
+        {alert.show && (
+          <div className="fixed top-20 right-5 z-[9999] w-80">
+            <Alert
+              type={alert.type}
+              message={alert.message}
+              onClose={() => setAlert({ ...alert, show: false })}
+            />
+          </div>
+        )}
+      </AnimatePresence>
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this class session? This action cannot be undone."
+        onConfirm={executeDelete}
+        onCancel={() => setConfirm({ show: false, id: null })}
+        confirmText="Delete"
+        type="danger"
+      />
     </motion.div>
   );
 };
@@ -92,10 +127,10 @@ const SessionRow = ({ session, index, onEdit, onDelete }) => {
   const isUpcoming = sessionDate >= new Date();
   const isPast = sessionDate < new Date();
 
-  const roomDisplay = session.room_full_name || 
-                      (session.building_code && session.room_number 
-                        ? `${session.building_code}-${session.room_number}` 
-                        : session.room_number || session.room || null);
+  const roomDisplay = session.room_full_name ||
+    (session.building_code && session.room_number
+      ? `${session.building_code}-${session.room_number}`
+      : session.room_number || session.room || null);
 
   const hasAttendance = session.has_attendance || session.attendance_count > 0;
 
@@ -131,18 +166,17 @@ const SessionRow = ({ session, index, onEdit, onDelete }) => {
 
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="text-sm text-gray-900">
-          {sessionDate.toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric', 
-            year: 'numeric' 
+          {sessionDate.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
           })}
         </div>
       </td>
 
       <td className="px-6 py-4 whitespace-nowrap">
-        <span className={`inline-flex items-center gap-1 text-xs ${
-          isUpcoming ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'
-        } px-2.5 py-1 rounded-full font-medium`}>
+        <span className={`inline-flex items-center gap-1 text-xs ${isUpcoming ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'
+          } px-2.5 py-1 rounded-full font-medium`}>
           <Calendar className="w-3 h-3" />
           {session.day_of_week}
         </span>

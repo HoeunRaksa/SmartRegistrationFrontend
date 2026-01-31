@@ -17,11 +17,13 @@ import {
   Image as ImageIcon,
   User,
 } from "lucide-react";
+import Alert from "../../gobalConponent/Alert";
 
 const TeacherForm = ({ onUpdate, editingTeacher, onCancelEdit }) => {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
+  const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
 
   const [formData, setFormData] = useState({
     // user fields
@@ -112,7 +114,7 @@ const TeacherForm = ({ onUpdate, editingTeacher, onCancelEdit }) => {
     if (!file) return;
 
     if (file.size > 2048000) {
-      alert("Image size must be less than 2MB");
+      setAlert({ show: true, message: "Image size must be less than 2MB", type: "error" });
       e.target.value = null;
       return;
     }
@@ -160,7 +162,7 @@ const TeacherForm = ({ onUpdate, editingTeacher, onCancelEdit }) => {
     try {
       // IMPORTANT: password required only when create
       if (!editingTeacher && !formData.password) {
-        alert("Password is required for new teacher");
+        setAlert({ show: true, message: "Password is required for new teacher", type: "error" });
         setLoading(false);
         return;
       }
@@ -176,7 +178,11 @@ const TeacherForm = ({ onUpdate, editingTeacher, onCancelEdit }) => {
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error("Failed to save teacher:", error);
-      alert(error.response?.data?.message || "Failed to save teacher");
+      setAlert({
+        show: true,
+        message: error.response?.data?.message || "Failed to save teacher",
+        type: "error"
+      });
     } finally {
       setLoading(false);
     }
@@ -186,6 +192,12 @@ const TeacherForm = ({ onUpdate, editingTeacher, onCancelEdit }) => {
 
   return (
     <div className="relative overflow-hidden rounded-2xl bg-white border border-white shadow-lg p-5">
+      <Alert
+        isOpen={alert.show}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert({ ...alert, show: false })}
+      />
       {/* Soft background accents */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-purple-400/20 blur-3xl" />

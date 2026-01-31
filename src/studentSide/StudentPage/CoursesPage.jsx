@@ -15,6 +15,8 @@ import {
   BookMarked,
   Award
 } from 'lucide-react';
+import Alert from '../../gobalConponent/Alert.jsx';
+import ConfirmDialog from '../../gobalConponent/ConfirmDialog.jsx';
 import {
   fetchStudentCourses,
   fetchAvailableCourses,
@@ -28,7 +30,8 @@ const CoursesPage = () => {
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [alert, setAlert] = useState({ show: false, message: '', type: 'error' });
+  const [confirm, setConfirm] = useState({ show: false, id: null });
   const [activeTab, setActiveTab] = useState('enrolled'); // 'enrolled' or 'available'
 
   useEffect(() => {
@@ -36,8 +39,7 @@ const CoursesPage = () => {
   }, []);
 
   const showMessage = (type, text) => {
-    setMessage({ type, text });
-    setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+    setAlert({ show: true, message: text, type });
   };
 
   const buildScheduleText = (courseOrEnrollment) => {
@@ -135,12 +137,16 @@ const CoursesPage = () => {
     }
   };
 
-  const handleDrop = async (courseId) => {
-    if (!window.confirm('Are you sure you want to drop this course?')) return;
+  const handleDrop = (courseId) => {
+    setConfirm({ show: true, id: courseId });
+  };
+
+  const executeDrop = async () => {
+    if (!confirm.id) return;
 
     try {
       setEnrolling(true);
-      await dropCourse(courseId);
+      await dropCourse(confirm.id);
       showMessage('success', 'Successfully dropped course');
       await loadCourses();
     } catch (error) {
@@ -148,6 +154,7 @@ const CoursesPage = () => {
       showMessage('error', error?.response?.data?.message || 'Failed to drop course');
     } finally {
       setEnrolling(false);
+      setConfirm({ show: false, id: null });
     }
   };
 
@@ -178,35 +185,22 @@ const CoursesPage = () => {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Message Alert */}
-      <AnimatePresence>
-        {message.text && (
-          <motion.div
-            initial={{ opacity: 0, y: -20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.9 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className={`backdrop-blur-xl rounded-2xl p-4 border shadow-lg flex items-center gap-3 ${message.type === 'success'
-              ? 'border-green-200/50 bg-green-50/50'
-              : 'border-red-200/50 bg-red-50/50'
-              }`}
-          >
-            <motion.div
-              animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 0.5 }}
-            >
-              {message.type === 'success' ? (
-                <CheckCircle className="w-5 h-5 text-green-600" />
-              ) : (
-                <AlertCircle className="w-5 h-5 text-red-600" />
-              )}
-            </motion.div>
-            <p className={`font-medium ${message.type === 'success' ? 'text-green-700' : 'text-red-700'}`}>
-              {message.text}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Alert
+        isOpen={alert.show}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert({ ...alert, show: false })}
+      />
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title="Drop Course"
+        message="Are you sure you want to drop this course? This action may affect your academic progress."
+        onConfirm={executeDrop}
+        onCancel={() => setConfirm({ show: false, id: null })}
+        confirmText="Drop Course"
+        type="danger"
+      />
 
       <motion.div
         initial={{ opacity: 0, y: -20 }}

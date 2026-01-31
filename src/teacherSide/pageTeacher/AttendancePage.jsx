@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 
 import FormModal from '../../Components/FormModal';
+import Alert from '../../gobalConponent/Alert.jsx';
+import { AnimatePresence } from 'framer-motion';
 
 const AttendancePage = () => {
   const [courses, setCourses] = useState([]);
@@ -39,6 +41,7 @@ const AttendancePage = () => {
     start_time: '07:45',
     end_time: '09:00',
   });
+  const [alert, setAlert] = useState({ show: false, message: '', type: 'error' });
   const location = useLocation();
 
   useEffect(() => {
@@ -178,7 +181,7 @@ const AttendancePage = () => {
 
   const handleSaveAttendance = async () => {
     if (!selectedSessionId) {
-      alert('Please select a class session');
+      setAlert({ show: true, message: 'Please select a class session', type: 'error' });
       return;
     }
 
@@ -192,10 +195,10 @@ const AttendancePage = () => {
           remarks: ''
         }))
       });
-      alert('Attendance saved successfully!');
+      setAlert({ show: true, message: 'Attendance saved successfully!', type: 'success' });
       loadData(); // Refresh stats
     } catch (error) {
-      alert(error.response?.data?.message || 'Failed to save attendance');
+      setAlert({ show: true, message: error.response?.data?.message || 'Failed to save attendance', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -203,7 +206,7 @@ const AttendancePage = () => {
 
   const handleCreateSession = async (e) => {
     e.preventDefault();
-    if (!selectedCourseId) return alert("Please select a course first");
+    if (!selectedCourseId) return setAlert({ show: true, message: "Please select a course first", type: "error" });
 
     try {
       setLoading(true);
@@ -212,7 +215,7 @@ const AttendancePage = () => {
         ...sessionForm
       });
 
-      alert('Session created successfully!');
+      setAlert({ show: true, message: 'Session created successfully!', type: 'success' });
       setIsCreateModalOpen(false);
 
       // Reload sessions and select the new one
@@ -224,7 +227,7 @@ const AttendancePage = () => {
         setSelectedSessionId(res.data.data.id);
       }
     } catch (error) {
-      alert(error.response?.data?.message || 'Failed to create session');
+      setAlert({ show: true, message: error.response?.data?.message || 'Failed to create session', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -270,6 +273,13 @@ const AttendancePage = () => {
 
   return (
     <div className="min-h-screen px-4 md:px-6 pb-8">
+      <Alert
+        isOpen={alert.show}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert({ ...alert, show: false })}
+      />
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Attendance</h1>

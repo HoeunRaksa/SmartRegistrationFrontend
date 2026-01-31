@@ -155,18 +155,13 @@ const AcademicSessionsPage = () => {
     );
 
     return (
-        <div className="p-4 md:p-6 min-h-screen space-y-6">
-            <AnimatePresence>
-                {alert.show && (
-                    <div className="fixed top-20 right-5 z-[9999] w-80">
-                        <Alert
-                            type={alert.type}
-                            message={alert.message}
-                            onClose={() => setAlert(prev => ({ ...prev, show: false }))}
-                        />
-                    </div>
-                )}
-            </AnimatePresence>
+        <div className="min-h-screen space-y-6">
+            <Alert
+                isOpen={alert.show}
+                type={alert.type}
+                message={alert.message}
+                onClose={() => setAlert(prev => ({ ...prev, show: false }))}
+            />
 
             <ConfirmDialog
                 isOpen={confirm.show}
@@ -177,7 +172,7 @@ const AcademicSessionsPage = () => {
                 confirmText="Continue"
                 type={confirm.title.includes("Delete") ? "danger" : "info"}
             />
-            <div className="p-6 max-w-7xl mx-auto space-y-6 w-full min-w-0 overflow-x-hidden">
+            <div className="space-y-6 w-full min-w-0 overflow-x-hidden">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>

@@ -16,6 +16,7 @@ import {
   Eye,
   Image as ImageIcon,
 } from "lucide-react";
+import Alert from "../../gobalConponent/Alert";
 
 /* ================== CONSTANTS ================== */
 
@@ -73,8 +74,7 @@ const DepartmentsForm = ({ onUpdate, editingDepartment, onCancelEdit }) => {
   const [form, setForm] = useState(INITIAL_FORM_STATE);
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState(null);
+  const [alert, setAlert] = useState({ show: false, message: "", type: "success" });
   const fileRef = useRef(null);
 
   const isEditMode = Boolean(editingDepartment);
@@ -119,7 +119,7 @@ const DepartmentsForm = ({ onUpdate, editingDepartment, onCancelEdit }) => {
     if (!file) return;
 
     if (file.size > MAX_IMAGE_SIZE) {
-      setError("Image size must be less than 10MB");
+      setAlert({ show: true, message: "Image size must be less than 10MB", type: "error" });
       e.target.value = null;
       return;
     }
@@ -134,8 +134,7 @@ const DepartmentsForm = ({ onUpdate, editingDepartment, onCancelEdit }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
-    setSuccess(false);
+    setAlert({ ...alert, show: false });
 
     try {
       const formData = new FormData();
@@ -160,7 +159,11 @@ const DepartmentsForm = ({ onUpdate, editingDepartment, onCancelEdit }) => {
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       console.error("Submit error:", err);
-      setError(err.response?.data?.message || err.message || "Failed to save department");
+      setAlert({
+        show: true,
+        message: err.response?.data?.message || err.message || "Failed to save department",
+        type: "error"
+      });
     } finally {
       setLoading(false);
     }
@@ -168,15 +171,12 @@ const DepartmentsForm = ({ onUpdate, editingDepartment, onCancelEdit }) => {
 
   return (
     <div className="space-y-6">
-      <AnimatePresence>
-        {success && (
-          <Alert
-            type="success"
-            message={`Department ${isEditMode ? "updated" : "created"} successfully!`}
-          />
-        )}
-        {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
-      </AnimatePresence>
+      <Alert
+        isOpen={alert.show}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert({ ...alert, show: false })}
+      />
 
       <FormShell>
         <FormHeader isEditMode={isEditMode} onCancel={resetForm} />
@@ -222,38 +222,6 @@ const FormShell = ({ children }) => (
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.06)_1px,transparent_1px)] bg-[size:28px_28px] opacity-[0.18]" />
     </div>
     <div className="relative p-6 md:p-7">{children}</div>
-  </motion.div>
-);
-
-const Alert = ({ type, message, onClose }) => (
-  <motion.div
-    initial={{ opacity: 0, y: -10, scale: 0.98 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    exit={{ opacity: 0, y: -10, scale: 0.98 }}
-    className={`flex items-center gap-3 rounded-2xl border px-4 py-3 shadow-sm backdrop-blur-xl ${type === "success"
-        ? "bg-green-50/70 border-green-200/60"
-        : "bg-red-50/70 border-red-200/60"
-      }`}
-  >
-    {type === "success" ? (
-      <CheckCircle2 className="w-5 h-5 text-green-600" />
-    ) : (
-      <AlertCircle className="w-5 h-5 text-red-600" />
-    )}
-    <p className={`text-sm font-semibold ${type === "success" ? "text-green-800" : "text-red-800"}`}>
-      {message}
-    </p>
-
-    {onClose && (
-      <button
-        type="button"
-        onClick={onClose}
-        className="ml-auto p-1.5 rounded-full text-red-700 hover:bg-red-100/70 transition-colors"
-        aria-label="Close alert"
-      >
-        <X className="w-4 h-4" />
-      </button>
-    )}
   </motion.div>
 );
 

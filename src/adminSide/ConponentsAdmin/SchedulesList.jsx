@@ -10,6 +10,10 @@ import {
   MapPin,
   Building2,
 } from "lucide-react";
+import ConfirmDialog from "../../gobalConponent/ConfirmDialog.jsx";
+import { useState } from "react";
+import Alert from "../../gobalConponent/Alert.jsx";
+import { AnimatePresence } from "framer-motion";
 
 const animations = {
   fadeUp: {
@@ -23,15 +27,23 @@ const animations = {
 };
 
 const SchedulesList = ({ schedules, onEdit, onRefresh }) => {
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this schedule?")) return;
+  const [confirm, setConfirm] = useState({ show: false, id: null });
+  const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
 
+  const handleDelete = (id) => {
+    setConfirm({ show: true, id });
+  };
+
+  const executeDelete = async () => {
+    if (!confirm.id) return;
     try {
-      await deleteSchedule(id);
+      await deleteSchedule(confirm.id);
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error("Failed to delete schedule:", err);
-      alert(err.response?.data?.message || "Failed to delete schedule");
+      setAlert({ show: true, message: err.response?.data?.message || "Failed to delete schedule", type: "error" });
+    } finally {
+      setConfirm({ show: false, id: null });
     }
   };
 
@@ -81,6 +93,23 @@ const SchedulesList = ({ schedules, onEdit, onRefresh }) => {
           </table>
         </div>
       )}
+
+      <Alert
+        isOpen={alert.show}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert({ ...alert, show: false })}
+      />
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this schedule? This action cannot be undone."
+        onConfirm={executeDelete}
+        onCancel={() => setConfirm({ show: false, id: null })}
+        confirmText="Delete"
+        type="danger"
+      />
     </motion.div>
   );
 };
@@ -109,10 +138,10 @@ const ScheduleRow = ({ schedule, index, onEdit, onDelete }) => {
   const dayColor = dayColors[schedule.day_of_week] || "gray";
 
   // ✅ Build room display from backend data
-  const roomDisplay = schedule.room_full_name || 
-                      (schedule.building_code && schedule.room_number 
-                        ? `${schedule.building_code}-${schedule.room_number}` 
-                        : schedule.room_number || schedule.room || null);
+  const roomDisplay = schedule.room_full_name ||
+    (schedule.building_code && schedule.room_number
+      ? `${schedule.building_code}-${schedule.room_number}`
+      : schedule.room_number || schedule.room || null);
 
   return (
     <motion.tr

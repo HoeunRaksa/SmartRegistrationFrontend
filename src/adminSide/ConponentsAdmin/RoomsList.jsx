@@ -12,17 +12,32 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import ConfirmDialog from "../../gobalConponent/ConfirmDialog.jsx";
+import Alert from "../../gobalConponent/Alert.jsx";
+import { useState } from "react";
 
 const RoomsList = ({ rooms, onEdit, onRefresh }) => {
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this room?")) return;
+  const [confirm, setConfirm] = useState({ show: false, id: null });
+  const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
 
+  const handleDelete = (id) => {
+    setConfirm({ show: true, id });
+  };
+
+  const executeDelete = async () => {
+    if (!confirm.id) return;
     try {
-      await deleteRoom(id);
+      await deleteRoom(confirm.id);
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error("Failed to delete room:", err);
-      alert(err.response?.data?.message || "Failed to delete room");
+      setAlert({
+        show: true,
+        message: err.response?.data?.message || "Failed to delete room",
+        type: "error"
+      });
+    } finally {
+      setConfirm({ show: false, id: null });
     }
   };
 
@@ -30,8 +45,14 @@ const RoomsList = ({ rooms, onEdit, onRefresh }) => {
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-white/40 border border-white/40 shadow-lg overflow-hidden"
+      className="rounded-2xl bg-white/40 border border-white/40 shadow-lg overflow-hidden relative"
     >
+      <Alert
+        isOpen={alert.show}
+        message={alert.message}
+        type={alert.type}
+        onClose={() => setAlert({ ...alert, show: false })}
+      />
       <div className="flex items-center justify-between p-5 border-b border-gray-200">
         <div className="flex items-center gap-2">
           <DoorOpen className="w-5 h-5 text-blue-600" />
@@ -68,6 +89,16 @@ const RoomsList = ({ rooms, onEdit, onRefresh }) => {
           </table>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this room? This action cannot be undone."
+        onConfirm={executeDelete}
+        onCancel={() => setConfirm({ show: false, id: null })}
+        confirmText="Delete"
+        type="danger"
+      />
     </motion.div>
   );
 };

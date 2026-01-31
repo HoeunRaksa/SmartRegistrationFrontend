@@ -7,6 +7,10 @@ import {
   Award,
   Hash,
 } from "lucide-react";
+import ConfirmDialog from "../../gobalConponent/ConfirmDialog.jsx";
+import { useState } from "react";
+import Alert from "../../gobalConponent/Alert.jsx";
+import { AnimatePresence } from "framer-motion";
 
 /* ================== ANIMATION VARIANTS ================== */
 
@@ -24,15 +28,23 @@ const animations = {
 /* ================== COMPONENT ================== */
 
 const SubjectsList = ({ subjects, onEdit, onRefresh }) => {
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this subject?")) return;
+  const [confirm, setConfirm] = useState({ show: false, id: null });
+  const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
 
+  const handleDelete = (id) => {
+    setConfirm({ show: true, id });
+  };
+
+  const executeDelete = async () => {
+    if (!confirm.id) return;
     try {
-      await deleteSubject(id);
+      await deleteSubject(confirm.id);
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error("Failed to delete subject:", err);
-      alert(err.response?.data?.message || "Failed to delete subject");
+      setAlert({ show: true, message: err.response?.data?.message || "Failed to delete subject", type: "error" });
+    } finally {
+      setConfirm({ show: false, id: null });
     }
   };
 
@@ -92,6 +104,23 @@ const SubjectsList = ({ subjects, onEdit, onRefresh }) => {
           </table>
         </div>
       )}
+
+      <Alert
+        isOpen={alert.show}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert({ ...alert, show: false })}
+      />
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this subject? This action cannot be undone."
+        onConfirm={executeDelete}
+        onCancel={() => setConfirm({ show: false, id: null })}
+        confirmText="Delete"
+        type="danger"
+      />
     </motion.div>
   );
 };

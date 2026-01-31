@@ -1,21 +1,8 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  createTeacherGrade,
-  updateTeacherGrade,
-} from "../../api/teacher_api.jsx";
-import {
-  Award,
-  X,
-  CheckCircle2,
-  AlertCircle,
-  Sparkles,
-  User,
-  BookOpen,
-  Hash,
-  FileText,
-  Info,
-} from "lucide-react";
+import { motion } from "framer-motion";
+import { createTeacherGrade, updateTeacherGrade } from "../../api/teacher_api.jsx";
+import { Award, X, Sparkles, User, BookOpen, Hash, FileText, Info, CheckCircle2, AlertCircle } from "lucide-react";
+import Alert from "../../gobalConponent/Alert.jsx";
 
 /* ================== CONSTANTS ================== */
 
@@ -233,14 +220,19 @@ const GradeForm = ({ onUpdate, editingGrade, onCancel, students, courses }) => {
 
   return (
     <div className="space-y-4">
-      <AnimatePresence>
-        {success && (
-          <Alert type="success" message={`Grade ${isEditMode ? "updated" : "created"} successfully!`} />
-        )}
-        {error && (
-          <Alert type="error" message={error} onClose={() => setError(null)} />
-        )}
-      </AnimatePresence>
+
+      <Alert
+        isOpen={success}
+        type="success"
+        message={`Grade ${isEditMode ? "updated" : "created"} successfully!`}
+        onClose={() => setSuccess(false)}
+      />
+      <Alert
+        isOpen={!!error}
+        type="error"
+        message={error}
+        onClose={() => setError(null)}
+      />
 
       <FormSection
         title={isEditMode ? "Edit Grade" : "Create New Grade"}
@@ -260,30 +252,7 @@ const GradeForm = ({ onUpdate, editingGrade, onCancel, students, courses }) => {
 };
 
 /* ================== ALERT COMPONENT ================== */
-const Alert = ({ type, message, onClose }) => (
-  <motion.div
-    initial={{ opacity: 0, y: -12 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -12 }}
-    transition={{ duration: 0.3 }}
-    className={`p-4 rounded-xl border ${type === "success"
-      ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-      : "bg-red-50 border-red-200 text-red-800"
-      } flex items-center gap-3`}
-  >
-    {type === "success" ? (
-      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-    ) : (
-      <AlertCircle className="w-5 h-5 text-red-600" />
-    )}
-    <p className="flex-1 font-medium">{message}</p>
-    {onClose && (
-      <button onClick={onClose} className="p-1 hover:bg-white/50 rounded transition">
-        <X className="w-4 h-4" />
-      </button>
-    )}
-  </motion.div>
-);
+
 
 /* ================== FORM SECTION ================== */
 const FormSection = ({

@@ -25,6 +25,8 @@ import {
 
 import { fetchDepartments } from "../../api/department_api";
 import { fetchMajors } from "../../api/major_api";
+import Alert from "../../gobalConponent/Alert.jsx";
+import { AnimatePresence } from "framer-motion";
 
 /* ================== SAFE HELPERS ================== */
 
@@ -136,6 +138,8 @@ const RegistrationReportPage = () => {
     date_to: "",
     semester: "", // ✅ semester-aware
   });
+
+  const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
 
   // ✅ FIX 429: prevent overlapping + duplicate summary calls
   const summaryInFlightRef = useRef(false);
@@ -299,7 +303,7 @@ const RegistrationReportPage = () => {
       setReportData(res?.data?.data ?? res?.data ?? null);
     } catch (err) {
       console.error("Failed to generate report:", err);
-      alert(err?.response?.data?.message || "Failed to generate report");
+      setAlert({ show: true, message: err?.response?.data?.message || "Failed to generate report", type: "error" });
       setReportData(null);
     } finally {
       setLoading(false);
@@ -312,7 +316,7 @@ const RegistrationReportPage = () => {
       await generateAndDownloadReport(payload, `registration_report_${Date.now()}.pdf`);
     } catch (err) {
       console.error("Failed to download PDF:", err);
-      alert(err?.response?.data?.message || "Failed to download PDF report");
+      setAlert({ show: true, message: err?.response?.data?.message || "Failed to download PDF report", type: "error" });
     }
   }, [buildCleanPayload, filters]);
 
@@ -345,6 +349,13 @@ const RegistrationReportPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
+      <Alert
+        isOpen={alert.show}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert({ ...alert, show: false })}
+      />
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -16 }}
@@ -734,10 +745,10 @@ const ReportTable = React.memo(function ReportTable({ registrations }) {
                   <td className="px-6 py-4">
                     <span
                       className={`text-xs px-2 py-1 rounded-full ${gender === "Male"
-                          ? "bg-blue-100 text-blue-600"
-                          : gender === "Female"
-                            ? "bg-pink-100 text-pink-600"
-                            : "bg-gray-100 text-gray-600"
+                        ? "bg-blue-100 text-blue-600"
+                        : gender === "Female"
+                          ? "bg-pink-100 text-pink-600"
+                          : "bg-gray-100 text-gray-600"
                         }`}
                     >
                       {gender}
@@ -755,10 +766,10 @@ const ReportTable = React.memo(function ReportTable({ registrations }) {
                   <td className="px-6 py-4">
                     <span
                       className={`text-xs px-2 py-1 rounded-full ${paid
-                          ? "bg-green-100 text-green-700"
-                          : pending
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-red-100 text-red-700"
+                        ? "bg-green-100 text-green-700"
+                        : pending
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-red-100 text-red-700"
                         }`}
                     >
                       {getPaymentLabel(reg)}

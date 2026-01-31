@@ -5,11 +5,16 @@ import MajorSubjectsList from "../ConponentsAdmin/MajorSubjectsList.jsx";
 import FormModal from "../../Components/FormModal.jsx";
 import { fetchMajorSubjects, deleteMajorSubject } from "../../api/major_subject_api.jsx";
 import { Link2, BarChart3 } from "lucide-react";
+import Alert from "../../gobalConponent/Alert.jsx";
+import ConfirmDialog from "../../gobalConponent/ConfirmDialog.jsx";
+import { AnimatePresence } from "framer-motion";
 
 const MajorSubjectsPage = () => {
   const [rows, setRows] = useState([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
+  const [confirm, setConfirm] = useState({ show: false, id: null });
 
   const load = async () => {
     try {
@@ -28,14 +33,21 @@ const MajorSubjectsPage = () => {
     load();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this major-subject?")) return;
+  const handleDelete = (id) => {
+    setConfirm({ show: true, id });
+  };
+
+  const executeDelete = async () => {
+    if (!confirm.id) return;
     try {
-      await deleteMajorSubject(id);
+      await deleteMajorSubject(confirm.id);
       load();
+      setAlert({ show: true, message: "Major-subject deleted successfully", type: "success" });
     } catch (e) {
       console.error(e);
-      alert("Delete failed. Check console.");
+      setAlert({ show: true, message: "Delete failed. Check console.", type: "error" });
+    } finally {
+      setConfirm({ show: false, id: null });
     }
   };
 
@@ -50,6 +62,22 @@ const MajorSubjectsPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
+      <Alert
+        isOpen={alert.show}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert({ ...alert, show: false })}
+      />
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this major-subject? This action cannot be undone."
+        onConfirm={executeDelete}
+        onCancel={() => setConfirm({ show: false, id: null })}
+        confirmText="Delete"
+        type="danger"
+      />
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Major Subjects</h1>

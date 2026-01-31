@@ -5,6 +5,7 @@ import API from "../../api/index";
 import { fetchCourses } from "../../api/course_api.jsx";
 import { getCachedCourses } from "../../utils/dataCache";
 import FormModal from "../../Components/FormModal";
+import Alert from "../../gobalConponent/Alert.jsx";
 
 const ProjectGroupsPage = () => {
     const [courses, setCourses] = useState([]);
@@ -14,6 +15,7 @@ const ProjectGroupsPage = () => {
     const [showAutoAssign, setShowAutoAssign] = useState(false);
     const [membersPerGroup, setMembersPerGroup] = useState(5);
     const [viewMode, setViewMode] = useState("grid"); // grid or list
+    const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
 
     useEffect(() => {
         loadCourses();
@@ -60,8 +62,9 @@ const ProjectGroupsPage = () => {
             });
             loadGroups(selectedCourse);
             setShowAutoAssign(false);
+            setAlert({ show: true, message: "Groups auto-assigned successfully!", type: "success" });
         } catch (err) {
-            alert(err.response?.data?.message || "Failed to auto-assign");
+            setAlert({ show: true, message: err.response?.data?.message || "Failed to auto-assign", type: "error" });
         } finally {
             setLoading(false);
         }
@@ -69,6 +72,13 @@ const ProjectGroupsPage = () => {
 
     return (
         <div className="min-h-screen space-y-6">
+            <Alert
+                isOpen={alert.show}
+                type={alert.type}
+                message={alert.message}
+                onClose={() => setAlert({ ...alert, show: false })}
+            />
+
             {/* Header & Controls */}
             <div className="bg-white rounded-3xl p-6 border border-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
                 <div>

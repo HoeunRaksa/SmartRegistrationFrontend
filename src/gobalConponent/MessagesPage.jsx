@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { fetchConversations, fetchMessages, sendMessage, createGroup, deleteMessage, clearConversation, fetchClassmates, deleteConversation } from "../api/message_api";
 import { getEcho } from "../echo";
+import Alert from "./Alert";
+import ConfirmDialog from "./ConfirmDialog";
 
 const MessagesPage = () => {
   const [conversations, setConversations] = useState([]);
@@ -57,6 +59,9 @@ const MessagesPage = () => {
 
   const messagesEndRef = useRef(null);
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+  const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
+  const [confirm, setConfirm] = useState({ show: false, title: "", message: "", action: null });
 
   const mapServerMessageToUI = (m) => {
     const senderId = m.s_id ?? m.sender_id;
@@ -120,8 +125,13 @@ const MessagesPage = () => {
         return [...prev, incomingMessage];
       });
 
-      // Clear typing indicator for this user when message is received
       setTypingUsers(prev => prev.filter(u => u.id !== event.s_id));
+
+      // ✅ Play sound for incoming message (iOS 26 Style)
+      if (event.s_id !== currentUser.id) {
+        const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3");
+        audio.play().catch(e => console.log("Sound play error:", e));
+      }
     });
 
     channel.listenForWhisper("typing", (e) => {
@@ -186,7 +196,7 @@ const MessagesPage = () => {
       }, 1000);
     } catch (err) {
       console.error("Error accessing microphone:", err);
-      alert("Microphone access denied or not available.");
+      setAlert({ show: true, message: "Microphone access denied or not available.", type: "error" });
     }
   };
 
@@ -285,41 +295,57 @@ const MessagesPage = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this message?")) return;
-    try {
-      await deleteMessage(id);
-      setMessages(prev => prev.map(m => m.id === id ? { ...m, is_deleted: true, message: "Message deleted" } : m));
-    } catch (e) {
-      alert("Failed to delete message");
-    }
+  const handleDelete = (id) => {
+    setConfirm({
+      show: true,
+      title: "Delete Message",
+      message: "Are you sure you want to delete this message?",
+      action: async () => {
+        try {
+          await deleteMessage(id);
+          setMessages(prev => prev.map(m => m.id === id ? { ...m, is_deleted: true, message: "Message deleted" } : m));
+        } catch (e) {
+          setAlert({ show: true, message: "Failed to delete message", type: "error" });
+        }
+      }
+    });
   };
 
-  const handleClearChat = async () => {
+  const handleClearChat = () => {
     if (!selectedConversation?.id) return;
-    if (!window.confirm("Are you sure you want to clear all messages in this conversation? This cannot be undone.")) return;
-
-    try {
-      await clearConversation(selectedConversation.id);
-      setMessages([]);
-      // Reload conversations to update last message preview
-      loadConversations();
-    } catch (e) {
-      alert("Failed to clear chat");
-    }
+    setConfirm({
+      show: true,
+      title: "Clear Chat",
+      message: "Are you sure you want to clear all messages in this conversation? This cannot be undone.",
+      action: async () => {
+        try {
+          await clearConversation(selectedConversation.id);
+          setMessages([]);
+          // Reload conversations to update last message preview
+          loadConversations();
+        } catch (e) {
+          setAlert({ show: true, message: "Failed to clear chat", type: "error" });
+        }
+      }
+    });
   };
 
-  const handleDeleteGroup = async () => {
+  const handleDeleteGroup = () => {
     if (!selectedConversation?.id) return;
-    if (!window.confirm("Are you sure you want to delete this group? This will remove it for everyone.")) return;
-
-    try {
-      await deleteConversation(selectedConversation.id);
-      setSelectedConversation(null);
-      loadConversations();
-    } catch (e) {
-      alert("Failed to delete group");
-    }
+    setConfirm({
+      show: true,
+      title: "Delete Group",
+      message: "Are you sure you want to delete this group? This will remove it for everyone.",
+      action: async () => {
+        try {
+          await deleteConversation(selectedConversation.id);
+          setSelectedConversation(null);
+          loadConversations();
+        } catch (e) {
+          setAlert({ show: true, message: "Failed to delete group", type: "error" });
+        }
+      }
+    });
   };
 
   const startPrivateChat = async (userId) => {
@@ -352,7 +378,7 @@ const MessagesPage = () => {
       loadConversations();
       setSelectedConversation(newGroup);
     } catch (e) {
-      alert("Failed to create group");
+      setAlert({ show: true, message: "Failed to create group", type: "error" });
     }
   };
 
@@ -373,7 +399,27 @@ const MessagesPage = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-120px)] md:p-6">
+    <div className="h-[calc(100vh-120px)] md:p-6 relative">
+      <Alert
+        isOpen={alert.show}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert({ ...alert, show: false })}
+      />
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title={confirm.title}
+        message={confirm.message}
+        onConfirm={async () => {
+          if (confirm.action) await confirm.action();
+          setConfirm({ ...confirm, show: false });
+        }}
+        onCancel={() => setConfirm({ ...confirm, show: false })}
+        confirmText="Confirm"
+        type="danger"
+      />
+
       <div className="h-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm flex">
         {/* Sidebar */}
         <div className={`w-full md:w-[360px] border-r border-slate-200 flex flex-col ${showChat ? "hidden md:flex" : "flex"}`}>
@@ -789,6 +835,20 @@ const MessagesPage = () => {
           </div>
         )}
       </AnimatePresence>
+      <Alert
+        isOpen={alert.show}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert({ ...alert, show: false })}
+      />
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title={confirm.title}
+        message={confirm.message}
+        onConfirm={confirm.action}
+        onCancel={() => setConfirm({ ...confirm, show: false })}
+      />
     </div>
   );
 };

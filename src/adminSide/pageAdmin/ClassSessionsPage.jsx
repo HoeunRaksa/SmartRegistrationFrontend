@@ -7,6 +7,8 @@ import { fetchCourseOptions } from "../../api/course_api.jsx";
 import { fetchBuildingOptions } from "../../api/building_api.jsx";
 import { Calendar, Clock, Hash, Zap } from "lucide-react";
 import { motion } from "framer-motion";
+import ConfirmDialog from "../../gobalConponent/ConfirmDialog.jsx";
+import Alert from "../../gobalConponent/Alert.jsx";
 
 const ClassSessionsPage = () => {
   const [sessions, setSessions] = useState([]);
@@ -16,6 +18,8 @@ const ClassSessionsPage = () => {
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [confirm, setConfirm] = useState({ show: false });
+  const [alert, setAlert] = useState({ show: false, message: "", type: "success" });
 
   // Filters
   const [filters, setFilters] = useState({
@@ -95,11 +99,7 @@ const ClassSessionsPage = () => {
     loadSessions({});
   };
 
-  const handleGenerateSessions = async () => {
-    if (!window.confirm("Generate sessions from schedules? This will create sessions for the date range specified.")) {
-      return;
-    }
-
+  const executeGenerate = async () => {
     const startDate = prompt("Enter start date (YYYY-MM-DD):", "2026-01-27");
     const endDate = prompt("Enter end date (YYYY-MM-DD):", "2026-05-30");
 
@@ -113,11 +113,11 @@ const ClassSessionsPage = () => {
         overwrite: false,
       });
 
-      alert(res.data?.message || "Sessions generated successfully!");
+      setAlert({ show: true, message: res.data?.message || "Sessions generated successfully!", type: "success" });
       loadSessions();
     } catch (error) {
       console.error("Failed to generate sessions:", error);
-      alert(error.response?.data?.message || "Failed to generate sessions");
+      setAlert({ show: true, message: error.response?.data?.message || "Failed to generate sessions", type: "error" });
     } finally {
       setGenerating(false);
     }
@@ -150,6 +150,23 @@ const ClassSessionsPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
+      <Alert
+        isOpen={alert.show}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert({ ...alert, show: false })}
+      />
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title="Generate Sessions"
+        message="Generate sessions from schedules? This will create sessions for the date range specified."
+        confirmText="Generate"
+        type="primary"
+        onConfirm={executeGenerate}
+        onCancel={() => setConfirm({ show: false })}
+      />
+
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Class Sessions</h1>
@@ -196,7 +213,7 @@ const ClassSessionsPage = () => {
       <motion.button
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        onClick={handleGenerateSessions}
+        onClick={() => setConfirm({ show: true })}
         disabled={generating}
         className="w-full relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 py-3 text-sm font-semibold text-white shadow-lg disabled:opacity-70 disabled:cursor-not-allowed transition-all"
       >

@@ -10,6 +10,10 @@ import {
   Award,
   Clock,
 } from "lucide-react";
+import { useState } from "react";
+import Alert from "../../gobalConponent/Alert.jsx";
+import ConfirmDialog from "../../gobalConponent/ConfirmDialog.jsx";
+import { AnimatePresence } from "framer-motion";
 
 /* ================== ANIMATION VARIANTS ================== */
 
@@ -27,15 +31,24 @@ const animations = {
 /* ================== COMPONENT ================== */
 
 const AssignmentsList = ({ assignments, onEdit, onRefresh }) => {
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this assignment?")) return;
+  const [confirm, setConfirm] = useState({ show: false, id: null });
+  const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
+
+  const handleDelete = (id) => {
+    setConfirm({ show: true, id });
+  };
+
+  const executeDelete = async () => {
+    if (!confirm.id) return;
 
     try {
       await deleteAssignment(id);
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error("Failed to delete assignment:", err);
-      alert(err.response?.data?.message || "Failed to delete assignment");
+      setAlert({ show: true, message: err.response?.data?.message || "Failed to delete assignment", type: "error" });
+    } finally {
+      setConfirm({ show: false, id: null });
     }
   };
 
@@ -101,6 +114,28 @@ const AssignmentsList = ({ assignments, onEdit, onRefresh }) => {
           </table>
         </div>
       )}
+
+      <AnimatePresence>
+        {alert.show && (
+          <div className="fixed top-20 right-5 z-[9999] w-80">
+            <Alert
+              type={alert.type}
+              message={alert.message}
+              onClose={() => setAlert({ ...alert, show: false })}
+            />
+          </div>
+        )}
+      </AnimatePresence>
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this assignment? This action cannot be undone."
+        onConfirm={executeDelete}
+        onCancel={() => setConfirm({ show: false, id: null })}
+        confirmText="Delete"
+        type="danger"
+      />
     </motion.div>
   );
 };

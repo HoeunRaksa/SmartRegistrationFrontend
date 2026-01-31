@@ -12,6 +12,7 @@ import {
   FileText,
   Layers,
 } from "lucide-react";
+import Alert from "../../gobalConponent/Alert";
 
 const INITIAL_FORM_STATE = {
   building_code: "",
@@ -25,8 +26,7 @@ const INITIAL_FORM_STATE = {
 const BuildingForm = ({ onUpdate, onSuccess, editingBuilding, onCancel }) => {
   const [form, setForm] = useState(INITIAL_FORM_STATE);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState(null);
+  const [alert, setAlert] = useState({ show: false, message: "", type: "success" });
 
   const isEditMode = !!editingBuilding;
 
@@ -47,7 +47,7 @@ const BuildingForm = ({ onUpdate, onSuccess, editingBuilding, onCancel }) => {
 
   const resetForm = () => {
     setForm(INITIAL_FORM_STATE);
-    setError(null);
+    setAlert({ show: false, message: "", type: "success" });
     if (onCancel) onCancel();
   };
 
@@ -57,14 +57,13 @@ const BuildingForm = ({ onUpdate, onSuccess, editingBuilding, onCancel }) => {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
-    setError(null);
+    setAlert({ ...alert, show: false });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
-    setSuccess(false);
+    setAlert({ ...alert, show: false });
 
     try {
       const submitData = {
@@ -77,13 +76,13 @@ const BuildingForm = ({ onUpdate, onSuccess, editingBuilding, onCancel }) => {
       };
 
       if (!submitData.building_code) {
-        setError("Building code is required");
+        setAlert({ show: true, message: "Building code is required", type: "error" });
         setLoading(false);
         return;
       }
 
       if (!submitData.building_name) {
-        setError("Building name is required");
+        setAlert({ show: true, message: "Building name is required", type: "error" });
         setLoading(false);
         return;
       }
@@ -95,12 +94,14 @@ const BuildingForm = ({ onUpdate, onSuccess, editingBuilding, onCancel }) => {
       }
 
       resetForm();
-      setSuccess(true);
+      setAlert({
+        show: true,
+        message: `Building ${isEditMode ? "updated" : "created"} successfully!`,
+        type: "success"
+      });
 
       if (onSuccess) onSuccess();
       if (onUpdate) onUpdate();
-
-      setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       let errorMessage = "Failed to save building";
       if (err.response?.data) {
@@ -110,7 +111,7 @@ const BuildingForm = ({ onUpdate, onSuccess, editingBuilding, onCancel }) => {
       } else if (err.message) {
         errorMessage = err.message;
       }
-      setError(errorMessage);
+      setAlert({ show: true, message: errorMessage, type: "error" });
     } finally {
       setLoading(false);
     }
@@ -118,15 +119,12 @@ const BuildingForm = ({ onUpdate, onSuccess, editingBuilding, onCancel }) => {
 
   return (
     <div className="space-y-4">
-      <AnimatePresence>
-        {success && (
-          <Alert
-            type="success"
-            message={`Building ${isEditMode ? "updated" : "created"} successfully!`}
-          />
-        )}
-        {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
-      </AnimatePresence>
+      <Alert
+        isOpen={alert.show}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert({ ...alert, show: false })}
+      />
 
       <motion.div
         initial={{ opacity: 0, y: 24 }}
@@ -210,32 +208,6 @@ const BuildingForm = ({ onUpdate, onSuccess, editingBuilding, onCancel }) => {
     </div>
   );
 };
-
-/* ================== SUB-COMPONENTS ================== */
-
-const Alert = ({ type, message, onClose }) => (
-  <motion.div
-    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.95 }}
-    className={`flex items-center gap-3 p-4 rounded-2xl border shadow-sm ${type === "success" ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
-      }`}
-  >
-    {type === "success" ? (
-      <CheckCircle2 className="w-5 h-5 text-green-600" />
-    ) : (
-      <AlertCircle className="w-5 h-5 text-red-600" />
-    )}
-    <p className={`text-sm font-medium ${type === "success" ? "text-green-800" : "text-red-800"}`}>
-      {message}
-    </p>
-    {onClose && (
-      <button onClick={onClose} className="ml-auto text-red-600 hover:text-red-800">
-        <X className="w-4 h-4" />
-      </button>
-    )}
-  </motion.div>
-);
 
 const FormHeader = ({ isEditMode, onCancel }) => (
   <div className="flex items-center justify-between mb-4">

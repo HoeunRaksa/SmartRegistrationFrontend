@@ -5,6 +5,7 @@ const cleanBase = rawBase.replace(/\/api\/?$|\/+$/g, "");
 
 const API = axios.create({
   baseURL: `${cleanBase}/api`,
+  withCredentials: true, // Supported for HttpOnly cookies
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",

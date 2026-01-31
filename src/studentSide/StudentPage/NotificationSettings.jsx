@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Mail, DollarSign, GraduationCap, FileText, Save, Loader } from 'lucide-react';
 import axios from 'axios';
+import Alert from '../../gobalConponent/Alert.jsx';
+import { AnimatePresence } from 'framer-motion';
 
 const NotificationSettings = () => {
     const [preferences, setPreferences] = useState({
@@ -12,7 +14,7 @@ const NotificationSettings = () => {
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [message, setMessage] = useState('');
+    const [alert, setAlert] = useState({ show: false, message: '', type: 'error' });
 
     useEffect(() => {
         loadPreferences();
@@ -42,16 +44,14 @@ const NotificationSettings = () => {
     const handleSave = async () => {
         try {
             setSaving(true);
-            setMessage('');
 
             const response = await axios.put('/api/student/notification-preferences', preferences);
 
             if (response.data.success) {
-                setMessage('Preferences saved successfully!');
-                setTimeout(() => setMessage(''), 3000);
+                setAlert({ show: true, message: 'Preferences saved successfully!', type: 'success' });
             }
         } catch (error) {
-            setMessage('Failed to save preferences. Please try again.');
+            setAlert({ show: true, message: 'Failed to save preferences. Please try again.', type: 'error' });
             console.error('Save error:', error);
         } finally {
             setSaving(false);
@@ -148,26 +148,20 @@ const NotificationSettings = () => {
                     })}
                 </div>
 
-                {message && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={`mt-4 p-4 rounded-xl ${message.includes('success')
-                                ? 'bg-green-100 text-green-700 border border-green-200'
-                                : 'bg-red-100 text-red-700 border border-red-200'
-                            }`}
-                    >
-                        {message}
-                    </motion.div>
-                )}
+                <Alert
+                    isOpen={alert.show}
+                    type={alert.type}
+                    message={alert.message}
+                    onClose={() => setAlert({ ...alert, show: false })}
+                />
 
                 <div className="mt-6 flex justify-end">
                     <button
                         onClick={handleSave}
                         disabled={saving}
                         className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-semibold transition-all ${saving
-                                ? 'bg-blue-400 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg'
+                            ? 'bg-blue-400 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg'
                             }`}
                     >
                         {saving ? (

@@ -1,12 +1,10 @@
-/* ========================= EnrollmentForm.jsx (ULTIMATE GLASS UI) ========================= */
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { enrollStudent, updateEnrollmentStatus } from "../../api/admin_course_api.jsx";
 import {
   BookOpen,
   X,
   CheckCircle2,
-  AlertCircle,
   Sparkles,
   GraduationCap,
   Search,
@@ -20,7 +18,9 @@ import {
   User,
   Info,
   Zap,
+  AlertCircle
 } from "lucide-react";
+import Alert from "../../gobalConponent/Alert.jsx";
 
 /* ================== CONSTANTS ================== */
 const INITIAL_FORM_STATE = {
@@ -564,51 +564,7 @@ const SelectField = ({ icon: Icon, placeholder, value, onChange, options = [], d
 );
 
 /* ================== ALERT ================== */
-const Alert = ({ type, message, onClose }) => (
-  <motion.div
-    initial={{ opacity: 0, y: -10, scale: 0.98 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.98, y: -10, transition: { duration: 0.2 } }}
-    className="relative"
-  >
-    <div
-      className={[
-        "flex items-center gap-4 rounded-2xl border-2 backdrop-blur-xl p-4",
-        type === "success"
-          ? "bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-300"
-          : "bg-gradient-to-r from-red-50 to-rose-50 border-red-300",
-        "shadow-lg",
-      ].join(" ")}
-    >
-      <div
-        className={[
-          "p-3 rounded-xl shadow-lg",
-          type === "success" ? "bg-gradient-to-br from-emerald-500 to-teal-600" : "bg-gradient-to-br from-red-500 to-rose-600",
-        ].join(" ")}
-      >
-        {type === "success" ? (
-          <CheckCircle2 className="w-6 h-6 text-white" />
-        ) : (
-          <AlertCircle className="w-6 h-6 text-white" />
-        )}
-      </div>
 
-      <p className="flex-1 text-sm font-bold text-gray-900 leading-relaxed">{message}</p>
-
-      {onClose && (
-        <motion.button
-          whileHover={{ scale: 1.1, rotate: 90 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={onClose}
-          type="button"
-          className="p-2 rounded-xl hover:bg-white/50 transition-all"
-        >
-          <X className="w-5 h-5 text-gray-700" />
-        </motion.button>
-      )}
-    </div>
-  </motion.div>
-);
 
 /* ================== SUBMIT BUTTON ================== */
 const SubmitButton = ({ loading, isEditMode }) => (
@@ -979,16 +935,25 @@ const EnrollmentForm = ({
 
   return (
     <div className="space-y-4">
-      <AnimatePresence>
-        {success && (
-          <Alert
-            type="success"
-            message={`🎉 Enrollment ${isEditMode ? "updated" : "created"} successfully!`}
-          />
-        )}
-        {selectionError && <Alert type="error" message={selectionError} onClose={null} />}
-        {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
-      </AnimatePresence>
+
+      <Alert
+        isOpen={success}
+        type="success"
+        message={`🎉 Enrollment ${isEditMode ? "updated" : "created"} successfully!`}
+        onClose={() => setSuccess(false)}
+      />
+      <Alert
+        isOpen={!!selectionError}
+        type="error"
+        message={selectionError}
+        onClose={() => { }} // selectionError is computed, maybe just empty onClose
+      />
+      <Alert
+        isOpen={!!error}
+        type="error"
+        message={error}
+        onClose={() => setError(null)}
+      />
 
       <FormSection
         isEditMode={isEditMode}

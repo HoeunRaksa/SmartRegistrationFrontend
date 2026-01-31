@@ -22,6 +22,8 @@ import {
   User,
   Hash,
 } from "lucide-react";
+import ConfirmDialog from "../../gobalConponent/ConfirmDialog.jsx";
+import Alert from "../../gobalConponent/Alert.jsx";
 
 const STATUS_STYLES = {
   enrolled: {
@@ -58,6 +60,24 @@ const EnrollmentsList = ({
   const [showFilters, setShowFilters] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [expandedRows, setExpandedRows] = useState(new Set());
+  const [confirm, setConfirm] = useState({ show: false, id: null, studentName: "" });
+  const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
+
+  const handleDelete = (id, studentName) => {
+    setConfirm({ show: true, id, studentName });
+  };
+
+  const executeDelete = async () => {
+    if (!confirm.id) return;
+    try {
+      if (onDelete) await onDelete(confirm.id);
+    } catch (err) {
+      console.error("Failed to delete enrollment:", err);
+      setAlert({ show: true, message: err.response?.data?.message || "Failed to delete enrollment", type: "error" });
+    } finally {
+      setConfirm({ show: false, id: null, studentName: "" });
+    }
+  };
 
   const toggleRow = (id) => {
     setExpandedRows((prev) => {
@@ -161,11 +181,10 @@ const EnrollmentsList = ({
                 whileHover={{ scale: 1.05, y: -1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg ${
-                  showFilters
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-blue-500/30"
-                    : "bg-white/80 text-gray-700 border-2 border-white/60 hover:border-blue-300"
-                }`}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg ${showFilters
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-blue-500/30"
+                  : "bg-white/80 text-gray-700 border-2 border-white/60 hover:border-blue-300"
+                  }`}
               >
                 <Filter className="w-4 h-4" />
                 Filters
@@ -263,11 +282,28 @@ const EnrollmentsList = ({
             <EnrollmentsTable
               enrollments={filteredEnrollments}
               onEdit={onEdit}
-              onDelete={onDelete}
+              onDelete={handleDelete}
               expandedRows={expandedRows}
               toggleRow={toggleRow}
             />
           )}
+
+          <Alert
+            isOpen={alert.show}
+            type={alert.type}
+            message={alert.message}
+            onClose={() => setAlert({ ...alert, show: false })}
+          />
+
+          <ConfirmDialog
+            isOpen={confirm.show}
+            title="Confirm Delete"
+            message={`Are you sure you want to delete the enrollment for ${confirm.studentName}? This action cannot be undone.`}
+            onConfirm={executeDelete}
+            onCancel={() => setConfirm({ show: false, id: null, studentName: "" })}
+            confirmText="Delete"
+            type="danger"
+          />
         </div>
       </div>
     </div>
@@ -373,9 +409,8 @@ const EnrollmentCard = ({ enrollment, onEdit, onDelete, isExpanded, onToggle }) 
               />
             ) : null}
             <div
-              className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 items-center justify-center shadow-md ${
-                enrollment.profile_picture_url ? "hidden" : "flex"
-              }`}
+              className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 items-center justify-center shadow-md ${enrollment.profile_picture_url ? "hidden" : "flex"
+                }`}
             >
               <span className="text-xl font-black text-white">
                 {String(enrollment.student_name || "?").charAt(0).toUpperCase()}
@@ -445,11 +480,7 @@ const EnrollmentCard = ({ enrollment, onEdit, onDelete, isExpanded, onToggle }) 
               <motion.button
                 whileHover={{ scale: 1.05, y: -1 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  if (window.confirm(`Delete enrollment for ${enrollment.student_name}?`)) {
-                    onDelete(enrollment.id);
-                  }
-                }}
+                onClick={() => onDelete(enrollment.id, enrollment.student_name)}
                 className="p-2 rounded-xl bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-300 hover:from-red-100 hover:to-rose-100 hover:shadow-lg transition-all"
                 type="button"
               >

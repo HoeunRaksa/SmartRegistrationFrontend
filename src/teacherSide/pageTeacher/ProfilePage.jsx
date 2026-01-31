@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Mail, Phone, MapPin, Calendar, Award, BookOpen, Save, Upload, X } from "lucide-react";
+import Alert from "../../gobalConponent/Alert.jsx";
 import { fetchTeacherProfile, updateTeacherProfile } from "../../api/teacher_profile_api";
 
 const ProfilePage = () => {
@@ -8,6 +9,7 @@ const ProfilePage = () => {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState(null);
+  const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
 
   // Form state
   const [formData, setFormData] = useState({
@@ -67,10 +69,15 @@ const ProfilePage = () => {
       }
 
       await updateTeacherProfile(data);
+      setAlert({ show: true, message: "Profile updated successfully!", type: "success" });
       await loadProfile(); // Reload to get processed URLs etc.
       setIsEditing(false);
     } catch (error) {
-      alert("Failed to update profile: " + (error.response?.data?.message || error.message));
+      setAlert({
+        show: true,
+        message: "Failed to update profile: " + (error.response?.data?.message || error.message),
+        type: "error"
+      });
     } finally {
       setSaving(false);
     }
@@ -84,6 +91,13 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen px-4 md:px-6 pb-8">
+      <Alert
+        isOpen={alert.show}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert({ ...alert, show: false })}
+      />
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

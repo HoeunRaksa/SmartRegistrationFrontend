@@ -8,7 +8,12 @@ import {
   Edit,
   Building2,
   BookOpen,
+  User,
 } from "lucide-react";
+
+import ConfirmDialog from "../../gobalConponent/ConfirmDialog.jsx";
+import Alert from "../../gobalConponent/Alert.jsx";
+import { useState } from "react";
 
 /* ================== ANIMATION VARIANTS ================== */
 
@@ -35,15 +40,27 @@ const animations = {
 /* ================== COMPONENT ================== */
 
 const MajorsList = ({ majors, onEdit, onRefresh }) => {
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this major?")) return;
+  const [confirm, setConfirm] = useState({ show: false, id: null });
+  const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
 
+  const handleDelete = (id) => {
+    setConfirm({ show: true, id });
+  };
+
+  const executeDelete = async () => {
+    if (!confirm.id) return;
     try {
-      await deleteMajor(id);
+      await deleteMajor(confirm.id);
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error("Failed to delete major:", err);
-      alert(err.response?.data?.message || "Failed to delete major");
+      setAlert({
+        show: true,
+        message: err.response?.data?.message || "Failed to delete major",
+        type: "error"
+      });
+    } finally {
+      setConfirm({ show: false, id: null });
     }
   };
 
@@ -52,8 +69,16 @@ const MajorsList = ({ majors, onEdit, onRefresh }) => {
       variants={animations.fadeUp}
       initial="hidden"
       animate="show"
-      className="rounded-2xl bg-white/40 border border-white/40 shadow-lg p-5"
+      className="rounded-2xl bg-white/40 border border-white/40 shadow-lg p-5 relative"
     >
+      <div className="absolute top-4 right-4 z-50 w-72">
+        <Alert
+          show={alert.show}
+          message={alert.message}
+          type={alert.type}
+          onClose={() => setAlert({ ...alert, show: false })}
+        />
+      </div>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Grid3x3 className="w-5 h-5 text-blue-600" />
@@ -83,6 +108,16 @@ const MajorsList = ({ majors, onEdit, onRefresh }) => {
           ))}
         </motion.div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this major? This action cannot be undone."
+        onConfirm={executeDelete}
+        onCancel={() => setConfirm({ show: false, id: null })}
+        confirmText="Delete"
+        type="danger"
+      />
     </motion.div>
   );
 };

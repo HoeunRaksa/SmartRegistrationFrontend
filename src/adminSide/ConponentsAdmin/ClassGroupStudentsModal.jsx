@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { X, Search, UserPlus, Loader, Users, RefreshCw, AlertCircle, CheckCircle2, Building2, GraduationCap } from "lucide-react";
+import { createPortal } from "react-dom";
+import { X, Search, UserPlus, Loader, Users, RefreshCw, Building2, GraduationCap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { searchStudents } from "../../api/student_api.jsx";
 import {
@@ -7,6 +7,7 @@ import {
   assignStudentClassGroupManual,
 } from "../../api/student_class_group_api.jsx";
 import { fetchDepartments, fetchMajorsByDepartment } from "../../api/department_api.jsx";
+import Alert from "../../gobalConponent/Alert.jsx";
 
 const safeArr = (res) => {
   const d = res?.data?.data !== undefined ? res.data.data : res?.data;
@@ -76,40 +77,6 @@ const Badge = ({ children, variant = "default" }) => {
     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${styles[variant]}`}>
       {children}
     </span>
-  );
-};
-
-const Alert = ({ type = "error", message }) => {
-  const styles = {
-    error: {
-      bg: "bg-gradient-to-r from-red-50 to-rose-50",
-      border: "border-red-200",
-      text: "text-red-800",
-      icon: AlertCircle,
-      iconColor: "text-red-600",
-    },
-    success: {
-      bg: "bg-gradient-to-r from-emerald-50 to-green-50",
-      border: "border-emerald-200",
-      text: "text-emerald-800",
-      icon: CheckCircle2,
-      iconColor: "text-emerald-600",
-    },
-  };
-
-  const style = styles[type] || styles.error;
-  const Icon = style.icon;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      className={`flex items-start gap-3 p-4 rounded-2xl border-2 ${style.bg} ${style.border}`}
-    >
-      <Icon className={`w-5 h-5 mt-0.5 ${style.iconColor}`} />
-      <p className={`text-sm font-semibold leading-relaxed ${style.text}`}>{message}</p>
-    </motion.div>
   );
 };
 
@@ -433,267 +400,270 @@ const ClassGroupStudentsModal = ({ open, group, onClose }) => {
 
   const hasActiveFilters = filters.department_id || filters.major_id || search;
 
-  if (!open) return null;
-
-  return (
+  return createPortal(
     <AnimatePresence>
-      <motion.div
-        variants={animations.overlay}
-        initial="hidden"
-        animate="show"
-        exit="exit"
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
-        onClick={onClose}
-      >
+      {open && (
         <motion.div
-          variants={animations.modal}
+          variants={animations.overlay}
           initial="hidden"
           animate="show"
           exit="exit"
-          onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-7xl rounded-3xl bg-gradient-to-br from-white via-white to-gray-50 border-2 border-white/60 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+          className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+          onClick={onClose}
         >
-          {/* ========================= HEADER ========================= */}
-          <div className="relative overflow-hidden px-6 py-5 border-b-2 border-white/60 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 flex-shrink-0">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-200/30 to-purple-200/30 rounded-full blur-3xl" />
+          <motion.div
+            variants={animations.modal}
+            initial="hidden"
+            animate="show"
+            exit="exit"
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-7xl rounded-3xl bg-gradient-to-br from-white via-white to-gray-50 border-2 border-white/60 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+          >
+            {/* ========================= HEADER ========================= */}
+            <div className="relative overflow-hidden px-6 py-5 border-b-2 border-white/60 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 flex-shrink-0">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-200/30 to-purple-200/30 rounded-full blur-3xl" />
 
-            <div className="relative flex items-start justify-between gap-4">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg">
-                  <Users className="w-6 h-6 text-white" />
-                </div>
-
-                <div>
-                  <h3 className="text-xl font-black text-gray-900 mb-1">
-                    {group.class_name}
-                  </h3>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="info">{group.academic_year}</Badge>
-                    <Badge variant="info">Semester {group.semester}</Badge>
-                    {group.shift && <Badge variant="default">{group.shift}</Badge>}
-                    <Badge variant="success">
-                      <Users className="w-3 h-3" />
-                      {studentsInClass.length} Students
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-
-              <Button
-                variant="ghost"
-                icon={X}
-                onClick={onClose}
-                className="flex-shrink-0"
-              />
-            </div>
-          </div>
-
-          {/* ========================= ALERTS ========================= */}
-          <AnimatePresence>
-            {(error || success) && (
-              <div className="px-6 pt-4 flex-shrink-0">
-                {error && <Alert type="error" message={error} />}
-                {success && <Alert type="success" message={success} />}
-              </div>
-            )}
-          </AnimatePresence>
-
-          {/* ========================= CONTENT ========================= */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 overflow-y-auto flex-1">
-            {/* ========================= LEFT: CURRENT STUDENTS ========================= */}
-            <GlassCard className="h-fit">
-              <div className="p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100">
-                      <Users className="w-5 h-5 text-emerald-700" />
-                    </div>
-                    <div>
-                      <h4 className="text-base font-black text-gray-900">Current Students</h4>
-                      <p className="text-xs text-gray-600">
-                        {loading ? "Loading..." : `${studentsInClass.length} enrolled`}
-                      </p>
-                    </div>
+              <div className="relative flex items-start justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg">
+                    <Users className="w-6 h-6 text-white" />
                   </div>
 
-                  <Button
-                    variant="ghost"
-                    icon={RefreshCw}
-                    onClick={loadClassStudents}
-                    loading={loading}
-                    className="flex-shrink-0"
-                  >
-                    Refresh
-                  </Button>
-                </div>
-
-                <div className="max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-                  {loading ? (
-                    <div className="flex items-center justify-center py-12">
-                      <Loader className="w-8 h-8 animate-spin text-blue-600" />
-                    </div>
-                  ) : studentsInClass.length === 0 ? (
-                    <EmptyState
-                      icon={Users}
-                      title="No students yet"
-                      description="Use the search panel to find and add students to this class"
-                    />
-                  ) : (
-                    <motion.div
-                      variants={animations.list}
-                      initial="hidden"
-                      animate="show"
-                      className="space-y-2"
-                    >
-                      {studentsInClass.map((s, index) => {
-                        const studentId = s.id || s.student_id || index;
-                        const key = `current-${studentId}-${group.id}`;
-                        return <StudentCard key={key} student={s} />;
-                      })}
-                    </motion.div>
-                  )}
-                </div>
-              </div>
-            </GlassCard>
-
-            {/* ========================= RIGHT: ADD STUDENTS ========================= */}
-            <GlassCard className="h-fit">
-              <div className="p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 rounded-xl bg-gradient-to-br from-blue-100 to-purple-100">
-                    <UserPlus className="w-5 h-5 text-blue-700" />
-                  </div>
                   <div>
-                    <h4 className="text-base font-black text-gray-900">Add Students</h4>
-                    <p className="text-xs text-gray-600">Filter by department/major and search</p>
+                    <h3 className="text-xl font-black text-gray-900 mb-1">
+                      {group.class_name}
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="info">{group.academic_year}</Badge>
+                      <Badge variant="info">Semester {group.semester}</Badge>
+                      {group.shift && <Badge variant="default">{group.shift}</Badge>}
+                      <Badge variant="success">
+                        <Users className="w-3 h-3" />
+                        {studentsInClass.length} Students
+                      </Badge>
+                    </div>
                   </div>
                 </div>
 
-                {/* ✅ FILTER DROPDOWNS - ONLY DEPT & MAJOR */}
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  <FilterSelect
-                    icon={Building2}
-                    name="department_id"
-                    value={filters.department_id}
-                    onChange={(v) => handleFilterChange("department_id", v)}
-                    options={departments.map((d) => ({
-                      id: d.id,
-                      label: d.department_name || d.name || `Dept ${d.id}`,
-                    }))}
-                    placeholder="All Departments"
-                  />
+                <Button
+                  variant="ghost"
+                  icon={X}
+                  onClick={onClose}
+                  className="flex-shrink-0"
+                />
+              </div>
+            </div>
 
-                  <FilterSelect
-                    icon={GraduationCap}
-                    name="major_id"
-                    value={filters.major_id}
-                    onChange={(v) => handleFilterChange("major_id", v)}
-                    options={majors.map((m) => ({
-                      id: m.id,
-                      label: m.major_name || m.name || `Major ${m.id}`,
-                    }))}
-                    placeholder="All Majors"
-                    disabled={!filters.department_id}
-                  />
-                </div>
+            {/* ========================= ALERTS ========================= */}
+            <Alert
+              isOpen={!!error}
+              type="error"
+              message={error}
+              onClose={() => setError("")}
+            />
+            <Alert
+              isOpen={!!success}
+              type="success"
+              message={success}
+              onClose={() => setSuccess("")}
+            />
 
-                {/* Clear Filters Button */}
-                {hasActiveFilters && (
-                  <div className="mb-3">
+            {/* ========================= CONTENT ========================= */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 overflow-y-auto flex-1">
+              {/* ========================= LEFT: CURRENT STUDENTS ========================= */}
+              <GlassCard className="h-fit">
+                <div className="p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100">
+                        <Users className="w-5 h-5 text-emerald-700" />
+                      </div>
+                      <div>
+                        <h4 className="text-base font-black text-gray-900">Current Students</h4>
+                        <p className="text-xs text-gray-600">
+                          {loading ? "Loading..." : `${studentsInClass.length} enrolled`}
+                        </p>
+                      </div>
+                    </div>
+
                     <Button
                       variant="ghost"
-                      icon={X}
-                      onClick={clearFilters}
-                      className="w-full"
+                      icon={RefreshCw}
+                      onClick={loadClassStudents}
+                      loading={loading}
+                      className="flex-shrink-0"
                     >
-                      Clear All Filters
+                      Refresh
                     </Button>
                   </div>
-                )}
 
-                {/* Search Input */}
-                <div className="flex gap-2 mb-4">
-                  <div className="relative flex-1">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <Search className="w-4 h-4 text-gray-400" />
+                  <div className="max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                    {loading ? (
+                      <div className="flex items-center justify-center py-12">
+                        <Loader className="w-8 h-8 animate-spin text-blue-600" />
+                      </div>
+                    ) : studentsInClass.length === 0 ? (
+                      <EmptyState
+                        icon={Users}
+                        title="No students yet"
+                        description="Use the search panel to find and add students to this class"
+                      />
+                    ) : (
+                      <motion.div
+                        variants={animations.list}
+                        initial="hidden"
+                        animate="show"
+                        className="space-y-2"
+                      >
+                        {studentsInClass.map((s, index) => {
+                          const studentId = s.id || s.student_id || index;
+                          const key = `current-${studentId}-${group.id}`;
+                          return <StudentCard key={key} student={s} />;
+                        })}
+                      </motion.div>
+                    )}
+                  </div>
+                </div>
+              </GlassCard>
+
+              {/* ========================= RIGHT: ADD STUDENTS ========================= */}
+              <GlassCard className="h-fit">
+                <div className="p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 rounded-xl bg-gradient-to-br from-blue-100 to-purple-100">
+                      <UserPlus className="w-5 h-5 text-blue-700" />
                     </div>
-                    <input
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      className="w-full rounded-2xl border-2 border-gray-300 bg-white/90 backdrop-blur-xl pl-11 pr-4 py-3 text-sm font-semibold text-gray-900 outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
-                      placeholder="Search by name, code, email..."
+                    <div>
+                      <h4 className="text-base font-black text-gray-900">Add Students</h4>
+                      <p className="text-xs text-gray-600">Filter by department/major and search</p>
+                    </div>
+                  </div>
+
+                  {/* ✅ FILTER DROPDOWNS - ONLY DEPT & MAJOR */}
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <FilterSelect
+                      icon={Building2}
+                      name="department_id"
+                      value={filters.department_id}
+                      onChange={(v) => handleFilterChange("department_id", v)}
+                      options={departments.map((d) => ({
+                        id: d.id,
+                        label: d.department_name || d.name || `Dept ${d.id}`,
+                      }))}
+                      placeholder="All Departments"
+                    />
+
+                    <FilterSelect
+                      icon={GraduationCap}
+                      name="major_id"
+                      value={filters.major_id}
+                      onChange={(v) => handleFilterChange("major_id", v)}
+                      options={majors.map((m) => ({
+                        id: m.id,
+                        label: m.major_name || m.name || `Major ${m.id}`,
+                      }))}
+                      placeholder="All Majors"
+                      disabled={!filters.department_id}
                     />
                   </div>
 
-                  <Button
-                    variant="primary"
-                    icon={Search}
-                    onClick={doSearch}
-                    loading={searching}
-                  >
-                    Search
-                  </Button>
-                </div>
-
-                {/* Search Results */}
-                <div className="max-h-[440px] overflow-y-auto pr-2 custom-scrollbar">
-                  {searching ? (
-                    <div className="flex items-center justify-center py-12">
-                      <Loader className="w-8 h-8 animate-spin text-blue-600" />
+                  {/* Clear Filters Button */}
+                  {hasActiveFilters && (
+                    <div className="mb-3">
+                      <Button
+                        variant="ghost"
+                        icon={X}
+                        onClick={clearFilters}
+                        className="w-full"
+                      >
+                        Clear All Filters
+                      </Button>
                     </div>
-                  ) : candidates.length === 0 ? (
-                    <EmptyState
-                      icon={Search}
-                      title="No search results"
-                      description="Filter by department/major and search by name, code, or email to find students"
-                    />
-                  ) : (
-                    <motion.div
-                      variants={animations.list}
-                      initial="hidden"
-                      animate="show"
-                      className="space-y-2"
-                    >
-                      {candidates.map((s, index) => {
-                        const studentId = s.id || s.student_id || index;
-                        const key = `candidate-${studentId}`;
-                        return (
-                          <StudentCard
-                            key={key}
-                            student={s}
-                            onAction={addStudent}
-                            actionLabel="Add"
-                            actionIcon={UserPlus}
-                            actionVariant="success"
-                          />
-                        );
-                      })}
-                    </motion.div>
                   )}
-                </div>
 
-                {/* Info Note */}
-                <div className="mt-4 p-3 rounded-xl bg-blue-50 border border-blue-200">
-                  <p className="text-xs text-blue-800 leading-relaxed">
-                    <span className="font-bold">💡 Tip:</span> Filter by department first, then select a major to narrow down your search. Students will be added to <strong>{group.academic_year} Semester {group.semester}</strong>.
-                  </p>
-                </div>
-              </div>
-            </GlassCard>
-          </div>
+                  {/* Search Input */}
+                  <div className="flex gap-2 mb-4">
+                    <div className="relative flex-1">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <Search className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <input
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        className="w-full rounded-2xl border-2 border-gray-300 bg-white/90 backdrop-blur-xl pl-11 pr-4 py-3 text-sm font-semibold text-gray-900 outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+                        placeholder="Search by name, code, email..."
+                      />
+                    </div>
 
-          {/* ========================= FOOTER ========================= */}
-          <div className="px-6 py-4 border-t-2 border-white/60 bg-white/60 flex justify-end flex-shrink-0">
-            <Button variant="secondary" onClick={onClose}>
-              Close
-            </Button>
-          </div>
+                    <Button
+                      variant="primary"
+                      icon={Search}
+                      onClick={doSearch}
+                      loading={searching}
+                    >
+                      Search
+                    </Button>
+                  </div>
+
+                  {/* Search Results */}
+                  <div className="max-h-[440px] overflow-y-auto pr-2 custom-scrollbar">
+                    {searching ? (
+                      <div className="flex items-center justify-center py-12">
+                        <Loader className="w-8 h-8 animate-spin text-blue-600" />
+                      </div>
+                    ) : candidates.length === 0 ? (
+                      <EmptyState
+                        icon={Search}
+                        title="No search results"
+                        description="Filter by department/major and search by name, code, or email to find students"
+                      />
+                    ) : (
+                      <motion.div
+                        variants={animations.list}
+                        initial="hidden"
+                        animate="show"
+                        className="space-y-2"
+                      >
+                        {candidates.map((s, index) => {
+                          const studentId = s.id || s.student_id || index;
+                          const key = `candidate-${studentId}`;
+                          return (
+                            <StudentCard
+                              key={key}
+                              student={s}
+                              onAction={addStudent}
+                              actionLabel="Add"
+                              actionIcon={UserPlus}
+                              actionVariant="success"
+                            />
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </div>
+
+                  {/* Info Note */}
+                  <div className="mt-4 p-3 rounded-xl bg-blue-50 border border-blue-200">
+                    <p className="text-xs text-blue-800 leading-relaxed">
+                      <span className="font-bold">💡 Tip:</span> Filter by department first, then select a major to narrow down your search. Students will be added to <strong>{group.academic_year} Semester {group.semester}</strong>.
+                    </p>
+                  </div>
+                </div>
+              </GlassCard>
+            </div>
+
+            {/* ========================= FOOTER ========================= */}
+            <div className="px-6 py-4 border-t-2 border-white/60 bg-white/60 flex justify-end flex-shrink-0">
+              <Button variant="secondary" onClick={onClose}>
+                Close
+              </Button>
+            </div>
+          </motion.div>
         </motion.div>
-
-
-      </motion.div>
-    </AnimatePresence>
+      )}
+    </AnimatePresence>,
+    document.body
   );
 };
 

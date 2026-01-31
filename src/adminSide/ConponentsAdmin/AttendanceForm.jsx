@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Alert from "../../gobalConponent/Alert.jsx";
 import {
   createClassSession,
   markAttendance,
@@ -162,8 +163,8 @@ const AttendanceForm = ({ onUpdate, courses, students, sessions }) => {
             type="button"
             onClick={() => setMode("session")}
             className={`flex-1 py-2.5 sm:py-3 px-3 sm:px-6 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 ${mode === "session"
-                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/30 scale-105"
-                : "text-gray-600 hover:bg-white/60 hover:text-gray-800"
+              ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/30 scale-105"
+              : "text-gray-600 hover:bg-white/60 hover:text-gray-800"
               }`}
           >
             📅 Create Class Session
@@ -172,8 +173,8 @@ const AttendanceForm = ({ onUpdate, courses, students, sessions }) => {
             type="button"
             onClick={() => setMode("attendance")}
             className={`flex-1 py-2.5 sm:py-3 px-3 sm:px-6 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 ${mode === "attendance"
-                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-purple-500/30 scale-105"
-                : "text-gray-600 hover:bg-white/60 hover:text-gray-800"
+              ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-purple-500/30 scale-105"
+              : "text-gray-600 hover:bg-white/60 hover:text-gray-800"
               }`}
           >
             ✓ Mark Attendance
@@ -203,14 +204,18 @@ const AttendanceForm = ({ onUpdate, courses, students, sessions }) => {
       </motion.div>
 
       {/* Alerts - Responsive */}
-      <AnimatePresence>
-        {success && (
-          <Alert type="success" message={`${mode === "session" ? "Class session created" : "Attendance marked"} successfully! 🎉`} />
-        )}
-        {error && (
-          <Alert type="error" message={error} onClose={() => setError(null)} />
-        )}
-      </AnimatePresence>
+      <Alert
+        isOpen={success}
+        type="success"
+        message={`${mode === "session" ? "Class session created" : "Attendance marked"} successfully! 🎉`}
+        onClose={() => setSuccess(false)}
+      />
+      <Alert
+        isOpen={!!error}
+        type="error"
+        message={error}
+        onClose={() => setError(null)}
+      />
 
       {/* Forms - AnimatePresence for smooth transitions */}
       <AnimatePresence mode="wait">
@@ -241,32 +246,6 @@ const AttendanceForm = ({ onUpdate, courses, students, sessions }) => {
 
 /* ================== SUB-COMPONENTS ================== */
 
-const Alert = ({ type, message, onClose }) => (
-  <motion.div
-    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-    transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-    className={`flex items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl sm:rounded-2xl border shadow-md ${type === "success"
-        ? "bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200"
-        : "bg-gradient-to-r from-red-50 to-rose-50 border-red-200"
-      }`}
-  >
-    {type === "success" ? (
-      <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 flex-shrink-0" />
-    ) : (
-      <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 flex-shrink-0" />
-    )}
-    <p className={`text-xs sm:text-sm font-medium flex-1 ${type === "success" ? "text-emerald-800" : "text-red-800"}`}>
-      {message}
-    </p>
-    {onClose && (
-      <button onClick={onClose} className="text-red-600 hover:text-red-800 transition-colors flex-shrink-0">
-        <X className="w-4 h-4 sm:w-5 sm:h-5" />
-      </button>
-    )}
-  </motion.div>
-);
 
 const SessionFormSection = ({ onSubmit, form, setForm, loading, courses }) => (
   <motion.div

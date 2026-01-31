@@ -16,6 +16,8 @@ import { fetchSubjects } from "../../api/subject_api.jsx";
 import { fetchDepartments } from "../../api/department_api.jsx";
 import { createMajorSubjectsBulk } from "../../api/major_subject_api.jsx";
 import { getCachedDepartments, getCachedMajors, getCachedSubjects } from "../../utils/dataCache";
+import Alert from "../../gobalConponent/Alert.jsx";
+import { AnimatePresence } from "framer-motion";
 
 /* ================= ANIMATION ================= */
 
@@ -75,7 +77,7 @@ const MajorSubjectsForm = ({ onSuccess }) => {
   const [subjects, setSubjects] = useState([]);
   const [form, setForm] = useState(empty);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
 
   /* ================= LOAD DATA (FIXED: Sequential with caching) ================= */
 
@@ -151,7 +153,7 @@ const MajorSubjectsForm = ({ onSuccess }) => {
       }
       return { ...prev, [key]: value };
     });
-    setError("");
+    setAlert({ show: false, message: "", type: "error" });
   };
 
   const toggleSubject = (id) => {
@@ -161,12 +163,12 @@ const MajorSubjectsForm = ({ onSuccess }) => {
         ? prev.subject_ids.filter((x) => x !== id)
         : [...prev.subject_ids, id],
     }));
-    setError("");
+    setAlert({ show: false, message: "", type: "error" });
   };
 
   const clearForm = () => {
     setForm(empty);
-    setError("");
+    setAlert({ show: false, message: "", type: "error" });
   };
 
   /* ================= SUBMIT ================= */
@@ -174,10 +176,10 @@ const MajorSubjectsForm = ({ onSuccess }) => {
   const submit = async (e) => {
     e.preventDefault();
 
-    if (!form.department_id) return setError("Department is required.");
-    if (!form.major_id) return setError("Major is required.");
+    if (!form.department_id) return setAlert({ show: true, message: "Department is required.", type: "error" });
+    if (!form.major_id) return setAlert({ show: true, message: "Major is required.", type: "error" });
     if (!form.subject_ids || form.subject_ids.length === 0)
-      return setError("Select at least one subject.");
+      return setAlert({ show: true, message: "Select at least one subject.", type: "error" });
 
     const payload = {
       major_id: Number(form.major_id),
@@ -199,7 +201,7 @@ const MajorSubjectsForm = ({ onSuccess }) => {
         (err?.response?.data?.errors
           ? Object.values(err.response.data.errors).flat().join(", ")
           : "Failed to assign subjects to major");
-      setError(msg);
+      setAlert({ show: true, message: msg, type: "error" });
     } finally {
       setSaving(false);
     }
@@ -214,7 +216,7 @@ const MajorSubjectsForm = ({ onSuccess }) => {
       animate="show"
       className="relative overflow-hidden rounded-3xl border border-white/60 bg-white/55 backdrop-blur-2xl shadow-[0_22px_70px_-30px_rgba(15,23,42,0.35)] p-6 md:p-7"
     >
- 
+
 
       {/* HEADER */}
       <div className="relative flex items-start justify-between gap-4 mb-5">
@@ -250,9 +252,13 @@ const MajorSubjectsForm = ({ onSuccess }) => {
         </div>
       )}
 
-      {error && (
-        <div className="relative mb-4 p-3 rounded-2xl bg-red-50/80 border border-red-200 text-sm text-red-700">
-          {error}
+      {alert.show && (
+        <div className="mb-4">
+          <Alert
+            type={alert.type}
+            message={alert.message}
+            onClose={() => setAlert({ ...alert, show: false })}
+          />
         </div>
       )}
 
@@ -373,18 +379,16 @@ const MajorSubjectsForm = ({ onSuccess }) => {
                         key={s.id}
                         type="button"
                         onClick={() => toggleSubject(s.id)}
-                        className={`text-left flex items-start gap-3 p-3 rounded-2xl border transition-all ${
-                          checked
-                            ? "bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 shadow-sm"
-                            : "bg-white/80 border-gray-200 hover:bg-white"
-                        }`}
+                        className={`text-left flex items-start gap-3 p-3 rounded-2xl border transition-all ${checked
+                          ? "bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 shadow-sm"
+                          : "bg-white/80 border-gray-200 hover:bg-white"
+                          }`}
                       >
                         <span
-                          className={`mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md border ${
-                            checked
-                              ? "bg-blue-600 border-blue-600 text-white"
-                              : "bg-white border-gray-300 text-transparent"
-                          }`}
+                          className={`mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md border ${checked
+                            ? "bg-blue-600 border-blue-600 text-white"
+                            : "bg-white border-gray-300 text-transparent"
+                            }`}
                         >
                           ✓
                         </span>

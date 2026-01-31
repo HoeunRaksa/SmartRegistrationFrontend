@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, Download, Users, AlertCircle, CheckCircle, X, FileSpreadsheet } from 'lucide-react';
 import axios from 'axios';
+import Alert from '../../gobalConponent/Alert.jsx';
+import { AnimatePresence } from 'framer-motion';
 
 const BulkEnrollmentPage = () => {
     const [file, setFile] = useState(null);
     const [courseId, setCourseId] = useState('');
     const [uploading, setUploading] = useState(false);
     const [result, setResult] = useState(null);
+    const [alert, setAlert] = useState({ show: false, message: '', type: 'error' });
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
@@ -17,7 +20,7 @@ const BulkEnrollmentPage = () => {
                 setFile(selectedFile);
                 setResult(null);
             } else {
-                alert('Please select a CSV or Excel file');
+                setAlert({ show: true, message: 'Please select a CSV or Excel file', type: 'error' });
             }
         }
     };
@@ -37,13 +40,13 @@ const BulkEnrollmentPage = () => {
             link.remove();
         } catch (error) {
             console.error('Download failed:', error);
-            alert('Failed to download template');
+            setAlert({ show: true, message: 'Failed to download template', type: 'error' });
         }
     };
 
     const handleUpload = async () => {
         if (!file || !courseId) {
-            alert('Please select a file and enter course ID');
+            setAlert({ show: true, message: 'Please select a file and enter course ID', type: 'error' });
             return;
         }
 
@@ -81,6 +84,13 @@ const BulkEnrollmentPage = () => {
 
     return (
         <div className="space-y-6">
+            <Alert
+                isOpen={alert.show}
+                type={alert.type}
+                message={alert.message}
+                onClose={() => setAlert({ ...alert, show: false })}
+            />
+
             <div className="rounded-3xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-xl p-6">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
@@ -144,8 +154,8 @@ const BulkEnrollmentPage = () => {
                         onClick={handleUpload}
                         disabled={uploading || !file || !courseId}
                         className={`w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold transition-all ${uploading || !file || !courseId
-                                ? 'bg-blue-400 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:shadow-lg'
+                            ? 'bg-blue-400 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:shadow-lg'
                             }`}
                     >
                         <Upload className="w-5 h-5" />
@@ -158,8 +168,8 @@ const BulkEnrollmentPage = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className={`mt-6 p-4 rounded-xl border ${result.success
-                                ? 'bg-green-50 border-green-200'
-                                : 'bg-red-50 border-red-200'
+                            ? 'bg-green-50 border-green-200'
+                            : 'bg-red-50 border-red-200'
                             }`}
                     >
                         <div className="flex items-start gap-3">

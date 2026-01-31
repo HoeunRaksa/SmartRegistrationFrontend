@@ -10,6 +10,9 @@ import {
   deleteTeacherAssignment
 } from '../../api/teacher_api';
 import FormModal from '../../Components/FormModal';
+import Alert from '../../gobalConponent/Alert.jsx';
+import ConfirmDialog from '../../gobalConponent/ConfirmDialog.jsx';
+import { AnimatePresence } from 'framer-motion';
 
 const AssignmentsPage = () => {
   const navigate = useNavigate();
@@ -21,6 +24,8 @@ const AssignmentsPage = () => {
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [showSubmissionsModal, setShowSubmissionsModal] = useState(false);
   const [submissions, setSubmissions] = useState([]);
+  const [alert, setAlert] = useState({ show: false, message: '', type: 'error' });
+  const [confirm, setConfirm] = useState({ show: false, id: null });
 
   useEffect(() => {
     loadData();
@@ -66,7 +71,7 @@ const AssignmentsPage = () => {
       setShowSubmissionsModal(true);
     } catch (error) {
       console.error('Failed to load submissions:', error);
-      alert('Failed to load submissions');
+      setAlert({ show: true, message: 'Failed to load submissions', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -79,20 +84,43 @@ const AssignmentsPage = () => {
   };
 
   const handleDeleteAssignment = async (assignmentId) => {
-    if (!confirm('Are you sure you want to delete this assignment?')) return;
+    setConfirm({ show: true, id: assignmentId });
+  };
+
+  const executeDelete = async () => {
+    if (!confirm.id) return;
 
     try {
-      await deleteTeacherAssignment(assignmentId);
-      alert('Assignment deleted successfully');
+      await deleteTeacherAssignment(confirm.id);
+      setAlert({ show: true, message: 'Assignment deleted successfully', type: 'success' });
       loadData();
     } catch (error) {
       console.error('Failed to delete assignment:', error);
-      alert('Failed to delete assignment');
+      setAlert({ show: true, message: 'Failed to delete assignment', type: 'error' });
+    } finally {
+      setConfirm({ show: false, id: null });
     }
   };
 
   return (
     <div className="min-h-screen px-4 md:px-6 pb-8">
+      <Alert
+        isOpen={alert.show}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert({ ...alert, show: false })}
+      />
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this assignment? This action cannot be undone."
+        onConfirm={executeDelete}
+        onCancel={() => setConfirm({ show: false, id: null })}
+        confirmText="Delete"
+        type="danger"
+      />
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -347,7 +375,9 @@ const CreateAssignmentForm = ({ courses, onCreated, onClose }) => {
       onCreated();
       onClose();
     } catch (error) {
-      alert('Failed to create assignment');
+      // In a real app we'd pass this up to the parent via onCreated or another prop
+      // For now we'll just log it or we could add a local alert here too
+      console.error('Failed to create assignment:', error);
     } finally {
       setLoading(false);
     }

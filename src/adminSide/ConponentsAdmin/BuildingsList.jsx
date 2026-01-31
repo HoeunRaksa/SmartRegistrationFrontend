@@ -1,17 +1,32 @@
 import { motion } from "framer-motion";
 import { deleteBuilding } from "../../api/building_api.jsx";
 import { Building, Trash2, Edit, Hash, MapPin, Layers, CheckCircle, XCircle } from "lucide-react";
+import ConfirmDialog from "../../gobalConponent/ConfirmDialog.jsx";
+import Alert from "../../gobalConponent/Alert.jsx";
+import { useState } from "react";
 
 const BuildingsList = ({ buildings, onEdit, onRefresh }) => {
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this building?")) return;
+  const [confirm, setConfirm] = useState({ show: false, id: null });
+  const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
 
+  const handleDelete = (id) => {
+    setConfirm({ show: true, id });
+  };
+
+  const executeDelete = async () => {
+    if (!confirm.id) return;
     try {
-      await deleteBuilding(id);
+      await deleteBuilding(confirm.id);
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error("Failed to delete building:", err);
-      alert(err.response?.data?.message || "Failed to delete building");
+      setAlert({
+        show: true,
+        message: err.response?.data?.message || "Failed to delete building",
+        type: "error"
+      });
+    } finally {
+      setConfirm({ show: false, id: null });
     }
   };
 
@@ -19,8 +34,14 @@ const BuildingsList = ({ buildings, onEdit, onRefresh }) => {
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-white/40 border border-white/40 shadow-lg overflow-hidden"
+      className="rounded-2xl bg-white/40 border border-white/40 shadow-lg overflow-hidden relative"
     >
+      <Alert
+        isOpen={alert.show}
+        message={alert.message}
+        type={alert.type}
+        onClose={() => setAlert({ ...alert, show: false })}
+      />
       <div className="flex items-center justify-between p-5 border-b border-gray-200">
         <div className="flex items-center gap-2">
           <Building className="w-5 h-5 text-blue-600" />
@@ -62,6 +83,16 @@ const BuildingsList = ({ buildings, onEdit, onRefresh }) => {
           </table>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this building? This action cannot be undone."
+        onConfirm={executeDelete}
+        onCancel={() => setConfirm({ show: false, id: null })}
+        confirmText="Delete"
+        type="danger"
+      />
     </motion.div>
   );
 };

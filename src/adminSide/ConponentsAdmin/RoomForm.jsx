@@ -14,6 +14,7 @@ import {
   FileText,
   Tag,
 } from "lucide-react";
+import Alert from "../../gobalConponent/Alert";
 
 const INITIAL_FORM_STATE = {
   building_id: "",
@@ -51,8 +52,7 @@ const FACILITY_OPTIONS = [
 const RoomForm = ({ onUpdate, onSuccess, editingRoom, onCancel, buildings }) => {
   const [form, setForm] = useState(INITIAL_FORM_STATE);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState(null);
+  const [alert, setAlert] = useState({ show: false, message: "", type: "success" });
 
   const isEditMode = !!editingRoom;
 
@@ -75,7 +75,7 @@ const RoomForm = ({ onUpdate, onSuccess, editingRoom, onCancel, buildings }) => 
 
   const resetForm = () => {
     setForm(INITIAL_FORM_STATE);
-    setError(null);
+    setAlert({ show: false, message: "", type: "success" });
     if (onCancel) onCancel();
   };
 
@@ -85,7 +85,7 @@ const RoomForm = ({ onUpdate, onSuccess, editingRoom, onCancel, buildings }) => 
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
-    setError(null);
+    setAlert({ ...alert, show: false });
   };
 
   const handleFacilityToggle = (facility) => {
@@ -100,8 +100,7 @@ const RoomForm = ({ onUpdate, onSuccess, editingRoom, onCancel, buildings }) => 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
-    setSuccess(false);
+    setAlert({ ...alert, show: false });
 
     try {
       const submitData = {
@@ -116,13 +115,13 @@ const RoomForm = ({ onUpdate, onSuccess, editingRoom, onCancel, buildings }) => 
       };
 
       if (!submitData.building_id || isNaN(submitData.building_id)) {
-        setError("Please select a building");
+        setAlert({ show: true, message: "Please select a building", type: "error" });
         setLoading(false);
         return;
       }
 
       if (!submitData.room_number) {
-        setError("Room number is required");
+        setAlert({ show: true, message: "Room number is required", type: "error" });
         setLoading(false);
         return;
       }
@@ -134,12 +133,14 @@ const RoomForm = ({ onUpdate, onSuccess, editingRoom, onCancel, buildings }) => 
       }
 
       resetForm();
-      setSuccess(true);
+      setAlert({
+        show: true,
+        message: `Room ${isEditMode ? "updated" : "created"} successfully!`,
+        type: "success"
+      });
 
       if (onSuccess) onSuccess();
       if (onUpdate) onUpdate();
-
-      setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       let errorMessage = "Failed to save room";
       if (err.response?.data) {
@@ -149,7 +150,7 @@ const RoomForm = ({ onUpdate, onSuccess, editingRoom, onCancel, buildings }) => 
       } else if (err.message) {
         errorMessage = err.message;
       }
-      setError(errorMessage);
+      setAlert({ show: true, message: errorMessage, type: "error" });
     } finally {
       setLoading(false);
     }
@@ -164,12 +165,16 @@ const RoomForm = ({ onUpdate, onSuccess, editingRoom, onCancel, buildings }) => 
 
   return (
     <div className="space-y-4">
-      <AnimatePresence>
-        {success && (
-          <Alert type="success" message={`Room ${isEditMode ? "updated" : "created"} successfully!`} />
-        )}
-        {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
-      </AnimatePresence>
+      <div className="z-50 container mx-auto flex justify-center sticky top-0 h-0">
+        <div className="w-full max-w-md mt-4">
+          <Alert
+            show={alert.show}
+            type={alert.type}
+            message={alert.message}
+            onClose={() => setAlert({ ...alert, show: false })}
+          />
+        </div>
+      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 24 }}
@@ -260,8 +265,8 @@ const RoomForm = ({ onUpdate, onSuccess, editingRoom, onCancel, buildings }) => 
                 <label
                   key={facility}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all ${form.facilities.includes(facility)
-                      ? "bg-blue-100 border-blue-300 text-blue-700"
-                      : "bg-white border-gray-200 text-gray-700 hover:border-blue-200"
+                    ? "bg-blue-100 border-blue-300 text-blue-700"
+                    : "bg-white border-gray-200 text-gray-700 hover:border-blue-200"
                     }`}
                 >
                   <input
@@ -294,32 +299,6 @@ const RoomForm = ({ onUpdate, onSuccess, editingRoom, onCancel, buildings }) => 
     </div>
   );
 };
-
-/* ================== SUB-COMPONENTS ================== */
-
-const Alert = ({ type, message, onClose }) => (
-  <motion.div
-    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.95 }}
-    className={`flex items-center gap-3 p-4 rounded-2xl border shadow-sm ${type === "success" ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
-      }`}
-  >
-    {type === "success" ? (
-      <CheckCircle2 className="w-5 h-5 text-green-600" />
-    ) : (
-      <AlertCircle className="w-5 h-5 text-red-600" />
-    )}
-    <p className={`text-sm font-medium ${type === "success" ? "text-green-800" : "text-red-800"}`}>
-      {message}
-    </p>
-    {onClose && (
-      <button onClick={onClose} className="ml-auto text-red-600 hover:text-red-800">
-        <X className="w-4 h-4" />
-      </button>
-    )}
-  </motion.div>
-);
 
 const FormHeader = ({ isEditMode, onCancel }) => (
   <div className="flex items-center justify-between mb-4">

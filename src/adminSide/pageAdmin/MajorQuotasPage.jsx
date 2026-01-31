@@ -172,68 +172,6 @@ const GhostButton = ({ children, onClick, disabled, icon: Icon, className = "" }
 );
 
 /* ================== MODALS ================== */
-const ConfirmModal = ({ show, title, message, confirmText = "Confirm", onConfirm, onCancel, loading }) => {
-  if (!show) return null;
-  return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-        onClick={!loading ? onCancel : undefined}
-      >
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          onClick={(e) => e.stopPropagation()}
-          className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full border border-white/60"
-        >
-          <div className="flex items-start gap-3 mb-4">
-            <div className="p-2 bg-red-100 rounded-xl">
-              <AlertCircle className="w-6 h-6 text-red-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-gray-900">{title}</h3>
-              <p className="text-sm text-gray-600 mt-1">{message}</p>
-            </div>
-            <button onClick={onCancel} disabled={loading} className="text-gray-500 hover:text-gray-800">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={onCancel}
-              disabled={loading}
-              className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-colors disabled:opacity-60"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={onConfirm}
-              disabled={loading}
-              className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <Loader className="w-4 h-4 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="w-4 h-4" />
-                  {confirmText}
-                </>
-              )}
-            </button>
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-  );
-};
 
 const EditQuotaModal = ({
   show,
@@ -617,11 +555,18 @@ const MajorQuotasPage = () => {
         ))}
       </div>
 
-      {/* ================= ALERTS ================= */}
-      <AnimatePresence>
-        {success && <Alert type="success" message={success} onClose={() => setSuccess(null)} />}
-        {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
-      </AnimatePresence>
+      <Alert
+        isOpen={!!success}
+        type="success"
+        message={success}
+        onClose={() => setSuccess(null)}
+      />
+      <Alert
+        isOpen={!!error}
+        type="error"
+        message={error}
+        onClose={() => setError(null)}
+      />
 
       {/* ================= CREATE / UPSERT FORM MODAL ================= */}
       <FormModal
@@ -984,18 +929,17 @@ const MajorQuotasPage = () => {
       />
 
       {/* ================= DELETE MODAL ================= */}
-      <ConfirmModal
-        show={deleteOpen}
-        title="Delete Major Quota"
-        message={`Are you sure you want to delete quota ID ${quotaToDelete?.id ?? ""}? This cannot be undone.`}
-        confirmText="Delete"
+      <ConfirmDialog
+        isOpen={deleteOpen}
+        title="Confirm Delete"
+        message={`Are you sure you want to delete this quota? This will reset the seat limit and time window for this major.`}
         onConfirm={confirmDelete}
         onCancel={() => {
-          if (deleting) return;
           setDeleteOpen(false);
           setQuotaToDelete(null);
         }}
-        loading={deleting}
+        confirmText={deleting ? "Deleting..." : "Delete"}
+        type="danger"
       />
     </div>
   );

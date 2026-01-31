@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { UserPlus, UserCheck, Search, Users, Shield, MessageSquare, Plus, Clock, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import API from "../../api/index";
+import Alert from "../../gobalConponent/Alert.jsx";
 
 const FriendsPage = () => {
     const [friends, setFriends] = useState([]);
@@ -9,6 +10,7 @@ const FriendsPage = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(false);
     const [searching, setSearching] = useState(false);
+    const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
 
     useEffect(() => {
         loadPotentialFriends();
@@ -39,15 +41,27 @@ const FriendsPage = () => {
     const sendFriendRequest = async (studentId) => {
         try {
             await API.post("/social/friend-requests", { receiver_id: studentId });
-            alert("Friend request sent!");
+            setAlert({ show: true, message: "Friend request sent!", type: "success" });
             // Optionally refresh to show status
         } catch (err) {
-            alert(err.response?.data?.message || "Failed to send request");
+            setAlert({ show: true, message: err.response?.data?.message || "Failed to send request", type: "error" });
         }
     };
 
     return (
         <div className="min-h-screen space-y-8 pb-20">
+            <AnimatePresence>
+                {alert.show && (
+                    <div className="fixed top-20 right-5 z-[9999] w-80">
+                        <Alert
+                            type={alert.type}
+                            message={alert.message}
+                            onClose={() => setAlert({ ...alert, show: false })}
+                        />
+                    </div>
+                )}
+            </AnimatePresence>
+
             {/* Search Section */}
             <section className="bg-white/60 backdrop-blur-xl rounded-[2.5rem] p-8 border border-white/40 shadow-2xl">
                 <div className="max-w-2xl mx-auto text-center space-y-4 mb-8">

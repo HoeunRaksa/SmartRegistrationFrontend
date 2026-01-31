@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import userSettingsApi from "../api/setting_api.jsx";
 import profileFallback from "../assets/images/profile.png";
+import Alert from "./Alert.jsx";
+import ConfirmDialog from "./ConfirmDialog.jsx";
 
 const SettingPage = () => {
   const [user, setUser] = useState(null);
@@ -51,7 +53,8 @@ const SettingPage = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // UI states
-  const [message, setMessage] = useState({ type: "", text: "" });
+  const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
+  const [confirm, setConfirm] = useState({ show: false, title: "", message: "", action: null });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -93,8 +96,7 @@ const SettingPage = () => {
   };
 
   const showMessage = (type, text) => {
-    setMessage({ type, text });
-    setTimeout(() => setMessage({ type: "", text: "" }), 5000);
+    setAlert({ show: true, message: text, type });
   };
 
   const handleImageChange = (e) => {
@@ -139,27 +141,32 @@ const SettingPage = () => {
     }
   };
 
-  const handleDeleteImage = async () => {
-    if (!window.confirm("Are you sure you want to remove your profile picture?")) return;
+  const handleDeleteImage = () => {
+    setConfirm({
+      show: true,
+      title: "Remove Profile Picture",
+      message: "Are you sure you want to remove your profile picture?",
+      action: async () => {
+        try {
+          setIsSubmitting(true);
+          const response = await userSettingsApi.deleteProfilePicture();
+          const updatedUser = response.data.user;
 
-    try {
-      setIsSubmitting(true);
-      const response = await userSettingsApi.deleteProfilePicture();
-      const updatedUser = response.data.user;
+          setUser(updatedUser);
+          localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+          if (previewUrl) URL.revokeObjectURL(previewUrl);
+          setPreviewUrl(null);
 
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
-
-      showMessage("success", "Profile picture removed successfully!");
-      setTimeout(() => window.location.reload(), 1500);
-    } catch (error) {
-      showMessage("error", "Failed to delete profile picture");
-    } finally {
-      setIsSubmitting(false);
-    }
+          showMessage("success", "Profile picture removed successfully!");
+          setTimeout(() => window.location.reload(), 1500);
+        } catch (error) {
+          showMessage("error", "Failed to delete profile picture");
+        } finally {
+          setIsSubmitting(false);
+        }
+      }
+    });
   };
 
   const handleUpdateName = async (e) => {
@@ -297,30 +304,28 @@ const SettingPage = () => {
 
   return (
     <div className="min-h-screen space-y-6">
-   
+
 
       {/* MESSAGE ALERT */}
-      <AnimatePresence>
-        {message.text && (
-          <motion.div
-            initial={{ opacity: 0, y: -16, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -16, scale: 0.98 }}
-            className={`rounded-2xl p-4 border shadow-lg flex items-center gap-3 backdrop-blur-2xl ${
-              message.type === "success" ? "border-green-200/50 bg-green-50/60" : "border-red-200/50 bg-red-50/60"
-            }`}
-          >
-            {message.type === "success" ? (
-              <CheckCircle className="w-5 h-5 text-green-600" />
-            ) : (
-              <AlertCircle className="w-5 h-5 text-red-600" />
-            )}
-            <p className={`font-medium ${message.type === "success" ? "text-green-700" : "text-red-700"}`}>
-              {message.text}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Alert
+        isOpen={alert.show}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert({ ...alert, show: false })}
+      />
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title={confirm.title}
+        message={confirm.message}
+        onConfirm={async () => {
+          if (confirm.action) await confirm.action();
+          setConfirm({ ...confirm, show: false });
+        }}
+        onCancel={() => setConfirm({ ...confirm, show: false })}
+        confirmText="Confirm"
+        type="danger"
+      />
 
       {/* TABS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -334,11 +339,10 @@ const SettingPage = () => {
               whileHover={{ scale: 1.015, y: -3 }}
               whileTap={{ scale: 0.985 }}
               onClick={() => setActiveTab(tab.id)}
-              className={`relative overflow-hidden p-6 rounded-2xl border transition-all text-left ${
-                isActive
-                  ? "bg-gradient-to-br from-blue-600 to-purple-600 text-white border-transparent shadow-xl"
-                  : "bg-white/50 backdrop-blur-2xl border-white/30 text-gray-700 hover:border-blue-300/50 shadow-md"
-              }`}
+              className={`relative overflow-hidden p-6 rounded-2xl border transition-all text-left ${isActive
+                ? "bg-gradient-to-br from-blue-600 to-purple-600 text-white border-transparent shadow-xl"
+                : "bg-white/50 backdrop-blur-2xl border-white/30 text-gray-700 hover:border-blue-300/50 shadow-md"
+                }`}
             >
               <div className="flex items-start gap-3">
                 <div className={`p-2.5 rounded-2xl ${isActive ? "bg-white/15" : "bg-blue-500/10"}`}>

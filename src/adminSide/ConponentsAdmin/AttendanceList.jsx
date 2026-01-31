@@ -12,6 +12,10 @@ import {
   Clock,
   AlertCircle,
 } from "lucide-react";
+import ConfirmDialog from "../../gobalConponent/ConfirmDialog.jsx";
+import { useState } from "react";
+import Alert from "../../gobalConponent/Alert.jsx";
+import { AnimatePresence } from "framer-motion";
 
 /* ================== ANIMATION VARIANTS ================== */
 
@@ -29,15 +33,23 @@ const animations = {
 /* ================== COMPONENT ================== */
 
 const AttendanceList = ({ attendance, onEdit, onRefresh }) => {
-  const handleStatusChange = async (id, newStatus) => {
-    if (!window.confirm(`Change status to ${newStatus}?`)) return;
+  const [confirm, setConfirm] = useState({ show: false, id: null, nextStatus: null });
+  const [alert, setAlert] = useState({ show: false, message: "", type: "error" });
 
+  const handleStatusChange = (id, newStatus) => {
+    setConfirm({ show: true, id, nextStatus: newStatus });
+  };
+
+  const executeStatusChange = async () => {
+    if (!confirm.id || !confirm.nextStatus) return;
     try {
-      await updateAttendance(id, { status: newStatus });
+      await updateAttendance(confirm.id, { status: confirm.nextStatus });
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error("Failed to update attendance:", err);
-      alert(err.response?.data?.message || "Failed to update attendance");
+      setAlert({ show: true, message: err.response?.data?.message || "Failed to update attendance", type: "error" });
+    } finally {
+      setConfirm({ show: false, id: null, nextStatus: null });
     }
   };
 
@@ -102,6 +114,28 @@ const AttendanceList = ({ attendance, onEdit, onRefresh }) => {
           </table>
         </div>
       )}
+
+      <AnimatePresence>
+        {alert.show && (
+          <div className="fixed top-20 right-5 z-[9999] w-80">
+            <Alert
+              type={alert.type}
+              message={alert.message}
+              onClose={() => setAlert({ ...alert, show: false })}
+            />
+          </div>
+        )}
+      </AnimatePresence>
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title="Change Attendance Status"
+        message={`Are you sure you want to change this student's status to ${confirm.nextStatus}?`}
+        onConfirm={executeStatusChange}
+        onCancel={() => setConfirm({ show: false, id: null, nextStatus: null })}
+        confirmText="Change Status"
+        type="info"
+      />
     </motion.div>
   );
 };

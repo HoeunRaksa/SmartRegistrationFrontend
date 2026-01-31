@@ -1,20 +1,8 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  createGrade,
-  updateGrade,
-} from "../../api/admin_course_api.jsx";
-import {
-  Award,
-  X,
-  CheckCircle2,
-  AlertCircle,
-  Sparkles,
-  User,
-  BookOpen,
-  Hash,
-  FileText,
-} from "lucide-react";
+import { motion } from "framer-motion";
+import { createGrade, updateGrade } from "../../api/admin_course_api.jsx";
+import { Award, X, Sparkles, User, BookOpen, Hash, FileText, CheckCircle2 } from "lucide-react";
+import Alert from "../../gobalConponent/Alert.jsx";
 
 /* ================== CONSTANTS ================== */
 
@@ -155,14 +143,18 @@ const GradeForm = ({ onUpdate, editingGrade, onCancel, students, courses }) => {
 
   return (
     <div className="space-y-4">
-      <AnimatePresence>
-        {success && (
-          <Alert type="success" message={`Grade ${isEditMode ? "updated" : "created"} successfully!`} />
-        )}
-        {error && (
-          <Alert type="error" message={error} onClose={() => setError(null)} />
-        )}
-      </AnimatePresence>
+      <Alert
+        isOpen={success}
+        type="success"
+        message={`Grade ${isEditMode ? "updated" : "created"} successfully!`}
+        onClose={() => setSuccess(false)}
+      />
+      <Alert
+        isOpen={!!error}
+        type="error"
+        message={error}
+        onClose={() => setError(null)}
+      />
 
       <FormSection
         isEditMode={isEditMode}
@@ -180,31 +172,7 @@ const GradeForm = ({ onUpdate, editingGrade, onCancel, students, courses }) => {
 
 /* ================== SUB-COMPONENTS ================== */
 
-const Alert = ({ type, message, onClose }) => (
-  <motion.div
-    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.95 }}
-    className={`flex items-center gap-3 p-4 rounded-2xl border shadow-sm ${type === "success"
-      ? "bg-green-50 border-green-200"
-      : "bg-red-50 border-red-200"
-      }`}
-  >
-    {type === "success" ? (
-      <CheckCircle2 className="w-5 h-5 text-green-600" />
-    ) : (
-      <AlertCircle className="w-5 h-5 text-red-600" />
-    )}
-    <p className={`text-sm font-medium ${type === "success" ? "text-green-800" : "text-red-800"}`}>
-      {message}
-    </p>
-    {onClose && (
-      <button onClick={onClose} className="ml-auto text-red-600 hover:text-red-800">
-        <X className="w-4 h-4" />
-      </button>
-    )}
-  </motion.div>
-);
+
 
 const FormSection = ({ isEditMode, onCancel, onSubmit, form, setForm, loading, students, courses }) => (
   <motion.div

@@ -1,9 +1,11 @@
 import React, { useMemo, useState } from "react";
 import { RefreshCcw, Pencil, Trash2, Search, BookOpen, User, Calendar, GraduationCap, Hash } from "lucide-react";
 import { motion } from "framer-motion";
+import ConfirmDialog from "../../gobalConponent/ConfirmDialog.jsx";
 
 const CoursesList = ({ loading, courses, onEdit, onDelete, onRefresh }) => {
   const [q, setQ] = useState("");
+  const [confirm, setConfirm] = useState({ show: false, id: null, name: "" });
 
   // ✅ build course name safely (frontend fallback)
   const buildCourseName = (c) => {
@@ -272,9 +274,7 @@ const CoursesList = ({ loading, courses, onEdit, onDelete, onRefresh }) => {
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => {
-                          if (confirm("Delete this course?")) {
-                            onDelete?.(c.id);
-                          }
+                          setConfirm({ show: true, id: c.id, name: buildCourseName(c) });
                         }}
                         className="p-2 rounded-lg bg-red-100 hover:bg-red-200 transition-colors"
                         type="button"
@@ -289,6 +289,19 @@ const CoursesList = ({ loading, courses, onEdit, onDelete, onRefresh }) => {
           </tbody>
         </table>
       </div>
+
+      <ConfirmDialog
+        isOpen={confirm.show}
+        title="Delete Course"
+        message={`Are you sure you want to delete the course "${confirm.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        type="danger"
+        onConfirm={() => {
+          onDelete?.(confirm.id);
+          setConfirm({ show: false, id: null, name: "" });
+        }}
+        onCancel={() => setConfirm({ show: false, id: null, name: "" })}
+      />
 
       {/* Footer */}
       <div className="px-5 py-3 border-t border-gray-200 bg-white/60">
