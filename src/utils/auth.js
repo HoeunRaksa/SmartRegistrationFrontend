@@ -53,9 +53,11 @@ export const getToken = () => {
 
 /**
  * Save auth data after login
- * Token is stored in HttpOnly cookie by backend (secure)
+ * Token stored in both localStorage and HttpOnly cookie (hybrid approach)
  */
 export const saveAuthData = (token, user) => {
-  // Only store user info, token is in HttpOnly cookie
+  if (token) {
+    localStorage.setItem('token', token);
+  }
   localStorage.setItem('user', JSON.stringify(user));
 };
