@@ -126,7 +126,8 @@ export const fetchUnreadCount = async () => {
 export const fetchClassmates = async () => {
   try {
     const response = await API.get("/chat/classmates");
-    return extractData(response);
+    const data = extractData(response);
+    return { data: { data: Array.isArray(data) ? data : [] } };
   } catch (error) {
     console.error("fetchClassmates error:", error);
     throw error;

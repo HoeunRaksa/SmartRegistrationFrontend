@@ -232,7 +232,7 @@ const MessagesPage = () => {
   const loadClassmates = async () => {
     try {
       const res = await fetchClassmates();
-      setClassmates(res?.data || []);
+      setClassmates(res?.data?.data || []);
     } catch (e) {
       console.error("Failed to load classmates:", e);
     }
@@ -476,8 +476,8 @@ const MessagesPage = () => {
                   className={`w - full px - 4 py - 3 text - left hover: bg - slate - 50 flex items - center gap - 3 border - b border - slate - 50 ${selectedConversation?.id === c.id ? "bg-blue-50" : ""} `}
                 >
                   <div className={`h - 12 w - 12 rounded - full flex items - center justify - center font - bold text - white overflow - hidden bg - gradient - to - br ${c.type === 'course_group' ? "from-emerald-500 to-teal-600" :
-                      c.type === 'group' ? "from-indigo-600 to-purple-600" :
-                        "from-blue-600 to-indigo-600"
+                    c.type === 'group' ? "from-indigo-600 to-purple-600" :
+                      "from-blue-600 to-indigo-600"
                     } `}>
                     {c.avatar ? (
                       <img src={c.avatar} className="w-full h-full object-cover" alt="" />
@@ -528,8 +528,8 @@ const MessagesPage = () => {
                 <div className="flex items-center gap-3">
                   <button className="md:hidden p-2" onClick={() => setShowChat(false)}><ArrowLeft /></button>
                   <div className={`h - 10 w - 10 rounded - full flex items - center justify - center font - bold text - sm text - white overflow - hidden bg - gradient - to - br ${selectedConversation.type === 'course_group' ? "from-emerald-500 to-teal-600" :
-                      selectedConversation.type === 'group' ? "from-indigo-600 to-purple-600" :
-                        "from-blue-600 to-indigo-600"
+                    selectedConversation.type === 'group' ? "from-indigo-600 to-purple-600" :
+                      "from-blue-600 to-indigo-600"
                     } `}>
                     {selectedConversation.avatar ? (
                       <img src={selectedConversation.avatar} className="w-full h-full object-cover" alt="" />
@@ -592,8 +592,8 @@ const MessagesPage = () => {
                       )}
 
                       <div className={`px - 4 py - 2 rounded - 2xl shadow - sm transition - all ${msg.is_mine
-                          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-none"
-                          : "bg-white text-slate-800 border border-slate-100 rounded-tl-none"
+                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-none"
+                        : "bg-white text-slate-800 border border-slate-100 rounded-tl-none"
                         } ${msg.is_deleted ? "opacity-60 bg-slate-100" : ""} `}>
 
                         {msg.is_deleted ? (
