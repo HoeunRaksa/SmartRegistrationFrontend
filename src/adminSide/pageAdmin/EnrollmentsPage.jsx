@@ -85,7 +85,6 @@ const SoftButton = ({ icon: Icon, children, onClick, disabled, variant = "ghost"
   );
 };
 
-/* ================= FILTER SELECT COMPONENT (COLOR LIKE YOUR SAMPLE) ================= */
 /* ================= FILTER SELECT COMPONENT (CLEANER) ================= */
 const FilterSelect = ({
   icon: Icon,
@@ -112,7 +111,7 @@ const FilterSelect = ({
       disabled={disabled}
       className={[
         "w-full pl-12 pr-10 py-3 rounded-2xl",
-        "border border-gray-200 bg-white/50 backdrop-blur-sm text-sm font-medium outline-none",
+        "border border-gray-200 bg-white/80 text-sm font-medium outline-none",
         "transition-all shadow-sm hover:shadow-md hover:border-gray-300 appearance-none cursor-pointer",
         "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none",
         "focus:ring-4 focus:bg-white",
@@ -144,7 +143,7 @@ const FilterSearchInput = ({ value, onChange, name = "search" }) => (
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder="Search student..."
-      className="w-full pl-12 pr-4 py-3 rounded-2xl border border-gray-200 bg-white/50 backdrop-blur-sm text-sm font-medium outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 focus:bg-white transition-all shadow-sm hover:shadow-md hover:border-gray-300"
+      className="w-full pl-12 pr-4 py-3 rounded-2xl border border-gray-200 bg-white/80 text-sm font-medium outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 focus:bg-white transition-all shadow-sm hover:shadow-md hover:border-gray-300"
     />
   </div>
 );
