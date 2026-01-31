@@ -310,7 +310,7 @@ const StudentDashboard = () => {
                             className="p-2 rounded-xl backdrop-blur-xl bg-white/40 hover:bg-white/60 transition-all border border-white/30 shadow-sm"
                         >
                             <motion.div
-                                animate={{ rotate: sidebarCollapsed ? 0 : 180 }}
+                                animate={{ scale: 1 }}
                                 transition={{ duration: 0.3 }}
                             >
                                 {sidebarCollapsed ? <ChevronRight size={20} className="text-gray-700" /> : <ChevronLeft size={20} className="text-gray-700" />}
@@ -338,7 +338,7 @@ const StudentDashboard = () => {
                                         } border border-white/30`}
                                 >
                                     <motion.div
-                                        animate={isActive ? { rotate: [0, -10, 10, 0] } : {}}
+                                        animate={isActive ? { scale: [1, 1.1, 1] } : {}}
                                         transition={{ duration: 0.5 }}
                                     >
                                         <Icon size={20} className={isActive ? "drop-shadow-sm" : ""} />
@@ -373,7 +373,7 @@ const StudentDashboard = () => {
                         className="w-full flex items-center gap-3 px-4 py-2 rounded-2xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-5 flex-shrink-0"
                     >
                         <motion.div
-                            whileHover={{ rotate: [0, -15, 15, 0] }}
+                            whileHover={{ x: 3 }}
                             transition={{ duration: 0.3 }}
                         >
                             <LogOut size={20} />
@@ -444,7 +444,7 @@ const StudentDashboard = () => {
                                                     } border ${isActive ? 'border-white/30' : 'border-gray-200'}`}
                                             >
                                                 <motion.div
-                                                    animate={isActive ? { rotate: [0, -10, 10, 0] } : {}}
+                                                    animate={isActive ? { scale: [1, 1.1, 1] } : {}}
                                                     transition={{ duration: 0.5 }}
                                                 >
                                                     <Icon size={20} />
@@ -462,7 +462,7 @@ const StudentDashboard = () => {
                                     className="w-full flex items-center gap-3 px-4 py-2 rounded-2xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-5"
                                 >
                                     <motion.div
-                                        whileHover={{ rotate: [0, -15, 15, 0] }}
+                                        whileHover={{ x: 3 }}
                                         transition={{ duration: 0.3 }}
                                     >
                                         <LogOut size={20} />
@@ -531,7 +531,7 @@ const StudentDashboard = () => {
                                 className="flex items-center gap-3"
                             >
                                 <motion.div
-                                    animate={{ rotate: [0, 10, -10, 0] }}
+                                    animate={{ scale: [1, 1.1, 1] }}
                                     transition={{ duration: 0.5, delay: 0.2 }}
                                     className="hidden sm:flex p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-md"
                                 >
@@ -560,7 +560,7 @@ const StudentDashboard = () => {
                                 className="hidden lg:flex items-center gap-2 backdrop-blur-xl bg-white/50 rounded-xl px-4 py-2.5 border border-white/40 shadow-sm hover:shadow-md hover:bg-white/60 transition-all min-w-[280px]"
                             >
                                 <motion.div
-                                    animate={{ rotate: [0, 15, -15, 0] }}
+                                    animate={{ scale: [1, 1.1, 1] }}
                                     transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
                                 >
                                     <Search size={16} className="text-gray-500" />
@@ -588,7 +588,7 @@ const StudentDashboard = () => {
                                 className="hidden md:flex p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md group"
                             >
                                 <motion.div
-                                    animate={{ rotate: isFullscreen ? 180 : 0 }}
+                                    animate={{ scale: isFullscreen ? 1.1 : 1 }}
                                     transition={{ duration: 0.3 }}
                                 >
                                     {isFullscreen ? (
@@ -607,7 +607,7 @@ const StudentDashboard = () => {
                             >
                                 <motion.div
                                     animate={notifications > 0 ? {
-                                        rotate: [0, -10, 10, -10, 10, 0],
+                                        scale: [1, 1.2, 1],
                                     } : {}}
                                     transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
                                 >
@@ -652,7 +652,7 @@ const StudentDashboard = () => {
                                     />
                                 ) : (
                                     <motion.div
-                                        whileHover={{ scale: 1.1, rotate: [0, 5, -5, 0] }}
+                                        whileHover={{ scale: 1.1, y: -2 }}
                                         transition={{ duration: 0.3 }}
                                         className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md ring-2 ring-white/60 group-hover:ring-blue-400 transition-all"
                                     >

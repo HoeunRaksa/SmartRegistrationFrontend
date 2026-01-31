@@ -89,7 +89,7 @@ const DashboardHome = ({ currentSession }) => {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <motion.div
-          animate={{ rotate: 360 }}
+          animate={{ scale: [1, 1.1, 1] }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
         >
           <Loader className="w-12 h-12 text-blue-600" />
@@ -248,7 +248,7 @@ const StatCard = ({ title, value, icon: Icon, gradient, onClick, delay }) => (
         </motion.p>
       </div>
       <motion.div
-        whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+        whileHover={{ scale: 1.1, y: -2 }}
         transition={{ duration: 0.5 }}
         className="p-3 bg-white/20 rounded-xl"
       >
@@ -550,7 +550,7 @@ const QuickActionsCard = ({ navigate }) => (
         className="p-4 bg-gradient-to-br from-blue-500 to-cyan-500 text-white rounded-xl hover:shadow-lg transition-all"
       >
         <motion.div
-          whileHover={{ rotate: [0, -10, 10, 0] }}
+          whileHover={{ scale: 1.1, y: -2 }}
           transition={{ duration: 0.5 }}
         >
           <BookOpen className="w-8 h-8 mx-auto mb-2" />
@@ -565,7 +565,7 @@ const QuickActionsCard = ({ navigate }) => (
         className="p-4 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-xl hover:shadow-lg transition-all"
       >
         <motion.div
-          whileHover={{ rotate: [0, -10, 10, 0] }}
+          whileHover={{ scale: 1.1, y: -2 }}
           transition={{ duration: 0.5 }}
         >
           <Calendar className="w-8 h-8 mx-auto mb-2" />
@@ -580,7 +580,7 @@ const QuickActionsCard = ({ navigate }) => (
         className="p-4 bg-gradient-to-br from-orange-500 to-red-500 text-white rounded-xl hover:shadow-lg transition-all"
       >
         <motion.div
-          whileHover={{ rotate: [0, -10, 10, 0] }}
+          whileHover={{ scale: 1.1, y: -2 }}
           transition={{ duration: 0.5 }}
         >
           <FileText className="w-8 h-8 mx-auto mb-2" />
@@ -595,7 +595,7 @@ const QuickActionsCard = ({ navigate }) => (
         className="p-4 bg-gradient-to-br from-green-500 to-emerald-500 text-white rounded-xl hover:shadow-lg transition-all"
       >
         <motion.div
-          whileHover={{ rotate: [0, -10, 10, 0] }}
+          whileHover={{ scale: 1.1, y: -2 }}
           transition={{ duration: 0.5 }}
         >
           <Users className="w-8 h-8 mx-auto mb-2" />

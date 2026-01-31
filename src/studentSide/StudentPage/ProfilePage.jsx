@@ -101,7 +101,7 @@ const ProfilePage = () => {
           profileData?.student_name ??
           profileData?.full_name_en ??
           profileData?.full_name ??
-          "--",
+          "--", // Fallback for loading state or unknown; will be hidden by conditional rendering if possible
 
         email:
           profileData?.email ??
@@ -112,7 +112,7 @@ const ProfilePage = () => {
         student_code:
           profileData?.student_code ??
           profileData?.code ??
-          "--",
+          "",
 
         // ✅ IMPORTANT: image from accessor in Student model
         profile_picture_url:
@@ -126,6 +126,13 @@ const ProfilePage = () => {
         cumulative_gpa: gpaData?.cumulative_gpa ?? gpaData?.cgpa ?? profileData?.cumulative_gpa ?? null,
 
         credits_earned: profileData?.credits_earned ?? profileData?.total_credits ?? 0,
+
+        // Academic info
+        department: profileData?.department?.name ?? profileData?.department ?? "",
+        major: profileData?.major?.name ?? profileData?.major ?? "",
+        academic_year: profileData?.academic_year ?? profileData?.year ?? "",
+        semester: profileData?.semester ?? "",
+        academic_status: profileData?.academic_status ?? "Active",
 
         enrolled_courses:
           Array.isArray(profileData?.enrolled_courses) && profileData.enrolled_courses.length > 0
@@ -162,7 +169,7 @@ const ProfilePage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
+        <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
           <Loader className="w-12 h-12 text-blue-600" />
         </motion.div>
       </div>
@@ -207,32 +214,34 @@ const ProfilePage = () => {
             <div className="flex flex-wrap gap-3 justify-center md:justify-start mb-3">
               <div className="flex items-center gap-2 px-3 py-1 bg-white/20 rounded-lg">
                 <IdCard className="w-4 h-4" />
-                <span className="font-semibold">{student?.student_code || "--"}</span>
+                <span className="font-semibold">{student?.student_code || ""}</span>
               </div>
 
               <div className="flex items-center gap-2 px-3 py-1 bg-white/20 rounded-lg">
                 <Building className="w-4 h-4" />
                 <span>
-                  {student?.department?.name ?? student?.department ?? "--"}
+                  {student?.department || "Department Not Assigned"}
                 </span>
               </div>
 
               <div className="flex items-center gap-2 px-3 py-1 bg-white/20 rounded-lg">
                 <GraduationCap className="w-4 h-4" />
                 <span>
-                  {student?.major?.name ?? student?.major ?? "--"}
+                  {student?.major || "Major Not Assigned"}
                 </span>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-2 justify-center md:justify-start text-sm opacity-90">
-              <span>{student?.academic_year ?? student?.year ?? "--"}</span>
-              <span>•</span>
-              <span>{student?.semester ?? "--"}</span>
-              <span>•</span>
-              <span className="px-2 py-0.5 bg-green-500/30 rounded">
-                {student?.academic_status || "--"}
-              </span>
+              {student?.academic_year && <span>Year {student.academic_year}</span>}
+              {student?.academic_year && student?.semester && <span>•</span>}
+              {student?.semester && <span>Semester {student.semester}</span>}
+              {(student?.academic_year || student?.semester) && student?.academic_status && <span>•</span>}
+              {student?.academic_status && (
+                <span className="px-2 py-0.5 bg-green-500/30 rounded">
+                  {student.academic_status}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -252,7 +261,7 @@ const ProfilePage = () => {
               <p className="text-3xl font-bold">
                 {student?.current_gpa !== null && student?.current_gpa !== undefined
                   ? Number(student.current_gpa).toFixed(2)
-                  : "--"}
+                  : "0.00"}
               </p>
             </div>
             <div className="p-3 bg-white/20 rounded-xl">
@@ -273,7 +282,7 @@ const ProfilePage = () => {
               <p className="text-3xl font-bold">
                 {student?.cumulative_gpa !== null && student?.cumulative_gpa !== undefined
                   ? Number(student.cumulative_gpa).toFixed(2)
-                  : "--"}
+                  : "0.00"}
               </p>
             </div>
             <div className="p-3 bg-white/20 rounded-xl">
@@ -337,7 +346,7 @@ const ProfilePage = () => {
               <Mail className="w-5 h-5 text-blue-500 mt-1" />
               <div>
                 <div className="text-sm text-gray-600">Email</div>
-                <div className="font-semibold text-gray-900">{student?.email || "--"}</div>
+                <div className="font-semibold text-gray-900">{student?.email || student?.user?.email || ""}</div>
               </div>
             </div>
 
@@ -346,7 +355,7 @@ const ProfilePage = () => {
               <div>
                 <div className="text-sm text-gray-600">Phone</div>
                 <div className="font-semibold text-gray-900">
-                  {student?.phone_number ?? student?.phone ?? "--"}
+                  {student?.phone_number || student?.phone || ""}
                 </div>
               </div>
             </div>
@@ -362,7 +371,7 @@ const ProfilePage = () => {
                       day: "numeric",
                       year: "numeric",
                     })
-                    : "--"}
+                    : ""}
                 </div>
               </div>
             </div>
@@ -371,7 +380,7 @@ const ProfilePage = () => {
               <User className="w-5 h-5 text-orange-500 mt-1" />
               <div>
                 <div className="text-sm text-gray-600">Gender</div>
-                <div className="font-semibold text-gray-900">{student?.gender || "--"}</div>
+                <div className="font-semibold text-gray-900">{student?.gender || ""}</div>
               </div>
             </div>
 
@@ -379,7 +388,7 @@ const ProfilePage = () => {
               <MapPin className="w-5 h-5 text-red-500 mt-1" />
               <div>
                 <div className="text-sm text-gray-600">Address</div>
-                <div className="font-semibold text-gray-900">{student?.address || "--"}</div>
+                <div className="font-semibold text-gray-900">{student?.address || ""}</div>
               </div>
             </div>
           </div>
@@ -405,7 +414,7 @@ const ProfilePage = () => {
               <div>
                 <div className="text-sm text-gray-600">Department</div>
                 <div className="font-semibold text-gray-900">
-                  {student?.department?.name ?? student?.department ?? "--"}
+                  {student?.department || "N/A"}
                 </div>
               </div>
             </div>
@@ -415,7 +424,7 @@ const ProfilePage = () => {
               <div>
                 <div className="text-sm text-gray-600">Major</div>
                 <div className="font-semibold text-gray-900">
-                  {student?.major?.name ?? student?.major ?? "--"}
+                  {student?.major || "N/A"}
                 </div>
               </div>
             </div>
@@ -431,7 +440,7 @@ const ProfilePage = () => {
                       day: "numeric",
                       year: "numeric",
                     })
-                    : "--"}
+                    : ""}
                 </div>
               </div>
             </div>
@@ -446,7 +455,7 @@ const ProfilePage = () => {
                       month: "long",
                       year: "numeric",
                     })
-                    : "--"}
+                    : ""}
                 </div>
               </div>
             </div>
