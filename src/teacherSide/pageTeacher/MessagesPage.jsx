@@ -44,6 +44,15 @@ const MessagesPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConversation]);
 
+  // ✅ Polling every 1 second
+  useEffect(() => {
+    if (!selectedConversation?.id) return;
+    const interval = setInterval(() => {
+      loadMessages(selectedConversation.id, true);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [selectedConversation?.id]);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -64,15 +73,15 @@ const MessagesPage = () => {
     }
   };
 
-  const loadMessages = async (conversationId) => {
+  const loadMessages = async (conversationId, isPolling = false) => {
     try {
-      setLoadingMsgs(true);
+      if (!isPolling) setLoadingMsgs(true);
       const res = await fetchTeacherMessages(conversationId);
       setMessages(res.data?.data || []);
     } catch (error) {
       console.error('Failed to load messages:', error);
     } finally {
-      setLoadingMsgs(false);
+      if (!isPolling) setLoadingMsgs(false);
     }
   };
 
