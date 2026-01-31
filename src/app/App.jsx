@@ -6,11 +6,13 @@ import { Footer } from "../Components/footer/Footer";
 import MainRouter from "../Router/mainRouter";
 import "../App.css";
 import { ToastProvider } from "../Components/Context/ToastProvider";
+import ScrollToTop from "../Components/ScrollToTop";
 import { AdminDataProvider } from "../contexts/AdminDataContext";
 
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <ToastProvider>
         <AdminDataProvider>
           <AppContent />
@@ -31,10 +33,7 @@ function AppContent() {
     ? { duration: 0.1, ease: "easeOut" }
     : { duration: 0.35, ease: "easeInOut" };
 
-  // Scroll to top on route change
-  useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-  }, [location.pathname]);
+  // Scroll to top handled by ScrollToTop component in JSX
 
   useEffect(() => {
     const userStr = localStorage.getItem("user");
