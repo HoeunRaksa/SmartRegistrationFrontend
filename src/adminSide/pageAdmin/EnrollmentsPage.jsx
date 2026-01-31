@@ -26,7 +26,7 @@ import {
   Calendar,
   Layers,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 /* ========================= UI PRIMITIVES (COLORFUL LIKE YOUR SAMPLE) ========================= */
 const GlassPanel = ({ className = "", children }) => (
