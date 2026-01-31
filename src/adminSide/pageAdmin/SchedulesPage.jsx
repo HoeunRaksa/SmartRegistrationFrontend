@@ -50,7 +50,7 @@ const SchedulesPage = () => {
       const data = res.data?.data || res.data || res || [];
       const coursesArray = Array.isArray(data) ? data : [];
 
-      console.log('✅ Loaded courses:', coursesArray.length, coursesArray);
+
       setCourses(coursesArray);
     } catch (error) {
       console.error("Failed to load courses:", error);

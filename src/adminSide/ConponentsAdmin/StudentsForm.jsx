@@ -260,7 +260,7 @@ const StudentsForm = ({ onUpdate, editingStudent, onCancelEdit }) => {
         academic_year: form.academic_year,
       };
 
-      console.log("UPDATE PAYLOAD", payload);
+
 
       await updateStudent(editingStudent.id, payload);
 

@@ -128,12 +128,12 @@ const AttendancePage = () => {
       });
 
       if (existingSession) {
-        console.log("Auto-detected existing session:", existingSession);
+
         setSelectedCourseId(courseId);
         setSelectedSessionId(existingSession.id);
         setIsAutoDetected(true);
       } else {
-        console.log("Auto-creating session for:", activeSchedule.course_name);
+
         try {
           const res = await createTeacherClassSession({
             course_id: courseId,

@@ -1250,7 +1250,7 @@ const RegistrationModal = ({
                         onOpenQr(registration);
                       } catch (e) {
                         const err = extractAxiosError(e);
-                        console.log("GenerateQR FULL:", err);
+
                         toast?.error?.(
                           `${err.status ?? "NO-HTTP"} ${err.msg}${err.details ? " • " + err.details : ""
                             }`.trim()

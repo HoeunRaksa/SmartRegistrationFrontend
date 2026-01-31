@@ -152,7 +152,7 @@ const SubjectsForm = ({ onUpdate, onSuccess, editingSubject, onCancel, onCancelE
         response = await createSubject(submitData);
       }
 
-      console.log("Response:", response);
+
 
       resetForm();
       setSuccess(true);

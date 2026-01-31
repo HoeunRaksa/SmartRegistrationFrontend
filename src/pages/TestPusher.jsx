@@ -4,7 +4,7 @@ import Pusher from "pusher-js";
 
 const TestPusher = () => {
   useEffect(() => {
-    Pusher.logToConsole = true;
+    // Pusher.logToConsole = true;
     window.Pusher = Pusher;
 
     const echo = new Echo({
@@ -16,12 +16,12 @@ const TestPusher = () => {
 
     const channel = echo.channel("payments");
     channel.listen(".PaymentStatusUpdated", (data) => {
-      console.log("✅ Payment event received:", data);
+
       alert(`Payment: ${data.tran_id} -> ${data.status}`);
     });
 
     echo.connector.pusher.connection.bind("connected", () => {
-      console.log("✅ Pusher connected!");
+
     });
 
     echo.connector.pusher.connection.bind("error", (err) => {
