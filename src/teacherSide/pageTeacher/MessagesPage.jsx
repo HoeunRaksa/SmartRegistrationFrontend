@@ -93,31 +93,36 @@ const MessagesPage = () => {
 
       // ⚠️ channel name + event name MUST match backend
       // common: PrivateChannel("conversation.{id}") + broadcastAs("message.sent") or "MessageSent"
-      echo.private(`conversation.${conversationId}`)
-        .listen('MessageSent', (e) => {
-          const newMsg = e?.message || e?.data?.message || e;
+      const channel = echo.private(`conversation.${conversationId}`);
 
-          if (!newMsg) return;
+      const handleMessageEvent = (e) => {
+        const newMsg = e?.message || e?.data?.message || e;
 
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === newMsg.id)) return prev; // avoid duplicates
-            return [...prev, newMsg];
-          });
+        if (!newMsg) return;
 
-          // update last message in conversation list
-          setConversations((prev) =>
-            prev.map((c) =>
-              c.id === conversationId
-                ? {
-                  ...c,
-                  last_message: newMsg.content ?? c.last_message,
-                  last_message_time: newMsg.created_at ?? new Date().toISOString(),
-                  unread_count: c.unread_count, // keep existing (or backend should refresh)
-                }
-                : c
-            )
-          );
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === newMsg.id)) return prev; // avoid duplicates
+          return [...prev, newMsg];
         });
+
+        // update last message in conversation list
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === conversationId
+              ? {
+                ...c,
+                last_message: newMsg.content ?? c.last_message,
+                last_message_time: newMsg.created_at ?? new Date().toISOString(),
+                unread_count: c.unread_count, // keep existing (or backend should refresh)
+              }
+              : c
+          )
+        );
+      };
+
+      channel.listen('.message.sent', handleMessageEvent);
+      channel.listen('message.sent', handleMessageEvent);
+      channel.listen('MessageSent', handleMessageEvent);
 
     } catch (err) {
       console.error('Realtime subscribe error:', err);
