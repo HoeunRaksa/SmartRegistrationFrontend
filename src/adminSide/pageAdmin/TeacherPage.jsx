@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 import TeacherForm from "../ConponentsAdmin/TeacherForm.jsx";
 import FormModal from "../../Components/FormModal.jsx";
 import { fetchTeachers, deleteTeacher } from "../../api/teacher_api.jsx";
@@ -354,14 +355,14 @@ const TeacherRow = ({ teacher, onEdit, onView, onDelete }) => {
 const TeacherModal = ({ teacher, onClose }) => {
   const profileUrl = teacher.user?.profile_picture_url;
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.15 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
         onClick={onClose}
       >
         <motion.div
@@ -408,10 +409,10 @@ const TeacherModal = ({ teacher, onClose }) => {
               <InfoField icon={UserCircle} label="Account Name" value={teacher.user?.name || ""} iconColor="text-orange-500" />
 
               {teacher.gender && (
-                <InfoField icon={UserCircle} label="Gender" value={teacher.gender} iconColor="text-pink-500" />
+                <InfoField icon={UserCircle} label="Gender" value={teacher.gender} iconColor="pink-500" />
               )}
               {teacher.date_of_birth && (
-                <InfoField icon={Calendar} label="Date of Birth" value={teacher.date_of_birth} iconColor="text-indigo-500" />
+                <InfoField icon={Calendar} label="Date of Birth" value={teacher.date_of_birth} iconColor="indigo-500" />
               )}
             </div>
 
@@ -423,7 +424,8 @@ const TeacherModal = ({ teacher, onClose }) => {
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
 

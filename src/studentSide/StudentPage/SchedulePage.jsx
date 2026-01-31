@@ -206,7 +206,7 @@ const SchedulePage = () => {
         <div className="relative w-full max-w-md">
           <div className="absolute inset-0 -z-10 rounded-[32px] bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10 blur-2xl" />
           <div className="rounded-[28px] border border-white/60 bg-white/70 backdrop-blur-xl shadow-xl p-10 flex flex-col items-center gap-4">
-            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
+            <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
               <Loader className="w-12 h-12 text-blue-600" />
             </motion.div>
             <div className="text-center">
@@ -301,8 +301,8 @@ const SchedulePage = () => {
               <button
                 onClick={() => setViewMode("week")}
                 className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${viewMode === "week"
-                    ? "bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white shadow-md"
-                    : "text-gray-700 hover:bg-white/60"
+                  ? "bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white shadow-md"
+                  : "text-gray-700 hover:bg-white/60"
                   }`}
               >
                 Week
@@ -310,8 +310,8 @@ const SchedulePage = () => {
               <button
                 onClick={() => setViewMode("day")}
                 className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${viewMode === "day"
-                    ? "bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white shadow-md"
-                    : "text-gray-700 hover:bg-white/60"
+                  ? "bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white shadow-md"
+                  : "text-gray-700 hover:bg-white/60"
                   }`}
               >
                 Day
@@ -434,8 +434,8 @@ const SchedulePage = () => {
                     <div
                       key={day}
                       className={`text-center p-2 rounded-2xl transition-colors border ${isToday
-                          ? "bg-blue-50/80 border-blue-200/70"
-                          : "bg-white/50 border-white/60"
+                        ? "bg-blue-50/80 border-blue-200/70"
+                        : "bg-white/50 border-white/60"
                         }`}
                     >
                       <div className={`text-sm font-extrabold ${isToday ? "text-blue-700" : "text-gray-900"}`}>

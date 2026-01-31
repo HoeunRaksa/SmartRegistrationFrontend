@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Mail, DollarSign, GraduationCap, FileText, Save, Loader } from 'lucide-react';
-import axios from 'axios';
+import API from '../../api/index';
 import Alert from '../../gobalConponent/Alert.jsx';
 import { AnimatePresence } from 'framer-motion';
 
@@ -23,7 +23,7 @@ const NotificationSettings = () => {
     const loadPreferences = async () => {
         try {
             setLoading(true);
-            const response = await axios.get('/api/student/notification-preferences');
+            const response = await API.get('/student/notification-preferences');
             if (response.data.success) {
                 setPreferences(response.data.data);
             }
@@ -45,7 +45,7 @@ const NotificationSettings = () => {
         try {
             setSaving(true);
 
-            const response = await axios.put('/api/student/notification-preferences', preferences);
+            const response = await API.put('/student/notification-preferences', preferences);
 
             if (response.data.success) {
                 setAlert({ show: true, message: 'Preferences saved successfully!', type: 'success' });
@@ -92,7 +92,9 @@ const NotificationSettings = () => {
     if (loading) {
         return (
             <div className="min-h-[400px] grid place-items-center">
-                <Loader className="w-8 h-8 text-blue-600 animate-spin" />
+                <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
+                    <Loader className="w-12 h-12 text-blue-600" />
+                </motion.div>
             </div>
         );
     }
@@ -166,7 +168,9 @@ const NotificationSettings = () => {
                     >
                         {saving ? (
                             <>
-                                <Loader className="w-5 h-5 animate-spin" />
+                                <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1, repeat: Infinity }}>
+                                    <Loader className="w-5 h-5 shadow-sm" />
+                                </motion.div>
                                 Saving...
                             </>
                         ) : (

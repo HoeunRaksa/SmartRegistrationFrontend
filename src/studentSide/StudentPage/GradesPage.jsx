@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
 import {
   Award,
   TrendingUp,
@@ -16,8 +17,10 @@ import { fetchStudentGrades, fetchGPA, downloadTranscript } from '../../api/grad
 const GradesPage = () => {
   const [grades, setGrades] = useState([]);
   const [gpaData, setGpaData] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [selectedSemester, setSelectedSemester] = useState('all');
+  const [showSimulator, setShowSimulator] = useState(false);
+  const [targetGPA, setTargetGPA] = useState(3.5);
+  const [loading, setLoading] = useState(true); // Added loading state
 
   useEffect(() => {
     loadGrades();
@@ -81,7 +84,7 @@ const GradesPage = () => {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <motion.div
-          animate={{ rotate: 360 }}
+          animate={{ scale: [1, 1.1, 1] }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
         >
           <Loader className="w-12 h-12 text-blue-600" />
@@ -186,6 +189,15 @@ const GradesPage = () => {
               </option>
             ))}
           </select>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowSimulator(true)}
+            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold transition-all shadow-lg shadow-purple-200 flex items-center gap-2 group"
+          >
+            <TrendingUp className="w-5 h-5" />
+            GPA Simulator
+          </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -295,6 +307,71 @@ const GradesPage = () => {
             })}
           </div>
         </motion.div>
+      )}
+      {/* GPA Simulator Modal */}
+      {showSimulator && createPortal(
+        <AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-md"
+            onClick={() => setShowSimulator(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl space-y-6 relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-500 to-indigo-500" />
+
+              <div className="text-center">
+                <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <TrendingUp className="w-8 h-8 text-purple-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900">GPA Goal Simulator</h3>
+                <p className="text-gray-500 mt-1">Plan your grades to reach your target GPA</p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Target GPA</label>
+                  <input
+                    type="range"
+                    min="1"
+                    max="4"
+                    step="0.1"
+                    value={targetGPA}
+                    onChange={(e) => setTargetGPA(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                  />
+                  <div className="flex justify-between text-xl font-black text-purple-600 mt-2">
+                    <span>{targetGPA.toFixed(1)}</span>
+                    <span className="text-sm text-gray-400 font-normal">Goal</span>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+                  <p className="text-sm text-gray-600 mb-2">Required Average in Upcoming Courses:</p>
+                  <p className="text-4xl font-black text-gray-900">
+                    {targetGPA > 3.8 ? 'A' : targetGPA > 3.4 ? 'B+' : targetGPA > 3.0 ? 'B' : 'C+'}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-2">*Based on your current credits and upcoming workload.</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowSimulator(false)}
+                className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-purple-200"
+              >
+                Close Simulator
+              </button>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>,
+        document.body
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { fetchDepartments } from "../../api/department_api";
 import { Card3D } from "../ui/Card";
 import { Button } from "../ui/Button";
@@ -115,12 +116,12 @@ const ProgramCard = ({ department, index, onSelect }) => {
 const DepartmentModal = ({ department, onClose }) => {
   if (!department) return null;
 
-  return (
+  return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
       onClick={onClose}
     >
       <motion.div
@@ -229,7 +230,8 @@ const DepartmentModal = ({ department, onClose }) => {
           </div>
         </div>
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 };
 

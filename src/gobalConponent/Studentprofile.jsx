@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { createPortal } from "react-dom";
 import {
   GraduationCap,
   X,
@@ -80,13 +80,13 @@ const StudentProfile = ({ student, onClose }) => {
     student.department_name ||
     "";
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
         onClick={onClose}
         role="dialog"
         aria-modal="true"
@@ -264,7 +264,8 @@ const StudentProfile = ({ student, onClose }) => {
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
 

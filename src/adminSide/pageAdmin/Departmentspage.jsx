@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 import DepartmentsForm from "../ConponentsAdmin/DepartmentsForm.jsx";
 import { fetchStudents } from "../../api/student_api.jsx";
 import { fetchDepartments, deleteDepartment } from "../../api/department_api.jsx";
@@ -556,14 +557,14 @@ const DepartmentCard = ({ department, onEdit, onView, onDelete }) => {
 const DepartmentModal = ({ department, onClose }) => {
   const imageUrl = getImageUrl(department);
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.15 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
         onClick={onClose}
       >
         <motion.div
@@ -618,7 +619,8 @@ const DepartmentModal = ({ department, onClose }) => {
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
 

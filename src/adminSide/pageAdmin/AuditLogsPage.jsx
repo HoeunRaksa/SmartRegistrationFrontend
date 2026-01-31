@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 import {
     Shield,
     Activity,
@@ -290,8 +291,8 @@ const AuditLogsPage = () => {
                             <button
                                 onClick={() => setShowDatePicker(!showDatePicker)}
                                 className={`px-4 py-2.5 rounded-xl border text-sm font-bold shadow-sm flex items-center gap-2 transition-all ${dateRange.start || dateRange.end
-                                        ? "bg-blue-50 border-blue-200 text-blue-600"
-                                        : "bg-white border-slate-200 text-slate-600 hover:text-blue-600"
+                                    ? "bg-blue-50 border-blue-200 text-blue-600"
+                                    : "bg-white border-slate-200 text-slate-600 hover:text-blue-600"
                                     }`}
                             >
                                 <Calendar className="w-4 h-4" />
@@ -465,62 +466,71 @@ const AuditLogsPage = () => {
 
             {/* Log Detail Modal */}
             <AnimatePresence>
-                {selectedLog && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+                {selectedLog && createPortal(
+                    <AnimatePresence>
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-white/60"
-                            onClick={(e) => e.stopPropagation()}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
+                            onClick={() => setSelectedLog(null)}
                         >
-                            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                    <FileText className="w-5 h-5 text-blue-600" />
-                                    Log Details <span className="text-slate-400 font-normal">#{selectedLog.id}</span>
-                                </h3>
-                                <button onClick={() => setSelectedLog(null)} className="p-2 hover:bg-white rounded-xl text-slate-400 hover:text-slate-600 transition-colors">
-                                    <XCircle className="w-5 h-5" />
-                                </button>
-                            </div>
-                            <div className="p-6 space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                                        <p className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">User</p>
-                                        <p className="font-semibold text-slate-900">{selectedLog.user?.name}</p>
-                                        <p className="text-xs text-slate-500">{selectedLog.user?.email}</p>
-                                    </div>
-                                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                                        <p className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">IP & Time</p>
-                                        <p className="font-mono text-xs text-slate-900 font-bold mb-0.5">{selectedLog.ip_address}</p>
-                                        <p className="text-xs text-slate-500">{new Date(selectedLog.created_at).toLocaleString()}</p>
-                                    </div>
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-white/60"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                        <FileText className="w-5 h-5 text-blue-600" />
+                                        Log Details <span className="text-slate-400 font-normal">#{selectedLog.id}</span>
+                                    </h3>
+                                    <button onClick={() => setSelectedLog(null)} className="p-2 hover:bg-white rounded-xl text-slate-400 hover:text-slate-600 transition-colors">
+                                        <XCircle className="w-5 h-5" />
+                                    </button>
                                 </div>
+                                <div className="p-6 space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                            <p className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">User</p>
+                                            <p className="font-semibold text-slate-900">{selectedLog.user?.name}</p>
+                                            <p className="text-xs text-slate-500">{selectedLog.user?.email}</p>
+                                        </div>
+                                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                            <p className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">IP & Time</p>
+                                            <p className="font-mono text-xs text-slate-900 font-bold mb-0.5">{selectedLog.ip_address}</p>
+                                            <p className="text-xs text-slate-500">{new Date(selectedLog.created_at).toLocaleString()}</p>
+                                        </div>
+                                    </div>
 
-                                <div>
-                                    <p className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-2">Action Details</p>
-                                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 font-mono text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
-                                        {selectedLog.details || "No additional details provided."}
-                                        <br /><br />
-                                        Module: {selectedLog.module}<br />
-                                        Action: {selectedLog.action}
+                                    <div>
+                                        <p className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-2">Action Details</p>
+                                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 font-mono text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
+                                            {selectedLog.details || "No additional details provided."}
+                                            <br /><br />
+                                            Module: {selectedLog.module}<br />
+                                            Action: {selectedLog.action}
+                                        </div>
+                                    </div>
+
+                                    <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100 text-blue-800 text-xs">
+                                        <strong>System Note:</strong> This monitoring event was immutable and timestamped by the security auditing subsystem.
                                     </div>
                                 </div>
-
-                                <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100 text-blue-800 text-xs">
-                                    <strong>System Note:</strong> This monitoring event was immutable and timestamped by the security auditing subsystem.
+                                <div className="p-4 bg-slate-50 flex justify-end">
+                                    <button
+                                        onClick={() => setSelectedLog(null)}
+                                        className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:bg-slate-50 transition-colors"
+                                    >
+                                        Close
+                                    </button>
                                 </div>
-                            </div>
-                            <div className="p-4 bg-slate-50 flex justify-end">
-                                <button
-                                    onClick={() => setSelectedLog(null)}
-                                    className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:bg-slate-50 transition-colors"
-                                >
-                                    Close
-                                </button>
-                            </div>
+                            </motion.div>
                         </motion.div>
-                    </div>
+                    </AnimatePresence>,
+                    document.body
                 )}
             </AnimatePresence>
         </div>

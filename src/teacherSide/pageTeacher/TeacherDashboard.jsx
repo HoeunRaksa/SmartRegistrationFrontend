@@ -10,7 +10,6 @@ import AssignmentsPage from './AssignmentsPage.jsx';
 import SchedulePage from './SchedulePage.jsx';
 import MessagesPage from '../../gobalConponent/MessagesPage.jsx';
 import ProfilePage from './ProfilePage.jsx';
-import ProjectGroupsPage from './ProjectGroupsPage.jsx';
 import SettingPage from '../../gobalConponent/Settingpage.jsx';
 import { logoutApi } from '../../api/auth.jsx';
 import { fetchCurrentSession } from '../../api/admin_session_api.jsx';
@@ -56,7 +55,6 @@ const TeacherDashboard = () => {
     { id: 'students', label: 'Students', icon: Users, gradient: 'from-indigo-500 to-blue-500' },
     { id: 'grades', label: 'Grades', icon: Award, gradient: 'from-purple-500 to-pink-500' },
     { id: 'attendance', label: 'Attendance', icon: CheckSquare, gradient: 'from-green-500 to-teal-500' },
-    { id: 'project-groups', label: 'Project Groups', icon: Users, gradient: 'from-blue-600 to-indigo-600' },
     { id: 'assignments', label: 'Assignments', icon: ClipboardList, gradient: 'from-orange-500 to-amber-500' },
     { id: 'schedule', label: 'Schedule', icon: Calendar, gradient: 'from-cyan-500 to-blue-500' },
     { id: 'messages', label: 'Messages', icon: MessageSquare, gradient: 'from-pink-500 to-rose-500' },
@@ -140,9 +138,6 @@ const TeacherDashboard = () => {
         </div>
         <div style={{ display: activeSection === 'attendance' ? 'block' : 'none' }}>
           <AttendancePage />
-        </div>
-        <div style={{ display: activeSection === 'project-groups' ? 'block' : 'none' }}>
-          <ProjectGroupsPage />
         </div>
         <div style={{ display: activeSection === 'assignments' ? 'block' : 'none' }}>
           <AssignmentsPage />

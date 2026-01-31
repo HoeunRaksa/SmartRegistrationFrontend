@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
 import {
     FileText,
     Clock,
@@ -182,13 +182,20 @@ const CertificatePage = () => {
                 )}
             </div>
 
-            <AnimatePresence>
-                {showModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+            {showModal && createPortal(
+                <AnimatePresence>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+                        onClick={() => setShowModal(false)}
+                    >
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
+                            onClick={(e) => e.stopPropagation()}
                             className="w-full max-w-lg backdrop-blur-2xl bg-white/95 rounded-3xl p-8 border border-white/40 shadow-2xl overflow-hidden relative"
                         >
                             <button
@@ -211,8 +218,8 @@ const CertificatePage = () => {
                                             <label
                                                 key={type.value}
                                                 className={`flex items-start gap-3 p-4 rounded-2xl border-2 transition-all cursor-pointer ${formData.type === type.value
-                                                        ? 'border-blue-500 bg-blue-50/50 ring-2 ring-blue-500/20'
-                                                        : 'border-white/40 bg-white/40 hover:bg-white/80'
+                                                    ? 'border-blue-500 bg-blue-50/50 ring-2 ring-blue-500/20'
+                                                    : 'border-white/40 bg-white/40 hover:bg-white/80'
                                                     }`}
                                             >
                                                 <input
@@ -265,9 +272,10 @@ const CertificatePage = () => {
                                 </div>
                             </form>
                         </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+                    </motion.div>
+                </AnimatePresence>,
+                document.body
+            )}
         </div>
     );
 };

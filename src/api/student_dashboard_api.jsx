@@ -181,17 +181,17 @@ export const getConversations = async () => {
  */
 function extractData(response) {
   if (!response) return null;
-  
+
   // Backend returns: {success: true, data: {...}}
   if (response?.data?.data !== undefined) {
     return response.data.data;
   }
-  
+
   // Backend returns: {data: {...}}
   if (response?.data !== undefined) {
     return response.data;
   }
-  
+
   // Raw data
   return response;
 }
@@ -211,15 +211,15 @@ export function formatTimeAgo(dateStr) {
     const date = new Date(dateStr);
     const now = new Date();
     const diff = Math.floor((now - date) / 1000);
-    
+
     if (diff < 60) return `${diff}s ago`;
-    
+
     const minutes = Math.floor(diff / 60);
     if (minutes < 60) return `${minutes}m ago`;
-    
+
     const hours = Math.floor(minutes / 60);
     if (hours < 24) return `${hours}h ago`;
-    
+
     const days = Math.floor(hours / 24);
     return `${days}d ago`;
   } catch {
@@ -232,7 +232,7 @@ export function formatTimeAgo(dateStr) {
  */
 export function getDaysUntilDue(dueDate) {
   if (!dueDate) return null;
-  
+
   try {
     const due = new Date(dueDate);
     const now = new Date();
@@ -258,15 +258,15 @@ export function getGreeting() {
  */
 export function processDashboardData(rawData, fallbackUser = {}) {
   const data = rawData || {};
-  
+
   // Student info
   const student = data.student || {
     name: fallbackUser?.name || "Student",
-    student_code: fallbackUser?.student_code || "—",
-    major: fallbackUser?.major || "—",
-    year: fallbackUser?.year || "—",
+    student_code: fallbackUser?.student_code || "",
+    major: fallbackUser?.major || "",
+    year: fallbackUser?.year || "",
   };
-  
+
   // Stats
   const stats = data.stats || {
     gpa: 0,
@@ -274,30 +274,30 @@ export function processDashboardData(rawData, fallbackUser = {}) {
     attendance: 0,
     pending_assignments: 0,
   };
-  
+
   // Today's schedule
   const todayScheduleRaw = safeArray(data.today_schedule);
   const todayClasses = todayScheduleRaw.map((s) => ({
     id: s?.id,
-    course_code: s?.course_code || "—",
-    course_name: s?.course_name || "—",
+    course_code: s?.course_code || "",
+    course_name: s?.course_name || "",
     time: `${s?.start_time || ""} - ${s?.end_time || ""}`,
-    room: s?.room || "—",
-    instructor: s?.instructor_name || "—",
+    room: s?.room || "",
+    instructor: s?.instructor_name || "",
   }));
-  
+
   // Grades
   const gradesRaw = safeArray(data.grades);
   const recentGrades = gradesRaw.slice(0, 5).map((g) => ({
     id: g?.id,
-    course_code: g?.course_code || "—",
-    course_name: g?.course_name || "—",
-    assignment: g?.assignment_name || "—",
+    course_code: g?.course_code || "",
+    course_name: g?.course_name || "",
+    assignment: g?.assignment_name || "",
     grade: Number(g?.score || 0),
     total: Number(g?.total_points || 0),
     date: g?.created_at || new Date().toISOString(),
   }));
-  
+
   // Assignments
   const assignmentsRaw = safeArray(data.assignments);
   const pendingAssignmentsRaw = assignmentsRaw.filter((a) => {
@@ -306,28 +306,28 @@ export function processDashboardData(rawData, fallbackUser = {}) {
     if (Array.isArray(subs) && subs.length === 0) return true;
     return false;
   });
-  
+
   const pendingAssignments = pendingAssignmentsRaw
     .slice()
-    .sort((a, b) => 
-      new Date(a?.due_date || "2100-01-01") - 
+    .sort((a, b) =>
+      new Date(a?.due_date || "2100-01-01") -
       new Date(b?.due_date || "2100-01-01")
     )
     .map((a) => ({
       id: a?.id,
-      course_code: a?.course_code || "—",
-      title: a?.title || "—",
+      course_code: a?.course_code || "",
+      title: a?.title || "",
       due_date: a?.due_date || null,
       due_time: a?.due_time || "",
       points: Number(a?.points || 0),
     }));
-  
+
   // Conversations
   const conversationsRaw = safeArray(data.conversations);
-  
+
   // Build notifications from real data
   const notifications = [];
-  
+
   recentGrades.slice(0, 3).forEach((gr) => {
     notifications.push({
       id: `g-${gr.id}`,
@@ -336,18 +336,18 @@ export function processDashboardData(rawData, fallbackUser = {}) {
       type: "grade",
     });
   });
-  
+
   pendingAssignments.slice(0, 3).forEach((a) => {
     notifications.push({
       id: `a-${a.id}`,
       message: `Assignment pending: ${a.title}`,
-      time: a?.due_date 
-        ? `Due ${new Date(a.due_date).toLocaleDateString()}` 
+      time: a?.due_date
+        ? `Due ${new Date(a.due_date).toLocaleDateString()}`
         : "",
       type: "assignment",
     });
   });
-  
+
   if (conversationsRaw.length > 0) {
     notifications.push({
       id: "m-1",
@@ -356,7 +356,7 @@ export function processDashboardData(rawData, fallbackUser = {}) {
       type: "message",
     });
   }
-  
+
   return {
     student,
     stats: {

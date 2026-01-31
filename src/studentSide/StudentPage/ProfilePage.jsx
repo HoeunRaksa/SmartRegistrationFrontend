@@ -5,7 +5,8 @@
 */
 
 import React, { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 import {
   User,
   Mail,
@@ -55,6 +56,7 @@ const ProfilePage = () => {
   // ✅ used to force refresh the image after profile update / login / etc.
   const [imgKey, setImgKey] = useState(() => Date.now().toString());
   const [imgBroken, setImgBroken] = useState(false);
+  const [showDigitalId, setShowDigitalId] = useState(false);
 
   useEffect(() => {
     loadStudentProfile();
@@ -209,7 +211,18 @@ const ProfilePage = () => {
           </div>
 
           <div className="text-center md:text-left text-white flex-1">
-            <h1 className="text-3xl font-bold mb-2">{student?.name || "--"}</h1>
+            <div className="flex flex-col md:flex-row md:items-center gap-4 mb-2">
+              <h1 className="text-3xl font-bold">{student?.name || "--"}</h1>
+              <motion.button
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowDigitalId(true)}
+                className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-xl text-white text-sm font-bold border border-white/20 backdrop-blur-md transition-all"
+              >
+                <IdCard className="w-4 h-4" />
+                Digital ID
+              </motion.button>
+            </div>
 
             <div className="flex flex-wrap gap-3 justify-center md:justify-start mb-3">
               <div className="flex items-center gap-2 px-3 py-1 bg-white/20 rounded-lg">
@@ -414,7 +427,7 @@ const ProfilePage = () => {
               <div>
                 <div className="text-sm text-gray-600">Department</div>
                 <div className="font-semibold text-gray-900">
-                  {student?.department || "N/A"}
+                  {student?.department || ""}
                 </div>
               </div>
             </div>
@@ -424,7 +437,7 @@ const ProfilePage = () => {
               <div>
                 <div className="text-sm text-gray-600">Major</div>
                 <div className="font-semibold text-gray-900">
-                  {student?.major || "N/A"}
+                  {student?.major || ""}
                 </div>
               </div>
             </div>
@@ -552,6 +565,74 @@ const ProfilePage = () => {
           </div>
         </motion.div>
       </div>
+      {showDigitalId && createPortal(
+        <AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+            onClick={() => setShowDigitalId(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, rotateY: 90 }}
+              animate={{ scale: 1, rotateY: 0 }}
+              exit={{ scale: 0.9, rotateY: -90 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-[360px] aspect-[1/1.6] bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-[2.5rem] p-8 shadow-2xl border border-white/30 relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-3xl rounded-full -mr-16 -mt-16" />
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-3xl rounded-full -ml-16 -mb-16" />
+
+              <div className="relative z-10 flex flex-col h-full items-center text-center">
+                <div className="w-full flex justify-between items-center mb-8">
+                  <div className="px-3 py-1 bg-white/10 rounded-lg border border-white/20 text-[10px] font-bold text-white uppercase tracking-widest">
+                    Student ID
+                  </div>
+                  <Building className="w-6 h-6 text-white/40" />
+                </div>
+
+                <div className="w-32 h-32 rounded-3xl border-4 border-white/40 overflow-hidden shadow-2xl mb-6 bg-white/20">
+                  {imgSrc && !imgBroken ? (
+                    <img src={imgSrc} alt="ID" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-white">
+                      {student?.name?.charAt(0) || 'S'}
+                    </div>
+                  )}
+                </div>
+
+                <h3 className="text-2xl font-black text-white leading-tight mb-1">{student?.name}</h3>
+                <p className="text-blue-100 text-sm font-semibold opacity-80 mb-6">{student?.student_code}</p>
+
+                <div className="w-full h-[1px] bg-white/20 mb-6" />
+
+                <div className="grid grid-cols-2 gap-4 w-full mb-8">
+                  <div className="text-left">
+                    <p className="text-[10px] font-bold text-white/50 uppercase">Department</p>
+                    <p className="text-xs font-bold text-white truncate">{student?.department || ''}</p>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[10px] font-bold text-white/50 uppercase">Major</p>
+                    <p className="text-xs font-bold text-white truncate">{student?.major || ''}</p>
+                  </div>
+                </div>
+
+                <div className="mt-auto p-4 bg-white rounded-3xl shadow-inner group transition-all duration-500 hover:scale-110">
+                  {/* Mock QR Code */}
+                  <div className="w-32 h-32 grid grid-cols-4 gap-1 opacity-80 group-hover:opacity-100">
+                    {Array.from({ length: 16 }).map((_, i) => (
+                      <div key={i} className={`rounded-sm ${Math.random() > 0.5 ? 'bg-gray-900' : 'bg-transparent'}`} />
+                    ))}
+                  </div>
+                </div>
+                <p className="text-[10px] text-white/40 mt-4 uppercase font-black tracking-widest">Valid Academic Year 2024-2025</p>
+              </div>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 };

@@ -1,20 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from "react-dom";
 import {
   BookOpen,
+  Search,
+  Filter,
   Users,
   Clock,
-  Calendar,
-  Plus,
+  MapPin,
   Trash2,
+  CheckCircle,
+  Plus,
+  Loader,
+  ArrowRight,
+  ChevronRight,
+  Clock3,
+  BookMarked,
+  ShieldCheck,
+  Star,
+  Calendar,
   GraduationCap,
   AlertCircle,
-  CheckCircle,
-  Loader,
-  Search,
-  BookMarked,
-  Award
-} from 'lucide-react';
+  Award,
+  X
+} from "lucide-react";
 import Alert from '../../gobalConponent/Alert.jsx';
 import ConfirmDialog from '../../gobalConponent/ConfirmDialog.jsx';
 import {
@@ -29,6 +38,7 @@ const CoursesPage = () => {
   const [availableCourses, setAvailableCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
+  const [selectedCourseDetails, setSelectedCourseDetails] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [alert, setAlert] = useState({ show: false, message: '', type: 'error' });
   const [confirm, setConfirm] = useState({ show: false, id: null });
@@ -51,7 +61,7 @@ const CoursesPage = () => {
 
     if (!Array.isArray(schedules) || schedules.length === 0) {
       // maybe enrollment sends schedule string already, or it's empty
-      return typeof course?.schedule === 'string' ? course.schedule : '—';
+      return typeof course?.schedule === 'string' ? course.schedule : '';
     }
 
     // Example output: "Mon 10:00-11:30, Wed 10:00-11:30"
@@ -81,10 +91,10 @@ const CoursesPage = () => {
 
     return {
       id: course?.id || course?.course_id, // backend sometimes sends course_id in wrapper
-      course_code: course?.course_code || course?.code || '—',
-      course_name: course?.course_name || course?.name || course?.title || '—',
+      course_code: course?.course_code || course?.code || '',
+      course_name: course?.course_name || course?.name || course?.title || '',
       // Backend returns instructor as object { id, name }
-      instructor: course?.instructor?.name || course?.instructor_name || (typeof course?.instructor === 'string' ? course.instructor : '—'),
+      instructor: course?.instructor?.name || course?.instructor_name || (typeof course?.instructor === 'string' ? course.instructor : ''),
       credits: Number(course?.credits || 0),
       schedule: buildScheduleText(item),
       enrolled_students: Number(course?.enrolled_students || course?.enrolled_count || 0),
@@ -93,7 +103,7 @@ const CoursesPage = () => {
         course?.room ||
         (Array.isArray(course?.class_schedules) && course.class_schedules[0]?.room) ||
         (Array.isArray(course?.schedule) && course.schedule[0]?.room) ||
-        '—',
+        '',
       prerequisites: Array.isArray(course?.prerequisites) ? course.prerequisites : [],
       progress: Number(item?.progress ?? course?.progress ?? 0),
     };
@@ -174,7 +184,7 @@ const CoursesPage = () => {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <motion.div
-          animate={{ rotate: 360 }}
+          animate={{ scale: [1, 1.1, 1] }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
         >
           <Loader className="w-12 h-12 text-blue-600" />
@@ -248,7 +258,7 @@ const CoursesPage = () => {
         className="relative w-full sm:w-80"
       >
         <motion.div
-          whileHover={{ scale: 1.1, rotate: 10 }}
+          whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
         >
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
@@ -360,12 +370,13 @@ const CoursesPage = () => {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
+                      onClick={() => setSelectedCourseDetails(course)}
                       className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
                     >
                       View Details
                     </motion.button>
                     <motion.button
-                      whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
+                      whileHover={{ scale: 1.1, y: -2 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => handleDrop(course.id)}
                       disabled={enrolling}
@@ -450,17 +461,17 @@ const CoursesPage = () => {
                   >
                     {enrolling ? (
                       <motion.div
-                        animate={{ rotate: 360 }}
+                        animate={{ scale: [1, 1.2, 1] }}
                         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                       >
-                        <Loader className="w-5 h-5" />
+                        <Loader className="w-5 h-5 shadow-sm" />
                       </motion.div>
                     ) : (course.max_students > 0 && course.enrolled_students >= course.max_students) ? (
                       'Course Full'
                     ) : (
                       <>
                         <motion.div
-                          whileHover={{ rotate: 90 }}
+                          whileHover={{ scale: 1.2 }}
                           transition={{ duration: 0.3 }}
                         >
                           <Plus className="w-5 h-5" />
@@ -475,9 +486,91 @@ const CoursesPage = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </div >
+      {selectedCourseDetails && createPortal(
+        <AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+            onClick={() => setSelectedCourseDetails(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-[2.5rem] p-8 max-w-lg w-full shadow-2xl space-y-6 relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold uppercase tracking-wider">
+                    {selectedCourseDetails.course_code}
+                  </span>
+                  <h3 className="text-2xl font-bold text-gray-900 mt-2">{selectedCourseDetails.course_name}</h3>
+                </div>
+                <button
+                  onClick={() => setSelectedCourseDetails(null)}
+                  className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                >
+                  <X className="w-6 h-6 text-gray-400" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 italic">
+                  <p className="text-xs text-gray-500 font-bold uppercase mb-1">Instructor</p>
+                  <p className="font-semibold text-gray-900">{selectedCourseDetails.instructor}</p>
+                </div>
+                <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 italic">
+                  <p className="text-xs text-gray-500 font-bold uppercase mb-1">Credits</p>
+                  <p className="font-semibold text-gray-900">{selectedCourseDetails.credits} Units</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 text-gray-700">
+                  <Clock className="w-5 h-5 text-blue-500" />
+                  <span className="text-sm font-medium">{selectedCourseDetails.schedule}</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-700">
+                  <MapPin className="w-5 h-5 text-indigo-500" />
+                  <span className="text-sm font-medium">Room: {selectedCourseDetails.room}</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-700">
+                  <Users className="w-5 h-5 text-purple-500" />
+                  <span className="text-sm font-medium">{selectedCourseDetails.enrolled_students} Students Enrolled</span>
+                </div>
+              </div>
+
+              {selectedCourseDetails.prerequisites?.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Prerequisites</p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCourseDetails.prerequisites.map((prereq, pidx) => (
+                      <span key={pidx} className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium">
+                        {prereq}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={() => setSelectedCourseDetails(null)}
+                className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-bold shadow-lg hover:shadow-indigo-200 transition-all"
+              >
+                Close Details
+              </button>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>,
+        document.body
+      )}
+    </div>
   );
 };
 
 export default CoursesPage;
-

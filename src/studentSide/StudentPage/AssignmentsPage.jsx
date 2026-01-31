@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
 import {
   FileText,
   Upload,
@@ -14,7 +15,8 @@ import {
   Filter,
   Search,
   BookOpen,
-  Award
+  Award,
+  X
 } from 'lucide-react';
 import { fetchStudentAssignments, submitAssignment, } from '../../api/assignment_api';
 
@@ -26,6 +28,8 @@ const AssignmentsPage = () => {
   const [filterStatus, setFilterStatus] = useState('all'); // all, pending, submitted, graded
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedAssignmentDetails, setSelectedAssignmentDetails] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
   const fileInputRef = useRef(null);
 
@@ -127,7 +131,7 @@ const AssignmentsPage = () => {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <motion.div
-          animate={{ rotate: 360 }}
+          animate={{ scale: [1, 1.1, 1] }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
         >
           <Loader className="w-12 h-12 text-blue-600" />
@@ -378,7 +382,10 @@ const AssignmentsPage = () => {
                     </button>
                   )}
                   {assignment.submission_file && (
-                    <button className="px-6 py-2 backdrop-blur-xl bg-white/60 border border-white/40 text-gray-700 rounded-xl font-semibold hover:bg-white/80 transition-all flex items-center gap-2">
+                    <button
+                      onClick={() => showMessage('success', `File: ${assignment.submission_file.split('/').pop()}`)}
+                      className="px-6 py-2 backdrop-blur-xl bg-white/60 border border-white/40 text-gray-700 rounded-xl font-semibold hover:bg-white/80 transition-all flex items-center gap-2"
+                    >
                       <Download className="w-5 h-5" />
                       View Submission
                     </button>
@@ -390,14 +397,13 @@ const AssignmentsPage = () => {
         )}
       </div>
 
-      {/* Submission Modal */}
-      <AnimatePresence>
-        {selectedAssignment && (
+      {selectedAssignment && createPortal(
+        <AnimatePresence>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
             onClick={() => !submitting && setSelectedAssignment(null)}
           >
             <motion.div
@@ -449,41 +455,109 @@ const AssignmentsPage = () => {
                   )}
                 </div>
                 <input
-                  ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.doc,.docx,.zip,.txt"
+                  ref={fileInputRef}
                   onChange={handleFileSelect}
                   className="hidden"
+                  accept=".pdf,.doc,.docx,.zip"
                 />
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-4">
                 <button
-                  onClick={() => setSelectedAssignment(null)}
                   disabled={submitting}
-                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all disabled:opacity-50"
+                  onClick={() => setSelectedAssignment(null)}
+                  className="flex-1 py-4 px-6 rounded-2xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition-all disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={() => handleSubmit(selectedAssignment.id)}
                   disabled={submitting || !uploadedFile}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  onClick={() => handleSubmit(selectedAssignment.id)}
+                  className="flex-[2] py-4 px-6 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-lg hover:shadow-indigo-200 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {submitting ? (
-                    <Loader className="w-5 h-5 animate-spin" />
+                    <>
+                      <Loader className="w-5 h-5 animate-spin" />
+                      Submitting...
+                    </>
                   ) : (
                     <>
-                      <Upload className="w-5 h-5" />
-                      Submit
+                      <CheckCircle className="w-5 h-5" />
+                      Submit Now
                     </>
                   )}
                 </button>
               </div>
             </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Assignment Details Modal */}
+      {showDetailsModal && selectedAssignmentDetails && createPortal(
+        <AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+            onClick={() => setShowDetailsModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-[2.5rem] p-8 max-w-lg w-full shadow-2xl space-y-6 relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold uppercase tracking-wider">
+                    {selectedAssignmentDetails.course_code}
+                  </span>
+                  <h3 className="text-2xl font-bold text-gray-900 mt-2">{selectedAssignmentDetails.title}</h3>
+                </div>
+                <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                >
+                  <X className="w-6 h-6 text-gray-400" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 italic">
+                  <p className="text-xs text-gray-500 font-bold uppercase mb-1">Description</p>
+                  <p className="text-gray-700">{selectedAssignmentDetails.description || 'No description provided.'}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-2xl bg-blue-50 border border-blue-100 italic">
+                    <p className="text-xs text-blue-600 font-bold uppercase mb-1">Due Date</p>
+                    <p className="font-semibold text-gray-900">{selectedAssignmentDetails.due_date}</p>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-indigo-50 border border-indigo-100 italic">
+                    <p className="text-xs text-indigo-600 font-bold uppercase mb-1">Points</p>
+                    <p className="font-semibold text-gray-900">{selectedAssignmentDetails.points} Points</p>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-bold shadow-lg hover:shadow-indigo-200 transition-all"
+              >
+                Close Details
+              </button>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 };

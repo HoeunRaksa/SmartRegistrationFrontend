@@ -69,9 +69,9 @@ const DashboardHome = ({ currentSession }) => {
   const getFallbackDashboardData = () => ({
     student: {
       name: user?.name || "Student",
-      student_code: user?.student_code || "—",
-      major: user?.major || "—",
-      year: user?.year || "—",
+      student_code: user?.student_code || "",
+      major: user?.major || "",
+      year: user?.year || "",
     },
     stats: {
       gpa: 0,
@@ -129,8 +129,11 @@ const DashboardHome = ({ currentSession }) => {
               {getGreeting()}, {dashboardData?.student?.name}! 👋
             </motion.h1>
             <p className="text-white/90">
-              {dashboardData?.student?.student_code} •{" "}
-              {dashboardData?.student?.major} • {dashboardData?.student?.year}
+              {[
+                dashboardData?.student?.student_code,
+                dashboardData?.student?.major,
+                dashboardData?.student?.year
+              ].filter(Boolean).join(' • ')}
             </p>
           </div>
 

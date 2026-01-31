@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 import {
   Send,
   Search,
@@ -101,7 +102,7 @@ const MessagesPage = () => {
   useEffect(() => {
     if (!currentUser?.id || !selectedConversation?.id) return;
 
-    const channelName = `conversation.${selectedConversation.id}`;
+    const channelName = `conversation.${selectedConversation.id} `;
     const echo = getEcho();
     if (!echo) return;
 
@@ -158,7 +159,7 @@ const MessagesPage = () => {
 
   const handleTyping = () => {
     if (!selectedConversation?.id) return;
-    const channelName = `conversation.${selectedConversation.id}`;
+    const channelName = `conversation.${selectedConversation.id} `;
     const echo = getEcho();
     if (echo) {
       echo.private(channelName).whisper("typing", {
@@ -182,7 +183,7 @@ const MessagesPage = () => {
       recorder.ondataavailable = (e) => chunks.push(e.data);
       recorder.onstop = () => {
         const blob = new Blob(chunks, { type: 'audio/webm' });
-        const file = new File([blob], `voice-${Date.now()}.webm`, { type: 'audio/webm' });
+        const file = new File([blob], `voice - ${Date.now()}.webm`, { type: 'audio/webm' });
         setAttachments(prev => [...prev, file]);
         stream.getTracks().forEach(track => track.stop());
       };
@@ -212,7 +213,7 @@ const MessagesPage = () => {
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, '0')} `;
   };
 
   const loadConversations = async () => {
@@ -252,7 +253,7 @@ const MessagesPage = () => {
     if ((!newMessage.trim() && attachments.length === 0) || !selectedConversation?.id || sending) return;
 
     const contentToSend = newMessage.trim();
-    const tempId = `tmp-${Date.now()}`;
+    const tempId = `tmp - ${Date.now()} `;
 
     const optimistic = {
       id: tempId,
@@ -422,7 +423,7 @@ const MessagesPage = () => {
 
       <div className="h-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm flex">
         {/* Sidebar */}
-        <div className={`w-full md:w-[360px] border-r border-slate-200 flex flex-col ${showChat ? "hidden md:flex" : "flex"}`}>
+        <div className={`w - full md: w - [360px] border - r border - slate - 200 flex flex - col ${showChat ? "hidden md:flex" : "flex"} `}>
           <div className="px-4 pt-4 pb-0 border-b border-slate-200">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-slate-900">Messages</h2>
@@ -441,13 +442,13 @@ const MessagesPage = () => {
               <div className="flex gap-4 mb-3">
                 <button
                   onClick={() => setActiveTab("chats")}
-                  className={`text-sm font-bold pb-2 border-b-2 transition-colors ${activeTab === 'chats' ? "border-blue-600 text-blue-600" : "border-transparent text-slate-400 hover:text-slate-600"}`}
+                  className={`text - sm font - bold pb - 2 border - b - 2 transition - colors ${activeTab === 'chats' ? "border-blue-600 text-blue-600" : "border-transparent text-slate-400 hover:text-slate-600"} `}
                 >
                   Chats
                 </button>
                 <button
                   onClick={() => setActiveTab("classmates")}
-                  className={`text-sm font-bold pb-2 border-b-2 transition-colors ${activeTab === 'classmates' ? "border-blue-600 text-blue-600" : "border-transparent text-slate-400 hover:text-slate-600"}`}
+                  className={`text - sm font - bold pb - 2 border - b - 2 transition - colors ${activeTab === 'classmates' ? "border-blue-600 text-blue-600" : "border-transparent text-slate-400 hover:text-slate-600"} `}
                 >
                   Classmates
                 </button>
@@ -472,12 +473,12 @@ const MessagesPage = () => {
                 <button
                   key={c.id}
                   onClick={() => setSelectedConversation(c)}
-                  className={`w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 border-b border-slate-50 ${selectedConversation?.id === c.id ? "bg-blue-50" : ""}`}
+                  className={`w - full px - 4 py - 3 text - left hover: bg - slate - 50 flex items - center gap - 3 border - b border - slate - 50 ${selectedConversation?.id === c.id ? "bg-blue-50" : ""} `}
                 >
-                  <div className={`h-12 w-12 rounded-full flex items-center justify-center font-bold text-white overflow-hidden bg-gradient-to-br ${c.type === 'course_group' ? "from-emerald-500 to-teal-600" :
-                    c.type === 'group' ? "from-indigo-600 to-purple-600" :
-                      "from-blue-600 to-indigo-600"
-                    }`}>
+                  <div className={`h - 12 w - 12 rounded - full flex items - center justify - center font - bold text - white overflow - hidden bg - gradient - to - br ${c.type === 'course_group' ? "from-emerald-500 to-teal-600" :
+                      c.type === 'group' ? "from-indigo-600 to-purple-600" :
+                        "from-blue-600 to-indigo-600"
+                    } `}>
                     {c.avatar ? (
                       <img src={c.avatar} className="w-full h-full object-cover" alt="" />
                     ) : (
@@ -509,7 +510,7 @@ const MessagesPage = () => {
                     </div>
                     <div className="text-left flex-1">
                       <div className="text-sm font-bold text-slate-900 leading-tight">{u.name}</div>
-                      <div className="text-[10px] text-slate-400 font-medium">{u.student_id ? `#${u.student_id}` : "Classmate"}</div>
+                      <div className="text-[10px] text-slate-400 font-medium">{u.student_id ? `#${u.student_id} ` : "Classmate"}</div>
                     </div>
                     <MessageCircle className="w-4 h-4 text-slate-300 group-hover:text-blue-500 transition-colors" />
                   </button>
@@ -520,16 +521,16 @@ const MessagesPage = () => {
         </div>
 
         {/* Chat Area */}
-        <div className={`flex-1 flex flex-col ${showChat ? "flex" : "hidden md:flex"}`}>
+        <div className={`flex - 1 flex flex - col ${showChat ? "flex" : "hidden md:flex"} `}>
           {selectedConversation ? (
             <>
               <div className="h-16 border-b border-slate-200 px-4 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10">
                 <div className="flex items-center gap-3">
                   <button className="md:hidden p-2" onClick={() => setShowChat(false)}><ArrowLeft /></button>
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm text-white overflow-hidden bg-gradient-to-br ${selectedConversation.type === 'course_group' ? "from-emerald-500 to-teal-600" :
-                    selectedConversation.type === 'group' ? "from-indigo-600 to-purple-600" :
-                      "from-blue-600 to-indigo-600"
-                    }`}>
+                  <div className={`h - 10 w - 10 rounded - full flex items - center justify - center font - bold text - sm text - white overflow - hidden bg - gradient - to - br ${selectedConversation.type === 'course_group' ? "from-emerald-500 to-teal-600" :
+                      selectedConversation.type === 'group' ? "from-indigo-600 to-purple-600" :
+                        "from-blue-600 to-indigo-600"
+                    } `}>
                     {selectedConversation.avatar ? (
                       <img src={selectedConversation.avatar} className="w-full h-full object-cover" alt="" />
                     ) : (
@@ -570,7 +571,7 @@ const MessagesPage = () => {
 
               <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
                 {messages.map((msg) => (
-                  <div key={msg.id} className={`flex items-end gap-2 ${msg.is_mine ? "justify-end" : "justify-start"}`}>
+                  <div key={msg.id} className={`flex items - end gap - 2 ${msg.is_mine ? "justify-end" : "justify-start"} `}>
                     {!msg.is_mine && (
                       <div className="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0 mb-1 overflow-hidden border border-white">
                         {msg.sender_avatar ? (
@@ -583,17 +584,17 @@ const MessagesPage = () => {
                       </div>
                     )}
 
-                    <div className={`max-w-[70%] group relative`}>
+                    <div className={`max - w - [70 %] group relative`}>
                       {!msg.is_mine && (
                         <span className="text-[10px] text-slate-400 font-medium ml-1 mb-0.5 block">
                           {msg.sender_name}
                         </span>
                       )}
 
-                      <div className={`px-4 py-2 rounded-2xl shadow-sm transition-all ${msg.is_mine
-                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-none"
-                        : "bg-white text-slate-800 border border-slate-100 rounded-tl-none"
-                        } ${msg.is_deleted ? "opacity-60 bg-slate-100" : ""}`}>
+                      <div className={`px - 4 py - 2 rounded - 2xl shadow - sm transition - all ${msg.is_mine
+                          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-none"
+                          : "bg-white text-slate-800 border border-slate-100 rounded-tl-none"
+                        } ${msg.is_deleted ? "opacity-60 bg-slate-100" : ""} `}>
 
                         {msg.is_deleted ? (
                           <div className="flex items-center gap-2 py-1">
@@ -613,16 +614,18 @@ const MessagesPage = () => {
                                     alt="Chat attachment"
                                   />
                                 )}
-                                {att.type === 'audio' && (
-                                  <div className={`p-2 rounded-lg flex items-center gap-2 ${msg.is_mine ? "bg-blue-700/30" : "bg-slate-100"}`}>
-                                    <audio
-                                      controls
-                                      src={att._local ? att.file_path : (att.file_path.startsWith('http') ? att.file_path : `https://study.learner-teach.online/storage/${att.file_path}`)}
-                                      className="h-8 max-w-[200px]"
-                                    />
-                                  </div>
-                                )}
-                              </div>
+                                {
+                                  att.type === 'audio' && (
+                                    <div className={`p-2 rounded-lg flex items-center gap-2 ${msg.is_mine ? "bg-blue-700/30" : "bg-slate-100"}`}>
+                                      <audio
+                                        controls
+                                        src={att._local ? att.file_path : (att.file_path.startsWith('http') ? att.file_path : `https://study.learner-teach.online/storage/${att.file_path}`)}
+                                        className="h-8 max-w-[200px]"
+                                      />
+                                    </div>
+                                  )
+                                }
+                              </div >
                             ))}
                           </>
                         )}
@@ -636,7 +639,7 @@ const MessagesPage = () => {
                             </span>
                           )}
                         </div>
-                      </div>
+                      </div >
 
                       {(msg.is_mine || (currentUser.role === 'teacher' || currentUser.role === 'admin')) && !msg.is_deleted && (
                         <button
@@ -647,57 +650,61 @@ const MessagesPage = () => {
                           <Trash2 className="w-4 h-4" />
                         </button>
                       )}
-                    </div>
-                  </div>
+                    </div >
+                  </div >
                 ))}
-                {typingUsers.length > 0 && (
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+                {
+                  typingUsers.length > 0 && (
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+                      </div>
+                      <span className="text-xs text-slate-400 font-medium">
+                        {typingUsers.length > 2
+                          ? `${typingUsers.length} people are typing...`
+                          : `${typingUsers.map(u => u.name.split(' ')[0]).join(', ')} ${typingUsers.length === 1 ? 'is' : 'are'} typing...`}
+                      </span>
                     </div>
-                    <span className="text-xs text-slate-400 font-medium">
-                      {typingUsers.length > 2
-                        ? `${typingUsers.length} people are typing...`
-                        : `${typingUsers.map(u => u.name.split(' ')[0]).join(', ')} ${typingUsers.length === 1 ? 'is' : 'are'} typing...`}
-                    </span>
-                  </div>
-                )}
+                  )
+                }
                 <div ref={messagesEndRef} />
-              </div>
+              </div >
 
               {/* Message Input Container */}
-              <div className="p-4 bg-white border-t border-slate-100 shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.05)]">
-                {attachments.length > 0 && (
-                  <div className="flex gap-3 mb-3 overflow-x-auto pb-2 scrollbar-hide">
-                    {attachments.map((file, i) => (
-                      <motion.div
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        key={i}
-                        className="relative h-20 w-20 bg-slate-50 rounded-xl flex-shrink-0 flex items-center justify-center border border-slate-200 group"
-                      >
-                        {file.type.startsWith('image/') ? (
-                          <img src={URL.createObjectURL(file)} className="h-full w-full object-cover rounded-xl" alt="" />
-                        ) : (
-                          <div className="flex flex-col items-center gap-1">
-                            <Mic className="w-6 h-6 text-blue-500" />
-                            <span className="text-[10px] font-bold text-slate-500 uppercase">Voice</span>
-                          </div>
-                        )}
-                        <button
-                          onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 transition-colors"
+              < div className="p-4 bg-white border-t border-slate-100 shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.05)]" >
+                {
+                  attachments.length > 0 && (
+                    <div className="flex gap-3 mb-3 overflow-x-auto pb-2 scrollbar-hide">
+                      {attachments.map((file, i) => (
+                        <motion.div
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          key={i}
+                          className="relative h-20 w-20 bg-slate-50 rounded-xl flex-shrink-0 flex items-center justify-center border border-slate-200 group"
                         >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
+                          {file.type.startsWith('image/') ? (
+                            <img src={URL.createObjectURL(file)} className="h-full w-full object-cover rounded-xl" alt="" />
+                          ) : (
+                            <div className="flex flex-col items-center gap-1">
+                              <Mic className="w-6 h-6 text-blue-500" />
+                              <span className="text-[10px] font-bold text-slate-500 uppercase">Voice</span>
+                            </div>
+                          )}
+                          <button
+                            onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 transition-colors"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )
+                }
 
-                <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+                < form onSubmit={handleSendMessage} className="flex items-center gap-2" >
                   <input
                     type="file"
                     multiple
@@ -727,27 +734,29 @@ const MessagesPage = () => {
                     </button>
                   </div>
 
-                  {isRecording ? (
-                    <div className="flex-1 px-4 py-2.5 bg-red-50 rounded-xl flex items-center justify-between border border-red-100">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-red-600 animate-ping" />
-                        <span className="text-sm font-bold text-red-600 uppercase tracking-widest">Recording...</span>
+                  {
+                    isRecording ? (
+                      <div className="flex-1 px-4 py-2.5 bg-red-50 rounded-xl flex items-center justify-between border border-red-100">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-red-600 animate-ping" />
+                          <span className="text-sm font-bold text-red-600 uppercase tracking-widest">Recording...</span>
+                        </div>
+                        <span className="font-mono text-sm text-red-700 font-bold">{formatTime(recordingTime)}</span>
+                        <button type="button" onClick={stopRecording} className="text-red-600 font-bold text-xs hover:underline">STOP</button>
                       </div>
-                      <span className="font-mono text-sm text-red-700 font-bold">{formatTime(recordingTime)}</span>
-                      <button type="button" onClick={stopRecording} className="text-red-600 font-bold text-xs hover:underline">STOP</button>
-                    </div>
-                  ) : (
-                    <input
-                      type="text"
-                      value={newMessage}
-                      onChange={(e) => {
-                        setNewMessage(e.target.value);
-                        handleTyping();
-                      }}
-                      placeholder="Type a message..."
-                      className="flex-1 px-4 py-3 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium"
-                    />
-                  )}
+                    ) : (
+                      <input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => {
+                          setNewMessage(e.target.value);
+                          handleTyping();
+                        }}
+                        placeholder="Type a message..."
+                        className="flex-1 px-4 py-3 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium"
+                      />
+                    )
+                  }
 
                   <button
                     type="submit"
@@ -756,8 +765,8 @@ const MessagesPage = () => {
                   >
                     {sending ? <Loader className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                   </button>
-                </form>
-              </div>
+                </form >
+              </div >
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center bg-slate-50/50 text-slate-400 p-8 text-center">
@@ -774,67 +783,77 @@ const MessagesPage = () => {
               </p>
             </div>
           )}
-        </div>
-      </div>
+        </div >
+      </div >
 
       {/* Create Group Modal */}
-      <AnimatePresence>
-        {showCreateGroup && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+      {
+        showCreateGroup && createPortal(
+          <AnimatePresence>
             <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-100"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4"
+              onClick={() => setShowCreateGroup(false)}
             >
-              <div className="px-6 py-5 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-                <h3 className="text-lg font-bold text-slate-900">Create Study Group</h3>
-                <button onClick={() => setShowCreateGroup(false)} className="p-2 hover:bg-white rounded-xl transition-colors"><X className="text-slate-400 w-5 h-5" /></button>
-              </div>
-              <div className="p-6 space-y-6">
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Group Title</label>
-                  <input
-                    value={groupTitle}
-                    onChange={e => setGroupTitle(e.target.value)}
-                    className="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-all"
-                    placeholder="e.g. Finals Prep 2024"
-                  />
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-100"
+              >
+                <div className="px-6 py-5 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+                  <h3 className="text-lg font-bold text-slate-900">Create Study Group</h3>
+                  <button onClick={() => setShowCreateGroup(false)} className="p-2 hover:bg-white rounded-xl transition-colors"><X className="text-slate-400 w-5 h-5" /></button>
                 </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Select Participants</label>
-                  <div className="max-h-60 overflow-y-auto space-y-1 pr-2 scrollbar-hide">
-                    {conversations.filter(c => c.type === 'private').map(u => (
-                      <label key={u.id} className="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-2xl cursor-pointer transition-colors border border-transparent hover:border-slate-100">
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.includes(u.other_user_id || u.id)}
-                          onChange={(e) => {
-                            const id = u.other_user_id || u.id;
-                            setSelectedUsers(prev => e.target.checked ? [...prev, id] : prev.filter(i => i !== id));
-                          }}
-                          className="w-5 h-5 rounded-lg border-slate-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
-                          {initials(u.name)}
-                        </div>
-                        <span className="text-sm font-semibold text-slate-700">{u.name}</span>
-                      </label>
-                    ))}
+                <div className="p-6 space-y-6">
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Group Title</label>
+                    <input
+                      value={groupTitle}
+                      onChange={e => setGroupTitle(e.target.value)}
+                      className="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-all"
+                      placeholder="e.g. Finals Prep 2024"
+                    />
                   </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Select Participants</label>
+                    <div className="max-h-60 overflow-y-auto space-y-1 pr-2 scrollbar-hide">
+                      {conversations.filter(c => c.type === 'private').map(u => (
+                        <label key={u.id} className="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-2xl cursor-pointer transition-colors border border-transparent hover:border-slate-100">
+                          <input
+                            type="checkbox"
+                            checked={selectedUsers.includes(u.other_user_id || u.id)}
+                            onChange={(e) => {
+                              const id = u.other_user_id || u.id;
+                              setSelectedUsers(prev => e.target.checked ? [...prev, id] : prev.filter(i => i !== id));
+                            }}
+                            className="w-5 h-5 rounded-lg border-slate-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
+                            {initials(u.name)}
+                          </div>
+                          <span className="text-sm font-semibold text-slate-700">{u.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleCreateGroup}
+                    disabled={!groupTitle.trim() || selectedUsers.length === 0}
+                    className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl hover:shadow-xl hover:shadow-blue-500/20 disabled:opacity-50 transition-all"
+                  >
+                    Confirm Group
+                  </button>
                 </div>
-                <button
-                  onClick={handleCreateGroup}
-                  disabled={!groupTitle.trim() || selectedUsers.length === 0}
-                  className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl hover:shadow-xl hover:shadow-blue-500/20 disabled:opacity-50 transition-all"
-                >
-                  Confirm Group
-                </button>
-              </div>
+              </motion.div>
             </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+          </AnimatePresence>,
+          document.body
+        )
+      }
       <Alert
         isOpen={alert.show}
         type={alert.type}
@@ -849,7 +868,7 @@ const MessagesPage = () => {
         onConfirm={confirm.action}
         onCancel={() => setConfirm({ ...confirm, show: false })}
       />
-    </div>
+    </div >
   );
 };
 
