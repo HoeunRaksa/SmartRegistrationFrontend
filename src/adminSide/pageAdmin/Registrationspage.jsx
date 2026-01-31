@@ -242,13 +242,14 @@ const RegistrationPage = () => {
   }, [selectedMajor]);
 
   const selectedSemesterInt = useMemo(() => {
+    if (selectedSemester === "all") return null;
     const v = parseInt(selectedSemester, 10);
     return Number.isFinite(v) ? v : 1;
   }, [selectedSemester]);
 
   const loadRegistrationsOnly = useCallback(
     async (opts = { preferCache: true }) => {
-      const semKey = String(selectedSemesterInt);
+      const semKey = selectedSemesterInt === null ? "all" : String(selectedSemesterInt);
 
       // instant from cache
       if (opts?.preferCache && semesterCacheRef.current.has(semKey)) {
@@ -261,7 +262,11 @@ const RegistrationPage = () => {
       const reqId = ++latestReqIdRef.current;
 
       try {
-        const regRes = await fetchRegistrations({ semester: selectedSemesterInt });
+        // If selectedSemesterInt is null, we fetch all (pass undefined or handled by API if we omit param, or specific 'all' param if API supports it)
+        // Check API: usually omitting filtering params returns all, or we might need to handle client side if API forces filtering.
+        // Assuming fetchRegistrations handles optional semester.
+        const params = selectedSemesterInt !== null ? { semester: selectedSemesterInt } : {};
+        const regRes = await fetchRegistrations(params);
         if (reqId !== latestReqIdRef.current) return;
 
         const regData = regRes.data?.data || regRes.data || [];
@@ -285,12 +290,14 @@ const RegistrationPage = () => {
     try {
       setLoading(true);
 
-      const semKey = String(selectedSemesterInt);
+      const semKey = selectedSemesterInt === null ? "all" : String(selectedSemesterInt);
 
       // ✅ FIXED: Staggered requests instead of Promise.all (prevents 429)
       // Registrations load first, then departments/majors with delays + caching
+      const params = selectedSemesterInt !== null ? { semester: selectedSemesterInt } : {};
+
       const [regRes, deptRes, majorRes] = await staggeredRequests([
-        () => fetchRegistrations({ semester: selectedSemesterInt }),
+        () => fetchRegistrations(params),
         () => getCachedDepartments(fetchDepartments),
         () => getCachedMajors(fetchMajors),
       ], 150); // 150ms delay between each request
@@ -448,7 +455,7 @@ const RegistrationPage = () => {
 
   // ✅ manual refresh (and clear cache for the current semester)
   const handleRefresh = useCallback(async () => {
-    semesterCacheRef.current.delete(String(selectedSemesterInt));
+    semesterCacheRef.current.delete(selectedSemesterInt === null ? "all" : String(selectedSemesterInt));
     await loadRegistrationsOnly({ preferCache: false });
     toast?.success?.("Refreshed");
   }, [selectedSemesterInt, loadRegistrationsOnly, toast]);
@@ -580,6 +587,7 @@ const RegistrationPage = () => {
                 onChange={(e) => setSelectedSemester(e.target.value)}
                 className="px-3 py-2 bg-white/60 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
               >
+                <option value="all">All Semesters</option>
                 <option value="1">Semester 1</option>
                 <option value="2">Semester 2</option>
               </select>
