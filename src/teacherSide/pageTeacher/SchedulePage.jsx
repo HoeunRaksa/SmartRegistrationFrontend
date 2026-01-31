@@ -101,7 +101,14 @@ const SchedulePage = () => {
                   scheduleData[day].map((classItem, index) => (
                     <div
                       key={index}
-                      onClick={() => navigate('/teacher/attendance', { state: { courseId: classItem.course_id } })}
+                      onClick={() => navigate('/teacher/attendance', {
+                        state: {
+                          courseId: classItem.course_id,
+                          startTime: classItem.time.split(' - ')[0],
+                          endTime: classItem.time.split(' - ')[1],
+                          room: classItem.room
+                        }
+                      })}
                       className="p-3 rounded-xl bg-gray-50 border border-gray-100 hover:bg-blue-50 hover:border-blue-200 cursor-pointer transition-all shadow-sm group"
                     >
                       <div className={`inline-flex px-2 py-1 rounded-lg bg-gradient-to-r ${classItem.color} text-white text-[10px] font-bold mb-2 group-hover:scale-105 transition-transform`}>
