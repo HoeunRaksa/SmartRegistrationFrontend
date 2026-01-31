@@ -5,19 +5,22 @@
 /**
  * Logout user - clear all auth data and redirect to login
  */
+/**
+ * Logout user - clear all auth data and redirect to login
+ */
 export const logout = () => {
-  localStorage.removeItem('token');
+  localStorage.removeItem('token'); // clear just in case
   localStorage.removeItem('user');
   window.location.href = '/login';
 };
 
 /**
  * Check if user is authenticated
+ * (Relies on HttpOnly cookie + user object presence)
  */
 export const isAuthenticated = () => {
-  const token = localStorage.getItem('token');
   const user = localStorage.getItem('user');
-  return !!(token && user);
+  return !!user;
 };
 
 /**
@@ -43,15 +46,16 @@ export const hasRole = (requiredRoles) => {
 
 /**
  * Get auth token
+ * @deprecated Tokens are now HttpOnly cookies
  */
 export const getToken = () => {
-  return localStorage.getItem('token');
+  return null;
 };
 
 /**
  * Save auth data after login
  */
 export const saveAuthData = (token, user) => {
-  localStorage.setItem('token', token);
+  // Token is HTTP-Only cookie now
   localStorage.setItem('user', JSON.stringify(user));
 };

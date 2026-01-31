@@ -113,9 +113,19 @@ API.interceptors.response.use(
     inFlight.delete(key);
 
     // -----------------------------
-    // ✅ 4) Optional retry on 429 with backoff (small + safe)
+    // ✅ 4) Handle 401 (Cookie expired/invalid) -> Force Logout
     // -----------------------------
-    const status = error?.response?.status;
+    if (status === 401) {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+    }
+
+    // -----------------------------
+    // ✅ 5) Optional retry on 429 with backoff (small + safe)
+    // -----------------------------
     if (status === 429 && !config.__retry429) {
       config.__retry429 = true;
 

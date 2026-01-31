@@ -37,11 +37,10 @@ function AppContent() {
   }, [location.pathname]);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
     const userStr = localStorage.getItem("user");
     const pathname = location.pathname.toLowerCase();
 
-    if (!token || !userStr) return;
+    if (!userStr) return;
 
     let user;
     try {
@@ -121,8 +120,8 @@ function AppContent() {
               <MainRouter />
             ) : (
               <AnimatePresence mode="wait">
-<motion.div
-                key={location.pathname}
+                <motion.div
+                  key={location.pathname}
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -16 }}
