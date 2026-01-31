@@ -44,14 +44,14 @@ const MessagesPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConversation]);
 
-  // ✅ Polling every 1 second
-  useEffect(() => {
-    if (!selectedConversation?.id) return;
-    const interval = setInterval(() => {
-      loadMessages(selectedConversation.id, true);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [selectedConversation?.id]);
+  // ✅ Polling every 1 second (DISABLED: User requested pure real-time)
+  // useEffect(() => {
+  //   if (!selectedConversation?.id) return;
+  //   const interval = setInterval(() => {
+  //     loadMessages(selectedConversation.id, true);
+  //   }, 1000);
+  //   return () => clearInterval(interval);
+  // }, [selectedConversation?.id]);
 
   useEffect(() => {
     scrollToBottom();

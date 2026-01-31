@@ -95,11 +95,11 @@ const MessagesPage = () => {
       loadMessages(selectedConversation.id);
       setShowChat(true);
 
-      // ✅ Poll every 1 second
-      const interval = setInterval(() => {
-        loadMessages(selectedConversation.id);
-      }, 1000);
-      return () => clearInterval(interval);
+      // ✅ Polling every 1 second (DISABLED: User requested pure real-time)
+      // const interval = setInterval(() => {
+      //   loadMessages(selectedConversation.id);
+      // }, 1000);
+      // return () => clearInterval(interval);
     }
   }, [selectedConversation?.id]);
 
