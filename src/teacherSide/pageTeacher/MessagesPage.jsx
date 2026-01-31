@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Search, Send, Paperclip, MoreVertical, Loader2 } from 'lucide-react';
 import { fetchTeacherConversations, fetchTeacherMessages, sendTeacherMessage } from '../../api/teacher_api';
+import { getEcho } from '../../echo'; // ✅ add echo
 
 const MessagesPage = () => {
   const [conversations, setConversations] = useState([]);
@@ -16,6 +17,10 @@ const MessagesPage = () => {
   const messagesEndRef = useRef(null);
   const currentUserId = JSON.parse(localStorage.getItem('user'))?.id;
 
+  // ✅ keep echo + active channel in refs (so no re-render issues)
+  const echoRef = useRef(null);
+  const activeConversationIdRef = useRef(null);
+
   useEffect(() => {
     loadConversations();
   }, []);
@@ -23,9 +28,20 @@ const MessagesPage = () => {
   useEffect(() => {
     if (selectedConversation) {
       loadMessages(selectedConversation.id);
+
+      // ✅ subscribe realtime when select conversation
+      subscribeToConversation(selectedConversation.id);
     } else {
+      // ✅ cleanup when unselect
+      unsubscribeFromConversation();
       setMessages([]);
     }
+
+    // ✅ cleanup when switching conversation or leaving page
+    return () => {
+      unsubscribeFromConversation();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConversation]);
 
   useEffect(() => {
@@ -57,6 +73,72 @@ const MessagesPage = () => {
       console.error('Failed to load messages:', error);
     } finally {
       setLoadingMsgs(false);
+    }
+  };
+
+  // ✅ REALTIME: subscribe
+  const subscribeToConversation = (conversationId) => {
+    try {
+      const echo = getEcho();
+      if (!echo) return;
+
+      echoRef.current = echo;
+
+      // leave previous if switching
+      if (activeConversationIdRef.current && activeConversationIdRef.current !== conversationId) {
+        unsubscribeFromConversation();
+      }
+
+      activeConversationIdRef.current = conversationId;
+
+      // ⚠️ channel name + event name MUST match backend
+      // common: PrivateChannel("conversation.{id}") + broadcastAs("message.sent") or "MessageSent"
+      echo.private(`conversation.${conversationId}`)
+        .listen('MessageSent', (e) => {
+          const newMsg = e?.message || e?.data?.message || e;
+
+          if (!newMsg) return;
+
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === newMsg.id)) return prev; // avoid duplicates
+            return [...prev, newMsg];
+          });
+
+          // update last message in conversation list
+          setConversations((prev) =>
+            prev.map((c) =>
+              c.id === conversationId
+                ? {
+                  ...c,
+                  last_message: newMsg.content ?? c.last_message,
+                  last_message_time: newMsg.created_at ?? new Date().toISOString(),
+                  unread_count: c.unread_count, // keep existing (or backend should refresh)
+                }
+                : c
+            )
+          );
+        });
+
+    } catch (err) {
+      console.error('Realtime subscribe error:', err);
+    }
+  };
+
+  // ✅ REALTIME: unsubscribe
+  const unsubscribeFromConversation = () => {
+    try {
+      const echo = echoRef.current || getEcho();
+      const id = activeConversationIdRef.current;
+
+      if (!echo || !id) return;
+
+      // stop listening & leave private channel
+      echo.private(`conversation.${id}`).stopListening('MessageSent');
+      echo.leave(`private-conversation.${id}`);
+
+      activeConversationIdRef.current = null;
+    } catch (err) {
+      console.error('Realtime unsubscribe error:', err);
     }
   };
 
