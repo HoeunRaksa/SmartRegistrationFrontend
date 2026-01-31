@@ -423,7 +423,7 @@ const MessagesPage = () => {
 
       <div className="h-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm flex">
         {/* Sidebar */}
-        <div className={`w - full md: w - [360px] border - r border - slate - 200 flex flex - col ${showChat ? "hidden md:flex" : "flex"} `}>
+        <div className={`w-full md:w-[360px] border-r border-slate-200 flex flex-col ${showChat ? "hidden md:flex" : "flex"}`}>
           <div className="px-4 pt-4 pb-0 border-b border-slate-200">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-slate-900">Messages</h2>
@@ -442,13 +442,13 @@ const MessagesPage = () => {
               <div className="flex gap-4 mb-3">
                 <button
                   onClick={() => setActiveTab("chats")}
-                  className={`text - sm font - bold pb - 2 border - b - 2 transition - colors ${activeTab === 'chats' ? "border-blue-600 text-blue-600" : "border-transparent text-slate-400 hover:text-slate-600"} `}
+                  className={`text-sm font-bold pb-2 border-b-2 transition-colors ${activeTab === 'chats' ? "border-blue-600 text-blue-600" : "border-transparent text-slate-400 hover:text-slate-600"}`}
                 >
                   Chats
                 </button>
                 <button
                   onClick={() => setActiveTab("classmates")}
-                  className={`text - sm font - bold pb - 2 border - b - 2 transition - colors ${activeTab === 'classmates' ? "border-blue-600 text-blue-600" : "border-transparent text-slate-400 hover:text-slate-600"} `}
+                  className={`text-sm font-bold pb-2 border-b-2 transition-colors ${activeTab === 'classmates' ? "border-blue-600 text-blue-600" : "border-transparent text-slate-400 hover:text-slate-600"}`}
                 >
                   Classmates
                 </button>
@@ -473,9 +473,9 @@ const MessagesPage = () => {
                 <button
                   key={c.id}
                   onClick={() => setSelectedConversation(c)}
-                  className={`w - full px - 4 py - 3 text - left hover: bg - slate - 50 flex items - center gap - 3 border - b border - slate - 50 ${selectedConversation?.id === c.id ? "bg-blue-50" : ""} `}
+                  className={`w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 border-b border-slate-50 ${selectedConversation?.id === c.id ? "bg-blue-50" : ""}`}
                 >
-                  <div className={`h - 12 w - 12 rounded - full flex items - center justify - center font - bold text - white overflow - hidden bg - gradient - to - br ${c.type === 'course_group' ? "from-emerald-500 to-teal-600" :
+                  <div className={`h-12 w-12 rounded-full flex items-center justify-center font-bold text-white overflow-hidden bg-gradient-to-br ${c.type === 'course_group' ? "from-emerald-500 to-teal-600" :
                     c.type === 'group' ? "from-indigo-600 to-purple-600" :
                       "from-blue-600 to-indigo-600"
                     } `}>
@@ -521,13 +521,13 @@ const MessagesPage = () => {
         </div>
 
         {/* Chat Area */}
-        <div className={`flex - 1 flex flex - col ${showChat ? "flex" : "hidden md:flex"} `}>
+        <div className={`flex-1 flex flex-col ${showChat ? "flex" : "hidden md:flex"}`}>
           {selectedConversation ? (
             <>
               <div className="h-16 border-b border-slate-200 px-4 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10">
                 <div className="flex items-center gap-3">
                   <button className="md:hidden p-2" onClick={() => setShowChat(false)}><ArrowLeft /></button>
-                  <div className={`h - 10 w - 10 rounded - full flex items - center justify - center font - bold text - sm text - white overflow - hidden bg - gradient - to - br ${selectedConversation.type === 'course_group' ? "from-emerald-500 to-teal-600" :
+                  <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm text-white overflow-hidden bg-gradient-to-br ${selectedConversation.type === 'course_group' ? "from-emerald-500 to-teal-600" :
                     selectedConversation.type === 'group' ? "from-indigo-600 to-purple-600" :
                       "from-blue-600 to-indigo-600"
                     } `}>
@@ -571,7 +571,7 @@ const MessagesPage = () => {
 
               <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
                 {messages.map((msg) => (
-                  <div key={msg.id} className={`flex items - end gap - 2 ${msg.is_mine ? "justify-end" : "justify-start"} `}>
+                  <div key={msg.id} className={`flex items-end gap-2 ${msg.is_mine ? "justify-end" : "justify-start"}`}>
                     {!msg.is_mine && (
                       <div className="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0 mb-1 overflow-hidden border border-white">
                         {msg.sender_avatar ? (
@@ -584,17 +584,17 @@ const MessagesPage = () => {
                       </div>
                     )}
 
-                    <div className={`max - w - [70 %] group relative`}>
+                    <div className={`max-w-[70%] group relative`}>
                       {!msg.is_mine && (
                         <span className="text-[10px] text-slate-400 font-medium ml-1 mb-0.5 block">
                           {msg.sender_name}
                         </span>
                       )}
 
-                      <div className={`px - 4 py - 2 rounded - 2xl shadow - sm transition - all ${msg.is_mine
-                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-none"
-                        : "bg-white text-slate-800 border border-slate-100 rounded-tl-none"
-                        } ${msg.is_deleted ? "opacity-60 bg-slate-100" : ""} `}>
+                      <div className={`px-4 py-2 rounded-2xl shadow-sm transition-all ${msg.is_mine
+                          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-none"
+                          : "bg-white text-slate-800 border border-slate-100 rounded-tl-none"
+                        } ${msg.is_deleted ? "opacity-60 bg-slate-100" : ""}`}>
 
                         {msg.is_deleted ? (
                           <div className="flex items-center gap-2 py-1">
