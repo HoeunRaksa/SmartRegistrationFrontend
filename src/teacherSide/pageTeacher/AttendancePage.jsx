@@ -486,7 +486,10 @@ const AttendancePage = () => {
             </div>
             <select
               value={selectedCourseId}
-              onChange={(e) => setSelectedCourseId(e.target.value)}
+              onChange={(e) => {
+                setSelectedCourseId(e.target.value);
+                setSelectedSessionId('');
+              }}
               className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 font-bold transition-all shadow-sm"
             >
               <option value="">Choose a course...</option>
