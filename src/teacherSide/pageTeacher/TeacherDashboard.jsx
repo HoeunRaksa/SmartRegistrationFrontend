@@ -176,7 +176,7 @@ const TeacherDashboard = () => {
       <motion.aside
         animate={{ width: sidebarCollapsed ? 80 : 280 }}
         transition={{ duration: 0.2 }}
-        className="sidebar-fixed backdrop-blur-2xl bg-white/30 gen-z-glass border-r border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.2)] hidden md:block"
+        className="sidebar-fixed backdrop-blur-2xl bg-white/70 gen-z-glass border-r border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.2)] hidden md:block"
       >
         <div className="flex flex-col h-full p-4 overflow-hidden">
           <div className="flex items-center justify-between mb-8 px-2 flex-shrink-0">
@@ -384,7 +384,7 @@ const TeacherDashboard = () => {
 
       {/* ================= MAIN CONTENT (scrolls; sidebar stays fixed) ================= */}
       <div className={`sidebar-main transition-all duration-200 ${sidebarCollapsed ? "md:ml-20" : "md:ml-72"}`}>
-        <header className="sticky top-0 z-30 backdrop-blur-md bg-white/80 border-b border-gray-200 shadow-sm">
+        <header className="sticky top-0 z-30 backdrop-blur-md bg-white/95 border-b border-gray-200 shadow-sm">
           <div className="flex items-center justify-between px-4 md:px-6 py-3">
             <div className="flex items-center gap-3">
               <button

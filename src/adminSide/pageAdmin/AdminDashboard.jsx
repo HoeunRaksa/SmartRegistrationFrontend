@@ -451,7 +451,7 @@ const AdminDashboard = () => {
       <motion.aside
         animate={{ width: sidebarCollapsed ? 80 : 280 }}
         transition={{ duration: 0.2 }}
-        className="sidebar-fixed glass-bar gen-z-glass border-r border-white/20 hidden md:block"
+        className="sidebar-fixed glass-bar gen-z-glass bg-white/70 border-r border-white/20 hidden md:block"
       >
         <div className="flex flex-col h-full p-4 overflow-hidden">
           <div className="flex items-center justify-between mb-8 px-2 flex-shrink-0">

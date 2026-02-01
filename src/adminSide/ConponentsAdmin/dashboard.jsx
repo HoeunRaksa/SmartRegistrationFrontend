@@ -126,40 +126,40 @@ const AdminDashboard = () => {
       {/* iOS Glass Hero Header */}
       <motion.div
         variants={itemVariants}
-        className="relative rounded-[2.5rem] overflow-hidden p-10 md:p-14 border border-white/60 bg-white/20 backdrop-blur-3xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)]"
+        className="relative rounded-[3rem] overflow-hidden p-10 md:p-14 border border-white/10 bg-slate-900 shadow-2xl"
       >
-        {/* Subtle Decorative Accents */}
+        {/* Dark Mode Decorative Accents */}
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/10 rounded-full blur-[100px] gpu-accelerate" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-400/10 rounded-full blur-[100px] gpu-accelerate" />
+          <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-blue-600/30 rounded-full blur-[140px] gpu-accelerate" />
+          <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-purple-600/20 rounded-full blur-[140px] gpu-accelerate" />
         </div>
 
         <div className="relative z-10 flex flex-col lg:flex-row gap-10 items-center justify-between">
           <div className="space-y-6 max-w-2xl text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/50 border border-white/80 shadow-sm">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10 shadow-sm">
               <Sparkles className="w-4 h-4 text-amber-500" />
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Admin Command Suite</span>
+              <span className="text-[10px] font-black text-blue-200 uppercase tracking-widest">Admin Command Suite</span>
             </div>
-            <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight leading-[0.9]">
-              Nova<span className="text-blue-600">Tech</span> <br />
-              <span className="text-slate-400">Institutional Hub</span>
+            <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight leading-[0.9]">
+              Nova<span className="text-blue-400">Tech</span> <br />
+              <span className="text-white/60">Institutional Hub</span>
             </h1>
-            <p className="text-slate-500 text-lg font-medium leading-relaxed">
+            <p className="text-white/80 text-lg font-medium leading-relaxed">
               Seamless management experience powered by glass-morphic architecture. Control every aspect of your academic ecosystem with precision.
             </p>
 
             <div className="flex flex-wrap justify-center lg:justify-start gap-4 pt-4">
-              <button className="px-8 py-3.5 rounded-2xl bg-slate-900 text-white font-black text-sm shadow-2xl shadow-slate-900/20 hover:scale-105 transition-transform">
+              <button className="px-8 py-3.5 rounded-2xl bg-blue-600 text-white font-black text-sm shadow-2xl shadow-blue-600/20 hover:scale-105 transition-transform">
                 Primary Actions
               </button>
-              <button className="px-8 py-3.5 rounded-2xl bg-white text-slate-900 font-black text-sm border border-white hover:bg-slate-50 transition-all shadow-xl shadow-slate-200/50">
+              <button className="px-8 py-3.5 rounded-2xl bg-white/10 text-white font-black text-sm border border-white/20 hover:bg-white/20 transition-all shadow-xl">
                 Network Status
               </button>
             </div>
           </div>
 
           <div className="hidden xl:flex flex-col gap-6">
-            <div className="p-8 rounded-[2.5rem] bg-white/40 border border-white shadow-xl backdrop-blur-md">
+            <div className="p-8 rounded-[2.5rem] bg-white/70 border border-white shadow-xl backdrop-blur-md">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-12 h-12 rounded-2xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
                   <Activity className="w-6 h-6 text-white" />
@@ -193,7 +193,7 @@ const AdminDashboard = () => {
             key={stat.title}
             variants={itemVariants}
             whileHover={{ y: -5, scale: 1.01 }}
-            className="group relative bg-white/30 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/60 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]"
+            className="group relative bg-white/80 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/60 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]"
           >
             <div className="flex items-center justify-between mb-8">
               <div className={`p-4 rounded-2xl bg-gradient-to-br ${stat.gradient} shadow-lg shadow-blue-500/10 group-hover:rotate-6 transition-transform`}>
@@ -222,7 +222,7 @@ const AdminDashboard = () => {
         {/* Comparison Chart Container */}
         <motion.div
           variants={itemVariants}
-          className="xl:col-span-2 bg-white/30 backdrop-blur-3xl rounded-[2.5rem] p-10 border border-white/60 shadow-xl"
+          className="xl:col-span-2 bg-white/80 backdrop-blur-3xl rounded-[2.5rem] p-10 border border-white/60 shadow-xl"
         >
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-12">
             <div className="flex items-center gap-4">
@@ -253,7 +253,7 @@ const AdminDashboard = () => {
         {/* Identity & Demographics */}
         <motion.div
           variants={itemVariants}
-          className="bg-white/30 backdrop-blur-3xl rounded-[2.5rem] p-10 border border-white/60 shadow-xl flex flex-col"
+          className="bg-white/80 backdrop-blur-3xl rounded-[2.5rem] p-10 border border-white/60 shadow-xl flex flex-col"
         >
           <div className="mb-8 flex items-center gap-4">
             <div className="p-3 rounded-2xl bg-purple-50/50 text-purple-500 border border-white shadow-sm">
@@ -290,7 +290,7 @@ const AdminDashboard = () => {
         {/* Live Activity Stream */}
         <motion.div
           variants={itemVariants}
-          className="bg-white/30 backdrop-blur-3xl rounded-[2.5rem] p-10 border border-white/60 shadow-xl flex flex-col"
+          className="bg-white/80 backdrop-blur-3xl rounded-[2.5rem] p-10 border border-white/60 shadow-xl flex flex-col"
         >
           <div className="flex items-center justify-between mb-10">
             <div className="flex items-center gap-4">
@@ -330,7 +330,7 @@ const AdminDashboard = () => {
         {/* Ranking / Popularity */}
         <motion.div
           variants={itemVariants}
-          className="bg-white/30 backdrop-blur-3xl rounded-[2.5rem] p-10 border border-white/60 shadow-xl"
+          className="bg-white/80 backdrop-blur-3xl rounded-[2.5rem] p-10 border border-white/60 shadow-xl"
         >
           <div className="flex items-center justify-between mb-10">
             <div className="flex items-center gap-4">

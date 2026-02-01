@@ -15,6 +15,7 @@ import ProfilePage from './ProfilePage.jsx';
 import FriendsPage from './FriendsPage.jsx';
 import ProjectGroupsPage from './ProjectGroupsPage.jsx';
 import CertificatePage from './CertificatePage.jsx';
+import PaymentPage from './PaymentPage.jsx';
 import { fetchCurrentSession } from '../../api/admin_session_api.jsx';
 import {
     LayoutDashboard,
@@ -39,7 +40,8 @@ import {
     Construction,
     Users,
     Users2,
-    Sparkles
+    Sparkles,
+    CreditCard
 } from 'lucide-react';
 
 const profileFallback = "/assets/images/profile-fallback.png";
@@ -112,6 +114,7 @@ const StudentDashboard = () => {
         { id: 'messages', label: 'Messages', icon: MessageSquare, gradient: 'from-pink-500 to-rose-500' },
         { id: 'profile', label: 'Profile', icon: User, gradient: 'from-violet-500 to-purple-500' },
         { id: 'certificates', label: 'Certificates', icon: FileText, gradient: 'from-blue-600 to-indigo-600' },
+        { id: 'payments', label: 'My Payments', icon: CreditCard, gradient: 'from-emerald-500 to-teal-500' },
         { id: 'settings', label: 'Settings', icon: Settings, gradient: 'from-gray-500 to-slate-500' },
     ];
 
@@ -184,6 +187,7 @@ const StudentDashboard = () => {
             case 'messages': return <MessagesPage />;
             case 'profile': return <ProfilePage />;
             case 'certificates': return <CertificatePage />;
+            case 'payments': return <PaymentPage />;
             case 'settings': return <SettingPage />;
             default: return <DashboardHome currentSession={currentSession} />;
         }
@@ -220,7 +224,7 @@ const StudentDashboard = () => {
             <motion.aside
                 animate={{ width: sidebarCollapsed ? 80 : 280 }}
                 transition={{ duration: 0.2 }}
-                className="sidebar-fixed backdrop-blur-3xl bg-white/30 border-r border-white/20 hidden md:block"
+                className="sidebar-fixed backdrop-blur-3xl bg-white/70 border-r border-white/20 hidden md:block"
             >
                 <div className="flex flex-col h-full p-4 overflow-hidden">
                     <div className="flex items-center justify-between mb-8 px-2 flex-shrink-0">
@@ -338,7 +342,7 @@ const StudentDashboard = () => {
 
             {/* ================= MAIN CONTENT ================= */}
             <div className={`sidebar-main transition-all duration-200 ${sidebarCollapsed ? 'md:ml-20' : 'md:ml-72'}`}>
-                <header className="sticky top-0 z-30 backdrop-blur-3xl bg-white/60 border-b border-white/20 shadow-sm">
+                <header className="sticky top-0 z-30 backdrop-blur-3xl bg-white/90 border-b border-white/20 shadow-sm">
                     <div className="flex items-center justify-between px-4 md:px-8 py-4">
                         <div className="flex items-center gap-4">
                             <motion.button

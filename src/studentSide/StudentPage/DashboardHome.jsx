@@ -19,7 +19,8 @@ import {
   UserCheck,
   Star,
   Activity,
-  ArrowUpRight
+  ArrowUpRight,
+  CreditCard
 } from "lucide-react";
 
 // ✅ Import from separate API file
@@ -121,7 +122,7 @@ const DashboardHome = ({ currentSession }) => {
       {/* iOS Glass Welcome Banner */}
       <motion.div
         variants={itemVariants}
-        className="relative rounded-[2.5rem] overflow-hidden p-8 md:p-12 border border-white/60 bg-white/20 backdrop-blur-3xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)] group"
+        className="relative rounded-[2.5rem] overflow-hidden p-8 md:p-12 border border-white/60 bg-white/50 backdrop-blur-3xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)] group"
       >
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
           <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-blue-400/10 rounded-full blur-[100px] gpu-accelerate" />
@@ -150,7 +151,7 @@ const DashboardHome = ({ currentSession }) => {
           {currentSession && (
             <motion.div
               whileHover={{ scale: 1.02 }}
-              className="backdrop-blur-2xl bg-white/40 rounded-[2rem] p-6 md:p-8 border border-white shadow-xl min-w-[280px] group/card"
+              className="backdrop-blur-2xl bg-white/60 rounded-[2rem] p-6 md:p-8 border border-white shadow-xl min-w-[280px] group/card"
             >
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-3 rounded-2xl bg-blue-500 text-white shadow-lg shadow-blue-500/20 group-hover/card:rotate-12 transition-transform">
@@ -224,7 +225,7 @@ const DashboardHome = ({ currentSession }) => {
         {/* Today's Schedule Card */}
         <motion.div
           variants={itemVariants}
-          className="bg-white/30 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/60 shadow-xl"
+          className="bg-white/80 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/60 shadow-xl"
         >
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
@@ -285,7 +286,7 @@ const DashboardHome = ({ currentSession }) => {
         {/* Priority Assignments Card */}
         <motion.div
           variants={itemVariants}
-          className="bg-white/30 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/60 shadow-xl"
+          className="bg-white/80 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/60 shadow-xl"
         >
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
@@ -349,7 +350,7 @@ const DashboardHome = ({ currentSession }) => {
         {/* Recent Performance Index */}
         <motion.div
           variants={itemVariants}
-          className="bg-white/30 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/60 shadow-xl"
+          className="bg-white/80 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/60 shadow-xl"
         >
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
@@ -400,7 +401,7 @@ const DashboardHome = ({ currentSession }) => {
         {/* Intelligence Stream (Notifications) */}
         <motion.div
           variants={itemVariants}
-          className="bg-white/30 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/60 shadow-xl"
+          className="bg-white/80 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/60 shadow-xl"
         >
           <div className="flex items-center gap-4 mb-8">
             <div className="p-3.5 rounded-2xl bg-purple-50/50 text-purple-600 border border-white shadow-sm">
@@ -438,7 +439,7 @@ const DashboardHome = ({ currentSession }) => {
       {/* Quick Launch Icons */}
       <motion.div
         variants={itemVariants}
-        className="bg-white/30 backdrop-blur-3xl rounded-[2.5rem] p-10 border border-white/60 shadow-xl"
+        className="bg-white/80 backdrop-blur-3xl rounded-[2.5rem] p-10 border border-white/60 shadow-xl"
       >
         <h2 className="text-2xl font-black text-slate-800 mb-8 tracking-tight">Global Quick Actions</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -447,6 +448,7 @@ const DashboardHome = ({ currentSession }) => {
             { label: 'Schedule', icon: Calendar, color: 'purple', path: '/student/schedule' },
             { label: 'Submissions', icon: FileText, color: 'orange', path: '/student/assignments' },
             { label: 'Connections', icon: Users, color: 'emerald', path: '/student/friends' },
+            { label: 'Payments', icon: CreditCard, color: 'emerald', path: '/student/payments' },
           ].map((action, i) => (
             <motion.button
               key={i}
@@ -476,7 +478,7 @@ const StatCard = ({ title, value, icon: Icon, gradient, label, onClick }) => (
   <motion.button
     whileHover={{ y: -8, scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
-    className="group relative bg-white/30 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/60 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] text-left w-full"
+    className="group relative bg-white/80 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/60 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] text-left w-full"
     onClick={onClick}
   >
     <div className="flex items-center justify-between mb-8">

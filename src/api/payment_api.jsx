@@ -85,3 +85,6 @@ export const checkPaymentStatus = (tranId) =>
 
 export const getRegistrationPayment = (registrationId) =>
   getOnce(`/payment/registration/${registrationId}`);
+
+export const fetchStudentPayments = () =>
+  getOnce("/student/payments");

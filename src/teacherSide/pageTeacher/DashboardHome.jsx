@@ -192,7 +192,7 @@ const DashboardHome = () => {
                 key={stat.title}
                 variants={itemVariants}
                 whileHover={{ y: -8, scale: 1.02 }}
-                className="group relative overflow-hidden bg-white/40 backdrop-blur-2xl rounded-3xl p-6 border border-white/50 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]"
+                className="group relative overflow-hidden bg-white/80 backdrop-blur-2xl rounded-3xl p-6 border border-white/50 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]"
               >
                 <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-transparent to-gray-100/30 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-125 duration-500" />
 
@@ -223,7 +223,7 @@ const DashboardHome = () => {
               variants={itemVariants}
               className="lg:col-span-2 space-y-6"
             >
-              <div className="bg-white/40 backdrop-blur-2xl rounded-[2.5rem] p-8 border border-white/50 shadow-xl overflow-hidden relative">
+              <div className="bg-white/85 backdrop-blur-2xl rounded-[2.5rem] p-8 border border-white/50 shadow-xl overflow-hidden relative">
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-8">
                     <div>
@@ -301,7 +301,7 @@ const DashboardHome = () => {
               </div>
 
               {/* Engagement Chart Section (Visual Only) */}
-              <div className="bg-white/40 backdrop-blur-2xl rounded-[2.5rem] p-8 border border-white/50 shadow-xl relative overflow-hidden">
+              <div className="bg-white/85 backdrop-blur-2xl rounded-[2.5rem] p-8 border border-white/50 shadow-xl relative overflow-hidden">
                 <div className="flex items-center justify-between mb-8">
                   <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600">
