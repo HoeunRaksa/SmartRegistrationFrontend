@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Search, Filter, Mail, Phone, BookOpen, Loader } from 'lucide-react';
+import { Users, Search, Filter, Mail, Phone, BookOpen, Loader, UserPlus, UserCheck, Clock } from 'lucide-react';
+import API from '../../api/index';
+import Alert from '../../gobalConponent/Alert.jsx';
 import { fetchTeacherStudents } from '../../api/teacher_api';
 
 const StudentsPage = () => {
@@ -8,6 +10,8 @@ const StudentsPage = () => {
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [alert, setAlert] = useState({ show: false, message: '', type: 'error' });
+  const [processingId, setProcessingId] = useState(null);
 
   useEffect(() => {
     loadStudents();
@@ -27,6 +31,23 @@ const StudentsPage = () => {
 
   const departments = ['all', ...new Set(students.map(s => s.department).filter(Boolean))];
 
+  const sendConnectionRequest = async (userId) => {
+    try {
+      setProcessingId(userId);
+      await API.post("/social/friend-requests", { receiver_id: userId });
+      setAlert({ show: true, message: "Connection request sent!", type: "success" });
+      loadStudents(); // Refresh to update status if backend returned it (wait, TeacherStudent index doesn't return status yet)
+    } catch (err) {
+      if (err.response?.status === 409) {
+        setAlert({ show: true, message: "Request already pending or connected.", type: "warning" });
+      } else {
+        setAlert({ show: true, message: err.response?.data?.message || "Failed to send request", type: "error" });
+      }
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   const filteredStudents = students.filter(student => {
     const matchesSearch = (student.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (student.student_id_card || '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -36,6 +57,13 @@ const StudentsPage = () => {
 
   return (
     <div className="space-y-6">
+      <Alert
+        isOpen={alert.show}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert({ ...alert, show: false })}
+      />
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -134,6 +162,27 @@ const StudentsPage = () => {
                         <a href={`mailto:${student.email}`} className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors shadow-sm">
                           <Mail className="w-4 h-4" />
                         </a>
+                        <button
+                          onClick={() => student.connection_status ? null : sendConnectionRequest(student.user_id)}
+                          disabled={processingId === student.user_id || student.connection_status}
+                          className={`p-2 rounded-lg transition-colors shadow-sm disabled:opacity-100 ${student.connection_status === 'accepted'
+                              ? "bg-emerald-50 text-emerald-600"
+                              : student.connection_status === 'pending'
+                                ? "bg-amber-50 text-amber-600"
+                                : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+                            }`}
+                          title={student.connection_status === 'accepted' ? "Connected" : student.connection_status === 'pending' ? "Pending" : "Connect"}
+                        >
+                          {processingId === student.user_id ? (
+                            <Loader className="w-4 h-4 animate-spin" />
+                          ) : student.connection_status === 'accepted' ? (
+                            <UserCheck className="w-4 h-4" />
+                          ) : student.connection_status === 'pending' ? (
+                            <Clock className="w-4 h-4" />
+                          ) : (
+                            <UserPlus className="w-4 h-4" />
+                          )}
+                        </button>
                       </div>
                     </td>
                   </tr>

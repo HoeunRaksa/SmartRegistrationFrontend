@@ -8,6 +8,22 @@ import {
 } from "lucide-react";
 import Alert from "../../gobalConponent/Alert.jsx";
 import { fetchTeacherProfile, updateTeacherProfile } from "../../api/teacher_profile_api";
+import { premiumColors } from "../../theme/premiumColors";
+
+const InfoChip = ({ icon: Icon, value, label, variant = "light" }) => {
+  const color = variant === "dark" ? premiumColors.blue : premiumColors.slate;
+  return (
+    <div className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all ${color.bg} border border-white shadow-sm`}>
+      <div className={`p-2 rounded-xl border-2 border-white ${color.icon} text-white shadow-md`}>
+        <Icon className="w-4 h-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[12px] font-black uppercase tracking-widest leading-none mb-1 text-slate-700">{label}</p>
+        <p className="text-sm font-black truncate text-slate-900">{value || "---"}</p>
+      </div>
+    </div>
+  );
+};
 
 const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -29,8 +45,26 @@ const ProfilePage = () => {
 
   // Image preview
   const [imagePreview, setImagePreview] = useState(null);
-  // Cache busting for image updates
-  const [imgKey, setImgKey] = useState(Date.now());
+  const [imgKey, setImgKey] = useState(() => Date.now().toString());
+  const [imgBroken, setImgBroken] = useState(false);
+
+  const safeStr = (v) => (v === null || v === undefined ? "" : String(v));
+
+  const normalizeUrl = (u) => {
+    const s = safeStr(u).trim();
+    if (!s || s === "null" || s === "undefined") return "";
+    if (/^https?:\/\//i.test(s)) return s;
+    const rawBase = import.meta.env.VITE_API_URL || "https://study.learner-teach.online";
+    const cleanBase = rawBase.replace(/\/api\/?$|\/+$/g, "");
+    return `${cleanBase}${s.startsWith("/") ? "" : "/"}${s}`;
+  };
+
+  const withCacheBust = (url, key) => {
+    const u = normalizeUrl(url);
+    if (!u) return "";
+    const sep = u.includes("?") ? "&" : "?";
+    return `${u}${sep}v=${encodeURIComponent(key)}`;
+  };
 
   useEffect(() => {
     loadProfile();
@@ -103,7 +137,9 @@ const ProfilePage = () => {
   if (!profileData) return <div className="p-8 text-center">Profile not found.</div>;
 
   const { user, department } = profileData;
-  const displayImage = imagePreview || (user.profile_picture_url ? `${user.profile_picture_url}${user.profile_picture_url.includes('?') ? '&' : '?'}t=${imgKey}` : null);
+
+  // Final image source with normalization and cache bust
+  const displayImage = imagePreview || withCacheBust(user.profile_picture_url, imgKey);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -121,7 +157,13 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10 pb-20">
+      {/* Decorative Background Blobs - matching Student Profile */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-100/20 rounded-full blur-[120px] -mr-64 -mt-64" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-indigo-50/30 rounded-full blur-[120px] -ml-64 -mb-64" />
+      </div>
+
       <Alert
         isOpen={alert.show}
         type={alert.type}
@@ -133,84 +175,88 @@ const ProfilePage = () => {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="space-y-6 px-4 md:px-8"
+        className="space-y-10 relative z-10"
       >
-        {/* ================= HEADER CARD ================= */}
+        {/* ================= CLEAN HEADER CARD ================= */}
         <motion.div
           variants={itemVariants}
-          className="relative overflow-hidden rounded-[2.5rem] bg-[#0F172A] p-8 md:p-10 shadow-2xl border border-white/10 group"
+          className="bg-white/40 backdrop-blur-3xl rounded-[3rem] p-10 md:p-14 border border-white shadow-xl relative overflow-hidden"
         >
-          {/* Abstract Background Art */}
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full blur-[100px] pointer-events-none -mr-20 -mt-20" />
-          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-indigo-600/10 rounded-full blur-[80px] pointer-events-none -ml-20 -mb-20" />
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] pointer-events-none" />
+          {/* Soft Decorative Accents */}
+          <div className="absolute top-0 right-0 w-[40%] h-[100%] bg-blue-100/30 rounded-full blur-[100px] -mr-20 -mt-20 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-[40%] h-[80%] bg-indigo-50/40 rounded-full blur-[100px] -ml-20 -mb-20 pointer-events-none" />
 
-          <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8">
-            {/* Avatar */}
+          <div className="relative z-10 flex flex-col md:flex-row items-center gap-10 md:gap-14">
+            {/* Avatar Area */}
             <div className="relative group/avatar">
-              <div className="absolute -inset-1 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-[2rem] opacity-75 blur-md group-hover/avatar:opacity-100 transition duration-500" />
-              <div className="relative w-40 h-40 rounded-[1.8rem] bg-[#1E293B] p-1.5 shadow-xl overflow-hidden">
-                <div className="w-full h-full rounded-[1.4rem] overflow-hidden bg-slate-800 relative flex items-center justify-center">
-                  {displayImage ? (
-                    <img src={displayImage} alt="Profile" className="w-full h-full object-cover transition-transform duration-700 group-hover/avatar:scale-110" />
+              <div className="w-44 h-44 md:w-60 md:h-60 rounded-[3.5rem] bg-white overflow-hidden border-4 border-white shadow-sm ring-1 ring-slate-100">
+                <div className="w-full h-full relative group transition-transform duration-500 hover:scale-105">
+                  {displayImage && !imgBroken ? (
+                    <img
+                      src={displayImage}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                      onError={() => setImgBroken(true)}
+                    />
                   ) : (
-                    <div className="text-5xl font-bold text-slate-500 select-none">
+                    <div className="w-full h-full flex items-center justify-center bg-slate-50 text-8xl font-black text-slate-200">
                       {user.name.charAt(0)}
                     </div>
                   )}
 
                   {isEditing && (
-                    <label className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity cursor-pointer backdrop-blur-sm">
-                      <Upload className="w-8 h-8 text-white mb-2" />
-                      <span className="text-xs text-white font-bold uppercase tracking-wider">Change</span>
+                    <label className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                      <Upload className="w-10 h-10 text-white mb-2" />
+                      <span className="text-[11px] text-white font-black uppercase tracking-widest">Update Photo</span>
                       <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
                     </label>
                   )}
                 </div>
               </div>
               {!isEditing && (
-                <div className="absolute -bottom-3 -right-3 bg-gradient-to-br from-green-400 to-emerald-600 rounded-xl p-2 shadow-lg border-2 border-[#0F172A] text-white">
-                  <CheckCircle className="w-4 h-4" />
+                <div className="absolute -bottom-2 -right-2 bg-emerald-400 rounded-2xl p-3 border-4 border-white text-white shadow-md">
+                  <CheckCircle className="w-5 h-5" />
                 </div>
               )}
             </div>
 
-            {/* Info */}
-            <div className="flex-1 text-center md:text-left text-white">
-              <div className="flex flex-col md:flex-row md:items-center gap-4 mb-3">
-                <h1 className="text-4xl md:text-5xl font-black tracking-tight">{user.name}</h1>
+            {/* Info Area */}
+            <div className="flex-1 text-center md:text-left text-slate-900">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                <div>
+                  <h1 className="text-5xl md:text-6xl font-black text-slate-800 tracking-tight leading-none mb-3">{user.name}</h1>
+                  <p className="text-slate-700 font-black uppercase tracking-[0.3em] text-[12px]">Faculty Member Registry</p>
+                </div>
+
                 {!isEditing && (
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
+                    whileHover={{ scale: 1.05, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setShowDigitalId(true)}
-                    className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md transition-all self-center md:self-auto"
+                    className="inline-flex items-center gap-3 px-10 py-4 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-900/10"
                   >
-                    <IdCard className="w-4 h-4 text-blue-300" />
-                    <span className="text-xs font-bold uppercase tracking-widest text-blue-100">Faculty ID</span>
+                    <IdCard className="w-5 h-5" />
+                    AUTHENTICATE ID
                   </motion.button>
                 )}
               </div>
 
-              <p className="text-lg text-blue-200 font-medium mb-6 flex flex-wrap items-center justify-center md:justify-start gap-2">
-                <Briefcase className="w-5 h-5 text-blue-400" />
-                {profileData.specialization || "Senior Lecturer"}
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500/50 mx-2" />
-                <span className="text-slate-400 font-normal">{user.email}</span>
-              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+                <InfoChip icon={Building} value={department?.name} label="Department" variant="dark" />
+                <InfoChip icon={Briefcase} value={profileData.specialization} label="Specialization" variant="dark" />
+                <InfoChip icon={GraduationCap} value={profileData.education} label="Education" variant="dark" />
+              </div>
 
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-8">
-                <div className="px-4 py-2 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center gap-2">
-                  <Building className="w-4 h-4 text-purple-400" />
-                  <span className="text-sm font-semibold text-slate-200">{department?.name || "General Department"}</span>
+              <div className="flex flex-wrap items-center gap-4 justify-center md:justify-start mb-12">
+                <div className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-white border border-slate-100 shadow-sm`}>
+                  <div className={`p-1.5 rounded-lg ${premiumColors.blue.icon} text-white shadow-sm`}>
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <span className="text-[11px] font-black text-slate-700 uppercase tracking-widest">Office: {profileData.office_location || "---"}</span>
                 </div>
-                <div className="px-4 py-2 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center gap-2">
-                  <GraduationCap className="w-4 h-4 text-pink-400" />
-                  <span className="text-sm font-semibold text-slate-200">{profileData.education || "PhD Candidate"}</span>
-                </div>
-                <div className="px-4 py-2 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-emerald-400" />
-                  <span className="text-sm font-semibold text-slate-200">{profileData.office_location || "R-101"}</span>
+                <div className="flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-emerald-50/50 text-emerald-500 border border-emerald-100 shadow-sm">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[11px] font-black text-slate-700 uppercase tracking-widest">ACTIVE NODE</span>
                 </div>
               </div>
 
@@ -220,30 +266,30 @@ const ProfilePage = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setIsEditing(true)}
-                  className="px-8 py-3 rounded-xl bg-white text-slate-900 font-bold hover:bg-blue-50 transition-all shadow-xl shadow-white/5 active:scale-95"
+                  className="px-12 py-4 rounded-2xl bg-white text-slate-800 border border-slate-200 font-black text-[11px] uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm"
                 >
-                  Edit Profile Information
+                  Modify Professional Profile
                 </motion.button>
               ) : (
-                <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+                <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleSave}
                     disabled={saving}
-                    className="px-8 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-12 py-4 rounded-2xl bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-500/20 disabled:opacity-50 flex items-center gap-3"
                   >
-                    {saving ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save className="w-5 h-5" />}
-                    Save Changes
+                    {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
+                    Commit Changes
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => { setIsEditing(false); setImagePreview(null); }}
                     disabled={saving}
-                    className="px-6 py-3 rounded-xl bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 transition-all border border-slate-700"
+                    className="px-10 py-4 rounded-2xl bg-white text-slate-600 font-black text-[11px] uppercase tracking-widest hover:bg-slate-50 transition-all border border-slate-200"
                   >
-                    Cancel
+                    Cancel Edit
                   </motion.button>
                 </div>
               )}
@@ -251,99 +297,95 @@ const ProfilePage = () => {
           </div>
         </motion.div>
 
-        {/* ================= EDITING FORM / DETAILS GRID ================= */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* ================= CLEAN CONTENT GRID ================= */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-12">
 
-          {/* Main Details */}
-          <motion.div variants={itemVariants} className="lg:col-span-2 space-y-6">
-            {/* Personal Card */}
-            <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-xl shadow-gray-200/50">
-              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <div className="p-2.5 rounded-2xl bg-blue-50 text-blue-600">
-                  <User className="w-5 h-5" />
-                </div>
-                Contact Information
+          {/* Main Content Area */}
+          <motion.div variants={itemVariants} className="lg:col-span-2 space-y-8">
+            {/* Constant Info Registry */}
+            <div className="bg-white/40 backdrop-blur-3xl rounded-[3rem] p-10 md:p-14 border border-white shadow-xl relative overflow-hidden group">
+              <h3 className="text-3xl font-black text-slate-800 mb-12 flex items-center gap-4 uppercase tracking-tighter">
+                <div className="w-2.5 h-10 bg-blue-500 rounded-full" />
+                Contact Registry
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Email Address</label>
-                  <div className="relative group">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="space-y-4">
+                  <label className="text-[12px] font-black text-slate-700 uppercase tracking-[0.3em] ml-2">Universal Email</label>
+                  <div className="relative group/input">
+                    <Mail className={`absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within/input:text-blue-400 transition-colors`} />
                     <input
                       type="email"
                       disabled={!isEditing}
                       value={formData.email}
                       onChange={e => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-gray-50 border-2 border-transparent focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                      className={`w-full pl-16 pr-8 py-5 rounded-[2rem] bg-white border border-slate-100 focus:border-blue-300 outline-none transition-all font-black text-slate-700 disabled:opacity-60 uppercase text-[12px] tracking-widest shadow-sm`}
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Phone Number</label>
-                  <div className="relative group">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-green-500 transition-colors" />
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-2">Secure Mobile</label>
+                  <div className="relative group/input">
+                    <Phone className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within/input:text-emerald-400 transition-colors" />
                     <input
                       type="tel"
                       disabled={!isEditing}
                       value={formData.phone}
                       onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-gray-50 border-2 border-transparent focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/10 outline-none transition-all font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full pl-16 pr-8 py-5 rounded-[2rem] bg-white border border-slate-100 focus:border-emerald-300 outline-none transition-all font-black text-slate-700 disabled:opacity-60 uppercase text-[11px] tracking-widest shadow-sm"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Office Location</label>
-                  <div className="relative group">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-red-500 transition-colors" />
+                <div className="space-y-4 md:col-span-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-2">Office Node Location</label>
+                  <div className="relative group/input">
+                    <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within/input:text-blue-400 transition-colors" />
                     <input
                       type="text"
                       disabled={!isEditing}
                       value={formData.office}
                       onChange={e => setFormData({ ...formData, office: e.target.value })}
-                      className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-gray-50 border-2 border-transparent focus:bg-white focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full pl-16 pr-8 py-5 rounded-[2rem] bg-white border border-slate-100 focus:border-blue-300 outline-none transition-all font-black text-slate-700 disabled:opacity-60 uppercase text-[11px] tracking-widest shadow-sm"
                     />
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Professional Card */}
-            <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-xl shadow-gray-200/50">
-              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <div className="p-2.5 rounded-2xl bg-purple-50 text-purple-600">
-                  <Award className="w-5 h-5" />
-                </div>
-                Professional Background
+            {/* Academic Credentials */}
+            <div className="bg-white/40 backdrop-blur-3xl rounded-[3rem] p-10 md:p-14 border border-white shadow-xl relative overflow-hidden group">
+              <h3 className="text-3xl font-black text-slate-800 mb-12 flex items-center gap-4 uppercase tracking-tighter">
+                <div className="w-2.5 h-10 bg-emerald-500 rounded-full" />
+                Expertise Nodes
               </h3>
 
-              <div className="grid grid-cols-1 gap-6">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Specialization / Expertise</label>
-                  <div className="relative group">
-                    <Star className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-purple-500 transition-colors" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-2">Specialization</label>
+                  <div className="relative group/input">
+                    <Star className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within/input:text-blue-300 transition-colors" />
                     <input
                       type="text"
                       disabled={!isEditing}
                       value={formData.specialization}
                       onChange={e => setFormData({ ...formData, specialization: e.target.value })}
-                      className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-gray-50 border-2 border-transparent focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 outline-none transition-all font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full pl-16 pr-8 py-5 rounded-[2rem] bg-white border border-slate-100 focus:border-blue-300 outline-none transition-all font-black text-slate-700 disabled:opacity-60 uppercase text-[11px] tracking-widest shadow-sm"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Highest Education</label>
-                  <div className="relative group">
-                    <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-pink-500 transition-colors" />
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-2">High Education</label>
+                  <div className="relative group/input">
+                    <GraduationCap className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within/input:text-indigo-300 transition-colors" />
                     <input
                       type="text"
                       disabled={!isEditing}
                       value={formData.education}
                       onChange={e => setFormData({ ...formData, education: e.target.value })}
-                      className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-gray-50 border-2 border-transparent focus:bg-white focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 outline-none transition-all font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full pl-16 pr-8 py-5 rounded-[2rem] bg-white border border-slate-100 focus:border-indigo-300 outline-none transition-all font-black text-slate-700 disabled:opacity-60 uppercase text-[11px] tracking-widest shadow-sm"
                     />
                   </div>
                 </div>
@@ -351,56 +393,59 @@ const ProfilePage = () => {
             </div>
           </motion.div>
 
-          {/* Sidebar Stats */}
-          <motion.div variants={itemVariants} className="space-y-6">
-            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-[2rem] p-8 text-white shadow-xl shadow-indigo-500/20 relative overflow-hidden">
+          {/* Sidebar Stats Area */}
+          <motion.div variants={itemVariants} className="space-y-8">
+            {/* Tenure Card - Soft Glass */}
+            <div className="bg-white/40 backdrop-blur-3xl rounded-[3rem] p-10 border border-white shadow-xl relative overflow-hidden group">
               <div className="relative z-10">
-                <h4 className="opacity-80 font-medium mb-1">Tenure</h4>
-                <div className="text-3xl font-black mb-6 flex items-baseline gap-1">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6">Academic Tenure</p>
+                <div className="text-7xl font-black text-slate-800 mb-10 flex items-baseline gap-3">
                   {profileData.join_date ? new Date().getFullYear() - new Date(profileData.join_date).getFullYear() : 0}
-                  <span className="text-sm font-semibold opacity-70">Years</span>
+                  <span className="text-xl font-bold text-slate-300 uppercase tracking-widest">Yrs</span>
                 </div>
 
-                <div className="h-px bg-white/20 my-6" />
+                <div className="h-1 bg-slate-100 rounded-full my-10" />
 
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium opacity-80">Department</span>
-                    <span className="text-sm font-bold bg-white/20 px-2 py-0.5 rounded-lg">{department?.code || "GEN"}</span>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Unit Node</span>
+                    <span className="text-[10px] font-black bg-white text-slate-600 px-5 py-2 rounded-xl uppercase border border-slate-50 shadow-sm">{department?.code || "GEN"}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium opacity-80">Role</span>
-                    <span className="text-sm font-bold bg-white/20 px-2 py-0.5 rounded-lg capitalize">{user.role}</span>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Access Status</span>
+                    <span className="text-[10px] font-black bg-blue-50/50 text-blue-400 px-5 py-2 rounded-xl uppercase border border-blue-100 shadow-sm">{user.role}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Decorative */}
-              <div className="absolute top-0 right-0 p-8 opacity-10">
-                <Award className="w-32 h-32" />
+              {/* Decorative background icon */}
+              <div className="absolute -bottom-10 -right-10 opacity-[0.05] transition-transform group-hover:scale-110 pointer-events-none">
+                <Award className="w-60 h-60 text-slate-400" />
               </div>
             </div>
 
-            <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-xl shadow-gray-200/50">
-              <h4 className="font-bold text-gray-900 mb-4">Account Status</h4>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                    <CheckCircle className="w-4 h-4" />
+            {/* Node Status - Soft Glass Dark */}
+            <div className="bg-slate-900/90 backdrop-blur-3xl rounded-[3rem] p-10 border border-white/10 relative overflow-hidden group shadow-2xl">
+              <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-10">Node Connectivity</h4>
+
+              <div className="space-y-8">
+                <div className="flex items-center gap-6">
+                  <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-emerald-300 shadow-inner">
+                    <CheckCircle className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="font-bold text-gray-900">Active</p>
-                    <p className="text-xs">Account is in good standing</p>
+                    <p className="text-xs font-black text-white uppercase tracking-widest mb-1">Active State</p>
+                    <p className="text-[11px] font-bold text-slate-700 uppercase tracking-tighter">Synced & Secure Node</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                    <Calendar className="w-4 h-4" />
+                <div className="flex items-center gap-6">
+                  <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-blue-300 shadow-inner">
+                    <Calendar className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="font-bold text-gray-900">Joined</p>
-                    <p className="text-xs">{new Date(user.created_at).toLocaleDateString()}</p>
+                    <p className="text-xs font-black text-white uppercase tracking-widest mb-1">Registry Date</p>
+                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">{new Date(user.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
               </div>
@@ -411,74 +456,80 @@ const ProfilePage = () => {
       </motion.div>
 
       {/* Digital Faculty ID Modal */}
-      {showDigitalId && createPortal(
-        <AnimatePresence>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl"
-            onClick={() => setShowDigitalId(false)}
-          >
+      {
+        showDigitalId && createPortal(
+          <AnimatePresence>
             <motion.div
-              initial={{ scale: 0.9, rotateY: 90 }}
-              animate={{ scale: 1, rotateY: 0 }}
-              exit={{ scale: 0.9, rotateY: -90 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-[380px] aspect-[1/1.6] bg-[#0F172A] rounded-[2rem] p-8 shadow-2xl border border-white/20 relative overflow-hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60"
+              onClick={() => setShowDigitalId(false)}
             >
-              {/* ID Card Design */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 blur-[80px] rounded-full -mr-16 -mt-16 pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/20 blur-[80px] rounded-full -ml-16 -mb-16 pointer-events-none" />
-              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 pointer-events-none" />
+              <motion.div
+                initial={{ scale: 0.9, rotateY: 90 }}
+                animate={{ scale: 1, rotateY: 0 }}
+                exit={{ scale: 0.9, rotateY: -90 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-[380px] aspect-[1/1.6] bg-white rounded-[3rem] p-8 border border-slate-200 relative overflow-hidden shadow-2xl"
+              >
+                <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full blur-[80px] -mr-16 -mt-16 pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-50/50 rounded-full blur-[80px] -ml-16 -mb-16 pointer-events-none" />
 
-              <div className="relative z-10 flex flex-col h-full items-center text-center">
-                <div className="w-full flex justify-between items-center mb-8 border-b border-white/10 pb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-black text-white text-xs">N</div>
-                    <span className="font-bold text-white tracking-wide">NOVATECH</span>
+                <div className="relative z-10 flex flex-col h-full items-center text-center">
+                  <div className="w-full flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center font-black text-white text-xs">N</div>
+                      <span className="font-bold text-slate-900 tracking-wide">NOVATECH</span>
+                    </div>
+                    <span className="px-3 py-1 rounded-full bg-slate-100 text-[10px] font-black text-slate-500 uppercase">Faculty Node</span>
                   </div>
-                  <span className="px-2 py-0.5 rounded-md bg-white/10 border border-white/10 text-[10px] font-bold text-white/70 uppercase">Faculty</span>
-                </div>
 
-                <div className="w-36 h-36 rounded-2xl border-4 border-white/10 p-1 bg-white/5 mb-6 shadow-2xl">
-                  <img
-                    src={displayImage || "https://ui-avatars.com/api/?name=" + user.name}
-                    alt="ID"
-                    className="w-full h-full object-cover rounded-xl"
-                  />
-                </div>
-
-                <h2 className="text-2xl font-black text-white leading-tight mb-1">{user.name}</h2>
-                <p className="text-blue-400 text-sm font-bold uppercase tracking-wider mb-8">{user.role}</p>
-
-                <div className="grid grid-cols-2 gap-4 w-full mb-auto">
-                  <div className="text-left p-3 rounded-xl bg-white/5 border border-white/5">
-                    <p className="text-[10px] font-bold text-white/40 uppercase mb-1">Department</p>
-                    <p className="text-xs font-bold text-white">{department?.code || "N/A"}</p>
+                  <div className="w-36 h-36 rounded-2xl border-4 border-slate-50 p-1 bg-slate-100 mb-6 shadow-sm">
+                    {displayImage && !imgBroken ? (
+                      <img
+                        src={displayImage}
+                        alt="ID"
+                        className="w-full h-full object-cover rounded-xl"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-slate-200 text-6xl font-black text-white rounded-xl">
+                        {user.name.charAt(0)}
+                      </div>
+                    )}
                   </div>
-                  <div className="text-left p-3 rounded-xl bg-white/5 border border-white/5">
-                    <p className="text-[10px] font-bold text-white/40 uppercase mb-1">ID Number</p>
-                    <p className="text-xs font-bold text-white">FAC-{user.id.toString().padStart(4, '0')}</p>
-                  </div>
-                </div>
 
-                <div className="w-full pt-6 border-t border-white/10">
-                  <div className="h-12 w-full bg-white rounded-lg flex items-center justify-center overflow-hidden">
-                    <div className="flex gap-1 opacity-80">
-                      {[...Array(20)].map((_, i) => (
-                        <div key={i} className={`w-1 h-8 ${Math.random() > 0.5 ? 'bg-black' : 'bg-transparent'}`} />
-                      ))}
+                  <h2 className="text-2xl font-black text-slate-900 leading-tight mb-1 uppercase tracking-tight">{user.name}</h2>
+                  <p className="text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] mb-8">{profileData.specialization || "Faculty Member"}</p>
+
+                  <div className="grid grid-cols-2 gap-4 w-full mb-auto mt-4">
+                    <div className="text-left p-3 rounded-xl bg-slate-50 border border-slate-100">
+                      <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Unit</p>
+                      <p className="text-[10px] font-black text-slate-700 truncate capitalize">{department?.code || "N/A"}</p>
+                    </div>
+                    <div className="text-left p-3 rounded-xl bg-slate-50 border border-slate-100">
+                      <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Node ID</p>
+                      <p className="text-[10px] font-black text-slate-700">FAC-{user.id?.toString().padStart(4, '0')}</p>
                     </div>
                   </div>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        </AnimatePresence>,
-        document.body
-      )}
 
+                  <div className="w-full pt-6 border-t border-slate-100 mt-8 text-center">
+                    <div className="h-10 w-full bg-slate-50 rounded-lg flex items-center justify-center overflow-hidden mb-3 border border-slate-100">
+                      <div className="flex gap-1 opacity-40">
+                        {[...Array(24)].map((_, i) => (
+                          <div key={i} className={`w-0.5 h-6 ${Math.random() > 0.3 ? 'bg-slate-900' : 'bg-transparent'}`} />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Authenticated Faculty Token</p>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          </AnimatePresence>,
+          document.body
+        )
+      }
     </div>
   );
 };

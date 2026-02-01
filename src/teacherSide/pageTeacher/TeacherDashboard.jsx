@@ -10,6 +10,7 @@ import AssignmentsPage from './AssignmentsPage.jsx';
 import SchedulePage from './SchedulePage.jsx';
 import MessagesPage from '../../gobalConponent/MessagesPage.jsx';
 import ProfilePage from './ProfilePage.jsx';
+import SocialPage from './SocialPage.jsx';
 import SettingPage from '../../gobalConponent/Settingpage.jsx';
 import { logoutApi } from '../../api/auth.jsx';
 import { fetchCurrentSession } from '../../api/admin_session_api.jsx';
@@ -34,6 +35,8 @@ import {
   Maximize2,
   Minimize2,
   Clock,
+  Globe,
+  GraduationCap
 } from 'lucide-react';
 
 const profileFallback = "/assets/images/profile-fallback.png";
@@ -53,11 +56,12 @@ const TeacherDashboard = () => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, gradient: 'from-blue-500 to-cyan-500' },
     { id: 'courses', label: 'My Courses', icon: BookOpen, gradient: 'from-green-500 to-emerald-500' },
-    { id: 'students', label: 'Students', icon: Users, gradient: 'from-indigo-500 to-blue-500' },
+    { id: 'students', label: 'Students', icon: GraduationCap, gradient: 'from-indigo-500 to-blue-500' },
     { id: 'grades', label: 'Grades', icon: Award, gradient: 'from-purple-500 to-pink-500' },
     { id: 'attendance', label: 'Attendance', icon: CheckSquare, gradient: 'from-green-500 to-teal-500' },
     { id: 'assignments', label: 'Assignments', icon: ClipboardList, gradient: 'from-orange-500 to-amber-500' },
     { id: 'schedule', label: 'Schedule', icon: Calendar, gradient: 'from-cyan-500 to-blue-500' },
+    { id: 'social', label: 'Social', icon: Globe, gradient: 'from-blue-600 to-indigo-600' },
     { id: 'messages', label: 'Messages', icon: MessageSquare, gradient: 'from-pink-500 to-rose-500' },
     { id: 'profile', label: 'Profile', icon: User, gradient: 'from-violet-500 to-purple-500' },
     { id: 'settings', label: 'Settings', icon: Settings, gradient: 'from-gray-500 to-slate-500' },
@@ -151,6 +155,9 @@ const TeacherDashboard = () => {
         </div>
         <div style={{ display: activeSection === 'profile' ? 'block' : 'none' }}>
           <ProfilePage />
+        </div>
+        <div style={{ display: activeSection === 'social' ? 'block' : 'none' }}>
+          <SocialPage />
         </div>
         <div style={{ display: activeSection === 'settings' ? 'block' : 'none' }}>
           <SettingPage />
