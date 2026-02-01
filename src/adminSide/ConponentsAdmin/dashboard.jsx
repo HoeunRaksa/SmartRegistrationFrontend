@@ -208,10 +208,10 @@ const AdminDashboard = () => {
             <div className="space-y-1">
               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.title}</h3>
               <p className="text-4xl font-black text-slate-800 tracking-tight">{stat.value.toLocaleString()}</p>
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2 flex items-center gap-2">
+              <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2 flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
                 {stat.label}
-              </p>
+              </div>
             </div>
           </motion.div>
         ))}
