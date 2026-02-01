@@ -11,6 +11,7 @@ import {
 
 import { TrendChart, ComparisonBarChart, DistributionPieChart, MultiLineChart } from '../../Components/ui/Charts';
 import AdminDashboardAPI from '../../api/admin_dashboard_api';
+import { fetchAuditLogs } from '../../api/audit_log_api';
 
 const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -39,13 +40,28 @@ const AdminDashboard = () => {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const res = await AdminDashboardAPI.getStats();
+      const [res, auditLogsRes] = await Promise.all([
+        AdminDashboardAPI.getStats(),
+        fetchAuditLogs({ per_page: 10 }).catch(() => ({ data: [] }))
+      ]);
+
       const data = AdminDashboardAPI.processStats(res);
 
       if (data) {
         setStats(data.stats);
         setCharts(data.charts);
-        setActivities(data.activities);
+        // Map audit logs to a simpler structure or use backend data directly if matches
+        const logs = auditLogsRes?.data?.data || auditLogsRes?.data || [];
+        // Optional: transform simpler logs if needed to match existing dummy structure, 
+        // typically the backend 'action' or 'description' fields map nicely to 'message'
+        const mappedLogs = logs.map(log => ({
+          id: log.id,
+          user: log.user,
+          message: log.description || log.action || 'Unknown activity',
+          time: log.created_at ? new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'
+        }));
+        setActivities(mappedLogs);
+
         setSystemStatus(data.systemStatus);
       }
     } catch (error) {
