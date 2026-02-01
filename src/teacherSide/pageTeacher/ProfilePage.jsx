@@ -90,7 +90,7 @@ const ProfilePage = () => {
   const displayImage = imagePreview || user.profile_picture_url || null;
 
   return (
-    <div className="min-h-screen px-4 md:px-6 pb-8">
+    <div className="space-y-6">
       <Alert
         isOpen={alert.show}
         type={alert.type}

@@ -342,7 +342,7 @@ const AttendancePage = () => {
 
   return (
     <>
-      <div className="min-h-screen px-4 md:px-6 pb-8">
+      <div className="space-y-6">
         <Alert
           isOpen={alert.show}
           type={alert.type}

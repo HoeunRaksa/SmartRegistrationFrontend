@@ -63,7 +63,7 @@ const GradesPage = () => {
   };
 
   return (
-    <div className="min-h-screen px-4 md:px-6 pb-8">
+    <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 mb-1">Grades</h1>
