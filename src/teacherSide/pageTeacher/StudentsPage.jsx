@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Search, Filter, Mail, Phone, BookOpen, Loader, UserPlus, UserCheck, Clock } from 'lucide-react';
+import { Users, Search, Filter, Mail, Phone, BookOpen, Loader, UserPlus, UserCheck, Clock, UserMinus, X } from 'lucide-react';
 import API from '../../api/index';
 import Alert from '../../gobalConponent/Alert.jsx';
 import { fetchTeacherStudents } from '../../api/teacher_api';
@@ -43,6 +43,20 @@ const StudentsPage = () => {
       } else {
         setAlert({ show: true, message: err.response?.data?.message || "Failed to send request", type: "error" });
       }
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const removeConnection = async (connectionId) => {
+    if (!window.confirm("Are you sure you want to remove this connection?")) return;
+    try {
+      setProcessingId(connectionId);
+      await API.delete(`/social/friend-requests/${connectionId}`);
+      setAlert({ show: true, message: "Connection removed.", type: "success" });
+      loadStudents();
+    } catch (err) {
+      setAlert({ show: true, message: "Failed to remove connection", type: "error" });
     } finally {
       setProcessingId(null);
     }
@@ -163,22 +177,28 @@ const StudentsPage = () => {
                           <Mail className="w-4 h-4" />
                         </a>
                         <button
-                          onClick={() => student.connection_status ? null : sendConnectionRequest(student.user_id)}
-                          disabled={processingId === student.user_id || student.connection_status}
-                          className={`p-2 rounded-lg transition-colors shadow-sm disabled:opacity-100 ${student.connection_status === 'accepted'
-                              ? "bg-emerald-50 text-emerald-600"
+                          onClick={() => {
+                            if (student.connection_status) {
+                              removeConnection(student.connection_id);
+                            } else {
+                              sendConnectionRequest(student.user_id);
+                            }
+                          }}
+                          disabled={processingId === student.user_id || processingId === student.connection_id}
+                          className={`p-2 rounded-lg transition-colors shadow-sm ${student.connection_status === 'accepted'
+                              ? "bg-rose-50 text-rose-600 hover:bg-rose-100"
                               : student.connection_status === 'pending'
-                                ? "bg-amber-50 text-amber-600"
+                                ? "bg-amber-50 text-amber-600 hover:bg-amber-100"
                                 : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
                             }`}
-                          title={student.connection_status === 'accepted' ? "Connected" : student.connection_status === 'pending' ? "Pending" : "Connect"}
+                          title={student.connection_status === 'accepted' ? "Remove Connection" : student.connection_status === 'pending' ? "Cancel Request" : "Connect"}
                         >
-                          {processingId === student.user_id ? (
+                          {processingId === student.user_id || processingId === student.connection_id ? (
                             <Loader className="w-4 h-4 animate-spin" />
                           ) : student.connection_status === 'accepted' ? (
-                            <UserCheck className="w-4 h-4" />
+                            <UserMinus className="w-4 h-4" />
                           ) : student.connection_status === 'pending' ? (
-                            <Clock className="w-4 h-4" />
+                            <X className="w-4 h-4" />
                           ) : (
                             <UserPlus className="w-4 h-4" />
                           )}

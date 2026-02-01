@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { UserPlus, UserCheck, Search, Users, Shield, MessageSquare, Plus, Clock, X } from "lucide-react";
+import { UserPlus, UserCheck, UserMinus, Search, Users, Shield, MessageSquare, Plus, Clock, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import API from "../../api/index";
 import Alert from "../../gobalConponent/Alert.jsx";
@@ -55,6 +55,17 @@ const FriendsPage = () => {
             } else {
                 setAlert({ show: true, message: err.response?.data?.message || "Failed to send request", type: "error" });
             }
+        }
+    };
+
+    const removeConnection = async (connectionId) => {
+        if (!window.confirm("Are you sure you want to remove this connection?")) return;
+        try {
+            await API.delete(`/social/friend-requests/${connectionId}`);
+            setAlert({ show: true, message: "Connection removed.", type: "success" });
+            loadPotentialFriends(searchTerm);
+        } catch (err) {
+            setAlert({ show: true, message: "Failed to remove connection", type: "error" });
         }
     };
 
@@ -169,14 +180,32 @@ const FriendsPage = () => {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {student.connection_status === 'accepted' ? (
-                                                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-sm">
-                                                    <UserCheck className="w-5 h-5" />
-                                                    <span className="text-[10px] font-black uppercase tracking-widest">Connected</span>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-sm">
+                                                        <UserCheck className="w-5 h-5" />
+                                                        <span className="text-[10px] font-black uppercase tracking-widest">Connected</span>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => removeConnection(student.connection_id)}
+                                                        className="p-2 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all border border-rose-100"
+                                                        title="Remove Connection"
+                                                    >
+                                                        <UserMinus className="w-4 h-4" />
+                                                    </button>
                                                 </div>
                                             ) : student.connection_status === 'pending' ? (
-                                                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 shadow-sm">
-                                                    <Clock className="w-5 h-5" />
-                                                    <span className="text-[10px] font-black uppercase tracking-widest">Pending</span>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 shadow-sm">
+                                                        <Clock className="w-5 h-5" />
+                                                        <span className="text-[10px] font-black uppercase tracking-widest">Pending</span>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => removeConnection(student.connection_id)}
+                                                        className="p-2 rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 transition-all border border-slate-100"
+                                                        title="Cancel Request"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
                                                 </div>
                                             ) : (
                                                 <button
