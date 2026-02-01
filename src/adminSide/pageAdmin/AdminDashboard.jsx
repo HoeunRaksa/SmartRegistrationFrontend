@@ -208,9 +208,6 @@ const MENU_ITEMS = [
 const VALID_SECTIONS = new Set(MENU_ITEMS.map((i) => i.id));
 const MENU_BY_ID = new Map(MENU_ITEMS.map(item => [item.id, item]));
 
-/* =========================
-   PURE MEMO SIDEBAR BUTTON
-========================= */
 const SidebarItem = React.memo(function SidebarItem({
   item,
   isActive,
@@ -224,38 +221,31 @@ const SidebarItem = React.memo(function SidebarItem({
     <motion.button
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.03 }}
-      whileHover={{ scale: 1.02, x: 4 }}
+      transition={{ delay: index * 0.02 }}
+      whileHover={{ x: 5 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${isActive
-        ? "bg-gradient-to-r " +
-        item.gradient +
-        " text-white shadow-lg shadow-blue-500/20"
-        : "glass hover:bg-white/50 text-gray-700"
-        } border border-white/30`}
+      className={`group relative w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl transition-all duration-300 ${isActive
+        ? "bg-white shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] text-blue-600 border border-gray-100"
+        : "text-gray-500 hover:bg-white/50 hover:text-slate-900"
+        }`}
       type="button"
     >
-      <motion.div
-        transition={{ duration: 0.5 }}
-      >
-        <Icon size={18} className={isActive ? "drop-shadow-sm" : ""} />
-      </motion.div>
+      <div className={`p-2 rounded-xl transition-all duration-300 ${isActive
+        ? "bg-gradient-to-br " + item.gradient + " text-white shadow-lg scale-110"
+        : "bg-gray-100 group-hover:bg-white group-hover:shadow-md"
+        }`}>
+        <Icon size={16} strokeWidth={isActive ? 2.5 : 2} />
+      </div>
       {!sidebarCollapsed && (
-        <motion.span
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="font-medium text-[13px]"
-        >
+        <span className={`font-bold text-[13px] tracking-tight transition-colors ${isActive ? "text-slate-900" : "group-hover:text-slate-900"}`}>
           {item.label}
-        </motion.span>
+        </span>
       )}
       {isActive && !sidebarCollapsed && (
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className="ml-auto w-2 h-2 rounded-full bg-white shadow-lg"
+          layoutId="admin-active-pill"
+          className="ml-auto w-1.5 h-6 rounded-full bg-gradient-to-b from-blue-500 to-indigo-600 shadow-sm"
         />
       )}
     </motion.button>
@@ -464,17 +454,31 @@ const AdminDashboard = () => {
         className="sidebar-fixed glass-bar gen-z-glass border-r border-white/20 hidden md:block"
       >
         <div className="flex flex-col h-full p-4 overflow-hidden">
-          <div className="flex items-center justify-between mb-6 px-2 flex-shrink-0">
-            {!sidebarCollapsed && (
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                NovaTech
-              </h1>
+          <div className="flex items-center justify-between mb-8 px-2 flex-shrink-0">
+            {sidebarCollapsed ? (
+              <div className="mx-auto">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg">
+                  <span className="text-white font-black text-xl">N</span>
+                </div>
+              </div>
+            ) : (
+              <div className="group cursor-pointer">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md group-hover:rotate-6 transition-transform">
+                    <span className="text-white font-black text-lg">N</span>
+                  </div>
+                  <h1 className="text-2xl font-black bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
+                    NovaTech
+                  </h1>
+                </div>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-10">Admin Authority</p>
+              </div>
             )}
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => setSidebarCollapsed((v) => !v)}
-              className="p-2 rounded-xl backdrop-blur-xl bg-white/40 hover:bg-white/60 transition-all border border-white/30 shadow-sm"
+              className="absolute -right-3 top-10 p-1.5 rounded-full bg-white shadow-xl border border-gray-100 text-gray-400 hover:text-blue-600 transition-all z-20"
               aria-label="Toggle sidebar"
               type="button"
             >
@@ -483,15 +487,15 @@ const AdminDashboard = () => {
                 transition={{ duration: 0.3 }}
               >
                 {sidebarCollapsed ? (
-                  <ChevronRight size={20} className="text-gray-700" />
+                  <ChevronRight size={14} strokeWidth={3} />
                 ) : (
-                  <ChevronLeft size={20} className="text-gray-700" />
+                  <ChevronLeft size={14} strokeWidth={3} />
                 )}
               </motion.div>
             </motion.button>
           </div>
 
-          <nav className="sidebar-fixed-nav space-y-1 scrollbar-hide">
+          <nav className="flex-1 space-y-1.5 overflow-y-auto scrollbar-hide py-4 px-1">
             {MENU_ITEMS.map((item, index) => (
               <SidebarItem
                 key={item.id}
@@ -504,23 +508,20 @@ const AdminDashboard = () => {
             ))}
           </nav>
 
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-4 flex-shrink-0"
-            type="button"
-          >
-            <motion.div
-              whileHover={{ rotate: [0, -15, 15, 0] }}
-              transition={{ duration: 0.3 }}
+          <div className="pt-4 border-t border-gray-100/50">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all bg-slate-900 text-white hover:bg-black shadow-xl shadow-slate-900/20 group"
+              type="button"
             >
-              <LogOut size={18} />
-            </motion.div>
-            {!sidebarCollapsed && (
-              <span className="font-medium text-[13px]">Logout</span>
-            )}
-          </motion.button>
+              <div className="p-2 rounded-xl bg-white/10 group-hover:bg-red-500 transition-colors">
+                <LogOut size={18} />
+              </div>
+              {!sidebarCollapsed && <span className="font-bold text-sm tracking-tight">Terminate Session</span>}
+            </motion.button>
+          </div>
         </div>
       </motion.aside>
 
