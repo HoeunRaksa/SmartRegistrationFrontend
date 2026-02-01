@@ -403,36 +403,22 @@ const AdminDashboard = () => {
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div
           animate={{
-            x: [0, 50, 0],
-            y: [0, 30, 0],
-            scale: [1, 1.1, 1],
+            x: [0, 100, 0],
+            y: [0, 50, 0],
+            scale: [1, 1.2, 1],
           }}
           transition={{
-            duration: 20,
+            duration: 15,
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="absolute top-20 left-10 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl"
+          className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-400/20 rounded-full blur-[120px]"
         />
         <motion.div
           animate={{
-            x: [0, -40, 0],
-            y: [0, 50, 0],
-            scale: [1, 1.15, 1],
-          }}
-          transition={{
-            duration: 25,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 0.5
-          }}
-          className="absolute top-1/3 right-10 w-[500px] h-[500px] bg-purple-400/20 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            x: [0, 30, 0],
-            y: [0, -40, 0],
-            scale: [1, 1.08, 1],
+            x: [0, -100, 0],
+            y: [0, 80, 0],
+            scale: [1, 1.3, 1],
           }}
           transition={{
             duration: 18,
@@ -440,7 +426,21 @@ const AdminDashboard = () => {
             ease: "easeInOut",
             delay: 1
           }}
-          className="absolute bottom-20 left-1/4 w-80 h-80 bg-pink-400/20 rounded-full blur-3xl"
+          className="absolute top-[20%] right-[-10%] w-[60%] h-[60%] bg-purple-400/20 rounded-full blur-[120px]"
+        />
+        <motion.div
+          animate={{
+            x: [0, 60, 0],
+            y: [0, -100, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 2
+          }}
+          className="absolute bottom-[-10%] left-[20%] w-[40%] h-[40%] bg-pink-400/20 rounded-full blur-[110px]"
         />
       </div>
       <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-[0.03]">
@@ -513,13 +513,13 @@ const AdminDashboard = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all bg-slate-900 text-white hover:bg-black shadow-xl shadow-slate-900/20 group"
+              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all bg-red-500/10 text-red-600 border border-red-100 hover:bg-red-500 hover:text-white group"
               type="button"
             >
-              <div className="p-2 rounded-xl bg-white/10 group-hover:bg-red-500 transition-colors">
-                <LogOut size={18} />
+              <div className="p-2 rounded-xl bg-white/50 group-hover:bg-red-400 transition-colors shadow-sm">
+                <LogOut size={16} />
               </div>
-              {!sidebarCollapsed && <span className="font-bold text-sm tracking-tight">Terminate Session</span>}
+              {!sidebarCollapsed && <span className="font-bold text-[13px] tracking-tight">Lock Station</span>}
             </motion.button>
           </div>
         </div>
