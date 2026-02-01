@@ -29,7 +29,7 @@ export const fetchAuditStats = async () => {
         const response = await API.get("/admin/audit-logs/stats");
         return extractData(response);
     } catch (error) {
-        console.error("fetchAuditStats error:", error);
+        // Stats endpoint not implemented yet - fail silently
         return null;
     }
 }
