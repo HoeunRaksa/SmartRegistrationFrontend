@@ -33,6 +33,7 @@ import {
   LogOut,
   Maximize2,
   Minimize2,
+  Clock,
 } from 'lucide-react';
 
 const profileFallback = "/assets/images/profile-fallback.png";
