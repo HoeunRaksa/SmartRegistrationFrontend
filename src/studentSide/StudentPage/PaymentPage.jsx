@@ -13,9 +13,12 @@ import {
     DollarSign,
     Wallet,
     Calendar,
-    Receipt
+    Receipt,
+    QrCode,
+    X,
+    Scan
 } from 'lucide-react';
-import { fetchStudentPayments } from '../../api/payment_api';
+import { fetchStudentPayments, generatePaymentQR } from '../../api/payment_api';
 
 const PaymentPage = () => {
     const [loading, setLoading] = useState(true);
@@ -24,6 +27,14 @@ const PaymentPage = () => {
         totalPaid: 0,
         outstanding: 0,
         lastPayment: null
+    });
+
+    // QR Modal State
+    const [qrModal, setQrModal] = useState({
+        isOpen: false,
+        data: null,
+        loading: false,
+        error: null
     });
 
     useEffect(() => {
@@ -66,6 +77,65 @@ const PaymentPage = () => {
 
         loadPayments();
     }, []);
+
+
+
+    const handleGenerateQR = async (payment) => {
+        // Only allow generation for PERIOD types or if we have enough info
+        if (!payment.registration_id) {
+            console.error("Missing registration ID");
+            return;
+        }
+
+        setQrModal({
+            isOpen: true,
+            data: null,
+            loading: true,
+            error: null
+        });
+
+        try {
+            const payPlan = {
+                type: 'SEMESTER',
+                semester: payment.semester || 1
+            };
+
+            const response = await generatePaymentQR(
+                payment.registration_id,
+                payment.semester || 1,
+                payPlan
+            );
+
+            // ABA Payway returns { tran_id, qr: { qr_image: "base64...", ... }, meta: ... }
+            if (response?.data?.qr) {
+                setQrModal({
+                    isOpen: true,
+                    data: {
+                        image: response.data.qr.qr_image, // Base64 string
+                        amount: payment.amount,
+                        description: payment.description,
+                        tran_id: response.data.tran_id
+                    },
+                    loading: false,
+                    error: null
+                });
+            } else {
+                throw new Error("Invalid QR response");
+            }
+        } catch (error) {
+            console.error("QR Generation Error:", error);
+            setQrModal({
+                isOpen: true,
+                data: null,
+                loading: false,
+                error: error.response?.data?.message || "Failed to generate QR code."
+            });
+        }
+    };
+
+    const closeQrModal = () => {
+        setQrModal({ isOpen: false, data: null, loading: false, error: null });
+    };
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -268,9 +338,20 @@ const PaymentPage = () => {
                                             </div>
                                         </td>
                                         <td className="px-8 py-6 text-right">
-                                            <button className="p-2.5 rounded-xl bg-white border border-gray-100 text-slate-400 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-100 shadow-sm transition-all">
-                                                <ArrowUpRight className="w-4 h-4" />
-                                            </button>
+                                            {status === 'pending' || status === 'unpaid' ? (
+                                                <button
+                                                    onClick={() => handleGenerateQR(payment)}
+                                                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 border border-blue-500 text-white shadow-lg shadow-blue-500/20 hover:scale-105 transition-all"
+                                                >
+                                                    <QrCode className="w-4 h-4" />
+                                                    <span className="text-xs font-bold">Pay Now</span>
+                                                </button>
+                                            ) : (
+                                                <button className="p-2.5 rounded-xl bg-white border border-gray-100 text-slate-400 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-100 shadow-sm transition-all">
+                                                    <ArrowUpRight className="w-4 h-4" />
+                                                </button>
+                                            )}
+
                                         </td>
                                     </motion.tr>
                                 );
@@ -287,6 +368,102 @@ const PaymentPage = () => {
                     </div>
                 </div>
             </motion.div>
+
+            {/* QR Code Modal */}
+            {qrModal.isOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                        onClick={closeQrModal}
+                    />
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        className="relative bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl overflow-hidden"
+                    >
+                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+
+                        <div className="flex items-center justify-between mb-8">
+                            <div>
+                                <h3 className="text-xl font-black text-slate-800">Scan to Pay</h3>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Secure Payment Gateway</p>
+                            </div>
+                            <button
+                                onClick={closeQrModal}
+                                className="p-2 rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-100 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="flex flex-col items-center justify-center">
+                            {qrModal.loading ? (
+                                <div className="py-12 flex flex-col items-center">
+                                    <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mb-4" />
+                                    <p className="text-sm font-bold text-slate-400 animate-pulse">Generating Secure QR...</p>
+                                </div>
+                            ) : qrModal.error ? (
+                                <div className="py-8 text-center">
+                                    <div className="w-12 h-12 rounded-full bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-4">
+                                        <AlertCircle className="w-6 h-6" />
+                                    </div>
+                                    <p className="text-slate-800 font-bold mb-2">Generation Failed</p>
+                                    <p className="text-slate-500 text-xs mb-4">{qrModal.error}</p>
+                                    <button
+                                        onClick={closeQrModal}
+                                        className="px-6 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="p-4 bg-white rounded-3xl border-2 border-dashed border-slate-200 shadow-sm mb-6 relative group">
+                                        <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-[1.3rem]" />
+                                        <div className="relative z-10 w-48 h-48 bg-slate-50 rounded-2xl overflow-hidden flex items-center justify-center">
+                                            {qrModal.data?.image ? (
+                                                <img
+                                                    src={`data:image/png;base64,${qrModal.data.image}`}
+                                                    alt="Payment QR Code"
+                                                    className="w-full h-full object-contain"
+                                                />
+                                            ) : (
+                                                <Scan className="w-12 h-12 text-slate-300" />
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="w-full space-y-4 text-center">
+                                        <div>
+                                            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Amount Due</p>
+                                            <p className="text-3xl font-black text-slate-800">${Number(qrModal.data?.amount || 0).toLocaleString()}</p>
+                                        </div>
+
+                                        <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                            <p className="text-xs font-medium text-slate-500 leading-relaxed">
+                                                Scan this code with your ABA Mobile App to complete the transaction securely.
+                                            </p>
+                                        </div>
+
+                                        {/* Optional Manual Check Button or Status text */}
+                                        <div className="pt-2">
+                                            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest">
+                                                <Clock className="w-3 h-3" />
+                                                Waiting for scan...
+                                            </span>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+
+            {/* End of Main Content */}
         </div>
     );
 };
