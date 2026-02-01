@@ -807,26 +807,26 @@ const EnrollmentForm = ({
     const all = Array.isArray(courses) ? courses : [];
     const { majorId } = selectedMajorInfo;
 
-    if (!majorId) {
-      return all.map((c) => ({
-        id: String(c?.id ?? ""),
-        label: getCourseLabelShort(c),
-        original: c,
-      }));
-    }
+    let filtered = all;
+    if (majorId) {
+      filtered = all.filter((c) => {
+        const courseMajorId = getCourseMajorId(c);
+        // Direct major match OR general course (no major)
+        return courseMajorId === majorId || !courseMajorId;
+      });
 
-    const filtered = all.filter((c) => {
-      const courseMajorId = getCourseMajorId(c);
-      if (!courseMajorId) return true;
-      return courseMajorId === majorId;
-    });
+      // Fallback: if even after filtering we have NOTHING, show all so user isn't stuck
+      if (filtered.length === 0) {
+        filtered = all;
+      }
+    }
 
     return filtered.map((c) => ({
       id: String(c?.id ?? ""),
       label: getCourseLabelShort(c),
       original: c,
     }));
-  }, [courses, selectedMajorInfo]);
+  }, [courses, selectedMajorInfo.majorId]);
 
   useEffect(() => {
     if (isEditMode) return;

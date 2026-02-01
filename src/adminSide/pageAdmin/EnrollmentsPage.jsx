@@ -439,6 +439,7 @@ const EnrollmentsPage = () => {
 
   const handleSuccess = () => {
     loadEnrollments();
+    loadCourses();
     setEditingEnrollment(null);
   };
 
