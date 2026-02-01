@@ -133,7 +133,7 @@ const ProfilePage = () => {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="space-y-6"
+        className="space-y-6 px-4 md:px-8"
       >
         {/* ================= HEADER CARD ================= */}
         <motion.div
