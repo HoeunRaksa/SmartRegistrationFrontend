@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { enrollStudent, updateEnrollmentStatus } from "../../api/admin_course_api.jsx";
 import {
   BookOpen,
@@ -225,6 +225,7 @@ const StudentTableSelect = ({
   onChange,
   students = [],
   disabled,
+  isEditMode,
   selectedCourseId,
   isAlreadyEnrolled,
   studentsLoading = false,
@@ -238,11 +239,12 @@ const StudentTableSelect = ({
 
   useEffect(() => {
     if (firstRender.current) return;
+    if (isEditMode) return;
     setQ("");
     if (typeof onSearchStudents === "function") onSearchStudents("");
     onChange([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterSignature]);
+  }, [filterSignature, isEditMode]);
 
   useEffect(() => {
     if (firstRender.current) {
@@ -255,11 +257,12 @@ const StudentTableSelect = ({
   }, [q, onSearchStudents]);
 
   useEffect(() => {
+    if (isEditMode) return;
     const idsInList = new Set((Array.isArray(students) ? students : []).map((s) => String(s?.id ?? "")));
     const next = (Array.isArray(value) ? value : []).filter((sid) => idsInList.has(String(sid)));
     if (next.length !== (value || []).length) onChange(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [students]);
+  }, [students, isEditMode]);
 
   const canToggle = (sid) => {
     if (!selectedCourseId) return true;
@@ -600,7 +603,7 @@ const SubmitButton = ({ loading, isEditMode }) => (
 );
 
 /* ================== HEADER ================== */
-const FormHeader = ({ isEditMode, onCancel }) => (
+const FormHeader = ({ isEditMode, onCancel, editingEnrollment }) => (
   <div className="flex items-center justify-between pb-5 border-b-2 border-white/60">
     <div className="flex items-center gap-4">
       <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 shadow-xl">
@@ -609,7 +612,7 @@ const FormHeader = ({ isEditMode, onCancel }) => (
       <div>
         <h2 className="text-xl font-black text-gray-900">{isEditMode ? "Update Enrollment" : "Enroll Students"}</h2>
         <p className="text-sm font-semibold text-gray-600 mt-0.5">
-          {isEditMode ? "Change enrollment status" : "Select students and course to enroll"}
+          {isEditMode ? `Updating enrollment for ${editingEnrollment?.student_name || 'Student'}` : "Select students and course to enroll"}
         </p>
       </div>
     </div>
@@ -645,6 +648,7 @@ const InfoBox = ({ message }) => (
 /* ================== FORM SECTION ================== */
 const FormSection = ({
   isEditMode,
+  editingEnrollment,
   onCancel,
   onSubmit,
   form,
@@ -666,7 +670,7 @@ const FormSection = ({
 }) => (
   <motion.div variants={animations.fadeUp} initial="hidden" animate="show">
     <GlassCard className="p-6">
-      <FormHeader isEditMode={isEditMode} onCancel={onCancel} />
+      <FormHeader isEditMode={isEditMode} onCancel={onCancel} editingEnrollment={editingEnrollment} />
 
       <motion.form
         onSubmit={onSubmit}
@@ -677,6 +681,7 @@ const FormSection = ({
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <StudentTableSelect
+            isEditMode={isEditMode}
             disabled={isEditMode || loading}
             value={form.student_ids}
             onChange={(ids) => setForm((p) => ({ ...p, student_ids: ids }))}
@@ -706,7 +711,7 @@ const FormSection = ({
               value={form.course_id}
               onChange={(v) => setForm((p) => ({ ...p, course_id: v }))}
               options={courseOptions}
-              disabled={loading}
+              disabled={isEditMode || loading}
               name="course_id"
               gradient="from-blue-500 to-indigo-600"
             />
@@ -762,12 +767,6 @@ const EnrollmentForm = ({
 
   const isEditMode = !!editingEnrollment;
   const studentRows = useMemo(() => (Array.isArray(students) ? students : []), [students]);
-
-  useEffect(() => {
-    if (isEditMode) return;
-    setForm((p) => ({ ...p, student_ids: [] }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterSignature]);
 
   const selectionError = useMemo(() => {
     if (isEditMode) return null;
@@ -869,8 +868,10 @@ const EnrollmentForm = ({
   };
 
   useEffect(() => {
-    setForm(INITIAL_FORM_STATE);
-  }, [filterSignature]);
+    if (!isEditMode) {
+      setForm(INITIAL_FORM_STATE);
+    }
+  }, [filterSignature, isEditMode]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -884,7 +885,21 @@ const EnrollmentForm = ({
       if (!form.status) throw new Error("Please select a status.");
 
       if (isEditMode) {
-        await updateEnrollmentStatus(editingEnrollment.id, { status: String(form.status) });
+        const enrollmentId =
+          editingEnrollment?.id ??
+          editingEnrollment?.enrollment_id ??
+          editingEnrollment?.course_enrollment_id ??
+          null;
+
+        if (!enrollmentId) {
+          throw new Error("Enrollment ID is missing. Please refresh and try again.");
+        }
+
+        await updateEnrollmentStatus(enrollmentId, {
+          status: String(form.status),
+          student_id: editingEnrollment?.student_id,
+          course_id: editingEnrollment?.course_id,
+        });
       } else {
         if (!form.student_ids || form.student_ids.length === 0) throw new Error("Please select at least one student.");
 
@@ -957,6 +972,7 @@ const EnrollmentForm = ({
 
       <FormSection
         isEditMode={isEditMode}
+        editingEnrollment={editingEnrollment}
         onCancel={resetForm}
         onSubmit={handleSubmit}
         form={form}
