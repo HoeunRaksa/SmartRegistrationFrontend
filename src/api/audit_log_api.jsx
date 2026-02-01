@@ -26,7 +26,7 @@ export const fetchAuditLogById = async (id) => {
 // GET: Fetch audit stats (optional, for dashboard widgets)
 export const fetchAuditStats = async () => {
     try {
-        const response = await API.get("/audit-logs/stats");
+        const response = await API.get("/admin/audit-logs/stats");
         return extractData(response);
     } catch (error) {
         console.error("fetchAuditStats error:", error);
