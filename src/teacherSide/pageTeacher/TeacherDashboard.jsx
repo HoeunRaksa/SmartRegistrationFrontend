@@ -179,36 +179,54 @@ const TeacherDashboard = () => {
       >
         <div className="flex flex-col h-full p-4 overflow-hidden">
           <div className="flex items-center justify-between mb-8 px-2 flex-shrink-0">
-            {!sidebarCollapsed && (
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  NovaTech
-                </h1>
-                <p className="text-xs text-gray-600 mt-0.5">Teacher Portal</p>
-                {currentSession && (
-                  <div className="mt-2 px-3 py-2 bg-blue-50/50 rounded-lg border border-blue-100">
-                    <div className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mb-0.5">Current Session</div>
-                    <div className="text-xs font-bold text-slate-700">{currentSession.name}</div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">{new Date(currentSession.start_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - {new Date(currentSession.end_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
+            {sidebarCollapsed ? (
+              <div className="mx-auto">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg">
+                  <span className="text-white font-black text-xl">N</span>
+                </div>
+              </div>
+            ) : (
+              <div className="group cursor-pointer">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-md group-hover:rotate-6 transition-transform">
+                    <span className="text-white font-black text-lg">N</span>
                   </div>
+                  <h1 className="text-2xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent tracking-tight">
+                    NovaTech
+                  </h1>
+                </div>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-10">Teacher Suite</p>
+                {currentSession && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="mt-6 px-4 py-3 bg-gradient-to-br from-blue-600/10 to-purple-600/5 rounded-2xl border border-blue-200/50 backdrop-blur-md"
+                  >
+                    <div className="text-[9px] font-black text-blue-600 uppercase tracking-[0.2em] mb-1">Live Semester</div>
+                    <div className="text-xs font-black text-slate-700 truncate">{currentSession.name}</div>
+                    <div className="flex items-center gap-1 mt-1.5">
+                      <Clock size={10} className="text-blue-400" />
+                      <span className="text-[9px] font-bold text-slate-400">ACTIVE SESSION</span>
+                    </div>
+                  </motion.div>
                 )}
               </div>
             )}
             <button
               onClick={() => setSidebarCollapsed((v) => !v)}
-              className="p-2 rounded-xl backdrop-blur-xl bg-white/40 hover:bg-white/60 transition-all border border-white/30 shadow-sm"
+              className="absolute -right-3 top-10 p-1.5 rounded-full bg-white shadow-xl border border-gray-100 text-gray-400 hover:text-blue-600 transition-all z-20"
               aria-label="Toggle sidebar"
               type="button"
             >
               {sidebarCollapsed ? (
-                <ChevronRight size={20} className="text-gray-700" />
+                <ChevronRight size={14} strokeWidth={3} />
               ) : (
-                <ChevronLeft size={20} className="text-gray-700" />
+                <ChevronLeft size={14} strokeWidth={3} />
               )}
             </button>
           </div>
 
-          <nav className="sidebar-fixed-nav space-y-2 scrollbar-hide">
+          <nav className="flex-1 space-y-1.5 overflow-y-auto scrollbar-hide py-4 px-1">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeSection === item.id;
@@ -217,28 +235,46 @@ const TeacherDashboard = () => {
                 <button
                   key={item.id}
                   onClick={() => handleSectionChange(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
-                    ? "backdrop-blur-xl bg-gradient-to-r " + item.gradient + " text-white shadow-lg"
-                    : "backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40"
-                    } border border-white/30`}
+                  className={`group relative w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 ${isActive
+                    ? "bg-white shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] text-blue-600 border border-gray-100"
+                    : "text-gray-500 hover:bg-white/50 hover:text-slate-800"
+                    }`}
                   type="button"
                 >
-                  <Icon size={20} className={isActive ? "drop-shadow-sm" : ""} />
-                  {!sidebarCollapsed && <span className="font-medium text-sm">{item.label}</span>}
-                  {isActive && !sidebarCollapsed && <div className="ml-auto w-2 h-2 rounded-full bg-white shadow-lg" />}
+                  <div className={`p-2 rounded-xl transition-all duration-300 ${isActive
+                    ? "bg-gradient-to-br " + item.gradient + " text-white shadow-lg scale-110"
+                    : "bg-gray-100 group-hover:bg-white group-hover:shadow-md"
+                    }`}>
+                    <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                  </div>
+                  {!sidebarCollapsed && (
+                    <span className={`font-bold text-sm tracking-tight transition-colors ${isActive ? "text-slate-900" : "group-hover:text-slate-900"}`}>
+                      {item.label}
+                    </span>
+                  )}
+                  {isActive && !sidebarCollapsed && (
+                    <motion.div
+                      layoutId="active-pill"
+                      className="ml-auto w-1.5 h-6 rounded-full bg-gradient-to-b from-blue-500 to-purple-600 shadow-sm"
+                    />
+                  )}
                 </button>
               );
             })}
           </nav>
 
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2 rounded-2xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-5 flex-shrink-0"
-            type="button"
-          >
-            <LogOut size={20} />
-            {!sidebarCollapsed && <span className="font-medium text-sm">Logout</span>}
-          </button>
+          <div className="pt-4 border-t border-gray-100/50">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all bg-slate-900 text-white hover:bg-black shadow-xl shadow-slate-900/20 group"
+              type="button"
+            >
+              <div className="p-2 rounded-xl bg-white/10 group-hover:bg-red-500 transition-colors">
+                <LogOut size={18} />
+              </div>
+              {!sidebarCollapsed && <span className="font-bold text-sm tracking-tight">Secure Sign Out</span>}
+            </button>
+          </div>
         </div>
       </motion.aside>
 
