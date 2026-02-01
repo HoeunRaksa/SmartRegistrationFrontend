@@ -184,7 +184,7 @@ const ProfilePage = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="backdrop-blur-xl bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl p-8 border border-white/20 shadow-lg"
+        className="backdrop-blur-xl bg-gradient-to-br from-blue-500 to-purple-500 rounded-[2.5rem] p-8 border border-white/20 shadow-lg"
       >
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
           {/* ✅ FIXED IMAGE BLOCK */}
