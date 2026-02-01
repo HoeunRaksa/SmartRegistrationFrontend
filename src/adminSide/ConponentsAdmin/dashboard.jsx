@@ -193,7 +193,7 @@ const AdminDashboard = () => {
             key={stat.title}
             variants={itemVariants}
             whileHover={{ y: -5, scale: 1.01 }}
-            className="group relative bg-white/80 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/60 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]"
+            className="group relative bg-white/80 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/60 "
           >
             <div className="flex items-center justify-between mb-8">
               <div className={`p-4 rounded-2xl bg-gradient-to-br ${stat.gradient} shadow-lg shadow-blue-500/10 group-hover:rotate-6 transition-transform`}>
@@ -377,7 +377,7 @@ const AdminDashboard = () => {
       {/* Modern Status Footer */}
       <motion.div
         variants={itemVariants}
-        className="bg-white/10 backdrop-blur-3xl rounded-[3rem] p-12 border border-white shadow-2xl flex flex-wrap justify-between items-center gap-12"
+        className="bg-white/10 rounded-[3rem] p-12 border border-white shadow-2xl flex flex-wrap justify-between items-center gap-12"
       >
         {systemStatus.map((status) => (
           <div key={status.label} className="flex flex-col items-center gap-4 text-center">

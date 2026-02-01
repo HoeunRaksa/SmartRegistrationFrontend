@@ -225,7 +225,8 @@ const AttendancePage = () => {
 
     const currentSession = sessions.find(s => String(s.id) === String(selectedSessionId));
 
-    // STRICT TIME CHECK
+    // STRICT TIME CHECK - DISABLED to allow manual submissions
+    /*
     const now = new Date();
     const todayStr = now.toLocaleDateString('en-CA');
     const sessionDate = currentSession?.date ? new Date(currentSession.date).toLocaleDateString('en-CA') : '';
@@ -252,6 +253,7 @@ const AttendancePage = () => {
       });
       return;
     }
+    */
 
     try {
       setLoading(true);
@@ -524,26 +526,10 @@ const AttendancePage = () => {
                   const sid = String(s.course_id || s.subject_id || '');
                   const matchCourse = sid === String(selectedCourseId);
 
-                  // TIME FILTER: Only show sessions that are TODAY and NOT EXPIRED
-                  const now = new Date();
-                  const todayStr = now.toLocaleDateString('en-CA');
-                  const sessionDate = s.date ? new Date(s.date).toLocaleDateString('en-CA') : '';
-
-                  const toMin = (str) => {
-                    if (!str) return 0;
-                    const [h, m] = str.split(':').map(Number);
-                    return (h || 0) * 60 + (m || 0);
-                  };
-
-                  const endTimeStr = s.end_time || s.time?.split(' - ')[1];
-                  const endMin = toMin(endTimeStr?.slice(0, 5));
-                  const currentMin = toMin(now.toTimeString().slice(0, 5));
-
-                  const isToday = sessionDate === todayStr;
-                  const isNotExpired = currentMin <= (endMin + 60); // Show up to 1 hour after class
-
-                  return matchCourse && isToday && isNotExpired;
+                  // ALLOW SAME DAY OR PAST SESSIONS (Flexible)
+                  return matchCourse;
                 })
+                .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort newest first
                 .map(session => {
                   // Use toLocaleDateString to get the correct LOCAL date from whatever the server sent
                   const d = session.date ? new Date(session.date) : null;
