@@ -657,7 +657,7 @@ const EnrollmentsPage = () => {
           hasMoreStudents={studentsHasMore}
           courses={courses}
           isAlreadyEnrolled={isAlreadyEnrolled}
-          filterSignature={`${filters.department_id}|${filters.major_id}|${filters.academic_year}|${filters.semester}|${filters.course_id}`}
+          filterSignature={`${filters.department_id}|${filters.major_id}|${filters.academic_year}|${filters.semester}`}
         />
       </FormModal>
 

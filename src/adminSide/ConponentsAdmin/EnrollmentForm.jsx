@@ -832,18 +832,20 @@ const EnrollmentForm = ({
     if (isEditMode) return;
 
     const { majorId } = selectedMajorInfo;
-    if (!majorId) return;
+    // Only enforce major matching if BOTH a student major is identified AND a course is selected
+    if (!majorId || !form.course_id) return;
 
-    if (form.course_id) {
-      const currentCourse = courses.find((c) => String(c?.id) === String(form.course_id));
-      if (currentCourse) {
-        const courseMajorId = getCourseMajorId(currentCourse);
-        if (courseMajorId !== majorId) {
-          setForm((p) => ({ ...p, course_id: "" }));
-        }
+    const currentCourse = courses.find((c) => String(c?.id) === String(form.course_id));
+    if (currentCourse) {
+      const courseMajorId = getCourseMajorId(currentCourse);
+
+      // Enforce ONLY if the course is explicitly tied to a major
+      // If courseMajorId is empty, it's considered a general course and allowed for any major
+      if (courseMajorId && courseMajorId !== majorId) {
+        setForm((p) => ({ ...p, course_id: "" }));
       }
     }
-  }, [selectedMajorInfo, form.course_id, courses, isEditMode]);
+  }, [selectedMajorInfo.majorId, form.course_id, courses, isEditMode]);
 
   useEffect(() => {
     if (editingEnrollment) {
