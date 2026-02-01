@@ -38,10 +38,55 @@ import {
     Minimize2,
     Construction,
     Users,
-    Users2
+    Users2,
+    Sparkles
 } from 'lucide-react';
 
 const profileFallback = "/assets/images/profile-fallback.png";
+
+const SidebarItem = React.memo(function SidebarItem({
+    item,
+    isActive,
+    sidebarCollapsed,
+    onClick,
+    index,
+}) {
+    const Icon = item.icon;
+
+    return (
+        <motion.button
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.02 }}
+            whileHover={{ x: 5 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onClick}
+            className={`group relative w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl transition-all duration-300 ${isActive
+                ? "bg-white shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] text-blue-600 border border-gray-100"
+                : "text-gray-500 hover:bg-white/50 hover:text-slate-900"
+                }`}
+            type="button"
+        >
+            <div className={`p-2 rounded-xl transition-all duration-300 ${isActive
+                ? "bg-gradient-to-br " + item.gradient + " text-white shadow-lg scale-110"
+                : "bg-gray-100/50 group-hover:bg-white group-hover:shadow-md"
+                }`}>
+                <Icon size={16} strokeWidth={isActive ? 2.5 : 2} />
+            </div>
+            {!sidebarCollapsed && (
+                <span className={`font-bold text-[13px] tracking-tight transition-colors ${isActive ? "text-slate-900" : "group-hover:text-slate-900"}`}>
+                    {item.label}
+                </span>
+            )}
+            {isActive && !sidebarCollapsed && (
+                <motion.div
+                    layoutId="student-active-pill"
+                    className="ml-auto w-1.5 h-6 rounded-full bg-gradient-to-b from-blue-500 to-indigo-600 shadow-sm"
+                />
+            )}
+        </motion.button>
+    );
+});
 
 const StudentDashboard = () => {
     const { section } = useParams();
@@ -57,8 +102,8 @@ const StudentDashboard = () => {
     const menuItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, gradient: 'from-blue-500 to-cyan-500' },
         { id: 'courses', label: 'My Courses', icon: BookOpen, gradient: 'from-green-500 to-emerald-500' },
-        { id: 'schedule', label: 'Schedule', icon: Clock, gradient: 'from-purple-500 to-pink-500' }, // Changed Icon to Clock to differentiate
-        { id: 'calendar', label: 'Calendar', icon: Calendar, gradient: 'from-orange-400 to-amber-500' }, // NEW
+        { id: 'schedule', label: 'Schedule', icon: Clock, gradient: 'from-purple-500 to-pink-500' },
+        { id: 'calendar', label: 'Calendar', icon: Calendar, gradient: 'from-orange-400 to-amber-500' },
         { id: 'grades', label: 'Grades', icon: Award, gradient: 'from-orange-500 to-red-500' },
         { id: 'assignments', label: 'Assignments', icon: FileText, gradient: 'from-indigo-500 to-blue-500' },
         { id: 'attendance', label: 'Attendance', icon: Clock, gradient: 'from-teal-500 to-cyan-500' },
@@ -70,6 +115,8 @@ const StudentDashboard = () => {
         { id: 'settings', label: 'Settings', icon: Settings, gradient: 'from-gray-500 to-slate-500' },
     ];
 
+    const activeMenuItem = menuItems.find(i => i.id === activeSection) || menuItems[0];
+
     const handleLogout = async () => {
         await logoutApi().catch(() => { });
         localStorage.removeItem('user');
@@ -77,7 +124,6 @@ const StudentDashboard = () => {
         navigate('/login');
     };
 
-    // Load user data
     useEffect(() => {
         const stored = localStorage.getItem("user");
         if (stored) {
@@ -94,13 +140,12 @@ const StudentDashboard = () => {
         fetchCurrentSession().then(setCurrentSession).catch(console.error);
     }, []);
 
-    // Validate section
     useEffect(() => {
         const validSections = menuItems.map(item => item.id);
         if (section && !validSections.includes(section)) {
             navigate('/student/dashboard', { replace: true });
         }
-    }, [section, navigate]);
+    }, [section, navigate, menuItems]);
 
     useEffect(() => {
         if (mobileMenuOpen) {
@@ -125,107 +170,22 @@ const StudentDashboard = () => {
         }
     };
 
-    // Coming Soon Component
-    const ComingSoonSection = ({ title, icon: Icon, gradient }) => (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-center min-h-[70vh]"
-        >
-            <div className="text-center max-w-md mx-auto px-4">
-                <motion.div
-                    animate={{
-                        scale: [1, 1.05, 1],
-                        rotate: [0, 5, -5, 0]
-                    }}
-                    transition={{
-                        duration: 4,
-                        repeat: Infinity,
-                        repeatType: "reverse"
-                    }}
-                    className={`inline-flex p-8 rounded-3xl bg-gradient-to-br ${gradient} shadow-2xl mb-6`}
-                >
-                    <Icon className="w-20 h-20 text-white" />
-                </motion.div>
-
-                <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    {title}
-                </h2>
-
-                <div className="flex items-center justify-center gap-2 mb-6">
-                    <Construction className="w-5 h-5 text-orange-500" />
-                    <p className="text-xl font-semibold text-gray-700">Coming Soon</p>
-                    <Construction className="w-5 h-5 text-orange-500" />
-                </div>
-
-                <p className="text-gray-600 mb-8 leading-relaxed">
-                    We're working hard to bring you this feature. Stay tuned for updates!
-                </p>
-
-                <div className="backdrop-blur-xl bg-white/60 rounded-2xl p-6 border border-white/40 shadow-lg">
-                    <p className="text-sm font-medium text-gray-700 mb-4">Expected Features:</p>
-                    <div className="grid grid-cols-1 gap-3">
-                        {[
-                            'Real-time updates',
-                            'Interactive interface',
-                            'Mobile-friendly design',
-                            'Easy to use dashboard'
-                        ].map((feature, index) => (
-                            <motion.div
-                                key={index}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                                className="flex items-center gap-2 text-sm text-gray-600"
-                            >
-                                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"></div>
-                                {feature}
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-
-                <motion.div
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className="mt-8"
-                >
-                    <GraduationCap className="w-16 h-16 text-gray-300 mx-auto" />
-                </motion.div>
-            </div>
-        </motion.div>
-    );
-
     const renderSection = () => {
         switch (activeSection) {
-            case 'dashboard':
-                return <DashboardHome currentSession={currentSession} />;
-            case 'courses':
-                return <CoursesPage />;
-            case 'schedule':
-                return <SchedulePage />;
-            case 'calendar':
-                return <CalendarPage />;
-            case 'grades':
-                return <GradesPage />;
-            case 'assignments':
-                return <AssignmentsPage />;
-            case 'attendance':
-                return <AttendancePage />;
-            case 'friends':
-                return <FriendsPage />;
-            case 'project-groups':
-                return <ProjectGroupsPage />;
-            case 'messages':
-                return <MessagesPage />;
-            case 'profile':
-                return <ProfilePage />;
-            case 'certificates':
-                return <CertificatePage />;
-            case 'settings':
-                return <SettingPage />;
-            default:
-                return <DashboardHome currentSession={currentSession} />;
+            case 'dashboard': return <DashboardHome currentSession={currentSession} />;
+            case 'courses': return <CoursesPage />;
+            case 'schedule': return <SchedulePage />;
+            case 'calendar': return <CalendarPage />;
+            case 'grades': return <GradesPage />;
+            case 'assignments': return <AssignmentsPage />;
+            case 'attendance': return <AttendancePage />;
+            case 'friends': return <FriendsPage />;
+            case 'project-groups': return <ProjectGroupsPage />;
+            case 'messages': return <MessagesPage />;
+            case 'profile': return <ProfilePage />;
+            case 'certificates': return <CertificatePage />;
+            case 'settings': return <SettingPage />;
+            default: return <DashboardHome currentSession={currentSession} />;
         }
     };
 
@@ -234,159 +194,93 @@ const StudentDashboard = () => {
             {/* ================= BACKGROUND SYSTEM ================= */}
             <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/30" />
 
-            {/* Animated orbs */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+            <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
                 <motion.div
-                    animate={{
-                        x: [0, 50, 0],
-                        y: [0, 30, 0],
-                        scale: [1, 1.1, 1],
-                    }}
-                    transition={{
-                        duration: 20,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                    }}
-                    className="absolute top-20 left-10 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl"
+                    animate={{ x: [0, 100, 0], y: [0, 50, 0], scale: [1, 1.2, 1] }}
+                    transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-400/20 rounded-full blur-[120px] gpu-accelerate"
                 />
                 <motion.div
-                    animate={{
-                        x: [0, -40, 0],
-                        y: [0, 50, 0],
-                        scale: [1, 1.15, 1],
-                    }}
-                    transition={{
-                        duration: 25,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                        delay: 0.5
-                    }}
-                    className="absolute top-1/3 right-10 w-[500px] h-[500px] bg-purple-400/20 rounded-full blur-3xl"
+                    animate={{ x: [0, -100, 0], y: [0, 80, 0], scale: [1, 1.3, 1] }}
+                    transition={{ duration: 30, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                    className="absolute top-[20%] right-[-10%] w-[60%] h-[60%] bg-purple-400/20 rounded-full blur-[120px] gpu-accelerate"
                 />
                 <motion.div
-                    animate={{
-                        x: [0, 30, 0],
-                        y: [0, -40, 0],
-                        scale: [1, 1.08, 1],
-                    }}
-                    transition={{
-                        duration: 18,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                        delay: 1
-                    }}
-                    className="absolute bottom-20 left-1/4 w-80 h-80 bg-pink-400/20 rounded-full blur-3xl"
+                    animate={{ x: [0, 60, 0], y: [0, -100, 0], scale: [1, 1.1, 1] }}
+                    transition={{ duration: 35, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+                    className="absolute bottom-[-10%] left-[20%] w-[40%] h-[40%] bg-pink-400/20 rounded-full blur-[110px] gpu-accelerate"
                 />
             </div>
 
-            {/* Grid pattern */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-[0.03]">
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:4rem_4rem]" />
             </div>
 
-            {/* ================= SIDEBAR - DESKTOP (fixed, non-scroll, 3D) ================= */}
+            {/* ================= SIDEBAR - DESKTOP ================= */}
             <motion.aside
                 animate={{ width: sidebarCollapsed ? 80 : 280 }}
                 transition={{ duration: 0.2 }}
-                className="sidebar-fixed backdrop-blur-2xl bg-white/30 gen-z-glass border-r border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.2)] hidden md:block"
+                className="sidebar-fixed backdrop-blur-3xl bg-white/30 border-r border-white/20 hidden md:block"
             >
                 <div className="flex flex-col h-full p-4 overflow-hidden">
-                    {/* Logo */}
                     <div className="flex items-center justify-between mb-8 px-2 flex-shrink-0">
-                        {!sidebarCollapsed && (
-                            <div>
-                                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                                    NovaTech
-                                </h1>
-                                <p className="text-xs text-gray-600 mt-0.5">Student Portal</p>
-                                {currentSession && (
-                                    <div className="mt-2 px-3 py-2 bg-blue-50/50 rounded-lg border border-blue-100">
-                                        <div className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mb-0.5">Current Session</div>
-                                        <div className="text-xs font-bold text-slate-700">{currentSession.name}</div>
-                                        <div className="text-[10px] text-slate-500 mt-0.5">{new Date(currentSession.start_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - {new Date(currentSession.end_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
+                        {sidebarCollapsed ? (
+                            <div className="mx-auto">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg">
+                                    <span className="text-white font-black text-xl">N</span>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="group cursor-pointer">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md group-hover:rotate-6 transition-transform">
+                                        <span className="text-white font-black text-lg">N</span>
                                     </div>
-                                )}
+                                    <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
+                                        NovaTech
+                                    </h1>
+                                </div>
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-10">Student Life</p>
                             </div>
                         )}
                         <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                            className="p-2 rounded-xl backdrop-blur-xl bg-white/40 hover:bg-white/60 transition-all border border-white/30 shadow-sm"
+                            className="absolute -right-3 top-10 p-1.5 rounded-full bg-white shadow-xl border border-gray-100 text-gray-400 hover:text-blue-600 transition-all z-20"
                         >
-                            <motion.div
-                                animate={{ scale: 1 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                {sidebarCollapsed ? <ChevronRight size={20} className="text-gray-700" /> : <ChevronLeft size={20} className="text-gray-700" />}
+                            <motion.div animate={{ rotate: sidebarCollapsed ? 0 : 180 }} transition={{ duration: 0.3 }}>
+                                {sidebarCollapsed ? <ChevronRight size={14} strokeWidth={3} /> : <ChevronLeft size={14} strokeWidth={3} />}
                             </motion.div>
                         </motion.button>
                     </div>
 
-                    {/* Menu Items */}
-                    <nav className="sidebar-fixed-nav space-y-2 scrollbar-hide">
-                        {menuItems.map((item, index) => {
-                            const Icon = item.icon;
-                            const isActive = activeSection === item.id;
-                            return (
-                                <motion.button
-                                    key={item.id}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: index * 0.05 }}
-                                    whileHover={{ scale: 1.02, x: 4 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={() => handleSectionChange(item.id)}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
-                                        ? 'backdrop-blur-xl bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
-                                        : 'backdrop-blur-xl bg-white/20 text-gray-700 hover:bg-white/40'
-                                        } border border-white/30`}
-                                >
-                                    <motion.div
-                                        animate={isActive ? { scale: [1, 1.1, 1] } : {}}
-                                        transition={{ duration: 0.5 }}
-                                    >
-                                        <Icon size={20} className={isActive ? "drop-shadow-sm" : ""} />
-                                    </motion.div>
-                                    {!sidebarCollapsed && (
-                                        <motion.span
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            transition={{ delay: 0.1 }}
-                                            className="font-medium text-sm"
-                                        >
-                                            {item.label}
-                                        </motion.span>
-                                    )}
-                                    {isActive && !sidebarCollapsed && (
-                                        <motion.div
-                                            initial={{ scale: 0 }}
-                                            animate={{ scale: 1 }}
-                                            className="ml-auto w-2 h-2 rounded-full bg-white shadow-lg"
-                                        />
-                                    )}
-                                </motion.button>
-                            );
-                        })}
+                    <nav className="flex-1 space-y-1.5 overflow-y-auto scrollbar-hide py-4 px-1">
+                        {menuItems.map((item, index) => (
+                            <SidebarItem
+                                key={item.id}
+                                item={item}
+                                isActive={activeSection === item.id}
+                                sidebarCollapsed={sidebarCollapsed}
+                                onClick={() => handleSectionChange(item.id)}
+                                index={index}
+                            />
+                        ))}
                     </nav>
 
-                    {/* Logout Button */}
-                    <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-2 rounded-2xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-5 flex-shrink-0"
-                    >
-                        <motion.div
-                            whileHover={{ x: 3 }}
-                            transition={{ duration: 0.3 }}
+                    <div className="pt-4 border-t border-gray-100/50">
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={handleLogout}
+                            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all bg-red-500/10 text-red-600 border border-red-100 hover:bg-red-500 hover:text-white group"
                         >
-                            <LogOut size={20} />
-                        </motion.div>
-                        {!sidebarCollapsed && (
-                            <span className="font-medium text-sm">Logout</span>
-                        )}
-                    </motion.button>
+                            <div className="p-2 rounded-xl bg-white/50 group-hover:bg-red-400 transition-colors shadow-sm">
+                                <LogOut size={16} />
+                            </div>
+                            {!sidebarCollapsed && <span className="font-bold text-[13px] tracking-tight">Lock Station</span>}
+                        </motion.button>
+                    </div>
                 </div>
             </motion.aside>
 
@@ -394,16 +288,13 @@ const StudentDashboard = () => {
             <AnimatePresence>
                 {mobileMenuOpen && (
                     <>
-                        {/* Overlay - darker and less blurry */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            transition={{ duration: 0.15 }}
                             className="fixed inset-0 bg-black/50 z-50 md:hidden"
                             onClick={() => setMobileMenuOpen(false)}
                         />
-                        {/* Sidebar - solid and fixed position */}
                         <motion.aside
                             initial={{ x: "-100%" }}
                             animate={{ x: 0 }}
@@ -413,294 +304,136 @@ const StudentDashboard = () => {
                         >
                             <div className="flex flex-col h-full p-4">
                                 <div className="flex items-center justify-between mb-8">
-                                    <div>
-                                        <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                                            NovaTech
-                                        </h1>
-                                        <p className="text-xs text-gray-600">Student Portal</p>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center">
+                                            <span className="text-white font-black text-lg">N</span>
+                                        </div>
+                                        <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">NovaTech</h1>
                                     </div>
-                                    <button
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className="p-2 rounded-xl backdrop-blur-xl bg-white/40 hover:bg-white/60 transition-all border border-white/30"
-                                    >
-                                        <X size={20} className="text-gray-700" />
-                                    </button>
+                                    <button onClick={() => setMobileMenuOpen(false)} className="p-2 rounded-xl bg-gray-100"><X size={20} /></button>
                                 </div>
 
-                                <nav className="flex-1 space-y-2 overflow-y-auto">
-                                    {menuItems.map((item, index) => {
-                                        const Icon = item.icon;
-                                        const isActive = activeSection === item.id;
-                                        return (
-                                            <motion.button
-                                                key={item.id}
-                                                initial={{ opacity: 0, x: -20 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: index * 0.05 }}
-                                                whileHover={{ scale: 1.02, x: 4 }}
-                                                whileTap={{ scale: 0.98 }}
-                                                onClick={() => {
-                                                    handleSectionChange(item.id);
-                                                    setMobileMenuOpen(false);
-                                                }}
-                                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
-                                                    ? 'bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
-                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                    } border ${isActive ? 'border-white/30' : 'border-gray-200'}`}
-                                            >
-                                                <motion.div
-                                                    animate={isActive ? { scale: [1, 1.1, 1] } : {}}
-                                                    transition={{ duration: 0.5 }}
-                                                >
-                                                    <Icon size={20} />
-                                                </motion.div>
-                                                <span className="font-medium text-sm">{item.label}</span>
-                                            </motion.button>
-                                        );
-                                    })}
+                                <nav className="flex-1 space-y-1 overflow-y-auto custom-scrollbar">
+                                    {menuItems.map((item, index) => (
+                                        <SidebarItem
+                                            key={item.id}
+                                            item={item}
+                                            isActive={activeSection === item.id}
+                                            sidebarCollapsed={false}
+                                            onClick={() => { handleSectionChange(item.id); setMobileMenuOpen(false); }}
+                                            index={index}
+                                        />
+                                    ))}
                                 </nav>
 
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={handleLogout}
-                                    className="w-full flex items-center gap-3 px-4 py-2 rounded-2xl transition-all backdrop-blur-xl bg-red-600 text-white hover:bg-red-700 border border-red-500/30 shadow-lg mt-5"
-                                >
-                                    <motion.div
-                                        whileHover={{ x: 3 }}
-                                        transition={{ duration: 0.3 }}
-                                    >
-                                        <LogOut size={20} />
-                                    </motion.div>
-                                    <span className="font-medium text-sm">Logout</span>
-                                </motion.button>
-
-                                {/* Mobile User Profile */}
-                                <div className="mt-auto pt-4 border-t border-gray-200">
-                                    <div className="bg-gray-100 rounded-2xl p-3 border border-gray-200 shadow-sm">
-                                        <div className="flex items-center gap-3">
-                                            {user?.profile_picture_url ? (
-                                                <img
-                                                    src={user.profile_picture_url}
-                                                    alt="Profile"
-                                                    className="w-10 h-10 rounded-full object-cover border-2 border-white/40 shadow-md"
-                                                    onError={(e) => {
-                                                        e.target.src = profileFallback;
-                                                    }}
-                                                />
-                                            ) : (
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg">
-                                                    {user?.name?.charAt(0).toUpperCase() || 'S'}
-                                                </div>
-                                            )}
-                                            <div className="flex-1">
-                                                <p className="font-semibold text-gray-800 text-sm">
-                                                    {user?.name || 'Student'}
-                                                </p>
-                                                <p className="text-xs text-gray-600">
-                                                    {user?.email || 'student@novatech.edu'}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <button onClick={handleLogout} className="mt-5 w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-red-500 text-white shadow-lg">
+                                    <LogOut size={20} />
+                                    <span className="font-bold text-sm">Lock Station</span>
+                                </button>
                             </div>
                         </motion.aside>
                     </>
                 )}
             </AnimatePresence>
 
-            {/* ================= MAIN CONTENT (scrolls; sidebar stays fixed) ================= */}
+            {/* ================= MAIN CONTENT ================= */}
             <div className={`sidebar-main transition-all duration-200 ${sidebarCollapsed ? 'md:ml-20' : 'md:ml-72'}`}>
-                {/* ================= TOP BAR ================= */}
-                <header className="sticky top-0 z-30 backdrop-blur-md bg-white/80 border-b border-gray-200 shadow-sm">
-                    <div className="flex items-center justify-between px-4 md:px-6 py-3">
-                        {/* Left Section */}
-                        <div className="flex items-center gap-3">
-                            {/* Mobile Menu Button */}
+                <header className="sticky top-0 z-30 backdrop-blur-3xl bg-white/60 border-b border-white/20 shadow-sm">
+                    <div className="flex items-center justify-between px-4 md:px-8 py-4">
+                        <div className="flex items-center gap-4">
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => setMobileMenuOpen(true)}
-                                className="md:hidden p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md"
+                                className="md:hidden p-2.5 rounded-xl backdrop-blur-xl bg-white/60 border border-white/40 shadow-sm"
                             >
-                                <Menu size={20} className="text-gray-700" />
+                                <Menu size={20} />
                             </motion.button>
 
-                            {/* Page Title */}
-                            <motion.div
-                                key={activeSection}
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3 }}
-                                className="flex items-center gap-3"
-                            >
+                            <AnimatePresence mode="wait">
                                 <motion.div
-                                    animate={{ scale: [1, 1.1, 1] }}
-                                    transition={{ duration: 0.5, delay: 0.2 }}
-                                    className="hidden sm:flex p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-md"
+                                    key={activeSection}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    className="flex items-center gap-3"
                                 >
-                                    {React.createElement(menuItems.find(item => item.id === activeSection)?.icon || LayoutDashboard, {
-                                        size: 20,
-                                        className: "text-white"
-                                    })}
+                                    <div className={`p-2 rounded-xl bg-gradient-to-br ${activeMenuItem.gradient} shadow-lg text-white`}>
+                                        {React.createElement(activeMenuItem.icon, { size: 20 })}
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-black text-slate-800 tracking-tight leading-none mb-1">
+                                            {activeMenuItem.label}
+                                        </h2>
+                                        <p className="hidden md:block text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                            {user?.name || 'Student'} • Academic Flow
+                                        </p>
+                                    </div>
                                 </motion.div>
-                                <div>
-                                    <h2 className="text-lg md:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                                        {menuItems.find(item => item.id === activeSection)?.label || 'Dashboard'}
-                                    </h2>
-                                    <p className="hidden md:block text-xs text-gray-500">
-                                        Welcome back, {user?.name?.split(' ')[0] || 'Student'}
-                                    </p>
-                                </div>
-                            </motion.div>
+                            </AnimatePresence>
                         </div>
 
-                        {/* Right Section */}
-                        <div className="flex items-center gap-2">
-                            {/* Search Bar */}
-                            <motion.div
-                                whileHover={{ scale: 1.02 }}
-                                whileFocus={{ scale: 1.02 }}
-                                className="hidden lg:flex items-center gap-2 backdrop-blur-xl bg-white/50 rounded-xl px-4 py-2.5 border border-white/40 shadow-sm hover:shadow-md hover:bg-white/60 transition-all min-w-[280px]"
-                            >
-                                <motion.div
-                                    animate={{ scale: [1, 1.1, 1] }}
-                                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                                >
-                                    <Search size={16} className="text-gray-500" />
-                                </motion.div>
-                                <input
-                                    type="text"
-                                    placeholder="Search courses, assignments..."
-                                    className="bg-transparent outline-none text-sm placeholder-gray-400 w-full text-gray-700 font-medium"
-                                />
-                            </motion.div>
+                        <div className="flex items-center gap-3">
+                            <div className="hidden lg:flex items-center gap-2 backdrop-blur-xl bg-white/50 rounded-2xl px-4 py-2.5 border border-white/40 shadow-sm w-80">
+                                <Search size={16} className="text-slate-400" />
+                                <input type="text" placeholder="Quantum search..." className="bg-transparent outline-none text-xs font-bold text-slate-700 w-full placeholder-slate-300" />
+                                <Sparkles size={14} className="text-amber-400" />
+                            </div>
 
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="lg:hidden p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md"
-                            >
-                                <Search size={18} className="text-gray-700" />
-                            </motion.button>
-
-                            {/* Fullscreen Toggle */}
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={toggleFullscreen}
-                                className="hidden md:flex p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md group"
-                            >
-                                <motion.div
-                                    animate={{ scale: isFullscreen ? 1.1 : 1 }}
-                                    transition={{ duration: 0.3 }}
+                            <div className="flex items-center gap-2">
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={toggleFullscreen}
+                                    className="hidden md:flex p-2.5 rounded-xl backdrop-blur-xl bg-white/60 border border-white/40 shadow-sm group"
                                 >
-                                    {isFullscreen ? (
-                                        <Minimize2 size={18} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
-                                    ) : (
-                                        <Maximize2 size={18} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
+                                    {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+                                </motion.button>
+
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="relative p-2.5 rounded-xl backdrop-blur-xl bg-white/60 border border-white/40 shadow-sm group"
+                                >
+                                    <Bell size={18} className="group-hover:text-blue-600 transition-colors" />
+                                    {notifications > 0 && (
+                                        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-lg border-2 border-white">{notifications}</span>
                                     )}
-                                </motion.div>
-                            </motion.button>
+                                </motion.button>
 
-                            {/* Notifications */}
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="relative p-2.5 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md group"
-                            >
                                 <motion.div
-                                    animate={notifications > 0 ? {
-                                        scale: [1, 1.2, 1],
-                                    } : {}}
-                                    transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
+                                    whileHover={{ scale: 1.02 }}
+                                    className="flex items-center gap-2 pl-2 pr-3 py-2 rounded-xl backdrop-blur-xl bg-white/60 border border-white/40 shadow-sm cursor-pointer group"
                                 >
-                                    <Bell size={18} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
+                                    {user?.profile_picture_url ? (
+                                        <img src={user.profile_picture_url} className="w-8 h-8 rounded-lg object-cover ring-2 ring-white/60" alt="P" />
+                                    ) : (
+                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-md">{user?.name?.charAt(0) || 'S'}</div>
+                                    )}
+                                    <div className="hidden xl:block">
+                                        <p className="text-sm font-black text-slate-800 leading-tight truncate max-w-[100px]">{user?.name?.split(' ')[0]}</p>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Active</p>
+                                    </div>
+                                    <ChevronRight size={14} className="text-slate-300 group-hover:text-slate-600" />
                                 </motion.div>
-                                {notifications > 0 && (
-                                    <>
-                                        <motion.span
-                                            initial={{ scale: 0 }}
-                                            animate={{ scale: 1 }}
-                                            className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-[10px] font-bold text-white shadow-lg border-2 border-white"
-                                        >
-                                            {notifications}
-                                        </motion.span>
-                                        <motion.span
-                                            animate={{
-                                                scale: [1, 1.2, 1],
-                                                opacity: [0.75, 0, 0.75]
-                                            }}
-                                            transition={{ duration: 1.5, repeat: Infinity }}
-                                            className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-400"
-                                        />
-                                    </>
-                                )}
-                            </motion.button>
-
-                            {/* Profile Dropdown */}
-                            <motion.div
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                className="hidden sm:flex items-center gap-2 pl-2 pr-3 py-2 rounded-xl backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 transition-all shadow-sm hover:shadow-md cursor-pointer group"
-                            >
-                                {user?.profile_picture_url ? (
-                                    <motion.img
-                                        whileHover={{ scale: 1.1 }}
-                                        src={user.profile_picture_url}
-                                        alt="Profile"
-                                        className="w-8 h-8 rounded-lg object-cover ring-2 ring-white/60 group-hover:ring-blue-400 transition-all"
-                                        onError={(e) => {
-                                            e.target.src = profileFallback;
-                                        }}
-                                    />
-                                ) : (
-                                    <motion.div
-                                        whileHover={{ scale: 1.1, y: -2 }}
-                                        transition={{ duration: 0.3 }}
-                                        className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md ring-2 ring-white/60 group-hover:ring-blue-400 transition-all"
-                                    >
-                                        {user?.name?.charAt(0).toUpperCase() || 'S'}
-                                    </motion.div>
-                                )}
-                                <div className="hidden lg:block">
-                                    <p className="text-sm font-semibold text-gray-800 leading-tight">
-                                        {user?.name?.split(' ')[0] || 'Student'}
-                                    </p>
-                                    <p className="text-xs text-gray-500 leading-tight">
-                                        Student
-                                    </p>
-                                </div>
-                                <motion.div
-                                    animate={{ x: [0, 3, 0] }}
-                                    transition={{ duration: 1.5, repeat: Infinity }}
-                                >
-                                    <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors hidden lg:block" />
-                                </motion.div>
-                            </motion.div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Breadcrumb */}
-                    <div className="hidden md:flex items-center gap-2 px-6 pb-3 text-xs text-gray-600">
-                        <span className="hover:text-blue-600 cursor-pointer transition-colors">Home</span>
-                        <ChevronRight size={12} className="text-gray-400" />
-                        <span className="font-medium text-blue-600">
-                            {menuItems.find(item => item.id === activeSection)?.label || 'Dashboard'}
-                        </span>
+                    <div className="hidden md:flex items-center gap-2 px-8 pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        <span className="hover:text-blue-600 cursor-pointer transition-colors">Portal</span>
+                        <ChevronRight size={10} />
+                        <span className="text-blue-600 font-black">{activeMenuItem.label}</span>
                     </div>
                 </header>
 
-                {/* Dynamic Content Area */}
-                <main className="min-h-screen pt-6 relative z-10 w-full">
+                <main className="min-h-screen pt-4 relative z-10 w-full overflow-x-hidden">
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={activeSection}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.3 }}
+                            initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 1.02, y: -10 }}
+                            transition={{ duration: 0.4, type: 'spring', damping: 20 }}
                         >
                             {renderSection()}
                         </motion.div>
@@ -708,17 +441,12 @@ const StudentDashboard = () => {
                 </main>
             </div>
 
-            <style>
-                {`
-          .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-          }
-          .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-          }
-        `}
-            </style>
+            <style>{`
+          .custom-scrollbar::-webkit-scrollbar { width: 0; }
+          .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+          .sidebar-fixed { position: fixed; left: 0; top: 0; bottom: 0; z-index: 40; transition: width 0.2s ease; overflow: visible; }
+          .sidebar-main { min-height: 100vh; position: relative; z-index: 10; }
+        `}</style>
         </div>
     );
 };

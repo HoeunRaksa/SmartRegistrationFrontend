@@ -12,6 +12,14 @@ import {
   Bell,
   ArrowRight,
   Loader,
+  Sparkles,
+  Zap,
+  CheckCircle,
+  MoreHorizontal,
+  UserCheck,
+  Star,
+  Activity,
+  ArrowUpRight
 } from "lucide-react";
 
 // ✅ Import from separate API file
@@ -42,19 +50,15 @@ const DashboardHome = ({ currentSession }) => {
   const loadDashboard = async () => {
     try {
       setLoading(true);
-
-      // ✅ ONE API call - gets all dashboard data
       const result = await StudentDashboardAPI.getDashboardData();
 
       if (result.success) {
-        // ✅ Process data using helper function
         const processed = StudentDashboardAPI.processDashboardData(
           result.data,
           user
         );
         setDashboardData(processed);
       } else {
-        // API failed - show fallback
         console.error("Dashboard API failed:", result.error);
         setDashboardData(getFallbackDashboardData());
       }
@@ -85,50 +89,56 @@ const DashboardHome = ({ currentSession }) => {
     notifications: [],
   });
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { type: 'spring', damping: 25, stiffness: 100 } }
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <motion.div
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        >
-          <Loader className="w-12 h-12 text-blue-600" />
-        </motion.div>
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin" />
+        <p className="mt-4 text-slate-400 font-bold tracking-widest text-xs animate-pulse uppercase">Syncing academic stream...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Welcome Banner */}
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="p-4 md:p-6 space-y-8 pb-20"
+    >
+      {/* iOS Glass Welcome Banner */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileHover={{ scale: 1.01 }}
-        className="backdrop-blur-xl bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl p-8 border border-white/20 shadow-lg relative overflow-hidden"
+        variants={itemVariants}
+        className="relative rounded-[2.5rem] overflow-hidden p-8 md:p-12 border border-white/60 bg-white/20 backdrop-blur-3xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)] group"
       >
-        <motion.div
-          animate={{
-            backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-          style={{ backgroundSize: "200% 100%" }}
-        />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <motion.h1
-              animate={{ x: [0, 5, 0] }}
-              transition={{ duration: 2, repeat: Infinity, repeatDelay: 2 }}
-              className="text-3xl font-bold text-white mb-2"
-            >
-              {getGreeting()}, {dashboardData?.student?.name}! 👋
-            </motion.h1>
-            <p className="text-white/90">
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+          <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-blue-400/10 rounded-full blur-[100px] gpu-accelerate" />
+          <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-400/10 rounded-full blur-[100px] gpu-accelerate" />
+        </div>
+
+        <div className="relative z-10 flex flex-col xl:flex-row gap-8 items-center justify-between">
+          <div className="space-y-4 text-center xl:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/50 border border-white/80 shadow-sm">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Student Excellence Portal</span>
+            </div>
+            <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight leading-none">
+              {getGreeting()}, <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">{dashboardData?.student?.name?.split(' ')[0]}! 👋</span>
+            </h1>
+            <p className="text-slate-500 text-lg font-medium max-w-lg">
               {[
                 dashboardData?.student?.student_code,
                 dashboardData?.student?.major,
@@ -139,474 +149,352 @@ const DashboardHome = ({ currentSession }) => {
 
           {currentSession && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="backdrop-blur-md bg-white/20 rounded-xl p-4 border border-white/30 text-white min-w-[240px]"
+              whileHover={{ scale: 1.02 }}
+              className="backdrop-blur-2xl bg-white/40 rounded-[2rem] p-6 md:p-8 border border-white shadow-xl min-w-[280px] group/card"
             >
-              <p className="text-xs font-bold uppercase tracking-wider opacity-80 mb-1">Current Term</p>
-              <h3 className="font-bold text-lg">{currentSession.name}</h3>
-              <div className="flex items-center gap-2 mt-2 text-sm opacity-90">
-                <Clock className="w-4 h-4" />
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 rounded-2xl bg-blue-500 text-white shadow-lg shadow-blue-500/20 group-hover/card:rotate-12 transition-transform">
+                  <Calendar size={20} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Academic Term</p>
+                  <h3 className="font-black text-slate-800 text-lg">{currentSession.name}</h3>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-sm font-bold text-slate-500">
+                <Clock className="w-4 h-4 text-blue-500" />
                 <span>
-                  {new Date(currentSession.start_date).toLocaleDateString()} — {new Date(currentSession.end_date).toLocaleDateString()}
+                  {new Date(currentSession.start_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} — {new Date(currentSession.end_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                 </span>
+              </div>
+              <div className="mt-6 w-full h-2 bg-slate-100 rounded-full overflow-hidden border border-white shadow-inner">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: '75%' }}
+                  transition={{ duration: 1.5, ease: "circOut" }}
+                  className="h-full bg-gradient-to-r from-blue-400 to-indigo-500"
+                />
               </div>
             </motion.div>
           )}
         </div>
       </motion.div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Modern iOS Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Current GPA"
           value={Number(dashboardData?.stats?.gpa || 0).toFixed(2)}
           icon={Award}
-          gradient="from-green-500 to-emerald-500"
+          gradient="from-emerald-400 to-teal-500"
+          label="Academic Rank"
           onClick={() => navigate("/student/grades")}
-          delay={0.1}
         />
 
         <StatCard
-          title="Enrolled Courses"
+          title="Course Load"
           value={dashboardData?.stats?.enrolled_courses}
           icon={BookOpen}
-          gradient="from-blue-500 to-cyan-500"
+          gradient="from-blue-400 to-indigo-500"
+          label="Active Syllabus"
           onClick={() => navigate("/student/courses")}
-          delay={0.2}
         />
 
         <StatCard
           title="Attendance"
           value={`${Number(dashboardData?.stats?.attendance || 0).toFixed(1)}%`}
-          icon={TrendingUp}
-          gradient="from-purple-500 to-pink-500"
+          icon={Activity}
+          gradient="from-purple-400 to-pink-500"
+          label="Punctuality Score"
           onClick={() => navigate("/student/attendance")}
-          delay={0.3}
         />
 
         <StatCard
           title="Pending Tasks"
           value={dashboardData?.stats?.pending_assignments}
-          icon={FileText}
-          gradient="from-orange-500 to-red-500"
+          icon={Zap}
+          gradient="from-orange-400 to-amber-500"
+          label="Immediate Actions"
           onClick={() => navigate("/student/assignments")}
-          delay={0.4}
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Today's Classes */}
-        <TodayClassesCard
-          classes={dashboardData?.todayClasses || []}
-          onViewAll={() => navigate("/student/schedule")}
-        />
+      {/* Content Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Today's Schedule Card */}
+        <motion.div
+          variants={itemVariants}
+          className="bg-white/30 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/60 shadow-xl"
+        >
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div className="p-3.5 rounded-2xl bg-blue-50/50 text-blue-600 border border-white shadow-sm">
+                <Calendar className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-black text-slate-800 tracking-tight">Today's Class</h2>
+                <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Campus Itinerary</p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate("/student/schedule")}
+              className="p-3 rounded-2xl bg-white/50 text-slate-400 hover:text-blue-600 hover:bg-white transition-all shadow-sm border border-white"
+            >
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          </div>
 
-        {/* Pending Assignments */}
-        <PendingAssignmentsCard
-          assignments={dashboardData?.pendingAssignments || []}
-          onViewAll={() => navigate("/student/assignments")}
-        />
+          <div className="space-y-4">
+            {dashboardData?.todayClasses.length === 0 ? (
+              <div className="text-center py-12 rounded-[2rem] bg-white/20 border border-dashed border-slate-200">
+                <CheckCircle className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                <p className="font-black text-slate-400 uppercase tracking-widest text-xs">No Lectures Lined Up</p>
+              </div>
+            ) : (
+              dashboardData?.todayClasses.map((classItem, index) => (
+                <motion.div
+                  key={index}
+                  whileHover={{ x: 8 }}
+                  className="flex items-center gap-5 p-5 rounded-[1.5rem] bg-white/40 border border-white hover:bg-white transition-all group duration-300 cursor-pointer"
+                  onClick={() => navigate("/student/schedule")}
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex flex-col items-center justify-center shadow-sm">
+                    <span className="text-[10px] font-black uppercase">Room</span>
+                    <span className="font-black text-sm">{classItem.room}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">{classItem.course_code}</div>
+                    <div className="font-black text-slate-800 truncate group-hover:text-blue-600 transition-colors">{classItem.course_name}</div>
+                    <div className="flex items-center gap-3 mt-2 text-slate-400">
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide">
+                        <Clock className="w-3.5 h-3.5" />
+                        {classItem.time}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide">
+                        <UserCheck className="w-3.5 h-3.5" />
+                        {classItem.instructor?.split(' ')[0]}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
+          </div>
+        </motion.div>
+
+        {/* Priority Assignments Card */}
+        <motion.div
+          variants={itemVariants}
+          className="bg-white/30 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/60 shadow-xl"
+        >
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div className="p-3.5 rounded-2xl bg-orange-50/50 text-orange-600 border border-white shadow-sm">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-black text-slate-800 tracking-tight">Priority Tasks</h2>
+                <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Academic Submissions</p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate("/student/assignments")}
+              className="p-3 rounded-2xl bg-white/50 text-slate-400 hover:text-orange-600 hover:bg-white transition-all shadow-sm border border-white"
+            >
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {dashboardData?.pendingAssignments.length === 0 ? (
+              <div className="text-center py-12 rounded-[2rem] bg-white/20 border border-dashed border-slate-200">
+                <Star className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                <p className="font-black text-slate-400 uppercase tracking-widest text-xs">Pipeline Flawless</p>
+              </div>
+            ) : (
+              dashboardData?.pendingAssignments.slice(0, 3).map((assignment, index) => (
+                <motion.div
+                  key={index}
+                  whileHover={{ x: 8 }}
+                  className="flex flex-col gap-3 p-5 rounded-[1.5rem] bg-white/40 border border-white hover:bg-white transition-all group duration-300 cursor-pointer"
+                  onClick={() => navigate("/student/assignments")}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-1">{assignment.course_code}</div>
+                      <h4 className="font-black text-slate-800 group-hover:text-orange-600 transition-colors leading-tight">{assignment.title}</h4>
+                    </div>
+                    <div className="p-2 rounded-xl bg-slate-900 text-white text-[10px] font-black shadow-lg">
+                      {assignment.points} PTS
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-2 pt-3 border-t border-slate-100">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${getDaysUntilDue(assignment.due_date) <= 2 ? 'bg-red-500 animate-pulse' : 'bg-orange-400'}`} />
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                        {getDaysUntilDue(assignment.due_date) <= 0 ? 'Due Today' : `${getDaysUntilDue(assignment.due_date)} Days Left`}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400 italic">Deadline: {new Date(assignment.due_date).toLocaleDateString()}</span>
+                  </div>
+                </motion.div>
+              ))
+            )}
+          </div>
+        </motion.div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Grades */}
-        <RecentGradesCard
-          grades={dashboardData?.recentGrades || []}
-          onViewAll={() => navigate("/student/grades")}
-        />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Recent Performance Index */}
+        <motion.div
+          variants={itemVariants}
+          className="bg-white/30 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/60 shadow-xl"
+        >
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div className="p-3.5 rounded-2xl bg-emerald-50/50 text-emerald-600 border border-white shadow-sm">
+                <Award className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-black text-slate-800 tracking-tight">Performance Index</h2>
+                <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Latest Evaluation Outputs</p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate("/student/grades")}
+              className="p-3 rounded-2xl bg-white/50 text-slate-400 hover:text-emerald-600 hover:bg-white transition-all shadow-sm border border-white"
+            >
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          </div>
 
-        {/* Notifications */}
-        <NotificationsCard notifications={dashboardData?.notifications || []} />
+          <div className="space-y-4">
+            {dashboardData?.recentGrades.length === 0 ? (
+              <div className="text-center py-12 rounded-[2rem] bg-white/20 border border-dashed border-slate-200">
+                <Activity className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                <p className="font-black text-slate-400 uppercase tracking-widest text-xs">Evaluation Vector Neutral</p>
+              </div>
+            ) : (
+              dashboardData?.recentGrades.map((grade, index) => (
+                <div key={index} className="flex items-center gap-5 p-5 rounded-[1.5rem] bg-white/40 border border-white shadow-sm">
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-inner">
+                    <div className="text-center">
+                      <div className="text-[10px] font-black uppercase leading-none">Score</div>
+                      <div className="text-lg font-black leading-none mt-1">{grade.grade}</div>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{grade.assignment}</div>
+                    <div className="font-black text-slate-800 truncate">{grade.course_code} - {grade.course_name}</div>
+                    <div className="w-full h-1 bg-slate-100 rounded-full mt-3 overflow-hidden">
+                      <div className="h-full bg-emerald-500 w-[85%]" />
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </motion.div>
+
+        {/* Intelligence Stream (Notifications) */}
+        <motion.div
+          variants={itemVariants}
+          className="bg-white/30 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/60 shadow-xl"
+        >
+          <div className="flex items-center gap-4 mb-8">
+            <div className="p-3.5 rounded-2xl bg-purple-50/50 text-purple-600 border border-white shadow-sm">
+              <Bell className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-black text-slate-800 tracking-tight">Intelligence Stream</h2>
+              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Real-Time Core Updates</p>
+            </div>
+          </div>
+
+          <div className="space-y-4 max-h-[360px] overflow-y-auto pr-2 custom-scrollbar">
+            {dashboardData?.notifications.length === 0 ? (
+              <div className="text-center py-12 rounded-[2rem] bg-white/20 border border-dashed border-slate-200">
+                <ZapOff className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                <p className="font-black text-slate-400 uppercase tracking-widest text-xs">No Signal Detected</p>
+              </div>
+            ) : (
+              dashboardData?.notifications.map((notif, index) => (
+                <div key={index} className="flex items-start gap-4 p-5 rounded-[1.5rem] bg-white/40 border border-white transition-all hover:bg-white group cursor-default">
+                  <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                    <Bell className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[13px] font-bold text-slate-700 leading-snug">{notif.message}</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">{notif.time}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </motion.div>
       </div>
 
-      {/* Quick Actions */}
-      <QuickActionsCard navigate={navigate} />
-    </div>
+      {/* Quick Launch Icons */}
+      <motion.div
+        variants={itemVariants}
+        className="bg-white/30 backdrop-blur-3xl rounded-[2.5rem] p-10 border border-white/60 shadow-xl"
+      >
+        <h2 className="text-2xl font-black text-slate-800 mb-8 tracking-tight">Global Quick Actions</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {[
+            { label: 'My Courses', icon: BookOpen, color: 'blue', path: '/student/courses' },
+            { label: 'Schedule', icon: Calendar, color: 'purple', path: '/student/schedule' },
+            { label: 'Submissions', icon: FileText, color: 'orange', path: '/student/assignments' },
+            { label: 'Connections', icon: Users, color: 'emerald', path: '/student/friends' },
+          ].map((action, i) => (
+            <motion.button
+              key={i}
+              whileHover={{ y: -8, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate(action.path)}
+              className="p-8 rounded-[2rem] bg-white/50 border border-white shadow-xl hover:bg-white hover:shadow-2xl transition-all group"
+            >
+              <div className={`w-14 h-14 rounded-2xl bg-${action.color}-500 text-white flex items-center justify-center mx-auto mb-4 shadow-lg shadow-${action.color}-500/20 group-hover:rotate-12 transition-transform`}>
+                <action.icon size={24} />
+              </div>
+              <p className="font-black text-xs text-slate-800 uppercase tracking-widest text-center">{action.label}</p>
+            </motion.button>
+          ))}
+        </div>
+      </motion.div>
+
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 0; }
+        .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+    </motion.div>
   );
 };
 
-// ==================== COMPONENT CARDS ====================
-
-const StatCard = ({ title, value, icon: Icon, gradient, onClick, delay }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay }}
-    whileHover={{ scale: 1.05, y: -5 }}
+const StatCard = ({ title, value, icon: Icon, gradient, label, onClick }) => (
+  <motion.button
+    whileHover={{ y: -8, scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
-    className={`backdrop-blur-xl bg-gradient-to-br ${gradient} rounded-2xl p-6 border border-white/20 shadow-lg cursor-pointer transition-all`}
+    className="group relative bg-white/30 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/60 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] text-left w-full"
     onClick={onClick}
   >
-    <div className="flex items-center justify-between">
-      <div className="text-white">
-        <p className="text-sm opacity-90 mb-1">{title}</p>
-        <motion.p
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: delay + 0.2, type: "spring" }}
-          className="text-3xl font-bold"
-        >
-          {value}
-        </motion.p>
+    <div className="flex items-center justify-between mb-8">
+      <div className={`p-4 rounded-2xl bg-gradient-to-br ${gradient} shadow-lg shadow-blue-500/10 group-hover:rotate-6 transition-transform`}>
+        <Icon className="w-7 h-7 text-white" />
       </div>
-      <motion.div
-        whileHover={{ scale: 1.1, y: -2 }}
-        transition={{ duration: 0.5 }}
-        className="p-3 bg-white/20 rounded-xl"
-      >
-        <Icon className="w-8 h-8 text-white" />
-      </motion.div>
-    </div>
-  </motion.div>
-);
-
-const TodayClassesCard = ({ classes, onViewAll }) => (
-  <motion.div
-    initial={{ opacity: 0, x: -20 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ delay: 0.5 }}
-    className="backdrop-blur-xl bg-white/60 rounded-2xl p-6 border border-white/40 shadow-lg"
-  >
-    <div className="flex items-center justify-between mb-6">
-      <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-        <div className="p-2 rounded-xl bg-blue-500/10">
-          <Calendar className="w-6 h-6 text-blue-500" />
-        </div>
-        Today's Classes
-      </h2>
-      <motion.button
-        whileHover={{ x: 5 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={onViewAll}
-        className="text-blue-500 hover:text-blue-600 font-semibold text-sm flex items-center gap-1"
-      >
-        View All <motion.div animate={{ x: [0, 3, 0] }} transition={{ duration: 1, repeat: Infinity }}><ArrowRight className="w-4 h-4" /></motion.div>
-      </motion.button>
+      <ArrowUpRight className="w-5 h-5 text-slate-300 group-hover:text-blue-500 transition-colors" />
     </div>
 
-    <div className="space-y-3">
-      {classes.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p className="font-semibold">No classes today</p>
-          <p className="text-sm">Enjoy your day off!</p>
-        </div>
-      ) : (
-        classes.map((classItem, index) => (
-          <motion.div
-            key={classItem.id ?? index}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.6 + index * 0.1 }}
-            whileHover={{ scale: 1.02, x: 5 }}
-            className="p-4 bg-gradient-to-r from-blue-50/50 to-purple-50/50 rounded-xl border border-blue-100 cursor-pointer"
-          >
-            <div className="flex items-start justify-between mb-2">
-              <div className="font-semibold text-blue-600">
-                {classItem.course_code}
-              </div>
-              <div className="flex items-center gap-1 text-sm text-gray-600">
-                <Clock className="w-4 h-4" />
-                {classItem.time}
-              </div>
-            </div>
-            <div className="font-medium text-gray-900 mb-1">
-              {classItem.course_name}
-            </div>
-            <div className="flex items-center justify-between text-sm text-gray-600">
-              <span>{classItem.room}</span>
-              <span>{classItem.instructor}</span>
-            </div>
-          </motion.div>
-        ))
-      )}
+    <div className="space-y-1">
+      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{title}</h3>
+      <p className="text-4xl font-black text-slate-800 tracking-tight">{value}</p>
+      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2 flex items-center gap-2">
+        <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+        {label}
+      </p>
     </div>
-  </motion.div>
-);
-
-const PendingAssignmentsCard = ({ assignments, onViewAll }) => (
-  <motion.div
-    initial={{ opacity: 0, x: 20 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ delay: 0.5 }}
-    className="backdrop-blur-xl bg-white/60 rounded-2xl p-6 border border-white/40 shadow-lg"
-  >
-    <div className="flex items-center justify-between mb-6">
-      <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-        <div className="p-2 rounded-xl bg-orange-500/10">
-          <FileText className="w-6 h-6 text-orange-500" />
-        </div>
-        Pending Assignments
-      </h2>
-      <motion.button
-        whileHover={{ x: 5 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={onViewAll}
-        className="text-blue-500 hover:text-blue-600 font-semibold text-sm flex items-center gap-1"
-      >
-        View All <motion.div animate={{ x: [0, 3, 0] }} transition={{ duration: 1, repeat: Infinity }}><ArrowRight className="w-4 h-4" /></motion.div>
-      </motion.button>
-    </div>
-
-    <div className="space-y-3">
-      {assignments.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p className="font-semibold">No pending assignments</p>
-          <p className="text-sm">Nice! You're on track.</p>
-        </div>
-      ) : (
-        assignments.slice(0, 3).map((assignment, index) => {
-          const daysUntilDue = getDaysUntilDue(assignment.due_date);
-          const isUrgent = typeof daysUntilDue === "number" && daysUntilDue <= 2;
-
-          return (
-            <motion.div
-              key={assignment.id ?? index}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.6 + index * 0.1 }}
-              whileHover={{ scale: 1.02, x: 5 }}
-              className={`p-4 rounded-xl border cursor-pointer ${isUrgent
-                ? "bg-red-50/50 border-red-200"
-                : "bg-orange-50/50 border-orange-200"
-                }`}
-            >
-              <div className="flex items-start justify-between mb-2">
-                <div className="font-semibold text-gray-900">
-                  {assignment.title}
-                </div>
-                <div className="px-2 py-1 bg-blue-500 text-white text-xs rounded-lg font-semibold">
-                  {assignment.points} pts
-                </div>
-              </div>
-
-              <div className="text-sm text-gray-600 mb-2">
-                {assignment.course_code}
-              </div>
-
-              <div
-                className={`flex items-center gap-2 text-sm ${isUrgent ? "text-red-600 font-semibold" : "text-gray-600"
-                  }`}
-              >
-                <Clock className="w-4 h-4" />
-                {assignment.due_date ? (
-                  <>
-                    Due: {new Date(assignment.due_date).toLocaleDateString()}
-                    {assignment.due_time ? ` at ${assignment.due_time}` : ""}
-                    {typeof daysUntilDue === "number" && daysUntilDue >= 0 && (
-                      <span className="ml-2">
-                        ({daysUntilDue} day{daysUntilDue !== 1 ? "s" : ""}{" "}
-                        left)
-                      </span>
-                    )}
-                  </>
-                ) : (
-                  <span>No due date</span>
-                )}
-              </div>
-            </motion.div>
-          );
-        })
-      )}
-    </div>
-  </motion.div>
-);
-
-const RecentGradesCard = ({ grades, onViewAll }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: 0.7 }}
-    className="backdrop-blur-xl bg-white/60 rounded-2xl p-6 border border-white/40 shadow-lg"
-  >
-    <div className="flex items-center justify-between mb-6">
-      <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-        <div className="p-2 rounded-xl bg-green-500/10">
-          <Award className="w-6 h-6 text-green-500" />
-        </div>
-        Recent Grades
-      </h2>
-      <motion.button
-        whileHover={{ x: 5 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={onViewAll}
-        className="text-blue-500 hover:text-blue-600 font-semibold text-sm flex items-center gap-1"
-      >
-        View All <motion.div animate={{ x: [0, 3, 0] }} transition={{ duration: 1, repeat: Infinity }}><ArrowRight className="w-4 h-4" /></motion.div>
-      </motion.button>
-    </div>
-
-    <div className="space-y-3">
-      {grades.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          <Award className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p className="font-semibold">No grades yet</p>
-          <p className="text-sm">Grades will appear here once posted.</p>
-        </div>
-      ) : (
-        grades.map((grade, index) => (
-          <motion.div
-            key={grade.id ?? index}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 + index * 0.1 }}
-            whileHover={{ scale: 1.02, y: -2 }}
-            className="p-4 bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-xl border border-green-100 cursor-pointer"
-          >
-            <div className="flex items-start justify-between mb-2">
-              <div>
-                <div className="font-semibold text-gray-900">
-                  {grade.assignment}
-                </div>
-                <div className="text-sm text-gray-600">
-                  {grade.course_code} - {grade.course_name}
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-green-600">
-                  {grade.grade}/{grade.total}
-                </div>
-                <div className="text-sm text-gray-600">
-                  {grade.total > 0
-                    ? ((grade.grade / grade.total) * 100).toFixed(0)
-                    : 0}
-                  %
-                </div>
-              </div>
-            </div>
-            <div className="text-xs text-gray-500">
-              Posted: {new Date(grade.date).toLocaleDateString()}
-            </div>
-          </motion.div>
-        ))
-      )}
-    </div>
-  </motion.div>
-);
-
-const NotificationsCard = ({ notifications }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: 0.7 }}
-    className="backdrop-blur-xl bg-white/60 rounded-2xl p-6 border border-white/40 shadow-lg"
-  >
-    <div className="flex items-center justify-between mb-6">
-      <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-        <div className="p-2 rounded-xl bg-purple-500/10">
-          <Bell className="w-6 h-6 text-purple-500" />
-        </div>
-        Notifications
-      </h2>
-    </div>
-
-    <div className="space-y-3">
-      {notifications.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          <Bell className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p className="font-semibold">No notifications</p>
-          <p className="text-sm">You're all caught up.</p>
-        </div>
-      ) : (
-        notifications.map((notification, index) => (
-          <motion.div
-            key={notification.id ?? index}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 + index * 0.1 }}
-            whileHover={{ scale: 1.02, x: 5 }}
-            className="p-4 bg-purple-50/50 rounded-xl border border-purple-100 cursor-pointer"
-          >
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Bell className="w-4 h-4 text-purple-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">
-                  {notification.message}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
-              </div>
-            </div>
-          </motion.div>
-        ))
-      )}
-    </div>
-  </motion.div>
-);
-
-const QuickActionsCard = ({ navigate }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: 0.9 }}
-    className="backdrop-blur-xl bg-white/60 rounded-2xl p-6 border border-white/40 shadow-lg"
-  >
-    <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-      <motion.button
-        whileHover={{ scale: 1.05, y: -5 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => navigate("/student/courses")}
-        className="p-4 bg-gradient-to-br from-blue-500 to-cyan-500 text-white rounded-xl hover:shadow-lg transition-all"
-      >
-        <motion.div
-          whileHover={{ scale: 1.1, y: -2 }}
-          transition={{ duration: 0.5 }}
-        >
-          <BookOpen className="w-8 h-8 mx-auto mb-2" />
-        </motion.div>
-        <p className="font-semibold text-sm">My Courses</p>
-      </motion.button>
-
-      <motion.button
-        whileHover={{ scale: 1.05, y: -5 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => navigate("/student/schedule")}
-        className="p-4 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-xl hover:shadow-lg transition-all"
-      >
-        <motion.div
-          whileHover={{ scale: 1.1, y: -2 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Calendar className="w-8 h-8 mx-auto mb-2" />
-        </motion.div>
-        <p className="font-semibold text-sm">Schedule</p>
-      </motion.button>
-
-      <motion.button
-        whileHover={{ scale: 1.05, y: -5 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => navigate("/student/assignments")}
-        className="p-4 bg-gradient-to-br from-orange-500 to-red-500 text-white rounded-xl hover:shadow-lg transition-all"
-      >
-        <motion.div
-          whileHover={{ scale: 1.1, y: -2 }}
-          transition={{ duration: 0.5 }}
-        >
-          <FileText className="w-8 h-8 mx-auto mb-2" />
-        </motion.div>
-        <p className="font-semibold text-sm">Assignments</p>
-      </motion.button>
-
-      <motion.button
-        whileHover={{ scale: 1.05, y: -5 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => navigate("/student/messages")}
-        className="p-4 bg-gradient-to-br from-green-500 to-emerald-500 text-white rounded-xl hover:shadow-lg transition-all"
-      >
-        <motion.div
-          whileHover={{ scale: 1.1, y: -2 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Users className="w-8 h-8 mx-auto mb-2" />
-        </motion.div>
-        <p className="font-semibold text-sm">Messages</p>
-      </motion.button>
-    </div>
-  </motion.div>
+  </motion.button>
 );
 
 export default DashboardHome;
