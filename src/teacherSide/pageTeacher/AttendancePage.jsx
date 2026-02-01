@@ -101,7 +101,25 @@ const AttendancePage = () => {
   const handleAutoDetect = async (schedules, sessions, courses) => {
     const now = new Date();
     const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' }); // e.g. "Monday"
-    const currentTimeStr = now.toTimeString().slice(0, 5); // "HH:MM"
+    const todayStr = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
+
+    // 🔥 FIRST: Check if backend already marked a session as current
+    const currentSession = sessions.find(s => s.is_current === true);
+    if (currentSession) {
+      setSelectedCourseId(currentSession.course_id);
+      setSelectedSessionId(currentSession.id);
+      setIsAutoDetected(true);
+      return;
+    }
+
+    // 🔥 SECOND: Check for today's sessions (system or manual)
+    const todaySession = sessions.find(s => s.is_today === true);
+    if (todaySession) {
+      setSelectedCourseId(todaySession.course_id);
+      setSelectedSessionId(todaySession.id);
+      setIsAutoDetected(true);
+      return;
+    }
 
     // Helper to convert "HH:MM" to minutes from midnight
     const toMinutes = (str) => {
@@ -111,34 +129,10 @@ const AttendancePage = () => {
       return h * 60 + m;
     };
 
-    const isTimeValid = (session) => {
-      if (!session) return false;
-      const now = new Date();
-      const todayStr = now.toLocaleDateString('en-CA');
-      const sessionDate = session.date ? new Date(session.date).toLocaleDateString('en-CA') : '';
-
-      if (sessionDate !== todayStr) return false;
-
-      const currentTimeStr = now.toTimeString().slice(0, 5);
-      const currentMin = toMinutes(currentTimeStr);
-
-      const startTimeStr = session.start_time || session.time?.split(' - ')[0];
-      const endTimeStr = session.end_time || session.time?.split(' - ')[1];
-
-      if (!startTimeStr || !endTimeStr) return true;
-
-      const startMin = toMinutes(startTimeStr.slice(0, 5));
-      const endMin = toMinutes(endTimeStr.slice(0, 5));
-
-      // Allow 15 mins buffer
-      return currentMin >= (startMin - 15) && currentMin <= (endMin + 15);
-    };
-
-    const toMinutesLocal = toMinutes; // alias for scope
-
+    const currentTimeStr = now.toTimeString().slice(0, 5);
     const currentMinutes = toMinutes(currentTimeStr);
 
-    // Find if something is scheduled NOW (with 30 min early buffer)
+    // 🔥 THIRD: Try to match against schedule and create session
     const activeSchedule = schedules.find(s => {
       if (s.day_of_week && s.day_of_week.toLowerCase() !== currentDay.toLowerCase()) return false;
 
@@ -150,31 +144,21 @@ const AttendancePage = () => {
     });
 
     if (activeSchedule) {
-      const courseId = activeSchedule.course_id || activeSchedule.id; // Backend might send course_id or we use ID if flat
-      // Check if we already have a session for this course TODAY
-      const todayStr = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
+      const courseId = activeSchedule.course_id || activeSchedule.id;
 
+      // Check if we already have a session for this course TODAY
       const existingSession = sessions.find(sess => {
         const sessDate = sess.date ? new Date(sess.date).toLocaleDateString('en-CA') : '';
         const matchCourse = String(sess.course_id) === String(courseId);
-
-        // Match if it's the same day and roughly same time (overlapping start times)
-        // This is robust against small differences like 08:00 vs 08:00:00
-        const sessStartMin = toMinutes(sess.time?.split(' - ')[0] || sess.start_time?.slice(0, 5));
-        const schedStartMin = toMinutes(activeSchedule.start_time?.slice(0, 5));
-        const matchTime = Math.abs(sessStartMin - schedStartMin) < 15; // Within 15 mins start time
-
-        return matchCourse && sessDate === todayStr && matchTime;
+        return matchCourse && sessDate === todayStr;
       });
 
       if (existingSession) {
-        if (isTimeValid(existingSession)) {
-          setSelectedCourseId(courseId);
-          setSelectedSessionId(existingSession.id);
-          setIsAutoDetected(true);
-        }
+        setSelectedCourseId(courseId);
+        setSelectedSessionId(existingSession.id);
+        setIsAutoDetected(true);
       } else {
-
+        // Create new session automatically
         try {
           const res = await createTeacherClassSession({
             course_id: courseId,
@@ -537,13 +521,21 @@ const AttendancePage = () => {
                   // Use toLocaleDateString to get the correct LOCAL date from whatever the server sent
                   const d = session.date ? new Date(session.date) : null;
                   const sessionDate = d ? d.toLocaleDateString('en-CA') : ''; // en-CA gives YYYY-MM-DD
-                  const now = new Date();
-                  const localToday = now.toLocaleDateString('en-CA');
-                  const isToday = sessionDate === localToday;
+
+                  // Use backend flags for cleaner logic
+                  const isCurrent = session.is_current;
+                  const isToday = session.is_today;
+                  const isManual = session.is_manual;
+
+                  let badge = '';
+                  if (isCurrent) badge = '🟢 ACTIVE - ';
+                  else if (isToday) badge = '⭐️ TODAY - ';
+
+                  const manualLabel = isManual ? ' (manual)' : '';
 
                   return (
                     <option key={session.id} value={session.id}>
-                      {isToday ? "⭐️ TODAY - " : ""}{sessionDate} ({session.time || session.start_time || '—'})
+                      {badge}{sessionDate} ({session.time || session.start_time || '—'}){manualLabel}
                     </option>
                   );
                 })}
