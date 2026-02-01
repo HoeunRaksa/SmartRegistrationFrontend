@@ -184,7 +184,7 @@ const ProfilePage = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="backdrop-blur-xl bg-gradient-to-br from-blue-500 to-purple-500 rounded-[2.5rem] p-8 border border-white/20 shadow-lg"
+        className="backdrop-blur-2xl bg-white/80 rounded-[2.5rem] p-8 border border-white/60 shadow-2xl"
       >
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
           {/* ✅ FIXED IMAGE BLOCK */}
@@ -203,21 +203,21 @@ const ProfilePage = () => {
                   onError={() => setImgBroken(true)}
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center">
+                <div className="w-full h-full bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center">
                   <span className="text-white text-4xl font-bold">{initials}</span>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="text-center md:text-left text-white flex-1">
+          <div className="text-center md:text-left text-slate-800 flex-1">
             <div className="flex flex-col md:flex-row md:items-center gap-4 mb-2">
               <h1 className="text-3xl font-bold">{student?.name || "--"}</h1>
               <motion.button
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowDigitalId(true)}
-                className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-xl text-white text-sm font-bold border border-white/20 backdrop-blur-md transition-all"
+                className="inline-flex items-center gap-2 px-4 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-white text-sm font-bold border border-slate-600 backdrop-blur-md transition-all shadow-lg"
               >
                 <IdCard className="w-4 h-4" />
                 Digital ID
@@ -225,19 +225,19 @@ const ProfilePage = () => {
             </div>
 
             <div className="flex flex-wrap gap-3 justify-center md:justify-start mb-3">
-              <div className="flex items-center gap-2 px-3 py-1 bg-white/20 rounded-lg">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-slate-700">
                 <IdCard className="w-4 h-4" />
                 <span className="font-semibold">{student?.student_code || ""}</span>
               </div>
 
-              <div className="flex items-center gap-2 px-3 py-1 bg-white/20 rounded-lg">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-slate-700">
                 <Building className="w-4 h-4" />
                 <span>
                   {student?.department || "Department Not Assigned"}
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 px-3 py-1 bg-white/20 rounded-lg">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-slate-700">
                 <GraduationCap className="w-4 h-4" />
                 <span>
                   {student?.major || "Major Not Assigned"}
@@ -245,13 +245,13 @@ const ProfilePage = () => {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 justify-center md:justify-start text-sm opacity-90">
+            <div className="flex flex-wrap gap-2 justify-center md:justify-start text-sm text-slate-600">
               {student?.academic_year && <span>Year {student.academic_year}</span>}
               {student?.academic_year && student?.semester && <span>•</span>}
               {student?.semester && <span>Semester {student.semester}</span>}
               {(student?.academic_year || student?.semester) && student?.academic_status && <span>•</span>}
               {student?.academic_status && (
-                <span className="px-2 py-0.5 bg-green-500/30 rounded">
+                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 border border-emerald-200 rounded font-medium">
                   {student.academic_status}
                 </span>
               )}
@@ -266,19 +266,19 @@ const ProfilePage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="backdrop-blur-xl bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl p-6 border border-white/20 shadow-lg"
+          className="backdrop-blur-2xl bg-white/90 rounded-2xl p-6 border border-slate-200 shadow-xl"
         >
           <div className="flex items-center justify-between">
-            <div className="text-white">
-              <p className="text-sm opacity-90 mb-1">Current GPA</p>
-              <p className="text-3xl font-bold">
+            <div className="text-slate-800">
+              <p className="text-sm text-slate-500 mb-1">Current GPA</p>
+              <p className="text-3xl font-bold text-emerald-600">
                 {student?.current_gpa !== null && student?.current_gpa !== undefined
                   ? Number(student.current_gpa).toFixed(2)
                   : "0.00"}
               </p>
             </div>
-            <div className="p-3 bg-white/20 rounded-xl">
-              <Award className="w-8 h-8 text-white" />
+            <div className="p-3 bg-emerald-100 rounded-xl">
+              <Award className="w-8 h-8 text-emerald-600" />
             </div>
           </div>
         </motion.div>
@@ -287,19 +287,19 @@ const ProfilePage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="backdrop-blur-xl bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-6 border border-white/20 shadow-lg"
+          className="backdrop-blur-2xl bg-white/90 rounded-2xl p-6 border border-slate-200 shadow-xl"
         >
           <div className="flex items-center justify-between">
-            <div className="text-white">
-              <p className="text-sm opacity-90 mb-1">Cumulative GPA</p>
-              <p className="text-3xl font-bold">
+            <div className="text-slate-800">
+              <p className="text-sm text-slate-500 mb-1">Cumulative GPA</p>
+              <p className="text-3xl font-bold text-blue-600">
                 {student?.cumulative_gpa !== null && student?.cumulative_gpa !== undefined
                   ? Number(student.cumulative_gpa).toFixed(2)
                   : "0.00"}
               </p>
             </div>
-            <div className="p-3 bg-white/20 rounded-xl">
-              <GraduationCap className="w-8 h-8 text-white" />
+            <div className="p-3 bg-blue-100 rounded-xl">
+              <GraduationCap className="w-8 h-8 text-blue-600" />
             </div>
           </div>
         </motion.div>
@@ -308,15 +308,15 @@ const ProfilePage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="backdrop-blur-xl bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-6 border border-white/20 shadow-lg"
+          className="backdrop-blur-2xl bg-white/90 rounded-2xl p-6 border border-slate-200 shadow-xl"
         >
           <div className="flex items-center justify-between">
-            <div className="text-white">
-              <p className="text-sm opacity-90 mb-1">Credits Earned</p>
-              <p className="text-3xl font-bold">{student?.credits_earned ?? 0}</p>
+            <div className="text-slate-800">
+              <p className="text-sm text-slate-500 mb-1">Credits Earned</p>
+              <p className="text-3xl font-bold text-purple-600">{student?.credits_earned ?? 0}</p>
             </div>
-            <div className="p-3 bg-white/20 rounded-xl">
-              <BookOpen className="w-8 h-8 text-white" />
+            <div className="p-3 bg-purple-100 rounded-xl">
+              <BookOpen className="w-8 h-8 text-purple-600" />
             </div>
           </div>
         </motion.div>
@@ -325,15 +325,15 @@ const ProfilePage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="backdrop-blur-xl bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-6 border border-white/20 shadow-lg"
+          className="backdrop-blur-2xl bg-white/90 rounded-2xl p-6 border border-slate-200 shadow-xl"
         >
           <div className="flex items-center justify-between">
-            <div className="text-white">
-              <p className="text-sm opacity-90 mb-1">Enrolled Courses</p>
-              <p className="text-3xl font-bold">{student?.enrolled_courses?.length || 0}</p>
+            <div className="text-slate-800">
+              <p className="text-sm text-slate-500 mb-1">Enrolled Courses</p>
+              <p className="text-3xl font-bold text-amber-600">{student?.enrolled_courses?.length || 0}</p>
             </div>
-            <div className="p-3 bg-white/20 rounded-xl">
-              <BookOpen className="w-8 h-8 text-white" />
+            <div className="p-3 bg-amber-100 rounded-xl">
+              <BookOpen className="w-8 h-8 text-amber-600" />
             </div>
           </div>
         </motion.div>
