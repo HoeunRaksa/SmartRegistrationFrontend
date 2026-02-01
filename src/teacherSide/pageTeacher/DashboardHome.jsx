@@ -21,11 +21,12 @@ import {
   Activity
 } from 'lucide-react';
 
-import { fetchTeacherDashboardStats } from '../../api/teacher_api';
+import { fetchTeacherDashboardStats, fetchTeacherAssignments } from '../../api/teacher_api';
 
 const DashboardHome = () => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
+  const [assignmentCount, setAssignmentCount] = useState(0);
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
@@ -36,8 +37,13 @@ const DashboardHome = () => {
   const loadStats = async () => {
     try {
       setLoading(true);
-      const res = await fetchTeacherDashboardStats();
-      setData(res.data?.data || null);
+      const [statsRes, assignmentsRes] = await Promise.all([
+        fetchTeacherDashboardStats(),
+        fetchTeacherAssignments().catch(() => ({ data: { data: [] } }))
+      ]);
+
+      setData(statsRes.data?.data || null);
+      setAssignmentCount(assignmentsRes.data?.data?.length || 0);
     } catch (error) {
       console.error('Failed to load dashboard stats:', error);
     } finally {
@@ -63,8 +69,8 @@ const DashboardHome = () => {
       change: 'Across all courses'
     },
     {
-      title: 'Assignments',
-      value: 'Check',
+      title: 'Active Assignments',
+      value: assignmentCount.toString(),
       icon: ClipboardList,
       gradient: 'from-orange-500 to-red-600',
       shadow: 'shadow-orange-500/20',
@@ -105,7 +111,7 @@ const DashboardHome = () => {
   };
 
   return (
-    <div className="min-h-screen px-4 md:px-8 pb-12 overflow-x-hidden">
+    <div className="space-y-6">
       {loading ? (
         <div className="flex flex-col items-center justify-center h-[70vh]">
           <div className="relative">
