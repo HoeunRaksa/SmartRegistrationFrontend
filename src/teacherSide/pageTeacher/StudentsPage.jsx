@@ -92,8 +92,8 @@ const StudentsPage = () => {
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Student</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Student ID</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Department</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Enrolled Courses</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Contact</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/40">
@@ -110,27 +110,31 @@ const StudentsPage = () => {
                         </div>
                         <div>
                           <p className="font-semibold text-gray-800">{student.full_name}</p>
-                          <p className="text-sm text-gray-600">{student.email}</p>
+                          <p className="text-xs text-gray-500">{student.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-gray-700">{student.student_id_card}</td>
+                    <td className="px-6 py-4 text-gray-700 font-medium">{student.student_id_card}</td>
                     <td className="px-6 py-4">
-                      <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
+                      <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-wider">
                         {student.department}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex gap-2">
-                        <a href={`mailto:${student.email}`} className="p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors">
-                          <Mail className="w-4 h-4" />
-                        </a>
+                      <div className="flex flex-wrap gap-1">
+                        {student.courses?.map(c => (
+                          <span key={c.id} className="px-2 py-0.5 rounded-lg bg-gray-100 text-gray-600 text-[10px] font-bold border border-gray-200">
+                            {c.course_name}
+                          </span>
+                        ))}
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <button className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm font-medium hover:shadow-lg transition-all">
-                        View Profile
-                      </button>
+                      <div className="flex gap-2">
+                        <a href={`mailto:${student.email}`} className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors shadow-sm">
+                          <Mail className="w-4 h-4" />
+                        </a>
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -306,6 +306,54 @@ const DashboardHome = () => {
                 </div>
               </div>
 
+              {/* Recent Students Section */}
+              <div className="bg-white/85 backdrop-blur-2xl rounded-[2.5rem] p-8 border border-white/50 shadow-xl relative overflow-hidden">
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-indigo-100 text-indigo-600">
+                      <Users className="w-6 h-6" />
+                    </div>
+                    Recent Students
+                  </h2>
+                  <button
+                    onClick={() => navigate('/teacher/students')}
+                    className="text-sm font-bold text-blue-600 hover:scale-105 transition-transform"
+                  >
+                    View All
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {(data?.recent_students || []).map((student) => (
+                    <div
+                      key={student.id}
+                      className="flex items-center gap-4 p-4 rounded-3xl bg-slate-50/50 border border-slate-100/50 hover:bg-white hover:shadow-lg transition-all duration-300 group"
+                    >
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white font-black overflow-hidden shadow-lg shadow-indigo-500/20">
+                        {student.profile_picture_url ? (
+                          <img src={student.profile_picture_url} alt={student.name} className="w-full h-full object-cover" />
+                        ) : (
+                          student.name.charAt(0)
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-black text-slate-800 truncate group-hover:text-indigo-600 transition-colors">{student.name}</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate">{student.student_code}</p>
+                      </div>
+                      <button className="p-2 rounded-xl bg-white text-slate-400 hover:text-indigo-600 hover:shadow-md transition-all">
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  {(!data?.recent_students || data.recent_students.length === 0) && (
+                    <div className="col-span-full py-10 text-center">
+                      <Users className="w-10 h-10 text-slate-200 mx-auto mb-2" />
+                      <p className="text-slate-400 text-sm font-bold">No students found yet</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Engagement Chart Section (Visual Only) */}
               <div className="bg-white/85 backdrop-blur-2xl rounded-[2.5rem] p-8 border border-white/50 shadow-xl relative overflow-hidden">
                 <div className="flex items-center justify-between mb-8">
