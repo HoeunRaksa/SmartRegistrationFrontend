@@ -389,11 +389,10 @@ const SettingPage = () => {
 
               <div className="flex flex-col md:flex-row items-center gap-8">
                 <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full opacity-60 blur group-hover:opacity-90 transition duration-300" />
                   <img
                     src={previewUrl || user?.profile_picture_url || profileFallback}
                     alt="Profile"
-                    className="relative w-32 h-32 rounded-full object-cover border-4 border-white shadow-xl"
+                    className="relative w-32 h-32 rounded-full object-cover border-4 border-white shadow-xl bg-white"
                   />
                   <button
                     onClick={() => fileInputRef.current?.click()}
