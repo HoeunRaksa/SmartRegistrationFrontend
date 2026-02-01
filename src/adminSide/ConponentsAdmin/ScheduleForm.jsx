@@ -89,6 +89,18 @@ const ScheduleForm = ({ onUpdate, onSuccess, editingSchedule, onCancel, courses 
   const [form, setForm] = useState(INITIAL_FORM_STATE);
   const [loading, setLoading] = useState(false);
 
+  const academicYears = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let i = -5; i <= 5; i++) {
+      const year = currentYear + i;
+      years.push(`${year}-${year + 1}`);
+    }
+    return years;
+  }, []);
+
+  const semesters = ["1", "2"];
+
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
 
@@ -382,6 +394,8 @@ const ScheduleForm = ({ onUpdate, onSuccess, editingSchedule, onCancel, courses 
         toggleModifyTime={toggleModifyTime}
         resetTimeToDefault={resetTimeToDefault}
         defaultTimes={defaultTimes}
+        academicYears={academicYears}
+        semesters={semesters}
       />
     </div>
   );
@@ -408,6 +422,8 @@ const FormSection = ({
   toggleModifyTime,
   resetTimeToDefault,
   defaultTimes,
+  academicYears,
+  semesters,
 }) => (
   <motion.div
     variants={{
@@ -436,10 +452,9 @@ const FormSection = ({
             className="w-full rounded-lg bg-white border border-gray-200 px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500/20"
           >
             <option value="">All Years</option>
-            {/* Standard years - could be dynamic later */}
-            <option value="2023-2024">2023-2024</option>
-            <option value="2024-2025">2024-2025</option>
-            <option value="2025-2026">2025-2026</option>
+            {academicYears.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
           </select>
         </div>
         <div>
@@ -451,9 +466,9 @@ const FormSection = ({
             className="w-full rounded-lg bg-white border border-gray-200 px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500/20"
           >
             <option value="">All Semesters</option>
-            <option value="1">Semester 1</option>
-            <option value="2">Semester 2</option>
-            <option value="3">Semester 3</option>
+            {semesters.map(sem => (
+              <option key={sem} value={sem}>Semester {sem}</option>
+            ))}
           </select>
         </div>
       </div>

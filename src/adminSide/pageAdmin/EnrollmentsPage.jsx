@@ -187,8 +187,16 @@ const EnrollmentsPage = () => {
   const [studentsPage, setStudentsPage] = useState(1);
   const [studentsHasMore, setStudentsHasMore] = useState(false);
 
-  const YEARS = useMemo(() => ["2024-2025", "2025-2026", "2026-2027"], []);
-  const SEMESTERS = useMemo(() => ["1", "2", "3"], []);
+  const YEARS = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let i = -5; i <= 5; i++) {
+      const year = currentYear + i;
+      years.push(`${year}-${year + 1}`);
+    }
+    return years;
+  }, []);
+  const SEMESTERS = useMemo(() => ["1", "2"], []);
 
   const [filters, setFilters] = useState({
     department_id: "",

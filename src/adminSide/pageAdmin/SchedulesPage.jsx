@@ -18,6 +18,18 @@ const SchedulesPage = () => {
   const [filterYear, setFilterYear] = useState("");
   const [filterSemester, setFilterSemester] = useState("");
 
+  const academicYears = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let i = -5; i <= 5; i++) {
+      const year = currentYear + i;
+      years.push(`${year}-${year + 1}`);
+    }
+    return years;
+  }, []);
+
+  const semesters = ["1", "2"];
+
   // ✅ staggered loading to reduce 429 risk
   useEffect(() => {
     loadSchedules();
@@ -169,9 +181,9 @@ const SchedulesPage = () => {
             className="w-full rounded-xl bg-white border border-gray-200 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/20"
           >
             <option value="">All Academic Years</option>
-            <option value="2023-2024">2023-2024</option>
-            <option value="2024-2025">2024-2025</option>
-            <option value="2025-2026">2025-2026</option>
+            {academicYears.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
           </select>
         </div>
         <div className="flex-1 w-full space-y-1.5">
@@ -182,9 +194,9 @@ const SchedulesPage = () => {
             className="w-full rounded-xl bg-white border border-gray-200 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/20"
           >
             <option value="">All Semesters</option>
-            <option value="1">Semester 1</option>
-            <option value="2">Semester 2</option>
-            <option value="3">Semester 3</option>
+            {semesters.map(sem => (
+              <option key={sem} value={sem}>Semester {sem}</option>
+            ))}
           </select>
         </div>
         <motion.button

@@ -362,7 +362,6 @@ const AcademicSessionsPage = () => {
                                         <option value="">Select...</option>
                                         <option value="1">Semester 1</option>
                                         <option value="2">Semester 2</option>
-                                        <option value="3">Summer</option>
                                     </select>
                                 </div>
                             </div>
