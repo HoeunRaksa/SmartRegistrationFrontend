@@ -436,20 +436,51 @@ const CreateAssignmentForm = ({ courses, onCreated, onClose }) => {
               className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
             />
           </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-amber-500" />
-              Due Date
-            </label>
-            <input
-              required
-              type="date"
-              value={formData.due_date}
-              onChange={e => setFormData({ ...formData, due_date: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-amber-500" />
+                Due Date
+              </label>
+              <input
+                required
+                type="date"
+                value={formData.due_date}
+                onChange={e => setFormData({ ...formData, due_date: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-teal-500" />
+                Due Time
+              </label>
+              <input
+                type="time"
+                value={formData.due_time}
+                onChange={e => setFormData({ ...formData, due_time: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              />
+            </div>
           </div>
         </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+            <FileText className="w-4 h-4 text-rose-500" />
+            Attachment (Optional)
+          </label>
+          <div className="relative">
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              onChange={e => setFormData({ ...formData, attachment: e.target.files[0] })}
+              className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+            <p className="mt-1 text-xs text-gray-500">Supported: PDF, DOC, DOCX (Max 10MB)</p>
+          </div>
+        </div>
+
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
             <ClipboardList className="w-4 h-4 text-purple-500" />

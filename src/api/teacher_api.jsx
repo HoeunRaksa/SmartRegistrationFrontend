@@ -194,7 +194,31 @@ export const fetchTeacherAssignments = async () => {
 
 export const createTeacherAssignment = async (assignmentData) => {
   try {
-    return await API.post("/teacher/assignments", assignmentData);
+    const formData = new FormData();
+
+    Object.entries(assignmentData || {}).forEach(([key, value]) => {
+      if (value === null || value === undefined) return;
+
+      // ✅ Generic file support
+      if (value instanceof File) {
+        formData.append(key, value);
+        return;
+      }
+
+      if (typeof value === "object" && !(value instanceof File)) {
+        // Should ideally stringify if it's complex, but for assignment creation standard fields are expected.
+        // If it's a date object, we might want to convert to string.
+        // However, most fields are simple strings/numbers.
+        // Assuming simple types for now as per controller validation.
+        // If you have nested objects, handle them here.
+      }
+
+      formData.append(key, value);
+    });
+
+    return await API.post("/teacher/assignments", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
   } catch (error) {
     console.error("createTeacherAssignment error:", error);
     throw error;
