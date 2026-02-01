@@ -353,40 +353,72 @@ const EmptyState = ({ hasSearch }) => (
   </div>
 );
 
-const EnrollmentsTable = ({ enrollments, onEdit, onDelete, expandedRows, toggleRow }) => (
-  <div className="space-y-3">
-    {enrollments.map((enrollment) => (
-      <EnrollmentCard
-        key={enrollment.id}
-        enrollment={enrollment}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        isExpanded={expandedRows.has(enrollment.id)}
-        onToggle={() => toggleRow(enrollment.id)}
-      />
-    ))}
-  </div>
-);
+const EnrollmentsTable = ({ enrollments, onEdit, onDelete, expandedRows, toggleRow }) => {
+  // Group by student to satisfy "dont show the same student in list"
+  const groupedEnrollments = useMemo(() => {
+    const map = new Map();
+    const list = [];
 
-const EnrollmentCard = ({ enrollment, onEdit, onDelete, isExpanded, onToggle }) => {
-  const statusConfig = STATUS_STYLES[enrollment.status] || STATUS_STYLES.enrolled;
-  const StatusIcon = statusConfig.icon;
+    enrollments.forEach((e) => {
+      const sid = String(e.student_id);
+      if (!map.has(sid)) {
+        const group = {
+          student_id: e.student_id,
+          student_name: e.student_name,
+          student_code: e.student_code,
+          profile_picture_url: e.profile_picture_url,
+          email: e.email,
+          phone_number: e.phone,
+          address: e.address,
+          academic_year: e.academic_year,
+          semester: e.semester,
+          department_id: e.department_id,
+          major_name: e.major_name,
+          courses: [],
+        };
+        map.set(sid, group);
+        list.push(group);
+      }
+      map.get(sid).courses.push(e);
+    });
+
+    return list;
+  }, [enrollments]);
+
+  return (
+    <div className="space-y-4">
+      {groupedEnrollments.map((group) => (
+        <StudentEnrollmentCard
+          key={group.student_id}
+          group={group}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          isExpanded={expandedRows.has(group.student_id)}
+          onToggle={() => toggleRow(group.student_id)}
+        />
+      ))}
+    </div>
+  );
+};
+
+const StudentEnrollmentCard = ({ group, onEdit, onDelete, isExpanded, onToggle }) => {
+  const enrollmentCount = group.courses.length;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl border-2 border-white/60 bg-white/80 backdrop-blur-xl shadow-lg hover:shadow-xl transition-all overflow-hidden"
+      className="rounded-3xl border-2 border-white/60 bg-white/80 backdrop-blur-xl shadow-lg hover:shadow-xl transition-all overflow-hidden"
     >
-      {/* Main Row - Always Visible */}
-      <div className="p-4">
-        <div className="flex items-start gap-4">
+      {/* Main Row */}
+      <div className="p-5">
+        <div className="flex items-start gap-5">
           {/* Expand Button */}
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={onToggle}
-            className="mt-1 p-2 rounded-xl bg-white/80 border-2 border-white/60 hover:border-blue-300 transition-all flex-shrink-0"
+            className="mt-1.5 p-2 rounded-xl bg-white/80 border-2 border-white/60 hover:border-blue-300 transition-all flex-shrink-0"
           >
             {isExpanded ? (
               <ChevronDown className="w-4 h-4 text-gray-700" />
@@ -397,11 +429,11 @@ const EnrollmentCard = ({ enrollment, onEdit, onDelete, isExpanded, onToggle }) 
 
           {/* Avatar */}
           <div className="flex-shrink-0">
-            {enrollment.profile_picture_url ? (
+            {group.profile_picture_url ? (
               <img
-                src={enrollment.profile_picture_url}
-                alt={enrollment.student_name}
-                className="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-md"
+                src={group.profile_picture_url}
+                alt={group.student_name}
+                className="w-16 h-16 rounded-[1.25rem] object-cover border-2 border-white shadow-md"
                 onError={(e) => {
                   e.target.style.display = "none";
                   if (e.target.nextSibling) e.target.nextSibling.style.display = "flex";
@@ -409,152 +441,126 @@ const EnrollmentCard = ({ enrollment, onEdit, onDelete, isExpanded, onToggle }) 
               />
             ) : null}
             <div
-              className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 items-center justify-center shadow-md ${enrollment.profile_picture_url ? "hidden" : "flex"
+              className={`w-16 h-16 rounded-[1.25rem] bg-gradient-to-br from-blue-500 to-indigo-600 items-center justify-center shadow-md ${group.profile_picture_url ? "hidden" : "flex"
                 }`}
             >
-              <span className="text-xl font-black text-white">
-                {String(enrollment.student_name || "?").charAt(0).toUpperCase()}
+              <span className="text-2xl font-black text-white">
+                {String(group.student_name || "?").charAt(0).toUpperCase()}
               </span>
             </div>
           </div>
 
-          {/* Main Info */}
+          {/* Student Info */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-4 mb-2">
+            <div className="flex items-start justify-between gap-4 mb-3">
               <div className="flex-1 min-w-0">
-                <h3 className="text-base font-black text-gray-900 mb-1">{enrollment.student_name}</h3>
+                <h3 className="text-lg font-black text-gray-900 mb-1">{group.student_name}</h3>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-bold">
-                    {enrollment.student_code}
+                  <span className="px-3 py-1 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-black">
+                    {group.student_code}
                   </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold">
-                    {enrollment.course_name || enrollment.subject_name}
+                  <span className="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-black uppercase tracking-wider">
+                    {group.major_name}
                   </span>
-                  {enrollment.class_name && (
-                    <span className="px-2.5 py-1 rounded-lg bg-purple-100 text-purple-700 text-xs font-bold">
-                      {enrollment.class_name}
-                    </span>
-                  )}
                 </div>
               </div>
 
-              {/* Status Badge */}
-              <div
-                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r ${statusConfig.bg} border-2 ${statusConfig.border} shadow-sm flex-shrink-0`}
-              >
-                <StatusIcon className={`w-4 h-4 ${statusConfig.text}`} />
-                <span className={`text-xs font-black ${statusConfig.text}`}>{statusConfig.label}</span>
-              </div>
-            </div>
-
-            {/* Quick Info */}
-            <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600">
-              {enrollment.academic_year && (
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span className="font-semibold">{enrollment.academic_year}</span>
-                </div>
-              )}
-              {enrollment.semester && (
-                <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 font-bold">
-                  Sem {enrollment.semester}
+              <div className="flex flex-col items-end gap-2">
+                <span className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-black shadow-lg shadow-blue-500/20">
+                  {enrollmentCount} {enrollmentCount === 1 ? 'COURSE' : 'COURSES'}
                 </span>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Enrollment Status</p>
+              </div>
+            </div>
+
+            {/* Courses Overview */}
+            <div className="flex flex-wrap gap-2">
+              {group.courses.slice(0, 3).map((e, i) => (
+                <span key={e.id} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/60 border border-white/40 text-xs font-semibold text-gray-700">
+                  <BookOpen className="w-3 h-3 text-blue-500" />
+                  {e.course_name || e.subject_name}
+                </span>
+              ))}
+              {enrollmentCount > 3 && (
+                <span className="text-xs font-black text-blue-600 flex items-center px-2">+{enrollmentCount - 3} more</span>
               )}
             </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <motion.button
-              whileHover={{ scale: 1.05, y: -1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => onEdit?.(enrollment)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/80 border-2 border-white/60 hover:border-blue-300 hover:shadow-lg transition-all"
-              type="button"
-            >
-              <Edit3 className="w-4 h-4 text-gray-700" />
-              <span className="text-xs font-bold text-gray-800">Edit</span>
-            </motion.button>
-
-            {typeof onDelete === "function" && (
-              <motion.button
-                whileHover={{ scale: 1.05, y: -1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => onDelete(enrollment.id, enrollment.student_name)}
-                className="p-2 rounded-xl bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-300 hover:from-red-100 hover:to-rose-100 hover:shadow-lg transition-all"
-                type="button"
-              >
-                <Trash2 className="w-4 h-4 text-red-600" />
-              </motion.button>
-            )}
           </div>
         </div>
-
-        {/* Progress Bar (if exists) */}
-        {enrollment.progress !== null && enrollment.progress !== undefined && (
-          <div className="mt-3">
-            <div className="flex items-center justify-between text-xs mb-1.5">
-              <span className="font-semibold text-gray-600">Progress</span>
-              <span className="font-bold text-gray-900">{Number(enrollment.progress)}%</span>
-            </div>
-            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${Number(enrollment.progress)}%` }}
-                transition={{ duration: 1, ease: "easeOut" }}
-                className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"
-              />
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Expanded Details - Only Shown When Clicked */}
+      {/* Expanded Enrollments Table */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="overflow-hidden"
+            className="border-t-2 border-white/60 bg-gray-50/30"
           >
-            <div className="border-t-2 border-white/60 bg-gradient-to-br from-white/60 to-gray-50/60 p-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Student Details */}
-                <div>
-                  <h4 className="text-xs font-black text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    Student Information
-                  </h4>
-                  <div className="space-y-2.5">
-                    <DetailItem icon={Hash} label="Student Code" value={enrollment.student_code} />
-                    <DetailItem icon={User} label="Full Name" value={enrollment.student_name} />
-                    <DetailItem icon={Mail} label="Email" value={enrollment.email} />
-                    <DetailItem icon={Phone} label="Phone" value={enrollment.phone_number} />
-                    <DetailItem icon={MapPin} label="Address" value={enrollment.address} />
+            <div className="p-5">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div className="lg:col-span-1 space-y-4">
+                  <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest px-1">Student Records</h4>
+                  <div className="space-y-2">
+                    <DetailItem icon={Mail} label="Contact Email" value={group.email} />
+                    <DetailItem icon={Phone} label="Phone Line" value={group.phone_number} />
                   </div>
                 </div>
 
-                {/* Course Details */}
-                <div>
-                  <h4 className="text-xs font-black text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
-                    <BookOpen className="w-4 h-4" />
-                    Course Information
-                  </h4>
-                  <div className="space-y-2.5">
-                    <DetailItem label="Course" value={enrollment.course_name} />
-                    <DetailItem label="Subject" value={enrollment.subject_name} />
-                    <DetailItem label="Class" value={enrollment.class_name} />
-                    <DetailItem label="Teacher" value={enrollment.teacher_name} />
-                    <DetailItem label="Academic Year" value={enrollment.academic_year} />
-                    <DetailItem label="Semester" value={enrollment.semester ? `Semester ${enrollment.semester}` : null} />
-                    {enrollment.enrolled_at && (
-                      <DetailItem
-                        label="Enrolled Date"
-                        value={new Date(enrollment.enrolled_at).toLocaleDateString()}
-                      />
-                    )}
+                <div className="lg:col-span-2">
+                  <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-4 px-1">Subscribed Courses</h4>
+                  <div className="space-y-3">
+                    {group.courses.map((enrollment) => {
+                      const statusStyle = STATUS_STYLES[enrollment.status] || STATUS_STYLES.enrolled;
+                      const Icon = statusStyle.icon;
+                      return (
+                        <div
+                          key={enrollment.id}
+                          className="flex items-center justify-between p-4 rounded-2xl bg-white border-2 border-white/60 shadow-sm hover:shadow-md transition-all group"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className={`p-2.5 rounded-xl bg-gradient-to-br ${statusStyle.bg} border ${statusStyle.border}`}>
+                              <Icon className={`w-4 h-4 ${statusStyle.text}`} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-black text-gray-900">{enrollment.course_name || enrollment.subject_name}</p>
+                              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">
+                                {enrollment.class_name} • Sem {enrollment.semester} • {enrollment.academic_year}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <div className="text-right hidden sm:block">
+                              <p className={`text-xs font-black ${statusStyle.text}`}>{statusStyle.label}</p>
+                              {enrollment.progress !== null && (
+                                <p className="text-[10px] font-bold text-gray-400 mt-0.5">{enrollment.progress}% Complete</p>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => onEdit?.(enrollment)}
+                                className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </motion.button>
+                              <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => onDelete?.(enrollment.id, group.student_name)}
+                                className="p-2 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </motion.button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -563,6 +569,84 @@ const EnrollmentCard = ({ enrollment, onEdit, onDelete, isExpanded, onToggle }) 
         )}
       </AnimatePresence>
     </motion.div>
+  );
+};
+
+{/* Progress Bar (if exists) */ }
+{
+  enrollment.progress !== null && enrollment.progress !== undefined && (
+    <div className="mt-3">
+      <div className="flex items-center justify-between text-xs mb-1.5">
+        <span className="font-semibold text-gray-600">Progress</span>
+        <span className="font-bold text-gray-900">{Number(enrollment.progress)}%</span>
+      </div>
+      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${Number(enrollment.progress)}%` }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"
+        />
+      </div>
+    </div>
+  )
+}
+      </div >
+
+  {/* Expanded Details - Only Shown When Clicked */ }
+  < AnimatePresence >
+  { isExpanded && (
+    <motion.div
+      initial={{ height: 0, opacity: 0 }}
+      animate={{ height: "auto", opacity: 1 }}
+      exit={{ height: 0, opacity: 0 }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      className="overflow-hidden"
+    >
+      <div className="border-t-2 border-white/60 bg-gradient-to-br from-white/60 to-gray-50/60 p-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Student Details */}
+          <div>
+            <h4 className="text-xs font-black text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Student Information
+            </h4>
+            <div className="space-y-2.5">
+              <DetailItem icon={Hash} label="Student Code" value={enrollment.student_code} />
+              <DetailItem icon={User} label="Full Name" value={enrollment.student_name} />
+              <DetailItem icon={Mail} label="Email" value={enrollment.email} />
+              <DetailItem icon={Phone} label="Phone" value={enrollment.phone_number} />
+              <DetailItem icon={MapPin} label="Address" value={enrollment.address} />
+            </div>
+          </div>
+
+          {/* Course Details */}
+          <div>
+            <h4 className="text-xs font-black text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              Course Information
+            </h4>
+            <div className="space-y-2.5">
+              <DetailItem label="Course" value={enrollment.course_name} />
+              <DetailItem label="Subject" value={enrollment.subject_name} />
+              <DetailItem label="Class" value={enrollment.class_name} />
+              <DetailItem label="Teacher" value={enrollment.teacher_name} />
+              <DetailItem label="Academic Year" value={enrollment.academic_year} />
+              <DetailItem label="Semester" value={enrollment.semester ? `Semester ${enrollment.semester}` : null} />
+              {enrollment.enrolled_at && (
+                <DetailItem
+                  label="Enrolled Date"
+                  value={new Date(enrollment.enrolled_at).toLocaleDateString()}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  )}
+      </AnimatePresence >
+    </motion.div >
   );
 };
 

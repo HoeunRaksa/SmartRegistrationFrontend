@@ -279,8 +279,16 @@ const StudentTableSelect = ({
   const filtered = useMemo(() => {
     const t = q.trim().toLowerCase();
     const arr = Array.isArray(students) ? students : [];
-    if (!t) return arr;
-    return arr.filter((s) => {
+
+    // Deduplicate students by ID to ensure no same student appears twice
+    const uniqueMap = new Map();
+    arr.forEach(s => {
+      if (s?.id) uniqueMap.set(String(s.id), s);
+    });
+    const uniqueArr = Array.from(uniqueMap.values());
+
+    if (!t) return uniqueArr;
+    return uniqueArr.filter((s) => {
       const text = `${pickStudentCode(s)} ${pickStudentName(s)} ${pickEmail(s)}`.toLowerCase();
       return text.includes(t);
     });

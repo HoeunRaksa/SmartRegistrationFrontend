@@ -448,27 +448,41 @@ const EnrollmentsPage = () => {
   };
 
   /* ================= QUICK STATS ================= */
-  const enrolledCount = (Array.isArray(enrollments) ? enrollments : []).filter((e) => e.status === "enrolled").length;
-  const completedCount = (Array.isArray(enrollments) ? enrollments : []).filter((e) => e.status === "completed").length;
+  const { filteredTotal, activeUniqueCount, completedUniqueCount } = useMemo(() => {
+    const list = Array.isArray(enrollments) ? enrollments : [];
+
+    // Total count is total enrollment records
+    const filteredTotal = list.length;
+
+    // For "Active Students", we want UNIQUE students who have "enrolled" status
+    const active = list.filter((e) => e.status === "enrolled");
+    const activeUniqueCount = new Set(active.map(e => String(e.student_id))).size;
+
+    // For "Completed", we want UNIQUE students who have "completed" status
+    const completed = list.filter((e) => e.status === "completed");
+    const completedUniqueCount = new Set(completed.map(e => String(e.student_id))).size;
+
+    return { filteredTotal, activeUniqueCount, completedUniqueCount };
+  }, [enrollments]);
 
   const quickStats = [
     {
       label: "Total Enrollments",
-      value: (Array.isArray(enrollments) ? enrollments : []).length,
+      value: filteredTotal,
       gradient: "from-blue-500 via-indigo-500 to-purple-500",
       icon: BookOpen,
       bgGradient: "from-blue-50 to-indigo-50",
     },
     {
       label: "Active Students",
-      value: enrolledCount,
+      value: activeUniqueCount,
       gradient: "from-emerald-500 via-teal-500 to-cyan-500",
       icon: Users,
       bgGradient: "from-emerald-50 to-teal-50",
     },
     {
-      label: "Completed",
-      value: completedCount,
+      label: "Completed Students",
+      value: completedUniqueCount,
       gradient: "from-purple-500 via-pink-500 to-rose-500",
       icon: CheckCircle,
       bgGradient: "from-purple-50 to-pink-50",
