@@ -400,7 +400,7 @@ const AdminDashboard = () => {
     <div className="sidebar-layout-root min-h-screen w-full relative">
       {/* ================= BACKGROUND SYSTEM ================= */}
       <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/30" />
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <motion.div
           animate={{
             x: [0, 100, 0],
@@ -408,11 +408,11 @@ const AdminDashboard = () => {
             scale: [1, 1.2, 1],
           }}
           transition={{
-            duration: 15,
+            duration: 25,
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-400/20 rounded-full blur-[120px]"
+          className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-400/20 rounded-full blur-[120px] gpu-accelerate"
         />
         <motion.div
           animate={{
@@ -421,12 +421,12 @@ const AdminDashboard = () => {
             scale: [1, 1.3, 1],
           }}
           transition={{
-            duration: 18,
+            duration: 30,
             repeat: Infinity,
             ease: "easeInOut",
             delay: 1
           }}
-          className="absolute top-[20%] right-[-10%] w-[60%] h-[60%] bg-purple-400/20 rounded-full blur-[120px]"
+          className="absolute top-[20%] right-[-10%] w-[60%] h-[60%] bg-purple-400/20 rounded-full blur-[120px] gpu-accelerate"
         />
         <motion.div
           animate={{
@@ -435,12 +435,12 @@ const AdminDashboard = () => {
             scale: [1, 1.1, 1],
           }}
           transition={{
-            duration: 20,
+            duration: 35,
             repeat: Infinity,
             ease: "easeInOut",
             delay: 2
           }}
-          className="absolute bottom-[-10%] left-[20%] w-[40%] h-[40%] bg-pink-400/20 rounded-full blur-[110px]"
+          className="absolute bottom-[-10%] left-[20%] w-[40%] h-[40%] bg-pink-400/20 rounded-full blur-[110px] gpu-accelerate"
         />
       </div>
       <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-[0.03]">
@@ -561,40 +561,17 @@ const AdminDashboard = () => {
                   </button>
                 </div>
 
-                <nav className="flex-1 space-y-1 overflow-y-auto">
-                  {MENU_ITEMS.map((item, index) => {
-                    const Icon = item.icon;
-                    const isActive = activeSection === item.id;
-
-                    return (
-                      <motion.button
-                        key={item.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.03 }}
-                        whileHover={{ scale: 1.02, x: 4 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => handleSectionChange(item.id)}
-                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all ${isActive
-                          ? "bg-gradient-to-r " +
-                          item.gradient +
-                          " text-white shadow-lg"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                          } border ${isActive ? "border-white/30" : "border-gray-200"}`}
-                        type="button"
-                      >
-                        <motion.div
-                          animate={isActive ? { rotate: [0, -10, 10, 0] } : {}}
-                          transition={{ duration: 0.5 }}
-                        >
-                          <Icon size={18} />
-                        </motion.div>
-                        <span className="font-medium text-[13px]">
-                          {item.label}
-                        </span>
-                      </motion.button>
-                    );
-                  })}
+                <nav className="flex-1 space-y-1 overflow-y-auto custom-scrollbar">
+                  {MENU_ITEMS.map((item, index) => (
+                    <SidebarItem
+                      key={item.id}
+                      item={item}
+                      isActive={activeSection === item.id}
+                      sidebarCollapsed={false}
+                      onClick={() => handleSectionChange(item.id)}
+                      index={index}
+                    />
+                  ))}
                 </nav>
 
                 <button

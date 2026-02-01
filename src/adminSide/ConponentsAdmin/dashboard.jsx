@@ -130,8 +130,8 @@ const AdminDashboard = () => {
       >
         {/* Subtle Decorative Accents */}
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/10 rounded-full blur-[100px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-400/10 rounded-full blur-[100px]" />
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/10 rounded-full blur-[100px] gpu-accelerate" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-400/10 rounded-full blur-[100px] gpu-accelerate" />
         </div>
 
         <div className="relative z-10 flex flex-col lg:flex-row gap-10 items-center justify-between">
@@ -351,8 +351,8 @@ const AdminDashboard = () => {
                 className="flex items-center gap-6 p-5 rounded-3xl bg-white/40 border border-white/60 hover:bg-white/100 transition-all duration-300 shadow-sm hover:shadow-xl"
               >
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl ${i === 0 ? 'bg-amber-100 text-amber-600' :
-                    i === 1 ? 'bg-slate-100 text-slate-600' :
-                      'bg-slate-50 text-slate-400'
+                  i === 1 ? 'bg-slate-100 text-slate-600' :
+                    'bg-slate-50 text-slate-400'
                   }`}>
                   {i + 1}
                 </div>
