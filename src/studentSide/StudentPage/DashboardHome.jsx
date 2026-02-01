@@ -491,10 +491,10 @@ const StatCard = ({ title, value, icon: Icon, gradient, label, onClick }) => (
     <div className="space-y-1">
       <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{title}</h3>
       <p className="text-4xl font-black text-slate-800 tracking-tight">{value}</p>
-      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2 flex items-center gap-2">
+      <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2 flex items-center gap-2">
         <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
         {label}
-      </p>
+      </div>
     </div>
   </motion.button>
 );
