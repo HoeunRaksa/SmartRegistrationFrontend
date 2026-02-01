@@ -513,8 +513,11 @@ const AttendancePage = () => {
                   const sid = String(s.course_id || s.subject_id || '');
                   const matchCourse = sid === String(selectedCourseId);
 
-                  // ALLOW SAME DAY OR PAST SESSIONS (Flexible)
-                  return matchCourse;
+                  // ONLY allow current sessions OR manual sessions created by teacher
+                  // Past and future system sessions are not selectable
+                  const isSelectable = s.is_current || s.is_manual;
+
+                  return matchCourse && isSelectable;
                 })
                 .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort newest first
                 .map(session => {
@@ -524,37 +527,37 @@ const AttendancePage = () => {
 
                   // Use backend flags for cleaner logic
                   const isCurrent = session.is_current;
-                  const isToday = session.is_today;
                   const isManual = session.is_manual;
 
                   let badge = '';
                   if (isCurrent) badge = '🟢 ACTIVE - ';
-                  else if (isToday) badge = '⭐️ TODAY - ';
-
-                  const manualLabel = isManual ? ' (manual)' : '';
+                  else if (isManual) badge = '📝 MANUAL - ';
 
                   return (
                     <option key={session.id} value={session.id}>
-                      {badge}{sessionDate} ({session.time || session.start_time || '—'}){manualLabel}
+                      {badge}{sessionDate} ({session.time || session.start_time || '—'})
                     </option>
                   );
                 })}
             </select>
-            {selectedCourseId && sessions.filter(s => String(s.course_id || s.subject_id || '') === String(selectedCourseId)).length === 0 && (
-              <div className="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-100 flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5" />
-                <div>
-                  <p className="text-[11px] font-bold text-amber-800 uppercase">No sessions found for this course</p>
-                  <p className="text-[10px] text-amber-700 mb-2">Sessions are usually auto-created from your schedule, but you can create one manually if needed.</p>
-                  <button
-                    onClick={() => setIsCreateModalOpen(true)}
-                    className="text-[10px] font-bold text-blue-600 underline"
-                  >
-                    Create Manual Session
-                  </button>
+            {selectedCourseId && sessions.filter(s => {
+              const matchCourse = String(s.course_id || s.subject_id || '') === String(selectedCourseId);
+              return matchCourse && (s.is_current || s.is_manual);
+            }).length === 0 && (
+                <div className="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-100 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5" />
+                  <div>
+                    <p className="text-[11px] font-bold text-amber-800 uppercase">No active sessions right now</p>
+                    <p className="text-[10px] text-amber-700 mb-2">Sessions are only available during their scheduled time. Create a manual session to mark attendance anytime.</p>
+                    <button
+                      onClick={() => setIsCreateModalOpen(true)}
+                      className="text-[10px] font-bold text-blue-600 underline"
+                    >
+                      + Create Manual Session
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
             {!selectedCourseId && (
               <p className="mt-2 text-[10px] text-amber-600 font-medium flex items-center gap-1 italic">
                 <AlertCircle className="w-3 h-3" />
