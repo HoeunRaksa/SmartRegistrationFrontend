@@ -507,17 +507,11 @@ const AttendancePage = () => {
                 }`}
               disabled={!selectedCourseId}
             >
-              <option value="">{selectedCourseId ? "Choose a session date & time..." : "Select a course first"}</option>
+              <option value="">{selectedCourseId ? "Choose active session..." : "Select a course first"}</option>
               {sessions
                 .filter(s => {
                   const sid = String(s.course_id || s.subject_id || '');
-                  const matchCourse = sid === String(selectedCourseId);
-
-                  // ONLY allow current sessions OR manual sessions created by teacher
-                  // Past and future system sessions are not selectable
-                  const isSelectable = s.is_current || s.is_manual;
-
-                  return matchCourse && isSelectable;
+                  return sid === String(selectedCourseId);
                 })
                 .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort newest first
                 .map(session => {
@@ -540,21 +534,14 @@ const AttendancePage = () => {
                   );
                 })}
             </select>
-            {selectedCourseId && sessions.filter(s => {
-              const matchCourse = String(s.course_id || s.subject_id || '') === String(selectedCourseId);
-              return matchCourse && (s.is_current || s.is_manual);
-            }).length === 0 && (
+            {selectedCourseId && sessions.filter(s =>
+              String(s.course_id || s.subject_id || '') === String(selectedCourseId)
+            ).length === 0 && (
                 <div className="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-100 flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5" />
                   <div>
                     <p className="text-[11px] font-bold text-amber-800 uppercase">No active sessions right now</p>
-                    <p className="text-[10px] text-amber-700 mb-2">Sessions are only available during their scheduled time. Create a manual session to mark attendance anytime.</p>
-                    <button
-                      onClick={() => setIsCreateModalOpen(true)}
-                      className="text-[10px] font-bold text-blue-600 underline"
-                    >
-                      + Create Manual Session
-                    </button>
+                    <p className="text-[10px] text-amber-700">Sessions are only available during their scheduled time (15 min before start → 60 min after end).</p>
                   </div>
                 </div>
               )}
