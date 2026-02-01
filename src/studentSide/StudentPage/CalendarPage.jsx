@@ -95,8 +95,8 @@ const CalendarPage = () => {
                         >
                             <div className="flex justify-between items-start mb-1">
                                 <span className={`text-sm font-bold w-7 h-7 flex items-center justify-center rounded-full transition-colors ${isToday
-                                        ? "bg-blue-600 text-white shadow-md shadow-blue-300"
-                                        : isSelected ? "text-blue-700 bg-blue-100" : "text-gray-700 group-hover:text-blue-600"
+                                    ? "bg-blue-600 text-white shadow-md shadow-blue-300"
+                                    : isSelected ? "text-blue-700 bg-blue-100" : "text-gray-700 group-hover:text-blue-600"
                                     }`}>
                                     {day}
                                 </span>
@@ -147,7 +147,7 @@ const CalendarPage = () => {
     });
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="space-y-6">
             {/* Header */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -255,10 +255,10 @@ const CalendarPage = () => {
                                             <div className="flex justify-between items-start mb-2">
                                                 <span
                                                     className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${evt.type === 'exam'
-                                                            ? 'bg-red-50 text-red-600'
-                                                            : evt.type === 'assignment'
-                                                                ? 'bg-amber-50 text-amber-600'
-                                                                : 'bg-blue-50 text-blue-600'
+                                                        ? 'bg-red-50 text-red-600'
+                                                        : evt.type === 'assignment'
+                                                            ? 'bg-amber-50 text-amber-600'
+                                                            : 'bg-blue-50 text-blue-600'
                                                         }`}
                                                 >
                                                     {evt.type || "Class"}

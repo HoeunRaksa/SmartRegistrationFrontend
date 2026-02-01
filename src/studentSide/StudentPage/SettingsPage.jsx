@@ -165,7 +165,7 @@ const SettingsPage = () => {
     ];
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="space-y-6">
             {/* Header */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -213,8 +213,8 @@ const SettingsPage = () => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`w-full text-left px-4 py-3 rounded-xl font-semibold flex items-center gap-3 transition-all ${activeTab === tab.id
-                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
-                                    : 'bg-white/60 hover:bg-white text-gray-700'
+                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                                : 'bg-white/60 hover:bg-white text-gray-700'
                                 }`}
                         >
                             <tab.icon className="w-5 h-5" />
