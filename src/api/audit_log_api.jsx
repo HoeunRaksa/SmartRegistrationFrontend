@@ -3,7 +3,7 @@ import API, { extractData } from "./index";
 // GET: Fetch audit logs with filters
 export const fetchAuditLogs = async (params = {}) => {
     try {
-        const response = await API.get("/audit-logs", { params });
+        const response = await API.get("/admin/audit-logs", { params });
         // Expecting Laravel paginate response or standard data array
         return extractData(response);
     } catch (error) {
