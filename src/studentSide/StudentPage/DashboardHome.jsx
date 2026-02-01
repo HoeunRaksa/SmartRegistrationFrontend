@@ -117,12 +117,12 @@ const DashboardHome = ({ currentSession }) => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="p-4 md:p-6 space-y-8 pb-20"
+      className="space-y-8 pb-20"
     >
       {/* iOS Glass Welcome Banner */}
       <motion.div
         variants={itemVariants}
-        className="relative rounded-[2.5rem] overflow-hidden p-8 md:p-12 border border-white/60 bg-white/50 backdrop-blur-3xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)] group"
+        className="relative rounded-[2.5rem] overflow-hidden md:p-12 border border-white/60 bg-white/50 backdrop-blur-3xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)] group"
       >
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
           <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-blue-400/10 rounded-full blur-[100px] gpu-accelerate" />

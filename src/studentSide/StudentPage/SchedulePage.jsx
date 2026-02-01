@@ -222,7 +222,7 @@ const SchedulePage = () => {
   const todayName = new Date().toLocaleDateString("en-US", { weekday: "long" });
 
   return (
-    <div className="px-4 sm:px-6 py-6 space-y-6">
+    <div className="space-y-6">
       {/* Error Banner */}
       <AnimatePresence>
         {error && (

@@ -87,7 +87,7 @@ const AttendancePage = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Overall Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <motion.div

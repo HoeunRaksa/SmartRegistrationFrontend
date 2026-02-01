@@ -94,7 +94,7 @@ const GradesPage = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* GPA Overview Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <motion.div
