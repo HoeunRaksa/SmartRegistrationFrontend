@@ -312,8 +312,12 @@ const AdminDashboard = () => {
                 whileHover={{ x: 5 }}
                 className="p-5 rounded-3xl bg-white/40 border border-white/60 flex gap-5 items-start transition-all"
               >
-                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-slate-400 shrink-0 shadow-sm border border-slate-100">
-                  <UserCheck className="w-6 h-6 text-blue-500/50" />
+                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-slate-400 shrink-0 shadow-sm border border-slate-100 overflow-hidden">
+                  {act.user?.profile_picture_url ? (
+                    <img src={act.user.profile_picture_url} className="w-full h-full object-cover" alt="" />
+                  ) : (
+                    <span className="text-xl font-black text-blue-300">{(act.user?.name || '?').charAt(0)}</span>
+                  )}
                 </div>
                 <div className="flex-1">
                   <p className="text-[13px] font-bold text-slate-700 leading-snug">{act.message}</p>
