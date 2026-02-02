@@ -15,7 +15,7 @@ const ConfirmDialog = ({ isOpen, title, message, onConfirm, onCancel, confirmTex
     return createPortal(
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 min-h-screen">
+                <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 min-h-screen overflow-y-auto">
                     {/* Backdrop */}
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -31,7 +31,7 @@ const ConfirmDialog = ({ isOpen, title, message, onConfirm, onCancel, confirmTex
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.9, opacity: 0, y: 20 }}
                         transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                        className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-white z-50 pointer-events-auto"
+                        className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-white z-50 pointer-events-auto my-auto"
                     >
                         <div className="p-6">
                             <div className="flex items-center gap-4 mb-4">

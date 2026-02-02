@@ -86,7 +86,7 @@ const StudentProfile = ({ student, onClose }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+        className="fixed inset-0 z-[9999] flex items-start justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto"
         onClick={onClose}
         role="dialog"
         aria-modal="true"
@@ -97,7 +97,7 @@ const StudentProfile = ({ student, onClose }) => {
           exit={{ scale: 0.95, opacity: 0, y: 16 }}
           transition={{ duration: 0.18 }}
           onClick={(e) => e.stopPropagation()}
-          className="max-w-6xl w-full max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl"
+          className="max-w-6xl w-full bg-white rounded-3xl shadow-2xl my-auto"
         >
           {/* Header */}
           <div className="relative overflow-hidden">

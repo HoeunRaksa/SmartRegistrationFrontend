@@ -38,6 +38,12 @@ const FormModal = ({ isOpen, onClose, children, title, maxWidth = "max-w-2xl" })
         };
     }, [isOpen, onClose]);
 
+    const handleBackdropClick = (e) => {
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
+
     return createPortal(
         <AnimatePresence>
             {isOpen && (
@@ -52,18 +58,22 @@ const FormModal = ({ isOpen, onClose, children, title, maxWidth = "max-w-2xl" })
                     />
 
                     {/* Modal Container */}
-                    <div className="fixed inset-0 z-[9999] overflow-y-auto px-4 py-8 flex items-start justify-center pointer-events-none">
+                    <div
+                        className="fixed inset-0 z-[9999] overflow-y-auto px-4 py-8 flex items-start justify-center"
+                        onClick={handleBackdropClick}
+                    >
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 20 }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            className={`relative w-full ${maxWidth} pointer-events-auto`}
+                            className={`relative w-full ${maxWidth} my-auto min-h-0`}
+                            onClick={(e) => e.stopPropagation()}
                         >
                             {/* Optional Close Button (Top-Right) */}
                             <button
                                 onClick={onClose}
-                                className="absolute -top-2 -right-2 z-10 p-2 rounded-full bg-red-500 text-white shadow-lg hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                                className="absolute -top-2 -right-2 z-20 p-2 rounded-full bg-red-500 text-white shadow-lg hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                                 aria-label="Close modal"
                             >
                                 <X className="w-5 h-5" />

@@ -408,7 +408,7 @@ const ClassGroupStudentsModal = ({ open, group, onClose }) => {
           initial="hidden"
           animate="show"
           exit="exit"
-          className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+          className="fixed inset-0 z-[99999] flex items-start justify-center bg-black/60 backdrop-blur-sm px-4 py-8 overflow-y-auto"
           onClick={onClose}
         >
           <motion.div
@@ -417,7 +417,7 @@ const ClassGroupStudentsModal = ({ open, group, onClose }) => {
             animate="show"
             exit="exit"
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-7xl rounded-3xl bg-gradient-to-br from-white via-white to-gray-50 border-2 border-white/60 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+            className="w-full max-w-7xl rounded-3xl bg-gradient-to-br from-white via-white to-gray-50 border-2 border-white/60 shadow-2xl overflow-hidden flex flex-col my-auto"
           >
             {/* ========================= HEADER ========================= */}
             <div className="relative overflow-hidden px-6 py-5 border-b-2 border-white/60 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 flex-shrink-0">
