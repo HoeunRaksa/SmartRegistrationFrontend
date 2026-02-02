@@ -184,16 +184,16 @@ const StudentsPage = () => {
                               sendConnectionRequest(student.user_id);
                             }
                           }}
-                          disabled={processingId === student.user_id || processingId === student.connection_id}
+                          disabled={!!processingId && (processingId === student.user_id || processingId === student.connection_id)}
                           className={`p-2 rounded-lg transition-colors shadow-sm ${student.connection_status === 'accepted'
-                              ? "bg-rose-50 text-rose-600 hover:bg-rose-100"
-                              : student.connection_status === 'pending'
-                                ? "bg-amber-50 text-amber-600 hover:bg-amber-100"
-                                : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+                            ? "bg-rose-50 text-rose-600 hover:bg-rose-100"
+                            : student.connection_status === 'pending'
+                              ? "bg-amber-50 text-amber-600 hover:bg-amber-100"
+                              : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
                             }`}
                           title={student.connection_status === 'accepted' ? "Remove Connection" : student.connection_status === 'pending' ? "Cancel Request" : "Connect"}
                         >
-                          {processingId === student.user_id || processingId === student.connection_id ? (
+                          {processingId && (processingId === student.user_id || processingId === student.connection_id) ? (
                             <Loader className="w-4 h-4 animate-spin" />
                           ) : student.connection_status === 'accepted' ? (
                             <UserMinus className="w-4 h-4" />
